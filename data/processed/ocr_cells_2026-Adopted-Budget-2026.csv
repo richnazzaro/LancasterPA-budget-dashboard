@@ -1,0 +1,14 @@
+source_page,row_label,column,ocr_text,problem,value,conf,corrected_to
+48,1000004-415100,actual_ytd_2025,"T7,A17",stripped_marks+unreadable,,9.198627,"77,417"
+100,1501001-614000 POL OFF 8HR,salary_2026_proposed,32621,missing_comma,32621,,
+100,1501001-614000 POL OFF 8HR,salary_2026_proposed,32621,missing_comma,32621,,
+100,1501001-614000 POL OFF 10HR,salary_2026_proposed,32621,missing_comma,32621,,
+101,1501001-614000 POL OFF 10HR,salary_2026_proposed,32621,missing_comma,32621,,
+101,1501001-614000 POL OFF 10HR,salary_2026_proposed,32621,missing_comma,32621,,
+101,1501001-614000 POL OFF 10HR,salary_2026_proposed,32621,missing_comma,32621,,
+101,1501001-614000 POL OFF 10HR,salary_2026_proposed,32621,missing_comma,32621,,
+101,1501001-614000 POL OFF 10HR,salary_2026_proposed,32621,missing_comma,32621,,
+121,1603000-611500 BUILDING SAFETY & COMPLIANCE,ft_pt,Fh,ft_pt_misread,FT,,
+159,56000000-407100,proposed_2026,"77,164",misread,77164,,"77,764"
+177,TOTAL Wastewater Revenues,amended_2025,"26,022,439 +",stripped_marks+joined_words,26022439,59.37381,
+177,TOTAL Wastewater Revenues,actual_ytd_2025,"~—«-17, 753,825",stripped_marks+joined_words,17753825,14.106646,

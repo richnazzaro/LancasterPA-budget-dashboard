@@ -23,12 +23,11 @@ from pathlib import Path
 import pandas as pd
 import pdfplumber
 
-ROOT = Path(__file__).resolve().parent.parent
-OUT_DIR = ROOT / "data" / "processed"
-
-# The city's spreadsheet rounds each cell independently, so sums can drift by
-# a few dollars from the printed total. Anything bigger is a real problem.
-ROUNDING_TOLERANCE = 5
+from budget_common import (
+    OUT_DIR, ROUNDING_TOLERANCE, acknowledge_known_issues, category_for,
+    find_rollup, make_fund_mapper, print_summary, staff_check, to_long,
+    to_number, total_check,
+)
 
 # The 8 amount columns on line-item pages, left to right.
 # (fiscal_year, doc_type)
@@ -86,49 +85,8 @@ GENERAL_FUND_DEPARTMENT_OVERRIDES = {
     "1405": "Executive",                     # Human Resources
     "1403": "City Controller / Treasurer",
 }
-
-# Printed checks that fail because of errors in the source PDF itself, after a
-# person has reviewed them. Unreviewed failures still stop the pipeline.
-KNOWN_ISSUES_FILE = ROOT / "data" / "known_issues.csv"
-
-
-def to_number(token):
-    token = token.strip()
-    negative = token.startswith("(") or token.startswith("-")
-    digits = re.sub(r"[^\d.]", "", token)
-    value = float(digits) if digits else 0.0
-    value = int(value) if value.is_integer() else value
-    return -value if negative else value
-
-
-def fund_and_department(org_code):
-    if len(org_code) >= 8:
-        return FUNDS.get(org_code[:3], f"Unknown fund {org_code[:3]}"), "Public Works"
-    dept = GENERAL_FUND_DEPARTMENT_OVERRIDES.get(org_code[:4]) or \
-        GENERAL_FUND_DEPARTMENTS.get(org_code[:2], f"Unknown dept {org_code[:2]}")
-    return "General Fund", dept
-
-
-def category_for(object_code):
-    """Broad category from the object (account) code."""
-    if object_code == "TBD":
-        return "Uncoded"
-    first, first_two = object_code[0], object_code[:2]
-    if first == "4":
-        return "Revenue"
-    if first_two == "61":
-        return "Salaries & Wages"
-    if first_two == "62":
-        return "Benefits"
-    if first == "6":
-        return "Personnel - Other"
-    if first == "7":
-        return "Operating"
-    if first == "8":
-        return "Equipment & Capital"
-    if first == "9":
-        return "Debt, Transfers & Allocations"
-    return "Other"
+fund_and_department = make_fund_mapper(
+    FUNDS, GENERAL_FUND_DEPARTMENTS, GENERAL_FUND_DEPARTMENT_OVERRIDES)
 
 
 def rows_from_chars(chars, y_tolerance=3, cell_gap=1.5):
@@ -173,26 +131,6 @@ def page_lines(page):
     table = [c for c in page.chars if not is_note(c)]
     notes = [c for c in page.chars if is_note(c)]
     return rows_from_chars(table), rows_from_chars(notes)
-
-
-def find_rollup(leaf_totals, printed):
-    """Find the run of most-recent section totals that adds up to `printed`.
-
-    Roll-ups nest (bureau -> department -> fund), so rather than tracking the
-    hierarchy we search backwards for a contiguous run of leaf sections whose
-    sum matches all 8 printed columns. Returns (count, diffs) of the best run.
-    """
-    running = [0] * 8
-    best = None
-    for k, sec in enumerate(reversed(leaf_totals), start=1):
-        running = [r + s for r, s in zip(running, sec)]
-        diffs = [r - p for r, p in zip(running, printed)]
-        worst = max(abs(d) for d in diffs)
-        if best is None or worst < best[2]:
-            best = (k, diffs, worst)
-        if worst <= max(ROUNDING_TOLERANCE, k):
-            return k, diffs
-    return (best[0], best[1]) if best else (0, [-p for p in printed])
 
 
 def extract(pdf_path):
@@ -263,16 +201,9 @@ def extract(pdf_path):
                         # a run of the preceding section totals.
                         level = "rollup"
                         n_members, diffs = find_rollup(leaf_totals, printed)
-                    sections.append({
-                        "level": level,
-                        "label": label,
-                        "source_page": page_no,
-                        "members": n_members,
-                        "max_abs_diff": max(abs(d) for d in diffs),
-                        "passed": all(abs(d) <= ROUNDING_TOLERANCE for d in diffs),
-                        **{f"printed_{k}": p for k, p in zip(AMOUNT_KEYS, printed)},
-                        **{f"diff_{k}": d for k, d in zip(AMOUNT_KEYS, diffs)},
-                    })
+                    sections.append(total_check(
+                        level, label, page_no, n_members, diffs, printed,
+                        AMOUNT_KEYS))
                     continue
 
                 # --- staffing schedule --------------------------------------
@@ -305,7 +236,7 @@ def extract(pdf_path):
                         sum(p["count_2027_proposed_revised"] for p in open_positions),
                         sum(p["salary_2027_proposed_revised"] for p in open_positions),
                     ]
-                    staff_checks.append(_staff_check(
+                    staff_checks.append(staff_check(
                         "object", f"{staff_dept} / {obj}", page_no,
                         len(open_positions), sums, printed))
                     open_staff_groups.append(printed)
@@ -323,7 +254,7 @@ def extract(pdf_path):
                         if open_positions else []
                     )
                     sums = [sum(g[i] for g in groups) for i in range(4)]
-                    staff_checks.append(_staff_check(
+                    staff_checks.append(staff_check(
                         "unit", staff_dept, page_no, len(groups), sums, printed))
                     open_staff_groups, open_positions = [], []
                     continue
@@ -334,7 +265,7 @@ def extract(pdf_path):
                     sums = [sum(p[k] for p in staff) for k in (
                         "count_2027_proposed", "salary_2027_proposed",
                         "count_2027_proposed_revised", "salary_2027_proposed_revised")]
-                    staff_checks.append(_staff_check(
+                    staff_checks.append(staff_check(
                         "grand_total", "All staffing schedules", page_no,
                         len(staff), sums, printed))
                     continue
@@ -379,16 +310,6 @@ def extract(pdf_path):
     return items, sections, staff, staff_checks, unparsed
 
 
-def _staff_check(level, label, page_no, members, sums, printed):
-    diffs = [s - p for s, p in zip(sums, printed)]
-    return {
-        "level": f"staffing_{level}", "label": label, "source_page": page_no,
-        "members": members, "max_abs_diff": max(abs(d) for d in diffs),
-        "passed": all(abs(d) <= ROUNDING_TOLERANCE for d in diffs),
-        "printed_counts_salaries": printed, "parsed_counts_salaries": sums,
-    }
-
-
 def _attach_notes(page_items, note_lines):
     """Give each note line to the closest line item above it on the page."""
     if not page_items:
@@ -401,28 +322,6 @@ def _attach_notes(page_items, note_lines):
             continue
         item = max(above, key=lambda x: x[0])[1]
         item["description"] = (item["description"] + " " + text).strip()
-
-
-def to_long(items, source_doc):
-    rows = []
-    for it in items:
-        for (fy, doc), key in zip(AMOUNT_COLUMNS, AMOUNT_KEYS):
-            rows.append({
-                "fiscal_year": fy,
-                "doc_type": doc,
-                "fund": it["fund"],
-                "department": it["department"],
-                "bureau": it.get("bureau", ""),
-                "account_code": it["account_code"],
-                "org_code": it["org_code"],
-                "object_code": it["object_code"],
-                "account_name": it["account_name"],
-                "category": it["category"],
-                "amount": it[key],
-                "source_doc": source_doc,
-                "source_page": it["source_page"],
-            })
-    return pd.DataFrame(rows)
 
 
 def main():
@@ -441,41 +340,14 @@ def main():
             "description", "source_page"]
     wide = wide[cols]
     wide.to_csv(args.out / f"line_items_{doc}.csv", index=False)
-    to_long(items, args.pdf.name).to_csv(args.out / f"budget_long_{doc}.csv", index=False)
+    to_long(items, AMOUNT_COLUMNS, AMOUNT_KEYS, args.pdf.name).to_csv(args.out / f"budget_long_{doc}.csv", index=False)
     pd.DataFrame(staff).to_csv(args.out / f"staffing_{doc}.csv", index=False)
     checks = pd.DataFrame(sections + staff_checks)
 
-    checks["acknowledged"] = ""
-    if KNOWN_ISSUES_FILE.exists():
-        known = pd.read_csv(KNOWN_ISSUES_FILE)
-        known = known[known["source_doc"] == args.pdf.name]
-        for _, k in known.iterrows():
-            hit = (checks["source_page"] == k["source_page"]) & \
-                  (checks["label"] == k["label"]) & ~checks["passed"]
-            checks.loc[hit, "acknowledged"] = k["note"]
+    checks = acknowledge_known_issues(checks, args.pdf.name)
     checks.to_csv(args.out / f"validation_{doc}.csv", index=False)
-
-    failed = checks[~checks["passed"] & (checks["acknowledged"] == "")]
-    acknowledged = checks[~checks["passed"] & (checks["acknowledged"] != "")]
-    print(f"Line items:      {len(items)}")
-    print(f"Positions:       {len(staff)}")
-    for level, grp in checks.groupby("level"):
-        print(f"Checks {level:<18} {grp['passed'].sum():>3}/{len(grp)} passed")
-    if unparsed:
-        print(f"\nUnparsed lines that look like data ({len(unparsed)}):")
-        for u in unparsed[:30]:
-            print(f"  p{u['source_page']}: {u['text'][:110]}")
-    if len(acknowledged):
-        print("\nKnown source-document issues (reviewed, see data/known_issues.csv):")
-        for _, r in acknowledged.iterrows():
-            print(f"  p{r.source_page} [{r.level}] {r.label}")
-    if len(failed):
-        print("\nFAILED checks (need review):")
-        for _, r in failed.iterrows():
-            print(f"  p{r.source_page} [{r.level}] {r.label}: off by up to {r.max_abs_diff:,}")
+    if not print_summary(items, staff, checks, unparsed):
         sys.exit(1)
-    print("\nAll checks pass or are acknowledged source issues.")
-
 
 if __name__ == "__main__":
     main()

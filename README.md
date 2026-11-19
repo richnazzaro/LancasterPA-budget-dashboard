@@ -41,9 +41,18 @@ A single budget book carries several years. The 2027 book has 2025 actual, 2026 
 ### Validation
 Each section, department, and fund total and each staffing subtotal printed in the PDF is recomputed from the parsed rows. Differences of up to $5 are allowed for the city's cent rounding. The script exits with an error if any check fails, unless that failure is listed in `data/known_issues.csv` with a note explaining the source-document error.
 
-### Scanned PDFs
-The 2026 adopted budget PDF has no text layer. It has to be OCR'd before extraction:
+### Scanned PDFs (OCR)
+Some budget books, including the 2026 adopted budget, have no text layer. They go through an OCR path that produces the same four tables:
+
 ```bash
-brew install ocrmypdf   # installs Tesseract and Ghostscript too
-ocrmypdf "Budget PDFs - City/2026-Adopted-Budget-2026.pdf" "Budget PDFs - City/2026-Adopted-Budget-2026-ocr.pdf"
+brew install tesseract
+python scripts/extract_scanned.py "Budget PDFs - City/2026-Adopted-Budget-2026.pdf"
 ```
+
+- `scripts/ocr_pages.py` renders each page at 300 DPI, turns it upright using Tesseract's orientation detection, erases table rules, and saves Tesseract word boxes to `data/ocr_cache/` (git-ignored, keyed by the PDF's hash). The first run takes about a minute; later runs reuse the cache.
+- `scripts/extract_scanned.py` reads the column header on each page and checks it against `config/<pdf name>.json`. It assigns each number to a column by its position on the page, then runs the same TOTAL-row and staffing checks as the text-layer extractor.
+- `config/<pdf name>.json` holds everything that varies by year: column order, fiscal year and doc_type per column, staffing columns, and the fund and department code maps. For another scanned year, copy the 2026 file and edit what differs.
+- An amount OCR can't read cleanly fails the run until a person fixes it in `data/ocr_corrections.csv`, with evidence from the page image. Every flagged cell is listed in `ocr_cells_<doc>.csv`. Corrected values still have to re-add to the printed totals.
+- `scripts/crosscheck.py` compares one book's column with another book's reprint of the same year, account by account. It writes `crosscheck_*.csv`, for example 2026 PROPOSED in the 2026 book vs 2026 ORIGINAL BUDGET in the 2027 book.
+
+`scripts/budget_common.py` holds the parts both extractors share.
