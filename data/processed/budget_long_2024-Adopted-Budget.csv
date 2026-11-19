@@ -344,7 +344,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2022,actual,General Fund,General Revenue,Other Income,1000004-419900,1000004,419900,Merchandise Sales,Revenue,39532,2024-Adopted-Budget.pdf,49
 2023,adopted,General Fund,General Revenue,Other Income,1000004-419900,1000004,419900,Merchandise Sales,Revenue,35000,2024-Adopted-Budget.pdf,49
 2023,amended,General Fund,General Revenue,Other Income,1000004-419900,1000004,419900,Merchandise Sales,Revenue,35000,2024-Adopted-Budget.pdf,49
-2023,actual_ytd,General Fund,General Revenue,Other Income,1000004-419900,1000004,419900,Merchandise Sales,Revenue,5172,2024-Adopted-Budget.pdf,49
+2023,actual_ytd,General Fund,General Revenue,Other Income,1000004-419900,1000004,419900,Merchandise Sales,Revenue,-5172,2024-Adopted-Budget.pdf,49
 2023,projected,General Fund,General Revenue,Other Income,1000004-419900,1000004,419900,Merchandise Sales,Revenue,40000,2024-Adopted-Budget.pdf,49
 2024,proposed,General Fund,General Revenue,Other Income,1000004-419900,1000004,419900,Merchandise Sales,Revenue,40000,2024-Adopted-Budget.pdf,49
 2022,actual,General Fund,General Revenue,Other Income,1000004-499000,1000004,499000,Fund Balance Reserve,Revenue,0,2024-Adopted-Budget.pdf,49
@@ -1385,7 +1385,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2023,actual_ytd,General Fund,Administrative Services,Fringe Benefits Exp,1408000-623000,1408000,623000,Pension Contribution,Benefits,1092817,2024-Adopted-Budget.pdf,91
 2023,projected,General Fund,Administrative Services,Fringe Benefits Exp,1408000-623000,1408000,623000,Pension Contribution,Benefits,1118817,2024-Adopted-Budget.pdf,91
 2024,proposed,General Fund,Administrative Services,Fringe Benefits Exp,1408000-623000,1408000,623000,Pension Contribution,Benefits,1207248,2024-Adopted-Budget.pdf,91
-2022,actual,General Fund,Administrative Services,Fringe Benefits Exp,1408000-624000,1408000,624000,Unemployment Compensation,Benefits,4367,2024-Adopted-Budget.pdf,91
+2022,actual,General Fund,Administrative Services,Fringe Benefits Exp,1408000-624000,1408000,624000,Unemployment Compensation,Benefits,-4367,2024-Adopted-Budget.pdf,91
 2023,adopted,General Fund,Administrative Services,Fringe Benefits Exp,1408000-624000,1408000,624000,Unemployment Compensation,Benefits,10000,2024-Adopted-Budget.pdf,91
 2023,amended,General Fund,Administrative Services,Fringe Benefits Exp,1408000-624000,1408000,624000,Unemployment Compensation,Benefits,6500,2024-Adopted-Budget.pdf,91
 2023,actual_ytd,General Fund,Administrative Services,Fringe Benefits Exp,1408000-624000,1408000,624000,Unemployment Compensation,Benefits,40212,2024-Adopted-Budget.pdf,91
@@ -2222,7 +2222,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2022,actual,General Fund,Community Planning & Economic Development,Planning Exp,1602000-760600,1602000,760600,Operating Supplies,Operating,193,2024-Adopted-Budget.pdf,126
 2023,adopted,General Fund,Community Planning & Economic Development,Planning Exp,1602000-760600,1602000,760600,Operating Supplies,Operating,1000,2024-Adopted-Budget.pdf,126
 2023,amended,General Fund,Community Planning & Economic Development,Planning Exp,1602000-760600,1602000,760600,Operating Supplies,Operating,1000,2024-Adopted-Budget.pdf,126
-2023,actual_ytd,General Fund,Community Planning & Economic Development,Planning Exp,1602000-760600,1602000,760600,Operating Supplies,Operating,185,2024-Adopted-Budget.pdf,126
+2023,actual_ytd,General Fund,Community Planning & Economic Development,Planning Exp,1602000-760600,1602000,760600,Operating Supplies,Operating,-185,2024-Adopted-Budget.pdf,126
 2023,projected,General Fund,Community Planning & Economic Development,Planning Exp,1602000-760600,1602000,760600,Operating Supplies,Operating,250,2024-Adopted-Budget.pdf,126
 2024,proposed,General Fund,Community Planning & Economic Development,Planning Exp,1602000-760600,1602000,760600,Operating Supplies,Operating,750,2024-Adopted-Budget.pdf,126
 2022,actual,General Fund,Community Planning & Economic Development,Planning Exp,1602000-765400,1602000,765400,Gas Oil & Diesel,Operating,455,2024-Adopted-Budget.pdf,126
@@ -3581,7 +3581,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2023,actual_ytd,Stormwater Management Fund,Public Works,SWM Admin Exp,56088600-623000,56088600,623000,Pension Contribution,Benefits,94439,2024-Adopted-Budget.pdf,170
 2023,projected,Stormwater Management Fund,Public Works,SWM Admin Exp,56088600-623000,56088600,623000,Pension Contribution,Benefits,108000,2024-Adopted-Budget.pdf,170
 2024,proposed,Stormwater Management Fund,Public Works,SWM Admin Exp,56088600-623000,56088600,623000,Pension Contribution,Benefits,117000,2024-Adopted-Budget.pdf,170
-2022,actual,Stormwater Management Fund,Public Works,SWM Admin Exp,56088600-624000,56088600,624000,Unemployment Compensation,Benefits,218,2024-Adopted-Budget.pdf,170
+2022,actual,Stormwater Management Fund,Public Works,SWM Admin Exp,56088600-624000,56088600,624000,Unemployment Compensation,Benefits,-218,2024-Adopted-Budget.pdf,170
 2023,adopted,Stormwater Management Fund,Public Works,SWM Admin Exp,56088600-624000,56088600,624000,Unemployment Compensation,Benefits,0,2024-Adopted-Budget.pdf,170
 2023,amended,Stormwater Management Fund,Public Works,SWM Admin Exp,56088600-624000,56088600,624000,Unemployment Compensation,Benefits,0,2024-Adopted-Budget.pdf,170
 2023,actual_ytd,Stormwater Management Fund,Public Works,SWM Admin Exp,56088600-624000,56088600,624000,Unemployment Compensation,Benefits,922,2024-Adopted-Budget.pdf,170
@@ -4091,7 +4091,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2023,actual_ytd,Sewer Fund,Public Works,Sewer Administration Exp,56188000-623000,56188000,623000,Pension Contribution,Benefits,271417,2024-Adopted-Budget.pdf,189
 2023,projected,Sewer Fund,Public Works,Sewer Administration Exp,56188000-623000,56188000,623000,Pension Contribution,Benefits,306000,2024-Adopted-Budget.pdf,189
 2024,proposed,Sewer Fund,Public Works,Sewer Administration Exp,56188000-623000,56188000,623000,Pension Contribution,Benefits,305000,2024-Adopted-Budget.pdf,189
-2022,actual,Sewer Fund,Public Works,Sewer Administration Exp,56188000-624000,56188000,624000,Unemployment Compensation,Benefits,499,2024-Adopted-Budget.pdf,189
+2022,actual,Sewer Fund,Public Works,Sewer Administration Exp,56188000-624000,56188000,624000,Unemployment Compensation,Benefits,-499,2024-Adopted-Budget.pdf,189
 2023,adopted,Sewer Fund,Public Works,Sewer Administration Exp,56188000-624000,56188000,624000,Unemployment Compensation,Benefits,0,2024-Adopted-Budget.pdf,189
 2023,amended,Sewer Fund,Public Works,Sewer Administration Exp,56188000-624000,56188000,624000,Unemployment Compensation,Benefits,0,2024-Adopted-Budget.pdf,189
 2023,actual_ytd,Sewer Fund,Public Works,Sewer Administration Exp,56188000-624000,56188000,624000,Unemployment Compensation,Benefits,13995,2024-Adopted-Budget.pdf,189
@@ -4607,7 +4607,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2023,actual_ytd,Water Fund,Public Works,Water Administration Exp,56289000-623000,56289000,623000,Pension Contribution,Benefits,496141,2024-Adopted-Budget.pdf,211
 2023,projected,Water Fund,Public Works,Water Administration Exp,56289000-623000,56289000,623000,Pension Contribution,Benefits,506640,2024-Adopted-Budget.pdf,211
 2024,proposed,Water Fund,Public Works,Water Administration Exp,56289000-623000,56289000,623000,Pension Contribution,Benefits,521839,2024-Adopted-Budget.pdf,211
-2022,actual,Water Fund,Public Works,Water Administration Exp,56289000-624000,56289000,624000,Unemployment Compensation,Benefits,853,2024-Adopted-Budget.pdf,211
+2022,actual,Water Fund,Public Works,Water Administration Exp,56289000-624000,56289000,624000,Unemployment Compensation,Benefits,-853,2024-Adopted-Budget.pdf,211
 2023,adopted,Water Fund,Public Works,Water Administration Exp,56289000-624000,56289000,624000,Unemployment Compensation,Benefits,10000,2024-Adopted-Budget.pdf,211
 2023,amended,Water Fund,Public Works,Water Administration Exp,56289000-624000,56289000,624000,Unemployment Compensation,Benefits,10000,2024-Adopted-Budget.pdf,211
 2023,actual_ytd,Water Fund,Public Works,Water Administration Exp,56289000-624000,56289000,624000,Unemployment Compensation,Benefits,10292,2024-Adopted-Budget.pdf,211
@@ -4673,7 +4673,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2023,actual_ytd,Water Fund,Public Works,Water Administration Exp,56289000-737000,56289000,737000,Travel,Operating,2391,2024-Adopted-Budget.pdf,212
 2023,projected,Water Fund,Public Works,Water Administration Exp,56289000-737000,56289000,737000,Travel,Operating,5000,2024-Adopted-Budget.pdf,212
 2024,proposed,Water Fund,Public Works,Water Administration Exp,56289000-737000,56289000,737000,Travel,Operating,7000,2024-Adopted-Budget.pdf,212
-2022,actual,Water Fund,Public Works,Water Administration Exp,56289000-738000,56289000,738000,Miscellaneous Expenses,Operating,2325,2024-Adopted-Budget.pdf,212
+2022,actual,Water Fund,Public Works,Water Administration Exp,56289000-738000,56289000,738000,Miscellaneous Expenses,Operating,-2325,2024-Adopted-Budget.pdf,212
 2023,adopted,Water Fund,Public Works,Water Administration Exp,56289000-738000,56289000,738000,Miscellaneous Expenses,Operating,1200,2024-Adopted-Budget.pdf,212
 2023,amended,Water Fund,Public Works,Water Administration Exp,56289000-738000,56289000,738000,Miscellaneous Expenses,Operating,1200,2024-Adopted-Budget.pdf,212
 2023,actual_ytd,Water Fund,Public Works,Water Administration Exp,56289000-738000,56289000,738000,Miscellaneous Expenses,Operating,303,2024-Adopted-Budget.pdf,212
@@ -5267,10 +5267,10 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2023,actual_ytd,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-408000,56300000,408000,Miscellaneous Revenue,Revenue,64710,2024-Adopted-Budget.pdf,238
 2023,projected,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-408000,56300000,408000,Miscellaneous Revenue,Revenue,86000,2024-Adopted-Budget.pdf,238
 2024,proposed,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-408000,56300000,408000,Miscellaneous Revenue,Revenue,90000,2024-Adopted-Budget.pdf,238
-2022,actual,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,42190,2024-Adopted-Budget.pdf,238
+2022,actual,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,-42190,2024-Adopted-Budget.pdf,238
 2023,adopted,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,0,2024-Adopted-Budget.pdf,238
 2023,amended,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,0,2024-Adopted-Budget.pdf,238
-2023,actual_ytd,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,51443,2024-Adopted-Budget.pdf,238
+2023,actual_ytd,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,-51443,2024-Adopted-Budget.pdf,238
 2023,projected,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,0,2024-Adopted-Budget.pdf,238
 2024,proposed,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,0,2024-Adopted-Budget.pdf,238
 2022,actual,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-417200,56300000,417200,Trash Fees,Revenue,5259047,2024-Adopted-Budget.pdf,238
@@ -5339,7 +5339,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2023,actual_ytd,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-623000,56387000,623000,Pension Contribution,Benefits,32371,2024-Adopted-Budget.pdf,240
 2023,projected,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-623000,56387000,623000,Pension Contribution,Benefits,56000,2024-Adopted-Budget.pdf,240
 2024,proposed,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-623000,56387000,623000,Pension Contribution,Benefits,34000,2024-Adopted-Budget.pdf,240
-2022,actual,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-624000,56387000,624000,Unemployment Compensation,Benefits,73,2024-Adopted-Budget.pdf,240
+2022,actual,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-624000,56387000,624000,Unemployment Compensation,Benefits,-73,2024-Adopted-Budget.pdf,240
 2023,adopted,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-624000,56387000,624000,Unemployment Compensation,Benefits,2000,2024-Adopted-Budget.pdf,240
 2023,amended,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-624000,56387000,624000,Unemployment Compensation,Benefits,2000,2024-Adopted-Budget.pdf,240
 2023,actual_ytd,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-624000,56387000,624000,Unemployment Compensation,Benefits,0,2024-Adopted-Budget.pdf,240

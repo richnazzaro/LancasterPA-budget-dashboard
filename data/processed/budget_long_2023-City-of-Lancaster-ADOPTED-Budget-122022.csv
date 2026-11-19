@@ -1358,7 +1358,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2021,actual,General Fund,Administrative Services,Fringe Benefits,1408000-624000,1408000,624000,Unemployment Compensation,Benefits,0,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,88
 2022,adopted,General Fund,Administrative Services,Fringe Benefits,1408000-624000,1408000,624000,Unemployment Compensation,Benefits,10000,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,88
 2022,amended,General Fund,Administrative Services,Fringe Benefits,1408000-624000,1408000,624000,Unemployment Compensation,Benefits,0,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,88
-2022,actual_ytd,General Fund,Administrative Services,Fringe Benefits,1408000-624000,1408000,624000,Unemployment Compensation,Benefits,4367,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,88
+2022,actual_ytd,General Fund,Administrative Services,Fringe Benefits,1408000-624000,1408000,624000,Unemployment Compensation,Benefits,-4367,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,88
 2022,projected,General Fund,Administrative Services,Fringe Benefits,1408000-624000,1408000,624000,Unemployment Compensation,Benefits,0,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,88
 2023,proposed,General Fund,Administrative Services,Fringe Benefits,1408000-624000,1408000,624000,Unemployment Compensation,Benefits,10000,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,88
 2021,actual,General Fund,Administrative Services,Fringe Benefits,1408000-625000,1408000,625000,Workers Compensation,Benefits,1009661,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,88
@@ -2081,7 +2081,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2022,actual_ytd,General Fund,Community Planning & Economic Development,Director Community Planning and Economic Development,1601000-741000,1601000,741000,Professional Services,Operating,15419,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,130
 2022,projected,General Fund,Community Planning & Economic Development,Director Community Planning and Economic Development,1601000-741000,1601000,741000,Professional Services,Operating,25000,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,130
 2023,proposed,General Fund,Community Planning & Economic Development,Director Community Planning and Economic Development,1601000-741000,1601000,741000,Professional Services,Operating,50000,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,130
-2021,actual,General Fund,Community Planning & Economic Development,Director Community Planning and Economic Development,1601000-744500,1601000,744500,Training & School,Operating,485,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,131
+2021,actual,General Fund,Community Planning & Economic Development,Director Community Planning and Economic Development,1601000-744500,1601000,744500,Training & School,Operating,-485,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,131
 2022,adopted,General Fund,Community Planning & Economic Development,Director Community Planning and Economic Development,1601000-744500,1601000,744500,Training & School,Operating,4000,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,131
 2022,amended,General Fund,Community Planning & Economic Development,Director Community Planning and Economic Development,1601000-744500,1601000,744500,Training & School,Operating,4000,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,131
 2022,actual_ytd,General Fund,Community Planning & Economic Development,Director Community Planning and Economic Development,1601000-744500,1601000,744500,Training & School,Operating,900,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,131
@@ -3734,7 +3734,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2021,actual,Stormwater Management Fund,Public Works,Stormwater Management Administration,56088600-624000,56088600,624000,Unemployment Compensation,Benefits,0,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,188
 2022,adopted,Stormwater Management Fund,Public Works,Stormwater Management Administration,56088600-624000,56088600,624000,Unemployment Compensation,Benefits,2500,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,188
 2022,amended,Stormwater Management Fund,Public Works,Stormwater Management Administration,56088600-624000,56088600,624000,Unemployment Compensation,Benefits,2500,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,188
-2022,actual_ytd,Stormwater Management Fund,Public Works,Stormwater Management Administration,56088600-624000,56088600,624000,Unemployment Compensation,Benefits,218,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,188
+2022,actual_ytd,Stormwater Management Fund,Public Works,Stormwater Management Administration,56088600-624000,56088600,624000,Unemployment Compensation,Benefits,-218,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,188
 2022,projected,Stormwater Management Fund,Public Works,Stormwater Management Administration,56088600-624000,56088600,624000,Unemployment Compensation,Benefits,0,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,188
 2023,proposed,Stormwater Management Fund,Public Works,Stormwater Management Administration,56088600-624000,56088600,624000,Unemployment Compensation,Benefits,0,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,188
 2021,actual,Stormwater Management Fund,Public Works,Stormwater Management Administration,56088600-625000,56088600,625000,Workers Compensation,Benefits,10644,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,188
@@ -4121,7 +4121,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2022,actual_ytd,Sewer Fund,Public Works,Wastewater Revenues,56100000-407100,56100000,407100,Pension State Fund,Revenue,222802,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,207
 2022,projected,Sewer Fund,Public Works,Wastewater Revenues,56100000-407100,56100000,407100,Pension State Fund,Revenue,222802,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,207
 2023,proposed,Sewer Fund,Public Works,Wastewater Revenues,56100000-407100,56100000,407100,Pension State Fund,Revenue,228500,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,207
-2021,actual,Sewer Fund,Public Works,Wastewater Revenues,56100000-408000,56100000,408000,Miscellaneous Revenue,Revenue,23618,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,207
+2021,actual,Sewer Fund,Public Works,Wastewater Revenues,56100000-408000,56100000,408000,Miscellaneous Revenue,Revenue,-23618,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,207
 2022,adopted,Sewer Fund,Public Works,Wastewater Revenues,56100000-408000,56100000,408000,Miscellaneous Revenue,Revenue,50000,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,207
 2022,amended,Sewer Fund,Public Works,Wastewater Revenues,56100000-408000,56100000,408000,Miscellaneous Revenue,Revenue,50000,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,207
 2022,actual_ytd,Sewer Fund,Public Works,Wastewater Revenues,56100000-408000,56100000,408000,Miscellaneous Revenue,Revenue,681,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,207
@@ -4244,7 +4244,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2021,actual,Sewer Fund,Public Works,Sewer Administration,56188000-624000,56188000,624000,Unemployment Compensation,Benefits,0,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,210
 2022,adopted,Sewer Fund,Public Works,Sewer Administration,56188000-624000,56188000,624000,Unemployment Compensation,Benefits,2500,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,210
 2022,amended,Sewer Fund,Public Works,Sewer Administration,56188000-624000,56188000,624000,Unemployment Compensation,Benefits,2500,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,210
-2022,actual_ytd,Sewer Fund,Public Works,Sewer Administration,56188000-624000,56188000,624000,Unemployment Compensation,Benefits,499,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,210
+2022,actual_ytd,Sewer Fund,Public Works,Sewer Administration,56188000-624000,56188000,624000,Unemployment Compensation,Benefits,-499,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,210
 2022,projected,Sewer Fund,Public Works,Sewer Administration,56188000-624000,56188000,624000,Unemployment Compensation,Benefits,0,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,210
 2023,proposed,Sewer Fund,Public Works,Sewer Administration,56188000-624000,56188000,624000,Unemployment Compensation,Benefits,0,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,210
 2021,actual,Sewer Fund,Public Works,Sewer Administration,56188000-625000,56188000,625000,Workers Compensation,Benefits,54119,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,210
@@ -4754,7 +4754,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2021,actual,Water Fund,Public Works,Water Administration,56289000-624000,56289000,624000,Unemployment Compensation,Benefits,0,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,235
 2022,adopted,Water Fund,Public Works,Water Administration,56289000-624000,56289000,624000,Unemployment Compensation,Benefits,10000,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,235
 2022,amended,Water Fund,Public Works,Water Administration,56289000-624000,56289000,624000,Unemployment Compensation,Benefits,10000,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,235
-2022,actual_ytd,Water Fund,Public Works,Water Administration,56289000-624000,56289000,624000,Unemployment Compensation,Benefits,853,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,235
+2022,actual_ytd,Water Fund,Public Works,Water Administration,56289000-624000,56289000,624000,Unemployment Compensation,Benefits,-853,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,235
 2022,projected,Water Fund,Public Works,Water Administration,56289000-624000,56289000,624000,Unemployment Compensation,Benefits,0,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,235
 2023,proposed,Water Fund,Public Works,Water Administration,56289000-624000,56289000,624000,Unemployment Compensation,Benefits,10000,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,235
 2021,actual,Water Fund,Public Works,Water Administration,56289000-625000,56289000,625000,Workers Compensation,Benefits,56616,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,235
@@ -5486,7 +5486,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2021,actual,Solid Waste & Recycling Fund,Public Works,Solid Waste & Recycling Expenses,56387000-624000,56387000,624000,Unemployment Compensation,Benefits,0,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,268
 2022,adopted,Solid Waste & Recycling Fund,Public Works,Solid Waste & Recycling Expenses,56387000-624000,56387000,624000,Unemployment Compensation,Benefits,2000,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,268
 2022,amended,Solid Waste & Recycling Fund,Public Works,Solid Waste & Recycling Expenses,56387000-624000,56387000,624000,Unemployment Compensation,Benefits,2000,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,268
-2022,actual_ytd,Solid Waste & Recycling Fund,Public Works,Solid Waste & Recycling Expenses,56387000-624000,56387000,624000,Unemployment Compensation,Benefits,73,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,268
+2022,actual_ytd,Solid Waste & Recycling Fund,Public Works,Solid Waste & Recycling Expenses,56387000-624000,56387000,624000,Unemployment Compensation,Benefits,-73,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,268
 2022,projected,Solid Waste & Recycling Fund,Public Works,Solid Waste & Recycling Expenses,56387000-624000,56387000,624000,Unemployment Compensation,Benefits,0,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,268
 2023,proposed,Solid Waste & Recycling Fund,Public Works,Solid Waste & Recycling Expenses,56387000-624000,56387000,624000,Unemployment Compensation,Benefits,2000,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,268
 2021,actual,Solid Waste & Recycling Fund,Public Works,Solid Waste & Recycling Expenses,56387000-625000,56387000,625000,Workers Compensation,Benefits,3556,2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,268

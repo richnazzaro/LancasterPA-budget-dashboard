@@ -26,7 +26,7 @@ rollup,Administrative Services,85,9,1.0,True,11046047.0,12062664.0,12147862.0,96
 section,Police Bureau Exp,91,55,468198.0,False,25609817.0,27241202.0,27222252.0,25814508.0,26768132.0,28685109.0,-2.0,0.0,0.0,-468198.0,0.0,0.0,,,"Text layer, every cell read cleanly (no OCR). EXPENDED YTD lines sum 468,198 below the printed total 25,814,508. All other columns agree within $2."
 section,Fire Bureau Exp,106,42,765343.0,False,12118172.0,12286802.0,12234449.0,12747534.0,13178322.0,13241439.0,2.0,0.0,-1.0,-765343.0,2.0,0.0,,,"Text layer, every cell read cleanly (no OCR). EXPENDED YTD lines sum 765,343 below the printed total 12,747,534. All other columns agree within $2."
 rollup,Public Safety,106,2,0.0,True,37727989.0,39528004.0,39456701.0,38562042.0,39946454.0,41926548.0,0.0,0.0,0.0,0.0,0.0,0.0,,,
-section,Director CPED Exp,113,22,969.0,False,1640806.0,1656862.0,1656862.0,1389360.0,1557114.0,1658231.0,-1.0,0.0,0.0,969.0,0.0,0.0,,,"actual_ytd_2021: lines sum 969 above the printed total, exactly twice 1601000-744500 Training & School (485); the total treats it as negative but no sign is printed."
+section,Director CPED Exp,113,22,1.0,True,1640806.0,1656862.0,1656862.0,1389360.0,1557114.0,1658231.0,-1.0,0.0,0.0,-1.0,0.0,0.0,,,
 section,Planning Exp,116,19,2.0,True,357828.0,451520.0,451520.0,281424.0,406917.0,614752.0,1.0,0.0,0.0,2.0,0.0,0.0,,,
 section,Building Code Administration,119,21,1.0,True,451221.0,513407.0,513407.0,432095.0,494197.0,566254.0,-1.0,0.0,0.0,1.0,1.0,0.0,,,
 section,Property Maintenance & Housing Inspections,123,21,1.0,True,1017540.0,846207.0,846207.0,670859.0,789893.0,922694.0,-1.0,0.0,0.0,0.0,0.0,0.0,,,
@@ -39,7 +39,7 @@ section,Director Public Works Exp,136,15,1.0,True,1366630.0,1412890.0,1412890.0,
 section,Engineering Exp,139,17,1.0,True,769104.0,736437.0,736437.0,664103.0,835943.0,594534.0,0.0,0.0,0.0,1.0,1.0,0.0,,,
 section,Streets Administration Exp,142,17,2.0,True,221317.0,213710.0,243710.0,200829.0,246574.0,164271.0,2.0,0.0,0.0,2.0,0.0,0.0,,,
 section,Street Maintenance Exp,144,8,1.0,True,324359.0,640580.0,640580.0,317329.0,476484.0,680980.0,1.0,0.0,0.0,0.0,0.0,0.0,,,
-section,Traffic Exp,148,22,7934.0,False,987433.0,1091708.0,1061708.0,813043.0,1032241.0,1022085.0,7934.0,0.0,0.0,2.0,0.0,0.0,,,"actual_2020: lines sum 7,934 above the printed total, exactly twice 1830000-741000 Professional Services (3,967); the total treats it as negative but no sign is printed."
+section,Traffic Exp,148,22,2.0,True,987433.0,1091708.0,1061708.0,813043.0,1032241.0,1022085.0,0.0,0.0,0.0,2.0,0.0,0.0,,,
 section,Motor Vehicles Exp,151,18,1.0,True,334131.0,314987.0,314987.0,270018.0,323281.0,437600.0,-1.0,0.0,0.0,-1.0,0.0,0.0,,,
 section,Parks Administration Exp,154,13,1.0,True,129386.0,158350.0,161350.0,133330.0,151896.0,173606.0,1.0,0.0,0.0,0.0,0.0,0.0,,,
 section,Parks Buildings Exp,156,15,2.0,True,969472.0,1307297.0,1312297.0,919027.0,1050385.0,1435236.0,2.0,0.0,0.0,0.0,-1.0,0.0,,,
@@ -66,7 +66,7 @@ section,Sewer Grounds Maintenance Exp,206,3,1.0,True,23392.0,34500.0,34500.0,576
 rollup,Wastewater Expenses,206,5,75.0,False,12942946.0,19891234.0,19891234.0,12879777.0,15844353.0,18747452.0,-75.0,0.0,0.0,0.0,1.0,0.0,,,"Text layer, every cell read cleanly (no OCR). 2020 ACTUAL roll-up is $75 below its bureau totals. Other columns agree within $1."
 section,Water Revenue,210,8,1.0,True,28842319.0,30145150.0,30145150.0,26182429.0,28873661.0,32550000.0,1.0,0.0,0.0,0.0,0.0,0.0,,,
 rollup,Water Revenues,210,1,0.0,True,28842319.0,30145150.0,30145150.0,26182429.0,28873661.0,32550000.0,0.0,0.0,0.0,0.0,0.0,0.0,,,
-section,Water Administration Exp,215,39,545864.0,False,16089172.0,22846475.0,22581475.0,19827489.0,20958859.0,23021247.0,545864.0,0.0,0.0,-1.0,0.0,0.0,,,"actual_2020: lines sum 545,864 above the printed total, exactly twice 56289000-738000 Miscellaneous Expenses (1,799) and 56289000-923000 Paying Agent Fees (271,132); the total treats them as negative but no sign is printed."
+section,Water Administration Exp,215,39,2.0,True,16089172.0,22846475.0,22581475.0,19827489.0,20958859.0,23021247.0,2.0,0.0,0.0,-1.0,0.0,0.0,,,
 section,Water Susquehanna Trmt Plant E,219,17,1.0,True,2741996.0,3637890.0,3547890.0,2374982.0,3238666.0,3845688.0,-1.0,0.0,0.0,1.0,1.0,0.0,,,
 section,Water Conestoga Trmt Plant Exp,223,14,2.0,True,2280332.0,3034835.0,3164835.0,2271517.0,2823798.0,3048544.0,2.0,0.0,0.0,0.0,-1.0,0.0,,,
 section,Water Transmission/Dist Exp,227,20,1.0,True,1523393.0,3106553.0,3331553.0,2571098.0,3455558.0,3374977.0,-1.0,0.0,0.0,-1.0,0.0,0.0,,,

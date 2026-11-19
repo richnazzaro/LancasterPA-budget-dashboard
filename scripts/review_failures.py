@@ -14,6 +14,9 @@ known_issues.csv it writes the arithmetic a reviewer needs:
     salary to the dollar (n positions x $0.50);
   * everything else: the printed vs. parsed figures.
 
+Run scripts/sign_corrections.py first: gaps it can prove are unsigned
+negatives get flipped (and logged) there, not acknowledged here.
+
 The drafts never change data and never make a check pass by themselves:
 a person reads them (and the page) and only then appends. A failure the
 draft cannot explain is labelled UNEXPLAINED so it is not waved through.

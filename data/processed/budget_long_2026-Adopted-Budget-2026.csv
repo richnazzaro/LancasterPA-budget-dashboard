@@ -662,7 +662,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2024,actual,General Fund,Neighborhood Engagement,Neighborhood Engagement,1300000-737000,1300000,737000,Travel,Operating,1472,2026-Adopted-Budget-2026.pdf,62
 2025,adopted,General Fund,Neighborhood Engagement,Neighborhood Engagement,1300000-737000,1300000,737000,Travel,Operating,1500,2026-Adopted-Budget-2026.pdf,62
 2025,amended,General Fund,Neighborhood Engagement,Neighborhood Engagement,1300000-737000,1300000,737000,Travel,Operating,1500,2026-Adopted-Budget-2026.pdf,62
-2025,actual_ytd,General Fund,Neighborhood Engagement,Neighborhood Engagement,1300000-737000,1300000,737000,Travel,Operating,1086,2026-Adopted-Budget-2026.pdf,62
+2025,actual_ytd,General Fund,Neighborhood Engagement,Neighborhood Engagement,1300000-737000,1300000,737000,Travel,Operating,-1086,2026-Adopted-Budget-2026.pdf,62
 2025,projected,General Fund,Neighborhood Engagement,Neighborhood Engagement,1300000-737000,1300000,737000,Travel,Operating,3000,2026-Adopted-Budget-2026.pdf,62
 2026,proposed,General Fund,Neighborhood Engagement,Neighborhood Engagement,1300000-737000,1300000,737000,Travel,Operating,3000,2026-Adopted-Budget-2026.pdf,62
 2024,actual,General Fund,Neighborhood Engagement,Neighborhood Engagement,1300000-741000,1300000,741000,Professional Services,Operating,36523,2026-Adopted-Budget-2026.pdf,63
@@ -1082,7 +1082,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2024,actual,General Fund,Administrative Services,Treasury,1402000-723000,1402000,723000,Maint. - Equipment,Operating,5248,2026-Adopted-Budget-2026.pdf,77
 2025,adopted,General Fund,Administrative Services,Treasury,1402000-723000,1402000,723000,Maint. - Equipment,Operating,2126,2026-Adopted-Budget-2026.pdf,77
 2025,amended,General Fund,Administrative Services,Treasury,1402000-723000,1402000,723000,Maint. - Equipment,Operating,2126,2026-Adopted-Budget-2026.pdf,77
-2025,actual_ytd,General Fund,Administrative Services,Treasury,1402000-723000,1402000,723000,Maint. - Equipment,Operating,1373,2026-Adopted-Budget-2026.pdf,77
+2025,actual_ytd,General Fund,Administrative Services,Treasury,1402000-723000,1402000,723000,Maint. - Equipment,Operating,-1373,2026-Adopted-Budget-2026.pdf,77
 2025,projected,General Fund,Administrative Services,Treasury,1402000-723000,1402000,723000,Maint. - Equipment,Operating,2200,2026-Adopted-Budget-2026.pdf,77
 2026,proposed,General Fund,Administrative Services,Treasury,1402000-723000,1402000,723000,Maint. - Equipment,Operating,2400,2026-Adopted-Budget-2026.pdf,77
 2024,actual,General Fund,Administrative Services,Treasury,1402000-729000,1402000,729000,Maint. - Vehicles,Operating,38,2026-Adopted-Budget-2026.pdf,77
@@ -2120,7 +2120,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2024,actual,General Fund,Public Safety,Fire Bureau Exp,1502001-940000,1502001,940000,Grants Match,"Debt, Transfers & Allocations",10565,2026-Adopted-Budget-2026.pdf,107
 2025,adopted,General Fund,Public Safety,Fire Bureau Exp,1502001-940000,1502001,940000,Grants Match,"Debt, Transfers & Allocations",0,2026-Adopted-Budget-2026.pdf,107
 2025,amended,General Fund,Public Safety,Fire Bureau Exp,1502001-940000,1502001,940000,Grants Match,"Debt, Transfers & Allocations",0,2026-Adopted-Budget-2026.pdf,107
-2025,actual_ytd,General Fund,Public Safety,Fire Bureau Exp,1502001-940000,1502001,940000,Grants Match,"Debt, Transfers & Allocations",1942,2026-Adopted-Budget-2026.pdf,107
+2025,actual_ytd,General Fund,Public Safety,Fire Bureau Exp,1502001-940000,1502001,940000,Grants Match,"Debt, Transfers & Allocations",-1942,2026-Adopted-Budget-2026.pdf,107
 2025,projected,General Fund,Public Safety,Fire Bureau Exp,1502001-940000,1502001,940000,Grants Match,"Debt, Transfers & Allocations",3849,2026-Adopted-Budget-2026.pdf,107
 2026,proposed,General Fund,Public Safety,Fire Bureau Exp,1502001-940000,1502001,940000,Grants Match,"Debt, Transfers & Allocations",10000,2026-Adopted-Budget-2026.pdf,107
 2024,actual,General Fund,Community Planning & Economic Development,Director CPED Exp,1601000-610900,1601000,610900,Salary - Director,Salaries & Wages,162909,2026-Adopted-Budget-2026.pdf,111
@@ -3038,7 +3038,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2024,actual,General Fund,Public Works,Street Maintenance Exp,1843000-768400,1843000,768400,Road Paving Materials,Operating,5118,2026-Adopted-Budget-2026.pdf,139
 2025,adopted,General Fund,Public Works,Street Maintenance Exp,1843000-768400,1843000,768400,Road Paving Materials,Operating,13000,2026-Adopted-Budget-2026.pdf,139
 2025,amended,General Fund,Public Works,Street Maintenance Exp,1843000-768400,1843000,768400,Road Paving Materials,Operating,13000,2026-Adopted-Budget-2026.pdf,139
-2025,actual_ytd,General Fund,Public Works,Street Maintenance Exp,1843000-768400,1843000,768400,Road Paving Materials,Operating,2156,2026-Adopted-Budget-2026.pdf,139
+2025,actual_ytd,General Fund,Public Works,Street Maintenance Exp,1843000-768400,1843000,768400,Road Paving Materials,Operating,-2156,2026-Adopted-Budget-2026.pdf,139
 2025,projected,General Fund,Public Works,Street Maintenance Exp,1843000-768400,1843000,768400,Road Paving Materials,Operating,15000,2026-Adopted-Budget-2026.pdf,139
 2026,proposed,General Fund,Public Works,Street Maintenance Exp,1843000-768400,1843000,768400,Road Paving Materials,Operating,18000,2026-Adopted-Budget-2026.pdf,139
 2024,actual,General Fund,Public Works,Street Maintenance Exp,1843000-769000,1843000,769000,Construction Material,Operating,0,2026-Adopted-Budget-2026.pdf,139
@@ -3287,13 +3287,13 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2025,actual_ytd,General Fund,Public Works,Motor Vehicles Exp,1850000-820000,1850000,820000,Minor Equipment,Equipment & Capital,57609,2026-Adopted-Budget-2026.pdf,146
 2025,projected,General Fund,Public Works,Motor Vehicles Exp,1850000-820000,1850000,820000,Minor Equipment,Equipment & Capital,75000,2026-Adopted-Budget-2026.pdf,146
 2026,proposed,General Fund,Public Works,Motor Vehicles Exp,1850000-820000,1850000,820000,Minor Equipment,Equipment & Capital,78000,2026-Adopted-Budget-2026.pdf,146
-2024,actual,General Fund,Public Works,Motor Vehicles Exp,1850000-827000,1850000,827000,Vehicles,Equipment & Capital,9452,2026-Adopted-Budget-2026.pdf,146
+2024,actual,General Fund,Public Works,Motor Vehicles Exp,1850000-827000,1850000,827000,Vehicles,Equipment & Capital,-9452,2026-Adopted-Budget-2026.pdf,146
 2025,adopted,General Fund,Public Works,Motor Vehicles Exp,1850000-827000,1850000,827000,Vehicles,Equipment & Capital,125330,2026-Adopted-Budget-2026.pdf,146
 2025,amended,General Fund,Public Works,Motor Vehicles Exp,1850000-827000,1850000,827000,Vehicles,Equipment & Capital,125330,2026-Adopted-Budget-2026.pdf,146
 2025,actual_ytd,General Fund,Public Works,Motor Vehicles Exp,1850000-827000,1850000,827000,Vehicles,Equipment & Capital,69718,2026-Adopted-Budget-2026.pdf,146
 2025,projected,General Fund,Public Works,Motor Vehicles Exp,1850000-827000,1850000,827000,Vehicles,Equipment & Capital,125330,2026-Adopted-Budget-2026.pdf,146
 2026,proposed,General Fund,Public Works,Motor Vehicles Exp,1850000-827000,1850000,827000,Vehicles,Equipment & Capital,164000,2026-Adopted-Budget-2026.pdf,146
-2024,actual,General Fund,Public Works,Parks Administration Exp,1860000-611500,1860000,611500,Salaried Personnel,Salaries & Wages,13247,2026-Adopted-Budget-2026.pdf,148
+2024,actual,General Fund,Public Works,Parks Administration Exp,1860000-611500,1860000,611500,Salaried Personnel,Salaries & Wages,-13247,2026-Adopted-Budget-2026.pdf,148
 2025,adopted,General Fund,Public Works,Parks Administration Exp,1860000-611500,1860000,611500,Salaried Personnel,Salaries & Wages,0,2026-Adopted-Budget-2026.pdf,148
 2025,amended,General Fund,Public Works,Parks Administration Exp,1860000-611500,1860000,611500,Salaried Personnel,Salaries & Wages,0,2026-Adopted-Budget-2026.pdf,148
 2025,actual_ytd,General Fund,Public Works,Parks Administration Exp,1860000-611500,1860000,611500,Salaried Personnel,Salaries & Wages,0,2026-Adopted-Budget-2026.pdf,148
@@ -3893,7 +3893,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2025,actual_ytd,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-611500,56088700,611500,Salaried Personnel,Salaries & Wages,181355,2026-Adopted-Budget-2026.pdf,167
 2025,projected,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-611500,56088700,611500,Salaried Personnel,Salaries & Wages,143556,2026-Adopted-Budget-2026.pdf,167
 2026,proposed,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-611500,56088700,611500,Salaried Personnel,Salaries & Wages,191524,2026-Adopted-Budget-2026.pdf,167
-2024,actual,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-612000,56088700,612000,Salary Temporary,Salaries & Wages,494,2026-Adopted-Budget-2026.pdf,167
+2024,actual,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-612000,56088700,612000,Salary Temporary,Salaries & Wages,-494,2026-Adopted-Budget-2026.pdf,167
 2025,adopted,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-612000,56088700,612000,Salary Temporary,Salaries & Wages,0,2026-Adopted-Budget-2026.pdf,167
 2025,amended,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-612000,56088700,612000,Salary Temporary,Salaries & Wages,0,2026-Adopted-Budget-2026.pdf,167
 2025,actual_ytd,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-612000,56088700,612000,Salary Temporary,Salaries & Wages,0,2026-Adopted-Budget-2026.pdf,167
@@ -3947,7 +3947,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2025,actual_ytd,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-822500,56088700,822500,Landscaping Trees etc,Equipment & Capital,4073,2026-Adopted-Budget-2026.pdf,168
 2025,projected,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-822500,56088700,822500,Landscaping Trees etc,Equipment & Capital,8000,2026-Adopted-Budget-2026.pdf,168
 2026,proposed,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-822500,56088700,822500,Landscaping Trees etc,Equipment & Capital,15000,2026-Adopted-Budget-2026.pdf,168
-2024,actual,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-827100,56088700,827100,Vehicle-Lease Purchase,Equipment & Capital,1720,2026-Adopted-Budget-2026.pdf,168
+2024,actual,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-827100,56088700,827100,Vehicle-Lease Purchase,Equipment & Capital,-1720,2026-Adopted-Budget-2026.pdf,168
 2025,adopted,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-827100,56088700,827100,Vehicle-Lease Purchase,Equipment & Capital,21257,2026-Adopted-Budget-2026.pdf,168
 2025,amended,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-827100,56088700,827100,Vehicle-Lease Purchase,Equipment & Capital,42907,2026-Adopted-Budget-2026.pdf,168
 2025,actual_ytd,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-827100,56088700,827100,Vehicle-Lease Purchase,Equipment & Capital,39894,2026-Adopted-Budget-2026.pdf,168
@@ -4301,7 +4301,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2025,actual_ytd,Sewer Fund,Public Works,Sewer Administration Exp,56188000-825000,56188000,825000,Computer Equip/Software,Equipment & Capital,7333,2026-Adopted-Budget-2026.pdf,181
 2025,projected,Sewer Fund,Public Works,Sewer Administration Exp,56188000-825000,56188000,825000,Computer Equip/Software,Equipment & Capital,8600,2026-Adopted-Budget-2026.pdf,181
 2026,proposed,Sewer Fund,Public Works,Sewer Administration Exp,56188000-825000,56188000,825000,Computer Equip/Software,Equipment & Capital,20000,2026-Adopted-Budget-2026.pdf,181
-2024,actual,Sewer Fund,Public Works,Sewer Administration Exp,56188000-827100,56188000,827100,Vehicle Lease Purchase,Equipment & Capital,8275,2026-Adopted-Budget-2026.pdf,181
+2024,actual,Sewer Fund,Public Works,Sewer Administration Exp,56188000-827100,56188000,827100,Vehicle Lease Purchase,Equipment & Capital,-8275,2026-Adopted-Budget-2026.pdf,181
 2025,adopted,Sewer Fund,Public Works,Sewer Administration Exp,56188000-827100,56188000,827100,Vehicle Lease Purchase,Equipment & Capital,0,2026-Adopted-Budget-2026.pdf,181
 2025,amended,Sewer Fund,Public Works,Sewer Administration Exp,56188000-827100,56188000,827100,Vehicle Lease Purchase,Equipment & Capital,0,2026-Adopted-Budget-2026.pdf,181
 2025,actual_ytd,Sewer Fund,Public Works,Sewer Administration Exp,56188000-827100,56188000,827100,Vehicle Lease Purchase,Equipment & Capital,0,2026-Adopted-Budget-2026.pdf,181
@@ -5075,7 +5075,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2025,actual_ytd,Water Fund,Public Works,Water Conestoga Trmt Plant Exp,56289200-766000,56289200,766000,Heating Oil,Operating,42667,2026-Adopted-Budget-2026.pdf,210
 2025,projected,Water Fund,Public Works,Water Conestoga Trmt Plant Exp,56289200-766000,56289200,766000,Heating Oil,Operating,50000,2026-Adopted-Budget-2026.pdf,210
 2026,proposed,Water Fund,Public Works,Water Conestoga Trmt Plant Exp,56289200-766000,56289200,766000,Heating Oil,Operating,65000,2026-Adopted-Budget-2026.pdf,210
-2024,actual,Water Fund,Public Works,Water Conestoga Trmt Plant Exp,56289200-827000,56289200,827000,Vehicles,Equipment & Capital,5376,2026-Adopted-Budget-2026.pdf,210
+2024,actual,Water Fund,Public Works,Water Conestoga Trmt Plant Exp,56289200-827000,56289200,827000,Vehicles,Equipment & Capital,-5376,2026-Adopted-Budget-2026.pdf,210
 2025,adopted,Water Fund,Public Works,Water Conestoga Trmt Plant Exp,56289200-827000,56289200,827000,Vehicles,Equipment & Capital,102861,2026-Adopted-Budget-2026.pdf,210
 2025,amended,Water Fund,Public Works,Water Conestoga Trmt Plant Exp,56289200-827000,56289200,827000,Vehicles,Equipment & Capital,166561,2026-Adopted-Budget-2026.pdf,210
 2025,actual_ytd,Water Fund,Public Works,Water Conestoga Trmt Plant Exp,56289200-827000,56289200,827000,Vehicles,Equipment & Capital,156632,2026-Adopted-Budget-2026.pdf,210
@@ -5135,7 +5135,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2025,actual_ytd,Water Fund,Public Works,Water Transmission/Dist Exp,56289400-741000,56289400,741000,Professional Services,Operating,15840,2026-Adopted-Budget-2026.pdf,212
 2025,projected,Water Fund,Public Works,Water Transmission/Dist Exp,56289400-741000,56289400,741000,Professional Services,Operating,26000,2026-Adopted-Budget-2026.pdf,212
 2026,proposed,Water Fund,Public Works,Water Transmission/Dist Exp,56289400-741000,56289400,741000,Professional Services,Operating,15000,2026-Adopted-Budget-2026.pdf,212
-2024,actual,Water Fund,Public Works,Water Transmission/Dist Exp,56289400-744000,56289400,744000,Contract Services,Operating,1494,2026-Adopted-Budget-2026.pdf,213
+2024,actual,Water Fund,Public Works,Water Transmission/Dist Exp,56289400-744000,56289400,744000,Contract Services,Operating,-1494,2026-Adopted-Budget-2026.pdf,213
 2025,adopted,Water Fund,Public Works,Water Transmission/Dist Exp,56289400-744000,56289400,744000,Contract Services,Operating,81567,2026-Adopted-Budget-2026.pdf,213
 2025,amended,Water Fund,Public Works,Water Transmission/Dist Exp,56289400-744000,56289400,744000,Contract Services,Operating,81567,2026-Adopted-Budget-2026.pdf,213
 2025,actual_ytd,Water Fund,Public Works,Water Transmission/Dist Exp,56289400-744000,56289400,744000,Contract Services,Operating,25865,2026-Adopted-Budget-2026.pdf,213
@@ -5273,7 +5273,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2025,actual_ytd,Water Fund,Public Works,Water Meter Shop Exp,56289500-827000,56289500,827000,Vehicles,Equipment & Capital,0,2026-Adopted-Budget-2026.pdf,216
 2025,projected,Water Fund,Public Works,Water Meter Shop Exp,56289500-827000,56289500,827000,Vehicles,Equipment & Capital,0,2026-Adopted-Budget-2026.pdf,216
 2026,proposed,Water Fund,Public Works,Water Meter Shop Exp,56289500-827000,56289500,827000,Vehicles,Equipment & Capital,0,2026-Adopted-Budget-2026.pdf,216
-2024,actual,Water Fund,Public Works,Water Meter Shop Exp,56289500-827100,56289500,827100,Vehicle-Lease Purchase,Equipment & Capital,3060,2026-Adopted-Budget-2026.pdf,216
+2024,actual,Water Fund,Public Works,Water Meter Shop Exp,56289500-827100,56289500,827100,Vehicle-Lease Purchase,Equipment & Capital,-3060,2026-Adopted-Budget-2026.pdf,216
 2025,adopted,Water Fund,Public Works,Water Meter Shop Exp,56289500-827100,56289500,827100,Vehicle-Lease Purchase,Equipment & Capital,47545,2026-Adopted-Budget-2026.pdf,216
 2025,amended,Water Fund,Public Works,Water Meter Shop Exp,56289500-827100,56289500,827100,Vehicle-Lease Purchase,Equipment & Capital,50298,2026-Adopted-Budget-2026.pdf,216
 2025,actual_ytd,Water Fund,Public Works,Water Meter Shop Exp,56289500-827100,56289500,827100,Vehicle-Lease Purchase,Equipment & Capital,45266,2026-Adopted-Budget-2026.pdf,216
@@ -5405,10 +5405,10 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2025,actual_ytd,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-408000,56300000,408000,Miscellaneous Revenue,Revenue,57726,2026-Adopted-Budget-2026.pdf,225
 2025,projected,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-408000,56300000,408000,Miscellaneous Revenue,Revenue,60000,2026-Adopted-Budget-2026.pdf,225
 2026,proposed,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-408000,56300000,408000,Miscellaneous Revenue,Revenue,60000,2026-Adopted-Budget-2026.pdf,225
-2024,actual,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,42676,2026-Adopted-Budget-2026.pdf,225
+2024,actual,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,-42676,2026-Adopted-Budget-2026.pdf,225
 2025,adopted,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,0,2026-Adopted-Budget-2026.pdf,225
 2025,amended,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,0,2026-Adopted-Budget-2026.pdf,225
-2025,actual_ytd,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,50955,2026-Adopted-Budget-2026.pdf,225
+2025,actual_ytd,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,-50955,2026-Adopted-Budget-2026.pdf,225
 2025,projected,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,0,2026-Adopted-Budget-2026.pdf,225
 2026,proposed,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,0,2026-Adopted-Budget-2026.pdf,225
 2024,actual,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-417200,56300000,417200,Trash Fees,Revenue,5646015,2026-Adopted-Budget-2026.pdf,225
@@ -5627,7 +5627,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2025,actual_ytd,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-820000,56387000,820000,Minor Equipment,Equipment & Capital,1075,2026-Adopted-Budget-2026.pdf,229
 2025,projected,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-820000,56387000,820000,Minor Equipment,Equipment & Capital,6000,2026-Adopted-Budget-2026.pdf,229
 2026,proposed,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-820000,56387000,820000,Minor Equipment,Equipment & Capital,8000,2026-Adopted-Budget-2026.pdf,229
-2024,actual,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-827100,56387000,827100,Vehicle-Lease Purchase,Equipment & Capital,3135,2026-Adopted-Budget-2026.pdf,229
+2024,actual,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-827100,56387000,827100,Vehicle-Lease Purchase,Equipment & Capital,-3135,2026-Adopted-Budget-2026.pdf,229
 2025,adopted,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-827100,56387000,827100,Vehicle-Lease Purchase,Equipment & Capital,53060,2026-Adopted-Budget-2026.pdf,229
 2025,amended,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-827100,56387000,827100,Vehicle-Lease Purchase,Equipment & Capital,53060,2026-Adopted-Budget-2026.pdf,229
 2025,actual_ytd,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-827100,56387000,827100,Vehicle-Lease Purchase,Equipment & Capital,23713,2026-Adopted-Budget-2026.pdf,229
@@ -5708,7 +5708,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2024,actual,Long's Park Fund,Public Works,Longs Park Revenue,66200000-418400,66200000,418400,Interest - Money Market,Revenue,6753,2026-Adopted-Budget-2026.pdf,233
 2025,adopted,Long's Park Fund,Public Works,Longs Park Revenue,66200000-418400,66200000,418400,Interest - Money Market,Revenue,0,2026-Adopted-Budget-2026.pdf,233
 2025,amended,Long's Park Fund,Public Works,Longs Park Revenue,66200000-418400,66200000,418400,Interest - Money Market,Revenue,0,2026-Adopted-Budget-2026.pdf,233
-2025,actual_ytd,Long's Park Fund,Public Works,Longs Park Revenue,66200000-418400,66200000,418400,Interest - Money Market,Revenue,7485,2026-Adopted-Budget-2026.pdf,233
+2025,actual_ytd,Long's Park Fund,Public Works,Longs Park Revenue,66200000-418400,66200000,418400,Interest - Money Market,Revenue,-7485,2026-Adopted-Budget-2026.pdf,233
 2025,projected,Long's Park Fund,Public Works,Longs Park Revenue,66200000-418400,66200000,418400,Interest - Money Market,Revenue,0,2026-Adopted-Budget-2026.pdf,233
 2026,proposed,Long's Park Fund,Public Works,Longs Park Revenue,66200000-418400,66200000,418400,Interest - Money Market,Revenue,0,2026-Adopted-Budget-2026.pdf,233
 2024,actual,Long's Park Fund,Public Works,Longs Park Exp,66286200-612000,66286200,612000,Salary Temporary,Salaries & Wages,28003,2026-Adopted-Budget-2026.pdf,234
@@ -5750,19 +5750,19 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2024,actual,Long's Park Fund,Public Works,Longs Park Exp,66286200-738100,66286200,738100,Investment Expenses,Operating,5006,2026-Adopted-Budget-2026.pdf,234
 2025,adopted,Long's Park Fund,Public Works,Longs Park Exp,66286200-738100,66286200,738100,Investment Expenses,Operating,10000,2026-Adopted-Budget-2026.pdf,234
 2025,amended,Long's Park Fund,Public Works,Longs Park Exp,66286200-738100,66286200,738100,Investment Expenses,Operating,10000,2026-Adopted-Budget-2026.pdf,234
-2025,actual_ytd,Long's Park Fund,Public Works,Longs Park Exp,66286200-738100,66286200,738100,Investment Expenses,Operating,5635,2026-Adopted-Budget-2026.pdf,234
+2025,actual_ytd,Long's Park Fund,Public Works,Longs Park Exp,66286200-738100,66286200,738100,Investment Expenses,Operating,-5635,2026-Adopted-Budget-2026.pdf,234
 2025,projected,Long's Park Fund,Public Works,Longs Park Exp,66286200-738100,66286200,738100,Investment Expenses,Operating,11300,2026-Adopted-Budget-2026.pdf,234
 2026,proposed,Long's Park Fund,Public Works,Longs Park Exp,66286200-738100,66286200,738100,Investment Expenses,Operating,12000,2026-Adopted-Budget-2026.pdf,234
-2024,actual,Long's Park Fund,Public Works,Longs Park Exp,66286200-739000,66286200,739000,Real Gain/Loss on Invest,Operating,636,2026-Adopted-Budget-2026.pdf,234
+2024,actual,Long's Park Fund,Public Works,Longs Park Exp,66286200-739000,66286200,739000,Real Gain/Loss on Invest,Operating,-636,2026-Adopted-Budget-2026.pdf,234
 2025,adopted,Long's Park Fund,Public Works,Longs Park Exp,66286200-739000,66286200,739000,Real Gain/Loss on Invest,Operating,0,2026-Adopted-Budget-2026.pdf,234
 2025,amended,Long's Park Fund,Public Works,Longs Park Exp,66286200-739000,66286200,739000,Real Gain/Loss on Invest,Operating,0,2026-Adopted-Budget-2026.pdf,234
 2025,actual_ytd,Long's Park Fund,Public Works,Longs Park Exp,66286200-739000,66286200,739000,Real Gain/Loss on Invest,Operating,0,2026-Adopted-Budget-2026.pdf,234
 2025,projected,Long's Park Fund,Public Works,Longs Park Exp,66286200-739000,66286200,739000,Real Gain/Loss on Invest,Operating,0,2026-Adopted-Budget-2026.pdf,234
 2026,proposed,Long's Park Fund,Public Works,Longs Park Exp,66286200-739000,66286200,739000,Real Gain/Loss on Invest,Operating,0,2026-Adopted-Budget-2026.pdf,234
-2024,actual,Long's Park Fund,Public Works,Longs Park Exp,66286200-739100,66286200,739100,Unreal Gain/Loss Invest,Operating,104387,2026-Adopted-Budget-2026.pdf,234
+2024,actual,Long's Park Fund,Public Works,Longs Park Exp,66286200-739100,66286200,739100,Unreal Gain/Loss Invest,Operating,-104387,2026-Adopted-Budget-2026.pdf,234
 2025,adopted,Long's Park Fund,Public Works,Longs Park Exp,66286200-739100,66286200,739100,Unreal Gain/Loss Invest,Operating,0,2026-Adopted-Budget-2026.pdf,234
 2025,amended,Long's Park Fund,Public Works,Longs Park Exp,66286200-739100,66286200,739100,Unreal Gain/Loss Invest,Operating,0,2026-Adopted-Budget-2026.pdf,234
-2025,actual_ytd,Long's Park Fund,Public Works,Longs Park Exp,66286200-739100,66286200,739100,Unreal Gain/Loss Invest,Operating,45831,2026-Adopted-Budget-2026.pdf,234
+2025,actual_ytd,Long's Park Fund,Public Works,Longs Park Exp,66286200-739100,66286200,739100,Unreal Gain/Loss Invest,Operating,-45831,2026-Adopted-Budget-2026.pdf,234
 2025,projected,Long's Park Fund,Public Works,Longs Park Exp,66286200-739100,66286200,739100,Unreal Gain/Loss Invest,Operating,0,2026-Adopted-Budget-2026.pdf,234
 2026,proposed,Long's Park Fund,Public Works,Longs Park Exp,66286200-739100,66286200,739100,Unreal Gain/Loss Invest,Operating,0,2026-Adopted-Budget-2026.pdf,234
 2024,actual,Long's Park Fund,Public Works,Longs Park Exp,66286200-741000,66286200,741000,Professional Services,Operating,15492,2026-Adopted-Budget-2026.pdf,235

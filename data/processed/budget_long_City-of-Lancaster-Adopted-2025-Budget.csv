@@ -2315,7 +2315,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2024,actual_ytd,General Fund,Community Planning & Economic Development,Planning Exp,1602000-760300,1602000,760300,Office Supplies,Operating,15,City-of-Lancaster-Adopted-2025-Budget.pdf,111
 2024,projected,General Fund,Community Planning & Economic Development,Planning Exp,1602000-760300,1602000,760300,Office Supplies,Operating,300,City-of-Lancaster-Adopted-2025-Budget.pdf,111
 2025,proposed,General Fund,Community Planning & Economic Development,Planning Exp,1602000-760300,1602000,760300,Office Supplies,Operating,800,City-of-Lancaster-Adopted-2025-Budget.pdf,111
-2023,actual,General Fund,Community Planning & Economic Development,Planning Exp,1602000-760600,1602000,760600,Operating Supplies,Operating,113,City-of-Lancaster-Adopted-2025-Budget.pdf,111
+2023,actual,General Fund,Community Planning & Economic Development,Planning Exp,1602000-760600,1602000,760600,Operating Supplies,Operating,-113,City-of-Lancaster-Adopted-2025-Budget.pdf,111
 2024,adopted,General Fund,Community Planning & Economic Development,Planning Exp,1602000-760600,1602000,760600,Operating Supplies,Operating,750,City-of-Lancaster-Adopted-2025-Budget.pdf,111
 2024,amended,General Fund,Community Planning & Economic Development,Planning Exp,1602000-760600,1602000,760600,Operating Supplies,Operating,750,City-of-Lancaster-Adopted-2025-Budget.pdf,111
 2024,actual_ytd,General Fund,Community Planning & Economic Development,Planning Exp,1602000-760600,1602000,760600,Operating Supplies,Operating,0,City-of-Lancaster-Adopted-2025-Budget.pdf,111
@@ -3308,13 +3308,13 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2023,actual,General Fund,Public Works,Motor Vehicles Exp,1850000-827000,1850000,827000,Vehicles,Equipment & Capital,2334,City-of-Lancaster-Adopted-2025-Budget.pdf,141
 2024,adopted,General Fund,Public Works,Motor Vehicles Exp,1850000-827000,1850000,827000,Vehicles,Equipment & Capital,49566,City-of-Lancaster-Adopted-2025-Budget.pdf,141
 2024,amended,General Fund,Public Works,Motor Vehicles Exp,1850000-827000,1850000,827000,Vehicles,Equipment & Capital,49566,City-of-Lancaster-Adopted-2025-Budget.pdf,141
-2024,actual_ytd,General Fund,Public Works,Motor Vehicles Exp,1850000-827000,1850000,827000,Vehicles,Equipment & Capital,10584,City-of-Lancaster-Adopted-2025-Budget.pdf,141
+2024,actual_ytd,General Fund,Public Works,Motor Vehicles Exp,1850000-827000,1850000,827000,Vehicles,Equipment & Capital,-10584,City-of-Lancaster-Adopted-2025-Budget.pdf,141
 2024,projected,General Fund,Public Works,Motor Vehicles Exp,1850000-827000,1850000,827000,Vehicles,Equipment & Capital,49566,City-of-Lancaster-Adopted-2025-Budget.pdf,141
 2025,proposed,General Fund,Public Works,Motor Vehicles Exp,1850000-827000,1850000,827000,Vehicles,Equipment & Capital,125330,City-of-Lancaster-Adopted-2025-Budget.pdf,141
 2023,actual,General Fund,Public Works,Parks Administration Exp,1860000-611500,1860000,611500,Salaried Personnel,Salaries & Wages,0,City-of-Lancaster-Adopted-2025-Budget.pdf,143
 2024,adopted,General Fund,Public Works,Parks Administration Exp,1860000-611500,1860000,611500,Salaried Personnel,Salaries & Wages,0,City-of-Lancaster-Adopted-2025-Budget.pdf,143
 2024,amended,General Fund,Public Works,Parks Administration Exp,1860000-611500,1860000,611500,Salaried Personnel,Salaries & Wages,0,City-of-Lancaster-Adopted-2025-Budget.pdf,143
-2024,actual_ytd,General Fund,Public Works,Parks Administration Exp,1860000-611500,1860000,611500,Salaried Personnel,Salaries & Wages,13247,City-of-Lancaster-Adopted-2025-Budget.pdf,143
+2024,actual_ytd,General Fund,Public Works,Parks Administration Exp,1860000-611500,1860000,611500,Salaried Personnel,Salaries & Wages,-13247,City-of-Lancaster-Adopted-2025-Budget.pdf,143
 2024,projected,General Fund,Public Works,Parks Administration Exp,1860000-611500,1860000,611500,Salaried Personnel,Salaries & Wages,0,City-of-Lancaster-Adopted-2025-Budget.pdf,143
 2025,proposed,General Fund,Public Works,Parks Administration Exp,1860000-611500,1860000,611500,Salaried Personnel,Salaries & Wages,0,City-of-Lancaster-Adopted-2025-Budget.pdf,143
 2023,actual,General Fund,Public Works,Parks Administration Exp,1860000-620100,1860000,620100,Educational Incentive,Benefits,5845,City-of-Lancaster-Adopted-2025-Budget.pdf,143
@@ -3785,7 +3785,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2024,actual_ytd,Stormwater Management Fund,Public Works,SWM Street Cleaning Exp,56084200-765400,56084200,765400,Gas Oil & Diesel,Operating,21275,City-of-Lancaster-Adopted-2025-Budget.pdf,158
 2024,projected,Stormwater Management Fund,Public Works,SWM Street Cleaning Exp,56084200-765400,56084200,765400,Gas Oil & Diesel,Operating,30000,City-of-Lancaster-Adopted-2025-Budget.pdf,158
 2025,proposed,Stormwater Management Fund,Public Works,SWM Street Cleaning Exp,56084200-765400,56084200,765400,Gas Oil & Diesel,Operating,35000,City-of-Lancaster-Adopted-2025-Budget.pdf,158
-2023,actual,Stormwater Management Fund,Public Works,SWM Street Cleaning Exp,56084200-825600,56084200,825600,Mach/Equip Lease Purch,Equipment & Capital,769,City-of-Lancaster-Adopted-2025-Budget.pdf,158
+2023,actual,Stormwater Management Fund,Public Works,SWM Street Cleaning Exp,56084200-825600,56084200,825600,Mach/Equip Lease Purch,Equipment & Capital,-769,City-of-Lancaster-Adopted-2025-Budget.pdf,158
 2024,adopted,Stormwater Management Fund,Public Works,SWM Street Cleaning Exp,56084200-825600,56084200,825600,Mach/Equip Lease Purch,Equipment & Capital,235547,City-of-Lancaster-Adopted-2025-Budget.pdf,158
 2024,amended,Stormwater Management Fund,Public Works,SWM Street Cleaning Exp,56084200-825600,56084200,825600,Mach/Equip Lease Purch,Equipment & Capital,215547,City-of-Lancaster-Adopted-2025-Budget.pdf,158
 2024,actual_ytd,Stormwater Management Fund,Public Works,SWM Street Cleaning Exp,56084200-825600,56084200,825600,Mach/Equip Lease Purch,Equipment & Capital,179767,City-of-Lancaster-Adopted-2025-Budget.pdf,158
@@ -3851,7 +3851,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2024,actual_ytd,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-822500,56088700,822500,Landscaping Trees etc,Equipment & Capital,4285,City-of-Lancaster-Adopted-2025-Budget.pdf,160
 2024,projected,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-822500,56088700,822500,Landscaping Trees etc,Equipment & Capital,14000,City-of-Lancaster-Adopted-2025-Budget.pdf,160
 2025,proposed,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-822500,56088700,822500,Landscaping Trees etc,Equipment & Capital,18000,City-of-Lancaster-Adopted-2025-Budget.pdf,160
-2023,actual,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-827100,56088700,827100,Vehicle-Lease Purchase,Equipment & Capital,16493,City-of-Lancaster-Adopted-2025-Budget.pdf,161
+2023,actual,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-827100,56088700,827100,Vehicle-Lease Purchase,Equipment & Capital,-16493,City-of-Lancaster-Adopted-2025-Budget.pdf,161
 2024,adopted,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-827100,56088700,827100,Vehicle-Lease Purchase,Equipment & Capital,17244,City-of-Lancaster-Adopted-2025-Budget.pdf,161
 2024,amended,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-827100,56088700,827100,Vehicle-Lease Purchase,Equipment & Capital,21344,City-of-Lancaster-Adopted-2025-Budget.pdf,161
 2024,actual_ytd,Stormwater Management Fund,Public Works,SWM Grounds Maint Exp,56088700-827100,56088700,827100,Vehicle-Lease Purchase,Equipment & Capital,20946,City-of-Lancaster-Adopted-2025-Budget.pdf,161
@@ -4307,7 +4307,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2024,actual_ytd,Sewer Fund,Public Works,Sewer Collections Exp,56188100-820000,56188100,820000,Minor Equipment,Equipment & Capital,10516,City-of-Lancaster-Adopted-2025-Budget.pdf,178
 2024,projected,Sewer Fund,Public Works,Sewer Collections Exp,56188100-820000,56188100,820000,Minor Equipment,Equipment & Capital,10000,City-of-Lancaster-Adopted-2025-Budget.pdf,178
 2025,proposed,Sewer Fund,Public Works,Sewer Collections Exp,56188100-820000,56188100,820000,Minor Equipment,Equipment & Capital,10000,City-of-Lancaster-Adopted-2025-Budget.pdf,178
-2023,actual,Sewer Fund,Public Works,Sewer Collections Exp,56188100-827100,56188100,827100,Vehicle-Lease Purchase,Equipment & Capital,7609,City-of-Lancaster-Adopted-2025-Budget.pdf,178
+2023,actual,Sewer Fund,Public Works,Sewer Collections Exp,56188100-827100,56188100,827100,Vehicle-Lease Purchase,Equipment & Capital,-7609,City-of-Lancaster-Adopted-2025-Budget.pdf,178
 2024,adopted,Sewer Fund,Public Works,Sewer Collections Exp,56188100-827100,56188100,827100,Vehicle-Lease Purchase,Equipment & Capital,383066,City-of-Lancaster-Adopted-2025-Budget.pdf,178
 2024,amended,Sewer Fund,Public Works,Sewer Collections Exp,56188100-827100,56188100,827100,Vehicle-Lease Purchase,Equipment & Capital,383066,City-of-Lancaster-Adopted-2025-Budget.pdf,178
 2024,actual_ytd,Sewer Fund,Public Works,Sewer Collections Exp,56188100-827100,56188100,827100,Vehicle-Lease Purchase,Equipment & Capital,232115,City-of-Lancaster-Adopted-2025-Budget.pdf,178
@@ -4343,7 +4343,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2024,actual_ytd,Sewer Fund,Public Works,Sewer Pumping Stations Exp,56188200-752000,56188200,752000,Power Electric-Main PS,Operating,250850,City-of-Lancaster-Adopted-2025-Budget.pdf,180
 2024,projected,Sewer Fund,Public Works,Sewer Pumping Stations Exp,56188200-752000,56188200,752000,Power Electric-Main PS,Operating,360000,City-of-Lancaster-Adopted-2025-Budget.pdf,180
 2025,proposed,Sewer Fund,Public Works,Sewer Pumping Stations Exp,56188200-752000,56188200,752000,Power Electric-Main PS,Operating,430000,City-of-Lancaster-Adopted-2025-Budget.pdf,180
-2023,actual,Sewer Fund,Public Works,Sewer Pumping Stations Exp,56188200-760600,56188200,760600,Operating Supplies,Operating,52186,City-of-Lancaster-Adopted-2025-Budget.pdf,180
+2023,actual,Sewer Fund,Public Works,Sewer Pumping Stations Exp,56188200-760600,56188200,760600,Operating Supplies,Operating,-52186,City-of-Lancaster-Adopted-2025-Budget.pdf,180
 2024,adopted,Sewer Fund,Public Works,Sewer Pumping Stations Exp,56188200-760600,56188200,760600,Operating Supplies,Operating,2400,City-of-Lancaster-Adopted-2025-Budget.pdf,180
 2024,amended,Sewer Fund,Public Works,Sewer Pumping Stations Exp,56188200-760600,56188200,760600,Operating Supplies,Operating,2400,City-of-Lancaster-Adopted-2025-Budget.pdf,180
 2024,actual_ytd,Sewer Fund,Public Works,Sewer Pumping Stations Exp,56188200-760600,56188200,760600,Operating Supplies,Operating,1727,City-of-Lancaster-Adopted-2025-Budget.pdf,180
@@ -4463,7 +4463,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2024,actual_ytd,Sewer Fund,Public Works,Sewer Treatment Exp,56188300-820000,56188300,820000,Minor Equipment,Equipment & Capital,19036,City-of-Lancaster-Adopted-2025-Budget.pdf,185
 2024,projected,Sewer Fund,Public Works,Sewer Treatment Exp,56188300-820000,56188300,820000,Minor Equipment,Equipment & Capital,25000,City-of-Lancaster-Adopted-2025-Budget.pdf,185
 2025,proposed,Sewer Fund,Public Works,Sewer Treatment Exp,56188300-820000,56188300,820000,Minor Equipment,Equipment & Capital,25000,City-of-Lancaster-Adopted-2025-Budget.pdf,185
-2023,actual,Sewer Fund,Public Works,Sewer Treatment Exp,56188300-827100,56188300,827100,Vehicle-Lease Purchase,Equipment & Capital,4250,City-of-Lancaster-Adopted-2025-Budget.pdf,185
+2023,actual,Sewer Fund,Public Works,Sewer Treatment Exp,56188300-827100,56188300,827100,Vehicle-Lease Purchase,Equipment & Capital,-4250,City-of-Lancaster-Adopted-2025-Budget.pdf,185
 2024,adopted,Sewer Fund,Public Works,Sewer Treatment Exp,56188300-827100,56188300,827100,Vehicle-Lease Purchase,Equipment & Capital,23529,City-of-Lancaster-Adopted-2025-Budget.pdf,185
 2024,amended,Sewer Fund,Public Works,Sewer Treatment Exp,56188300-827100,56188300,827100,Vehicle-Lease Purchase,Equipment & Capital,30529,City-of-Lancaster-Adopted-2025-Budget.pdf,185
 2024,actual_ytd,Sewer Fund,Public Works,Sewer Treatment Exp,56188300-827100,56188300,827100,Vehicle-Lease Purchase,Equipment & Capital,29436,City-of-Lancaster-Adopted-2025-Budget.pdf,185
@@ -4877,7 +4877,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2024,actual_ytd,Water Fund,Public Works,Water Susquehanna Trmt Plant E,56289100-820000,56289100,820000,Minor Equipment,Equipment & Capital,13427,City-of-Lancaster-Adopted-2025-Budget.pdf,199
 2024,projected,Water Fund,Public Works,Water Susquehanna Trmt Plant E,56289100-820000,56289100,820000,Minor Equipment,Equipment & Capital,10000,City-of-Lancaster-Adopted-2025-Budget.pdf,199
 2025,proposed,Water Fund,Public Works,Water Susquehanna Trmt Plant E,56289100-820000,56289100,820000,Minor Equipment,Equipment & Capital,10000,City-of-Lancaster-Adopted-2025-Budget.pdf,199
-2023,actual,Water Fund,Public Works,Water Susquehanna Trmt Plant E,56289100-827000,56289100,827000,Vehicles,Equipment & Capital,9228,City-of-Lancaster-Adopted-2025-Budget.pdf,199
+2023,actual,Water Fund,Public Works,Water Susquehanna Trmt Plant E,56289100-827000,56289100,827000,Vehicles,Equipment & Capital,-9228,City-of-Lancaster-Adopted-2025-Budget.pdf,199
 2024,adopted,Water Fund,Public Works,Water Susquehanna Trmt Plant E,56289100-827000,56289100,827000,Vehicles,Equipment & Capital,51946,City-of-Lancaster-Adopted-2025-Budget.pdf,199
 2024,amended,Water Fund,Public Works,Water Susquehanna Trmt Plant E,56289100-827000,56289100,827000,Vehicles,Equipment & Capital,51946,City-of-Lancaster-Adopted-2025-Budget.pdf,199
 2024,actual_ytd,Water Fund,Public Works,Water Susquehanna Trmt Plant E,56289100-827000,56289100,827000,Vehicles,Equipment & Capital,50650,City-of-Lancaster-Adopted-2025-Budget.pdf,199
@@ -4973,7 +4973,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2024,actual_ytd,Water Fund,Public Works,Water Conestoga Trmt Plant Exp,56289200-766000,56289200,766000,Heating Oil,Operating,35381,City-of-Lancaster-Adopted-2025-Budget.pdf,203
 2024,projected,Water Fund,Public Works,Water Conestoga Trmt Plant Exp,56289200-766000,56289200,766000,Heating Oil,Operating,65000,City-of-Lancaster-Adopted-2025-Budget.pdf,203
 2025,proposed,Water Fund,Public Works,Water Conestoga Trmt Plant Exp,56289200-766000,56289200,766000,Heating Oil,Operating,65000,City-of-Lancaster-Adopted-2025-Budget.pdf,203
-2023,actual,Water Fund,Public Works,Water Conestoga Trmt Plant Exp,56289200-827000,56289200,827000,Vehicles,Equipment & Capital,132,City-of-Lancaster-Adopted-2025-Budget.pdf,203
+2023,actual,Water Fund,Public Works,Water Conestoga Trmt Plant Exp,56289200-827000,56289200,827000,Vehicles,Equipment & Capital,-132,City-of-Lancaster-Adopted-2025-Budget.pdf,203
 2024,adopted,Water Fund,Public Works,Water Conestoga Trmt Plant Exp,56289200-827000,56289200,827000,Vehicles,Equipment & Capital,75322,City-of-Lancaster-Adopted-2025-Budget.pdf,203
 2024,amended,Water Fund,Public Works,Water Conestoga Trmt Plant Exp,56289200-827000,56289200,827000,Vehicles,Equipment & Capital,75322,City-of-Lancaster-Adopted-2025-Budget.pdf,203
 2024,actual_ytd,Water Fund,Public Works,Water Conestoga Trmt Plant Exp,56289200-827000,56289200,827000,Vehicles,Equipment & Capital,69249,City-of-Lancaster-Adopted-2025-Budget.pdf,203
@@ -5087,7 +5087,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2024,actual_ytd,Water Fund,Public Works,Water Transmission/Dist Exp,56289400-824000,56289400,824000,Hydrants,Equipment & Capital,91576,City-of-Lancaster-Adopted-2025-Budget.pdf,206
 2024,projected,Water Fund,Public Works,Water Transmission/Dist Exp,56289400-824000,56289400,824000,Hydrants,Equipment & Capital,87000,City-of-Lancaster-Adopted-2025-Budget.pdf,206
 2025,proposed,Water Fund,Public Works,Water Transmission/Dist Exp,56289400-824000,56289400,824000,Hydrants,Equipment & Capital,87000,City-of-Lancaster-Adopted-2025-Budget.pdf,206
-2023,actual,Water Fund,Public Works,Water Transmission/Dist Exp,56289400-827100,56289400,827100,Vehicle-Lease Purchase,Equipment & Capital,6918,City-of-Lancaster-Adopted-2025-Budget.pdf,207
+2023,actual,Water Fund,Public Works,Water Transmission/Dist Exp,56289400-827100,56289400,827100,Vehicle-Lease Purchase,Equipment & Capital,-6918,City-of-Lancaster-Adopted-2025-Budget.pdf,207
 2024,adopted,Water Fund,Public Works,Water Transmission/Dist Exp,56289400-827100,56289400,827100,Vehicle-Lease Purchase,Equipment & Capital,215603,City-of-Lancaster-Adopted-2025-Budget.pdf,207
 2024,amended,Water Fund,Public Works,Water Transmission/Dist Exp,56289400-827100,56289400,827100,Vehicle-Lease Purchase,Equipment & Capital,215603,City-of-Lancaster-Adopted-2025-Budget.pdf,207
 2024,actual_ytd,Water Fund,Public Works,Water Transmission/Dist Exp,56289400-827100,56289400,827100,Vehicle-Lease Purchase,Equipment & Capital,188047,City-of-Lancaster-Adopted-2025-Budget.pdf,207
@@ -5171,7 +5171,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2024,actual_ytd,Water Fund,Public Works,Water Meter Shop Exp,56289500-827000,56289500,827000,Vehicles,Equipment & Capital,0,City-of-Lancaster-Adopted-2025-Budget.pdf,209
 2024,projected,Water Fund,Public Works,Water Meter Shop Exp,56289500-827000,56289500,827000,Vehicles,Equipment & Capital,3838,City-of-Lancaster-Adopted-2025-Budget.pdf,209
 2025,proposed,Water Fund,Public Works,Water Meter Shop Exp,56289500-827000,56289500,827000,Vehicles,Equipment & Capital,3838,City-of-Lancaster-Adopted-2025-Budget.pdf,209
-2023,actual,Water Fund,Public Works,Water Meter Shop Exp,56289500-827100,56289500,827100,Vehicle-Lease Purchase,Equipment & Capital,17880,City-of-Lancaster-Adopted-2025-Budget.pdf,209
+2023,actual,Water Fund,Public Works,Water Meter Shop Exp,56289500-827100,56289500,827100,Vehicle-Lease Purchase,Equipment & Capital,-17880,City-of-Lancaster-Adopted-2025-Budget.pdf,209
 2024,adopted,Water Fund,Public Works,Water Meter Shop Exp,56289500-827100,56289500,827100,Vehicle-Lease Purchase,Equipment & Capital,42738,City-of-Lancaster-Adopted-2025-Budget.pdf,209
 2024,amended,Water Fund,Public Works,Water Meter Shop Exp,56289500-827100,56289500,827100,Vehicle-Lease Purchase,Equipment & Capital,42738,City-of-Lancaster-Adopted-2025-Budget.pdf,209
 2024,actual_ytd,Water Fund,Public Works,Water Meter Shop Exp,56289500-827100,56289500,827100,Vehicle-Lease Purchase,Equipment & Capital,30379,City-of-Lancaster-Adopted-2025-Budget.pdf,209
@@ -5309,10 +5309,10 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2024,actual_ytd,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-408000,56300000,408000,Miscellaneous Revenue,Revenue,72036,City-of-Lancaster-Adopted-2025-Budget.pdf,219
 2024,projected,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-408000,56300000,408000,Miscellaneous Revenue,Revenue,80000,City-of-Lancaster-Adopted-2025-Budget.pdf,219
 2025,proposed,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-408000,56300000,408000,Miscellaneous Revenue,Revenue,60000,City-of-Lancaster-Adopted-2025-Budget.pdf,219
-2023,actual,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,51482,City-of-Lancaster-Adopted-2025-Budget.pdf,219
+2023,actual,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,-51482,City-of-Lancaster-Adopted-2025-Budget.pdf,219
 2024,adopted,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,0,City-of-Lancaster-Adopted-2025-Budget.pdf,219
 2024,amended,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,0,City-of-Lancaster-Adopted-2025-Budget.pdf,219
-2024,actual_ytd,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,42659,City-of-Lancaster-Adopted-2025-Budget.pdf,219
+2024,actual_ytd,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,-42659,City-of-Lancaster-Adopted-2025-Budget.pdf,219
 2024,projected,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,0,City-of-Lancaster-Adopted-2025-Budget.pdf,219
 2025,proposed,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-413600,56300000,413600,Discounts Taken (contra),Revenue,0,City-of-Lancaster-Adopted-2025-Budget.pdf,219
 2023,actual,Solid Waste & Recycling Fund,Public Works,SWR Revenue,56300000-417200,56300000,417200,Trash Fees,Revenue,5662379,City-of-Lancaster-Adopted-2025-Budget.pdf,219
@@ -5537,7 +5537,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2024,actual_ytd,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-820000,56387000,820000,Minor Equipment,Equipment & Capital,5638,City-of-Lancaster-Adopted-2025-Budget.pdf,223
 2024,projected,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-820000,56387000,820000,Minor Equipment,Equipment & Capital,6500,City-of-Lancaster-Adopted-2025-Budget.pdf,223
 2025,proposed,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-820000,56387000,820000,Minor Equipment,Equipment & Capital,8500,City-of-Lancaster-Adopted-2025-Budget.pdf,223
-2023,actual,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-827100,56387000,827100,Vehicle-Lease Purchase,Equipment & Capital,5666,City-of-Lancaster-Adopted-2025-Budget.pdf,223
+2023,actual,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-827100,56387000,827100,Vehicle-Lease Purchase,Equipment & Capital,-5666,City-of-Lancaster-Adopted-2025-Budget.pdf,223
 2024,adopted,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-827100,56387000,827100,Vehicle-Lease Purchase,Equipment & Capital,90819,City-of-Lancaster-Adopted-2025-Budget.pdf,223
 2024,amended,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-827100,56387000,827100,Vehicle-Lease Purchase,Equipment & Capital,90819,City-of-Lancaster-Adopted-2025-Budget.pdf,223
 2024,actual_ytd,Solid Waste & Recycling Fund,Public Works,SWR Expenses,56387000-827100,56387000,827100,Vehicle-Lease Purchase,Equipment & Capital,3938,City-of-Lancaster-Adopted-2025-Budget.pdf,223
@@ -5624,7 +5624,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2023,actual,Long's Park Fund,Public Works,Longs Park Revenue,66200000-413500,66200000,413500,Invest Rev-Mutual Funds,Revenue,9179,City-of-Lancaster-Adopted-2025-Budget.pdf,227
 2024,adopted,Long's Park Fund,Public Works,Longs Park Revenue,66200000-413500,66200000,413500,Invest Rev-Mutual Funds,Revenue,0,City-of-Lancaster-Adopted-2025-Budget.pdf,227
 2024,amended,Long's Park Fund,Public Works,Longs Park Revenue,66200000-413500,66200000,413500,Invest Rev-Mutual Funds,Revenue,5000,City-of-Lancaster-Adopted-2025-Budget.pdf,227
-2024,actual_ytd,Long's Park Fund,Public Works,Longs Park Revenue,66200000-413500,66200000,413500,Invest Rev-Mutual Funds,Revenue,29941,City-of-Lancaster-Adopted-2025-Budget.pdf,227
+2024,actual_ytd,Long's Park Fund,Public Works,Longs Park Revenue,66200000-413500,66200000,413500,Invest Rev-Mutual Funds,Revenue,-29941,City-of-Lancaster-Adopted-2025-Budget.pdf,227
 2024,projected,Long's Park Fund,Public Works,Longs Park Revenue,66200000-413500,66200000,413500,Invest Rev-Mutual Funds,Revenue,5000,City-of-Lancaster-Adopted-2025-Budget.pdf,227
 2025,proposed,Long's Park Fund,Public Works,Longs Park Revenue,66200000-413500,66200000,413500,Invest Rev-Mutual Funds,Revenue,5000,City-of-Lancaster-Adopted-2025-Budget.pdf,227
 2023,actual,Long's Park Fund,Public Works,Longs Park Revenue,66200000-416300,66200000,416300,Realized Gains,Revenue,0,City-of-Lancaster-Adopted-2025-Budget.pdf,227
@@ -5684,13 +5684,13 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2023,actual,Long's Park Fund,Public Works,Longs Park Exp,66286200-739000,66286200,739000,Real Gain/Loss on Invest,Operating,0,City-of-Lancaster-Adopted-2025-Budget.pdf,229
 2024,adopted,Long's Park Fund,Public Works,Longs Park Exp,66286200-739000,66286200,739000,Real Gain/Loss on Invest,Operating,0,City-of-Lancaster-Adopted-2025-Budget.pdf,229
 2024,amended,Long's Park Fund,Public Works,Longs Park Exp,66286200-739000,66286200,739000,Real Gain/Loss on Invest,Operating,0,City-of-Lancaster-Adopted-2025-Budget.pdf,229
-2024,actual_ytd,Long's Park Fund,Public Works,Longs Park Exp,66286200-739000,66286200,739000,Real Gain/Loss on Invest,Operating,636,City-of-Lancaster-Adopted-2025-Budget.pdf,229
+2024,actual_ytd,Long's Park Fund,Public Works,Longs Park Exp,66286200-739000,66286200,739000,Real Gain/Loss on Invest,Operating,-636,City-of-Lancaster-Adopted-2025-Budget.pdf,229
 2024,projected,Long's Park Fund,Public Works,Longs Park Exp,66286200-739000,66286200,739000,Real Gain/Loss on Invest,Operating,0,City-of-Lancaster-Adopted-2025-Budget.pdf,229
 2025,proposed,Long's Park Fund,Public Works,Longs Park Exp,66286200-739000,66286200,739000,Real Gain/Loss on Invest,Operating,0,City-of-Lancaster-Adopted-2025-Budget.pdf,229
-2023,actual,Long's Park Fund,Public Works,Longs Park Exp,66286200-739100,66286200,739100,Unreal Gain/Loss Invest,Operating,52431,City-of-Lancaster-Adopted-2025-Budget.pdf,229
+2023,actual,Long's Park Fund,Public Works,Longs Park Exp,66286200-739100,66286200,739100,Unreal Gain/Loss Invest,Operating,-52431,City-of-Lancaster-Adopted-2025-Budget.pdf,229
 2024,adopted,Long's Park Fund,Public Works,Longs Park Exp,66286200-739100,66286200,739100,Unreal Gain/Loss Invest,Operating,0,City-of-Lancaster-Adopted-2025-Budget.pdf,229
 2024,amended,Long's Park Fund,Public Works,Longs Park Exp,66286200-739100,66286200,739100,Unreal Gain/Loss Invest,Operating,0,City-of-Lancaster-Adopted-2025-Budget.pdf,229
-2024,actual_ytd,Long's Park Fund,Public Works,Longs Park Exp,66286200-739100,66286200,739100,Unreal Gain/Loss Invest,Operating,101196,City-of-Lancaster-Adopted-2025-Budget.pdf,229
+2024,actual_ytd,Long's Park Fund,Public Works,Longs Park Exp,66286200-739100,66286200,739100,Unreal Gain/Loss Invest,Operating,-101196,City-of-Lancaster-Adopted-2025-Budget.pdf,229
 2024,projected,Long's Park Fund,Public Works,Longs Park Exp,66286200-739100,66286200,739100,Unreal Gain/Loss Invest,Operating,0,City-of-Lancaster-Adopted-2025-Budget.pdf,229
 2025,proposed,Long's Park Fund,Public Works,Longs Park Exp,66286200-739100,66286200,739100,Unreal Gain/Loss Invest,Operating,0,City-of-Lancaster-Adopted-2025-Budget.pdf,229
 2023,actual,Long's Park Fund,Public Works,Longs Park Exp,66286200-741000,66286200,741000,Professional Services,Operating,4017,City-of-Lancaster-Adopted-2025-Budget.pdf,230

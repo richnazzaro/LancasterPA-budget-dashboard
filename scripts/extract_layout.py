@@ -42,6 +42,7 @@ from ocr_pages import cache_dir, ocr_document
 
 CONFIG_DIR = ROOT / "config"
 CORRECTIONS_FILE = ROOT / "data" / "ocr_corrections.csv"
+SIGN_FILE = ROOT / "data" / "sign_corrections.csv"
 
 RE_ORG = re.compile(r"^\d{7,8}$")
 RE_OBJ = re.compile(r"^\d{6}$")
@@ -330,6 +331,7 @@ def extract(pdf_path, cfg):
         STAFF_FIELD["count"] = re.compile(st["count_pattern"])
 
     corrections = load_corrections(source_doc)
+    signs, used_signs = load_signs(source_doc), set()
     used_corrections = set()
 
     items, sections, staff, staff_checks, unparsed, cell_log = [], [], [], [], [], []
@@ -387,6 +389,8 @@ def extract(pdf_path, cfg):
                     values, problems = parse_amounts(amt_ws, anchors, lkeys, single)
                     values = _apply_corrections(values, problems, corrections,
                                                 used_corrections, page_no, label)
+                    values, as_printed = _apply_signs(values, signs, used_signs,
+                                                      page_no, label)
                     fund, dept = fund_and_department(org)
                     item = {
                         "org_code": org, "object_code": obj, "account_code": label,
@@ -396,6 +400,7 @@ def extract(pdf_path, cfg):
                         "fund": fund, "department": dept,
                         "category": category_for(obj), "source_page": page_no,
                         "description": "", "ytd_as_of": ytd_as_of,
+                        "as_printed": as_printed,
                         "ocr_flags": "; ".join(
                             f"{p['column']}:{p['problem']}" for p in problems),
                         **values,
@@ -584,6 +589,9 @@ def extract(pdf_path, cfg):
     if open_items:
         unparsed.append({"source_page": -1,
                          "text": f"{len(open_items)} line items never closed by a TOTAL"})
+    for key in sorted(set(signs) - used_signs):
+        unparsed.append({"source_page": key[0],
+                         "text": f"sign correction for {key[1]} / {key[2]} matched no line"})
     unused = set(corrections) - used_corrections
     for key in sorted(unused):
         unparsed.append({"source_page": key[0],
@@ -731,6 +739,32 @@ def _name(line, left_ws, amount_left, corrections, used, page_no, label):
     return " ".join(words)
 
 
+def load_signs(source_doc):
+    """Sign flips proven by printed totals (scripts/sign_corrections.py)."""
+    if not SIGN_FILE.exists():
+        return {}
+    df = pd.read_csv(SIGN_FILE, dtype=str, keep_default_na=False)
+    df = df[df.source_doc == source_doc]
+    return {(int(r.source_page), r.account_code, r.column): r for r in df.itertuples()}
+
+
+def _apply_signs(values, signs, used, page_no, label):
+    """Flip the logged values; return (values, "col=printed; ..." for audit)."""
+    printed = []
+    for column in list(values):
+        key = (page_no, label, column)
+        if key not in signs:
+            continue
+        c = signs[key]
+        if values[column] != to_number(c.printed_value):
+            raise ValueError(f"sign correction {key} expects printed {c.printed_value}, "
+                             f"page has {values[column]}")
+        printed.append(f"{column}={c.printed_value}")
+        values[column] = to_number(c.corrected_value)
+        used.add(key)
+    return values, "; ".join(printed)
+
+
 def _apply_corrections(values, problems, corrections, used, page_no, label):
     """Replace OCR'd cells with values a person read off the page image."""
     for column in list(values):
@@ -795,7 +829,7 @@ def main():
     wide = pd.DataFrame(items)
     cols = ["fund", "department", "bureau", "account_code", "org_code",
             "object_code", "account_name", "category", *keys, "ytd_as_of",
-            "description", "source_page", "ocr_flags"]
+            "description", "source_page", "as_printed", "ocr_flags"]
     wide = wide.reindex(columns=cols)
     wide.to_csv(args.out / f"line_items_{doc}.csv", index=False)
     to_long(items, columns, keys, args.pdf.name).to_csv(

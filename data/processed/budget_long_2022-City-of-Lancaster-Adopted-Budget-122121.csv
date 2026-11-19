@@ -2072,7 +2072,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2020,actual,General Fund,Community Planning & Economic Development,Director CPED Exp,1601000-744500,1601000,744500,Training & School,Operating,495,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,112
 2021,adopted,General Fund,Community Planning & Economic Development,Director CPED Exp,1601000-744500,1601000,744500,Training & School,Operating,3000,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,112
 2021,amended,General Fund,Community Planning & Economic Development,Director CPED Exp,1601000-744500,1601000,744500,Training & School,Operating,3000,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,112
-2021,actual_ytd,General Fund,Community Planning & Economic Development,Director CPED Exp,1601000-744500,1601000,744500,Training & School,Operating,485,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,112
+2021,actual_ytd,General Fund,Community Planning & Economic Development,Director CPED Exp,1601000-744500,1601000,744500,Training & School,Operating,-485,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,112
 2021,projected,General Fund,Community Planning & Economic Development,Director CPED Exp,1601000-744500,1601000,744500,Training & School,Operating,1000,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,112
 2022,proposed,General Fund,Community Planning & Economic Development,Director CPED Exp,1601000-744500,1601000,744500,Training & School,Operating,4000,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,112
 2020,actual,General Fund,Community Planning & Economic Development,Director CPED Exp,1601000-760300,1601000,760300,Office Supplies,Operating,618,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,113
@@ -3155,7 +3155,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2021,actual_ytd,General Fund,Public Works,Traffic Exp,1830000-737000,1830000,737000,Travel,Operating,0,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,146
 2021,projected,General Fund,Public Works,Traffic Exp,1830000-737000,1830000,737000,Travel,Operating,850,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,146
 2022,proposed,General Fund,Public Works,Traffic Exp,1830000-737000,1830000,737000,Travel,Operating,850,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,146
-2020,actual,General Fund,Public Works,Traffic Exp,1830000-741000,1830000,741000,Professional Services,Operating,3967,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,147
+2020,actual,General Fund,Public Works,Traffic Exp,1830000-741000,1830000,741000,Professional Services,Operating,-3967,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,147
 2021,adopted,General Fund,Public Works,Traffic Exp,1830000-741000,1830000,741000,Professional Services,Operating,18500,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,147
 2021,amended,General Fund,Public Works,Traffic Exp,1830000-741000,1830000,741000,Professional Services,Operating,18500,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,147
 2021,actual_ytd,General Fund,Public Works,Traffic Exp,1830000-741000,1830000,741000,Professional Services,Operating,4395,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,147
@@ -4871,7 +4871,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2021,actual_ytd,Water Fund,Public Works,Water Administration Exp,56289000-737000,56289000,737000,Travel,Operating,1634,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,213
 2021,projected,Water Fund,Public Works,Water Administration Exp,56289000-737000,56289000,737000,Travel,Operating,2500,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,213
 2022,proposed,Water Fund,Public Works,Water Administration Exp,56289000-737000,56289000,737000,Travel,Operating,7000,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,213
-2020,actual,Water Fund,Public Works,Water Administration Exp,56289000-738000,56289000,738000,Miscellaneous Expenses,Operating,1799,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,213
+2020,actual,Water Fund,Public Works,Water Administration Exp,56289000-738000,56289000,738000,Miscellaneous Expenses,Operating,-1799,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,213
 2021,adopted,Water Fund,Public Works,Water Administration Exp,56289000-738000,56289000,738000,Miscellaneous Expenses,Operating,1200,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,213
 2021,amended,Water Fund,Public Works,Water Administration Exp,56289000-738000,56289000,738000,Miscellaneous Expenses,Operating,1200,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,213
 2021,actual_ytd,Water Fund,Public Works,Water Administration Exp,56289000-738000,56289000,738000,Miscellaneous Expenses,Operating,319,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,213
@@ -4955,7 +4955,7 @@ fiscal_year,doc_type,fund,department,bureau,account_code,org_code,object_code,ac
 2021,actual_ytd,Water Fund,Public Works,Water Administration Exp,56289000-914000,56289000,914000,Revenue Tsfr'd to City,"Debt, Transfers & Allocations",3666667,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,214
 2021,projected,Water Fund,Public Works,Water Administration Exp,56289000-914000,56289000,914000,Revenue Tsfr'd to City,"Debt, Transfers & Allocations",4000000,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,214
 2022,proposed,Water Fund,Public Works,Water Administration Exp,56289000-914000,56289000,914000,Revenue Tsfr'd to City,"Debt, Transfers & Allocations",4000000,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,214
-2020,actual,Water Fund,Public Works,Water Administration Exp,56289000-923000,56289000,923000,Paying Agent Fees,"Debt, Transfers & Allocations",271132,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,215
+2020,actual,Water Fund,Public Works,Water Administration Exp,56289000-923000,56289000,923000,Paying Agent Fees,"Debt, Transfers & Allocations",-271132,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,215
 2021,adopted,Water Fund,Public Works,Water Administration Exp,56289000-923000,56289000,923000,Paying Agent Fees,"Debt, Transfers & Allocations",1700,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,215
 2021,amended,Water Fund,Public Works,Water Administration Exp,56289000-923000,56289000,923000,Paying Agent Fees,"Debt, Transfers & Allocations",1700,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,215
 2021,actual_ytd,Water Fund,Public Works,Water Administration Exp,56289000-923000,56289000,923000,Paying Agent Fees,"Debt, Transfers & Allocations",1213,2022-City-of-Lancaster-Adopted-Budget-122121.pdf,215
