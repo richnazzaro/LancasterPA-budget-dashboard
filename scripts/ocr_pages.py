@@ -149,6 +149,11 @@ def ocr_document(pdf_path, dpi=300, jobs=None, pages=None, fallback_rotate=90):
     with pdfium.PdfDocument(str(pdf_path)) as pdf:
         n_pages = len(pdf)
     indices = [p - 1 for p in pages] if pages else range(n_pages)
+    indices = [i for i in indices
+               if not (out_dir / f"page_{i + 1:03d}.tsv").exists()
+               or not (out_dir / f"page_{i + 1:03d}.json").exists()]
+    if not indices:                     # everything cached: no worker pool needed
+        return out_dir
     jobs = jobs or max(1, (os.cpu_count() or 2) - 1)
     done = 0
     with ProcessPoolExecutor(max_workers=jobs) as pool:

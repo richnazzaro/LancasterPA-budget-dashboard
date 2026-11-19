@@ -127,6 +127,22 @@ def crosscheck(a_path, a_col, b_path, b_col):
     return out.sort_values(["_o", "account_code"]).drop(columns="_o")
 
 
+def run_pair(a_csv, a_col, b_csv, b_col, out_dir=OUT_DIR):
+    """Run one comparison, write its CSV, return (table, stats)."""
+    out = crosscheck(a_csv, a_col, b_csv, b_col)
+    path = Path(out_dir) / (f"crosscheck_{a_col}_{doc_name(a_csv)}"
+                            f"_vs_{b_col}_{doc_name(b_csv)}.csv")
+    out.to_csv(path, index=False)
+    vc = out.status.value_counts()
+    in_both = sum(vc.get(s, 0) for s in ("match", "renamed", "budget_change",
+                                         "possible_ocr_error"))
+    equal = vc.get("match", 0) + vc.get("renamed", 0)
+    return out, {"file": path, "in_both": int(in_both), "equal": int(equal),
+                 "rate": equal / in_both if in_both else float("nan"),
+                 "adoption_changes": int(vc.get("budget_change", 0)),
+                 "possible_ocr_errors": int(vc.get("possible_ocr_error", 0))}
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("a_csv")
@@ -148,16 +164,12 @@ def main():
               f"total |gap| {gap.sum():,.0f} on total {m.amount_a.abs().sum():,.0f} "
               f"({gap.sum() / max(m.amount_a.abs().sum(), 1):.1%})")
         return
-    out = crosscheck(args.a_csv, args.a_column, args.b_csv, args.b_column)
-    name = (f"crosscheck_{args.a_column}_{doc_name(args.a_csv)}"
-            f"_vs_{args.b_column}_{doc_name(args.b_csv)}.csv")
-    out.to_csv(args.out / name, index=False)
-
-    both = out[out.status.isin(["match", "renamed", "budget_change", "possible_ocr_error"])]
-    agree = both.status.isin(["match", "renamed"]).sum()
+    out, stats = run_pair(args.a_csv, args.a_column, args.b_csv, args.b_column, args.out)
+    name = stats["file"].name
+    both, agree = stats["in_both"], stats["equal"]
     print(f"{doc_name(args.a_csv)} {args.a_column}  vs  {doc_name(args.b_csv)} {args.b_column}")
-    print(f"Accounts in both: {len(both)}; same amount: {agree} "
-          f"({agree / max(len(both), 1):.1%})")
+    print(f"Accounts in both: {both}; same amount: {agree} "
+          f"({agree / max(both, 1):.1%})")
     print(out.status.value_counts().to_string())
     for status in ["possible_ocr_error", "budget_change", "moved_or_recoded", "renamed"]:
         sub = out[out.status == status]

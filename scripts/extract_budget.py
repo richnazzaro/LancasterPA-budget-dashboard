@@ -26,7 +26,7 @@ import pdfplumber
 from budget_common import (
     OUT_DIR, ROUNDING_TOLERANCE, acknowledge_known_issues, category_for,
     find_rollup, make_fund_mapper, print_summary, staff_check, to_long,
-    to_number, total_check,
+    to_number, total_check, check_counts,
 )
 
 # The 8 amount columns on line-item pages, left to right.
@@ -329,7 +329,13 @@ def main():
     ap.add_argument("pdf", type=Path)
     ap.add_argument("--out", type=Path, default=OUT_DIR)
     args = ap.parse_args()
+    if not run(args.pdf, args.out)["ok"]:
+        sys.exit(1)
 
+
+def run(pdf, out=OUT_DIR):
+    """Extract and validate the 2027-style book. Returns a stats dict."""
+    args = argparse.Namespace(pdf=Path(pdf), out=Path(out))
     doc = args.pdf.stem
     items, sections, staff, staff_checks, unparsed = extract(args.pdf)
     args.out.mkdir(parents=True, exist_ok=True)
@@ -346,8 +352,9 @@ def main():
 
     checks = acknowledge_known_issues(checks, args.pdf.name)
     checks.to_csv(args.out / f"validation_{doc}.csv", index=False)
-    if not print_summary(items, staff, checks, unparsed):
-        sys.exit(1)
+    ok = print_summary(items, staff, checks, unparsed)
+    return {"ok": ok, "line_items": len(items), "positions": len(staff),
+            **check_counts(checks), "source": "text"}
 
 if __name__ == "__main__":
     main()

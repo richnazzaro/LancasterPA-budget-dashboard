@@ -23,9 +23,22 @@ pip install -r requirements.txt
 ```
 
 ## Running the extraction
+One command handles any budget book, scanned or not:
+
 ```bash
-python scripts/extract_budget.py "Budget PDFs - City/2027-RevisedProposedBudget-Compressed.pdf"
+python scripts/ingest.py "Budget PDFs - City/2026-Adopted-Budget-2026.pdf"
+python scripts/ingest.py --all          # every PDF in Budget PDFs - City/
 ```
+
+For each PDF, `ingest.py`:
+1. **Detects** whether the PDF has a usable text layer (share of pages with text) or needs OCR. OCR runs automatically and is cached.
+2. **Loads `config/<pdf name>.json`.** If there isn't one, it **infers** one from the column header rows ("2025 ORIGINAL BUDGET", "RECEIVED YTD 11/14/2025", "2026 PROPOSED", ...) and the staffing header, and writes it. An inferred config must be reviewed: check every column's year and type, the staffing field order, and the fund maps. Delete its `_generated` key and run again.
+3. **Extracts and validates** the book, then **cross-checks** it against its neighbours: book B-1's PROPOSED vs this book's ORIGINAL BUDGET, and this book's PROPOSED vs book B+1's.
+4. **Prints a short report:** text or OCR, line items, checks passed / acknowledged / unreviewed, and the cross-check match rate.
+
+Exit status: 0 when everything passes or is a reviewed source issue, 1 when a book has unreviewed failures, and 2 when a config was just inferred or a PDF couldn't be processed.
+
+The per-book scripts still work on their own: `scripts/extract_budget.py` (2027 book) and `scripts/extract_layout.py` (all others).
 
 This writes four files to `data/processed/`, suffixed with the PDF's name:
 

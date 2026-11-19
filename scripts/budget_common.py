@@ -163,6 +163,14 @@ def acknowledge_known_issues(checks, source_doc):
     return checks
 
 
+def check_counts(checks):
+    """passed / acknowledged (reviewed source errors) / failed (unreviewed)."""
+    failed = ~checks["passed"]
+    ack = failed & (checks["acknowledged"].fillna("") != "")
+    return {"checks": len(checks), "passed": int(checks["passed"].sum()),
+            "acknowledged": int(ack.sum()), "failed": int((failed & ~ack).sum())}
+
+
 def print_summary(items, staff, checks, unparsed):
     """Print the run summary. Returns True if every check passed or is known."""
     failed = checks[~checks["passed"] & (checks["acknowledged"] == "")]

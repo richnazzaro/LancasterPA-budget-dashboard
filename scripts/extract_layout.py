@@ -36,7 +36,7 @@ import pandas as pd
 from budget_common import (
     OUT_DIR, ROOT, acknowledge_known_issues, category_for, find_rollup,
     make_fund_mapper, print_summary, staff_check, to_long, to_number,
-    total_check,
+    total_check, check_counts,
 )
 from ocr_pages import cache_dir, ocr_document
 
@@ -327,8 +327,8 @@ def extract(pdf_path, cfg):
     st_keys = [(f"count_{c['fiscal_year']}_{c['doc_type']}",
                 f"salary_{c['fiscal_year']}_{c['doc_type']}") for c in st["columns"]]
     st_flat = [k for pair in st_keys for k in pair]
-    if st.get("count_pattern"):
-        STAFF_FIELD["count"] = re.compile(st["count_pattern"])
+    # Per book; reset every run so one book's pattern never leaks into the next.
+    STAFF_FIELD["count"] = re.compile(st.get("count_pattern") or DEFAULT_COUNT)
 
     corrections = load_corrections(source_doc)
     signs, used_signs = load_signs(source_doc), set()
@@ -640,8 +640,9 @@ def _tokens(line):
 RE_COUNT = re.compile(r"^\d+\.\d{2}$")
 
 
+DEFAULT_COUNT = r"^\d+\.\d{1,2}$"
 STAFF_FIELD = {
-    "count": re.compile(r"^\d+\.\d{1,2}$"),
+    "count": re.compile(DEFAULT_COUNT),
     "ft_pt": re.compile(r"^(FT|PT|F|P|[FP][A-Za-z1])$"),
     "bargaining_unit": re.compile(r"^(\d{4}|[A-Z])$"),
 }
@@ -812,7 +813,14 @@ def main():
     ap.add_argument("--config", type=Path)
     ap.add_argument("--out", type=Path, default=OUT_DIR)
     args = ap.parse_args()
+    if not run(args.pdf, args.config, args.out)["ok"]:
+        sys.exit(1)
 
+
+def run(pdf, config=None, out=OUT_DIR):
+    """Extract and validate one book. Returns a stats dict ("ok" = no
+    unreviewed failures)."""
+    args = argparse.Namespace(pdf=Path(pdf), config=config, out=Path(out))
     cfg_path = args.config or CONFIG_DIR / f"{args.pdf.stem}.json"
     cfg = json.loads(cfg_path.read_text())
     if cfg["source_doc"] != args.pdf.name:
@@ -846,8 +854,9 @@ def main():
     print("Pages: " + ", ".join(f"{k} {v}" for k, v in kinds.items()))
     print(f"OCR cells flagged: {len(cell_log)} "
           f"(see ocr_cells_{doc}.csv)")
-    if not print_summary(items, staff, checks, unparsed):
-        sys.exit(1)
+    ok = print_summary(items, staff, checks, unparsed)
+    return {"ok": ok, "line_items": len(items), "positions": len(staff),
+            **check_counts(checks), "source": cfg.get("source", "ocr")}
 
 
 if __name__ == "__main__":
