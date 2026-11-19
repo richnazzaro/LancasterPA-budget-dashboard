@@ -10,6 +10,7 @@
   let D = null;            // budget.json
   const rowCache = new Map();
   let chart = null;
+  let catChart = null;
   const S = { y: 0, m: '', c: '', k: 'expense', f: '', d: '', b: '' };
   const tableState = { sort: 'sel', dir: -1, q: '', shown: PAGE_SIZE };
 
@@ -203,6 +204,7 @@
       const next = dark ? 'light' : 'dark';
       document.documentElement.dataset.theme = next;
       try { localStorage.setItem('theme', next); } catch (e) { /* storage unavailable */ }
+      renderCatChart();
       renderRevExp();
     });
     window.addEventListener('popstate', () => { readURL(); render(); });
@@ -282,10 +284,12 @@
   }
 
   function renderCrumbs() {
+    const up = S.b ? { b: '' } : { d: '', b: '' };
+    const back = S.d ? `<button type="button" class="back-btn" data-nav='${esc(JSON.stringify(up))}'>← Back</button>` : '';
     const parts = [`<a href="#" data-nav='{"d":"","b":""}'>${esc(S.f || 'All funds')}</a>`];
     if (S.d) parts.push(S.b ? `<a href="#" data-nav='${esc(JSON.stringify({ b: '' }))}'>${esc(S.d)}</a>` : `<span aria-current="page">${esc(S.d)}</span>`);
     if (S.b) parts.push(`<span aria-current="page">${esc(S.b.split('::')[1])}</span>`);
-    $('crumbs').innerHTML = parts.join('<span aria-hidden="true">›</span>');
+    $('crumbs').innerHTML = back + parts.join('<span aria-hidden="true">›</span>');
   }
 
   /* ---------- bar cards ---------- */
@@ -381,6 +385,34 @@
       if (multiFund) it.meta = esc(it.key.split('::')[0]);
     }
     return cardsHTML(items, sum(scoped(k, { depth: 2 })));
+  }
+
+  /* Category breakdown donut. Color follows the category (its index), never its rank. */
+  const catColor = (i) => `var(--c${(i % 8) + 1})`;
+  function categoryDonutHTML() {
+    const k = key(S.y, S.m);
+    const groups = [...aggregate(scoped(k), (r) => r.cat, (r) => D.categories[r.cat]).values()].sort((a, b) => b.total - a.total);
+    const total = groups.reduce((t, g) => t + g.total, 0);
+    if (!groups.length || total <= 0) return '';
+    const legend = groups.map((g) => `<li><i class="swatch" style="background:${catColor(g.key)}"></i><span class="dl-name">${esc(g.label)}</span><span class="dl-val">${pdfLink(g.doc, g.page, money(g.total))} <span class="card-share">${((g.total / total) * 100).toFixed(1)}%</span></span></li>`).join('');
+    return `<div class="donut-wrap"><div class="donut-box"><canvas id="cat-chart" role="img" aria-label="${esc(seriesLabel(k))} by category: ${esc(groups.map((g) => `${g.label} ${money(g.total)}`).join(', '))}"></canvas></div><ul class="donut-legend">${legend}</ul></div>`;
+  }
+  function renderCatChart() {
+    if (catChart) { catChart.destroy(); catChart = null; }
+    const cv = $('cat-chart');
+    if (!cv || !window.Chart) return;
+    const groups = [...aggregate(scoped(key(S.y, S.m)), (r) => r.cat, (r) => D.categories[r.cat]).values()].sort((a, b) => b.total - a.total);
+    const css = getComputedStyle(document.documentElement);
+    const col = (i) => css.getPropertyValue(`--c${(i % 8) + 1}`).trim();
+    catChart = new Chart(cv, {
+      type: 'doughnut',
+      data: { labels: groups.map((g) => g.label), datasets: [{ data: groups.map((g) => Math.max(0, g.total)), backgroundColor: groups.map((g) => col(g.key)), borderColor: css.getPropertyValue('--surface').trim(), borderWidth: 2 }] },
+      options: {
+        cutout: '58%', responsive: true, maintainAspectRatio: false,
+        animation: matchMedia('(prefers-reduced-motion: reduce)').matches ? false : { duration: 300 },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${c.label}: ${money(c.raw)}` } } },
+      },
+    });
   }
 
   function categoryCards() {
@@ -485,11 +517,11 @@
     } else if (!S.b) {
       depth = 2;
       html += `<div class="two-col"><section class="panel" aria-labelledby="bur-title"><h2 id="bur-title">Bureaus</h2><p class="panel-note">Select a bureau to see its line items.</p>${bureauCards()}</section>`;
-      html += `<section class="panel" aria-labelledby="cat-title"><h2 id="cat-title">By category</h2><p class="panel-note">${esc(S.d)} ${kindWord} by type of spending or revenue.</p>${categoryCards()}</section></div>`;
+      html += `<section class="panel" aria-labelledby="cat-title"><h2 id="cat-title">By category</h2><p class="panel-note">${esc(S.d)} ${kindWord} by type of spending or revenue.</p>${categoryDonutHTML()}${categoryCards()}</section></div>`;
       html += `<section class="panel" aria-labelledby="all-title"><h2 id="all-title">${esc(S.d)} line items</h2><div data-table>${tableHTML(2)}</div></section>`;
     } else {
       html += `<section class="panel" aria-labelledby="li-title"><h2 id="li-title">Line items · ${esc(S.b.split('::')[1])}</h2><p class="panel-note">${esc(S.b.split('::')[0])} · ${esc(S.d)}. Sort by any column; search by name or account number.</p><div data-table>${tableHTML(3)}</div></section>`;
-      html += `<section class="panel" aria-labelledby="cat-title"><h2 id="cat-title">By category</h2>${categoryCards()}</section>`;
+      html += `<section class="panel" aria-labelledby="cat-title"><h2 id="cat-title">By category</h2>${categoryDonutHTML()}${categoryCards()}</section>`;
     }
     view.innerHTML = html;
     view.querySelectorAll('[data-more]').forEach((b) => b.addEventListener('click', () => {
@@ -497,6 +529,7 @@
       b.remove();
     }));
     wireTable(view, depth);
+    renderCatChart();
     renderRevExp();
   }
 

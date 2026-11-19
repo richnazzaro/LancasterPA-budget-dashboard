@@ -22,6 +22,7 @@
   --ok-fg: #6fd3a8;
   --info-bg: #142a45;
   --info-fg: #8dbbf0;
+  --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181; --c6: #0ca30c; --c7: #9085e9; --c8: #e66767;
   --radius: 10px;
   --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -32,7 +33,7 @@
     --bg: #f6f6f4; --surface: #ffffff; --surface-2: #f0f0ed; --border: #dcdbd5; --track: #e8e7e2;
     --text: #0b0b0b; --text-2: #52514e; --text-3: #6d6c66;
     --accent: #2a78d6; --sel: #1baf7a; --cmp: #eda100; --rev: #2a78d6; --exp: #eb6834;
-    --up: #c23a39; --down: #0d7a52; --hero: #0d7a52;
+    --up: #c23a39; --down: #0d7a52; --hero: #0d7a52; --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a; --c4: #eda100; --c5: #e87ba4; --c6: #008300; --c7: #6250d6; --c8: #e34948;
     --warn-bg: #fff3d6; --warn-fg: #7a5200; --ok-bg: #e2f5ec; --ok-fg: #0d6644; --info-bg: #e3eefb; --info-fg: #184f95;
   }
 }
@@ -41,7 +42,7 @@
   --bg: #f6f6f4; --surface: #ffffff; --surface-2: #f0f0ed; --border: #dcdbd5; --track: #e8e7e2;
   --text: #0b0b0b; --text-2: #52514e; --text-3: #6d6c66;
   --accent: #2a78d6; --sel: #1baf7a; --cmp: #eda100; --rev: #2a78d6; --exp: #eb6834;
-  --up: #c23a39; --down: #0d7a52; --hero: #0d7a52;
+  --up: #c23a39; --down: #0d7a52; --hero: #0d7a52; --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a; --c4: #eda100; --c5: #e87ba4; --c6: #008300; --c7: #6250d6; --c8: #e34948;
   --warn-bg: #fff3d6; --warn-fg: #7a5200; --ok-bg: #e2f5ec; --ok-fg: #0d6644; --info-bg: #e3eefb; --info-fg: #184f95;
 }
 
@@ -197,3 +198,13 @@ select { appearance: none; background: var(--surface-2) url("data:image/svg+xml,
 }
 @media (prefers-reduced-motion: reduce) { .bar-fill { transition: none; } }
 @media (forced-colors: active) { .bar-fill { background: CanvasText; } .bar-fill.cmp { background: GrayText; } }
+
+/* Category donut (department and bureau views) */
+.donut-wrap { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; margin: 0 0 18px; }
+.donut-box { position: relative; height: 200px; }
+.donut-legend { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; font-size: 14px; }
+.donut-legend li { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+.dl-name { color: var(--text); }
+.dl-val { text-align: right; white-space: nowrap; color: var(--text); font-weight: 600; }
+.dl-val a { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--text-3); }
+.back-btn { background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 6px 12px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; margin-right: 6px; }
