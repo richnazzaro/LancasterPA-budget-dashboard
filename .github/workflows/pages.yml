@@ -1,4 +1,4 @@
-# Builds web/data from data/processed and publishes web/ (plus the source PDFs) to GitHub Pages.
+# Builds web/data from data/processed and publishes web/ to GitHub Pages.
 # One-time setup: repo Settings > Pages > Build and deployment > Source: "GitHub Actions".
 name: Publish dashboard
 
@@ -31,14 +31,9 @@ jobs:
         run: |
           python scripts/build_dataset.py
           python scripts/check_dataset.py
-      - name: Assemble site
-        # web/pdfs is a symlink to "Budget PDFs - City"; -L copies the PDFs themselves.
-        run: |
-          mkdir _site
-          cp -RL web/. _site/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: _site
+          path: web
       - id: deployment
         uses: actions/deploy-pages@v4

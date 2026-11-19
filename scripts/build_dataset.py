@@ -2,7 +2,8 @@
 """Build the dashboard's JSON from every data/processed/budget_long_*.csv.
 
 Which figure is shown (the project's selection rule):
-  * "proposed" only for the newest book's own year (proposed_revised when present).
+  * Proposed figures only for the newest book's own year, as two measures:
+    "proposed" (the original proposal) and "revised" (proposed_revised), when present.
   * Every other year Y shows adopted, amended and projected from book Y+1
     (projected_revised preferred) and actual from book Y+2.
   * A book's own-year proposed column is never shown for older books.
@@ -33,10 +34,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-MEASURES = ["adopted", "amended", "projected", "actual", "proposed"]
+MEASURES = ["adopted", "amended", "projected", "actual", "proposed", "revised"]
+PROPOSED_MEASURES = {"proposed", "revised"}  # shown only for the newest year
 # measure -> (book offset from the figure's fiscal year, source columns in preference order)
 RULE = {
-    "proposed": (0, ["proposed_revised", "proposed"]),
+    "proposed": (0, ["proposed"]),
+    "revised": (0, ["proposed_revised"]),
     "adopted": (1, ["adopted"]),
     "amended": (1, ["amended"]),
     "projected": (1, ["projected_revised", "projected"]),
@@ -149,7 +152,7 @@ def build(processed: Path, out: Path) -> dict:
                 continue
             fy = int(r["fiscal_year"])
             offset, cols = RULE[measure]
-            if measure == "proposed" and fy != newest:
+            if measure in PROPOSED_MEASURES and fy != newest:
                 continue  # older books' own-year proposals are never shown
             nth = seen[(r["doc_type"], fy, r["account_code"])]
             seen[(r["doc_type"], fy, r["account_code"])] += 1
@@ -254,7 +257,7 @@ def printed_totals(processed: Path, designated: dict, newest: int, docs, bureaus
                 measure = COLUMN_TO_MEASURE.get(doc_type)
                 if measure is None or by - fy != RULE[measure][0]:
                     continue
-                if measure == "proposed" and fy != newest:
+                if measure in PROPOSED_MEASURES and fy != newest:
                     continue
                 # keep only the preferred column for each measure
                 key = f"{fy}|{measure}"

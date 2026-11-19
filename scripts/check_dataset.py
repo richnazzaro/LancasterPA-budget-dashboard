@@ -3,9 +3,11 @@
 
 1. Every series total per fund and revenue/expense equals the sum of the chosen
    column in the designated book's budget_long CSV (exact, to the dollar).
-2. Every fund roll-up the book prints is within $5 of the shown line-item sum
+2. Proposed-type measures ("proposed", "revised") exist only for the newest
+   year, and both exist when the newest book has both columns.
+3. Every fund roll-up the book prints is within $5 of the shown line-item sum
    (known source-PDF issues are reported, not failed).
-Exits 1 on any failure of check 1. Standard library only.
+Exits 1 on any failure of checks 1-2. Standard library only.
 """
 from __future__ import annotations
 
@@ -46,6 +48,22 @@ def main() -> int:
         ok = abs(expected - total) < 0.5
         failures += not ok
         print(f"{'ok  ' if ok else 'FAIL'} {key:16s} {fund:30s} {kind:8s} shown {total:>14,.0f}  csv[{col}] {expected:>14,.0f}")
+
+    newest = budget["newest_year"]
+    proposed_keys = {k for k, s in budget["series"].items() if s["measure"] in ("proposed", "revised")}
+    stray = sorted(k for k in proposed_keys if budget["series"][k]["year"] != newest)
+    newest_cols = {c for (fy, c, *_rest) in raw if fy == str(newest)}
+    expected = {f"{newest}|proposed"} if "proposed" in newest_cols else set()
+    if "proposed_revised" in newest_cols:
+        expected.add(f"{newest}|revised")
+    missing = sorted(expected - proposed_keys)
+    for k in stray:
+        print(f"FAIL proposed-type series for a non-newest year: {k}")
+    for k in missing:
+        print(f"FAIL newest book has the column but series is missing: {k}")
+    if not stray and not missing:
+        print(f"ok   proposed-type series: {', '.join(sorted(proposed_keys))} (newest year {newest} only)")
+    failures += len(stray) + len(missing)
 
     print("\nPrinted fund roll-ups vs shown sums:")
     for p in budget["printed"]:

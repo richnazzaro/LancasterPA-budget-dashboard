@@ -1,50 +1,46 @@
-/* Lancaster Budget Explorer: plain JS, no build step. Data: data/budget.json (scripts/build_dataset.py). */
+/* Lancaster Budget Explorer: plain JS, no build step. Data: data/budget.json (scripts/build_dataset.py).
+ * Routes (hash-based, so GitHub Pages needs no server rules):
+ *   #/                                        all departments
+ *   #/department/<dept>                       one department
+ *   #/department/<dept>/bureau/<fund--bureau> one bureau
+ * Shared query: y=year m=measure c=compare k=revenue f=fund
+ */
 (() => {
   'use strict';
 
-  const PDF_BASE = 'pdfs/'; // web/pdfs -> ../Budget PDFs - City (copied in by the Pages workflow)
-  const LABEL = { proposed: 'Proposed', adopted: 'Adopted', amended: 'Amended', projected: 'Projected', actual: 'Actual' };
-  const ORDER = ['adopted', 'amended', 'projected', 'actual', 'proposed'];
+  const LABEL = { proposed: 'Proposed', revised: 'Revised Proposed', adopted: 'Adopted', amended: 'Amended', projected: 'Projected', actual: 'Actual' };
+  const ORDER = ['adopted', 'amended', 'projected', 'actual', 'proposed', 'revised'];
+  const STATUS = {
+    proposed: 'Proposed, not adopted', revised: 'Revised proposal, not adopted', adopted: 'Adopted budget',
+    amended: 'Amended budget', projected: 'Projected year-end estimate', actual: 'Actual spending',
+  };
+  const CAT_ORDER = ['Salaries & Wages', 'Benefits', 'Operating', 'Equipment & Capital', 'Debt, Transfers & Allocations', 'Revenue', 'Uncoded'];
+  const PALETTE = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#9085e9', '#0ca30c', '#e66767'];
+  const OTHER_COLOR = '#777';
   const PAGE_SIZE = 50;
+  const PIE_SLICES = 7;
 
-  let D = null;            // budget.json
+  let D = null;
   const rowCache = new Map();
-  let chart = null;
-  let catChart = null;
-  const S = { y: 0, m: '', c: '', k: 'expense', f: '', d: '', b: '' };
-  const tableState = { sort: 'sel', dir: -1, q: '', shown: PAGE_SIZE };
+  let charts = [];
+  const S = { y: 0, m: '', c: '', k: 'expense', f: '' };
+  let route = { name: 'home' };
+  const T = { sort: 'sel', dir: -1, q: '', shown: PAGE_SIZE };
 
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
-  const money = (n) => (n < 0 ? '−$' : '$') + Math.abs(Math.round(n)).toLocaleString('en-US');
+  const money = (n) => (n < 0 ? '-$' : '$') + Math.abs(Math.round(n)).toLocaleString('en-US');
   const short = (n) => {
-    const a = Math.abs(n), sign = n < 0 ? '−' : '';
-    if (a >= 1e9) return sign + '$' + (a / 1e9).toFixed(1) + 'B';
-    if (a >= 1e6) return sign + '$' + (a / 1e6).toFixed(1) + 'M';
-    if (a >= 1e3) return sign + '$' + (a / 1e3).toFixed(0) + 'K';
-    return sign + '$' + a;
+    const a = Math.abs(n), sg = n < 0 ? '-' : '';
+    return a >= 1e9 ? `${sg}$${(a / 1e9).toFixed(1)}B` : a >= 1e6 ? `${sg}$${(a / 1e6).toFixed(0)}M` : a >= 1e3 ? `${sg}$${(a / 1e3).toFixed(0)}K` : `${sg}$${a}`;
   };
-  const pct = (a, b) => (b ? ((a - b) / Math.abs(b)) * 100 : null);
+  const pctOf = (a, b) => (b ? (a / Math.abs(b)) * 100 : null);
+  const slug = (s) => String(s).toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   const key = (y, m) => `${y}|${m}`;
   const parseKey = (k) => { const [y, m] = k.split('|'); return { y: +y, m }; };
   const series = (k) => D.series[k];
-  const seriesLabel = (k) => { const { y, m } = parseKey(k); return `${y} ${LABEL[m].toLowerCase()}`; };
-  const docName = (i) => D.docs[i];
-  const bookYearOf = (k) => { const s = series(k); return s.year + D.rule[s.measure].book_offset; };
-
-  function pdfHref(doc, page) {
-    return PDF_BASE + encodeURIComponent(docName(doc)) + (page ? `#page=${page}` : '');
-  }
-  function pdfLink(doc, page, text, extra = '') {
-    const title = `${docName(doc)}, page ${page}`;
-    return `<a href="${pdfHref(doc, page)}" target="_blank" rel="noopener" title="${esc(title)}" ${extra}>${text}</a>`;
-  }
-  function srcLink(agg) {
-    if (!agg || agg.doc == null) return '';
-    const label = agg.printed ? `p.${agg.page}` : (agg.minP === agg.maxP ? `p.${agg.minP}` : `pp.${agg.minP}–${agg.maxP}`);
-    const why = agg.printed ? 'printed total' : 'line items';
-    return `<span class="src">${pdfLink(agg.doc, agg.page, esc(label), `aria-label="Source: ${esc(docName(agg.doc))}, page ${agg.page} (${why})"`)}</span>`;
-  }
+  const seriesLabel = (k) => { const { y, m } = parseKey(k); return `${y} ${LABEL[m]}`; };
+  const sum = (list) => list.reduce((t, r) => t + r.v, 0);
 
   /* ---------- data access ---------- */
   function rows(k) {
@@ -53,594 +49,484 @@
     const s = series(k);
     const out = s.a.map((acct, i) => {
       const a = D.accounts[acct];
-      return {
-        code: a[0], name: a[1], fund: a[2], dept: a[3], bureau: a[4], cat: a[5],
-        v: s.v[i], p: s.p[i], doc: Array.isArray(s.doc) ? s.doc[i] : s.doc,
-        col: Array.isArray(s.column) ? s.column[i] : s.column,
-      };
+      return { code: a[0], name: a[1], fund: a[2], dept: a[3], bureau: a[4], cat: a[5], v: s.v[i] };
     });
     rowCache.set(k, out);
     return out;
   }
   const isRevenue = (r) => D.categories[r.cat] === 'Revenue';
-  const fundIdx = (name) => D.funds.indexOf(name);
-  const deptIdx = (name) => D.departments.indexOf(name);
-  const bureauKey = (r) => `${D.funds[r.fund]}::${D.bureaus[r.bureau]}`;
+  const bureauKey = (r) => `${r.fund}|${r.bureau}`;
+  const bureauSlug = (fund, bureau) => `${slug(D.funds[fund])}--${slug(D.bureaus[bureau])}`;
 
-  function scoped(k, { ignoreFund = false, kind = S.k, depth = 3 } = {}) {
-    const f = ignoreFund ? -1 : fundIdx(S.f);
-    const d = depth >= 2 ? deptIdx(S.d) : -1;
-    const b = depth >= 3 ? S.b : '';
+  function scoped(k, over = {}) {
+    const kind = over.kind || S.k;
+    const f = D.funds.indexOf(S.f);
     return rows(k).filter((r) =>
       (kind === 'revenue') === isRevenue(r) &&
-      (f < 0 || r.fund === f) &&
-      (d < 0 || r.dept === d) &&
-      (!b || bureauKey(r) === b));
+      (over.bureau != null || f < 0 || r.fund === f) && // a bureau lives in one fund, so the fund filter is moot
+      (over.dept == null || r.dept === over.dept) &&
+      (over.bureau == null || bureauKey(r) === over.bureau));
   }
-
   function aggregate(list, keyFn, labelFn) {
     const m = new Map();
     for (const r of list) {
       const k = keyFn(r);
       let g = m.get(k);
-      if (!g) { g = { key: k, label: labelFn(r), total: 0, n: 0, minP: Infinity, maxP: 0, doc: r.doc, funds: new Set(), sample: r }; m.set(k, g); }
-      g.total += r.v; g.n++;
-      if (r.doc === g.doc) { g.minP = Math.min(g.minP, r.p); g.maxP = Math.max(g.maxP, r.p); }
-      g.funds.add(r.fund);
+      if (!g) { g = { key: k, label: labelFn(r), total: 0, funds: new Set(), sample: r }; m.set(k, g); }
+      g.total += r.v; g.funds.add(r.fund);
     }
-    for (const g of m.values()) g.page = g.minP;
     return m;
   }
-  const sum = (list) => list.reduce((t, r) => t + r.v, 0);
+  const catRank = (i) => { const n = CAT_ORDER.indexOf(D.categories[i]); return n < 0 ? 99 : n; };
+  const catColor = (i) => PALETTE[catRank(i) % PALETTE.length];
 
-  function printedFund(fund, kind, k) {
-    return D.printed.find((p) => p.level === 'rollup' && p.fund === fund && p.kind === kind && k in p.values);
-  }
-  function printedSection(label, k, doc, minP, maxP) {
-    const hits = D.printed.filter((p) => p.level === 'section' && p.label === label && p.doc === doc && k in p.values && p.page >= minP && p.page <= maxP + 3);
-    hits.sort((a, b) => a.page - b.page);
-    return hits[0];
-  }
-  function attachPrinted(g, printed, k) {
-    if (!printed) return g;
-    g.printed = printed.values[k];
-    g.page = printed.page;
-    g.doc = printed.doc;
-    return g;
-  }
-
-  /* ---------- state & URL ---------- */
   const years = () => [...new Set(Object.values(D.series).map((s) => s.year))].sort((a, b) => b - a);
   const measuresFor = (y) => ORDER.filter((m) => series(key(y, m)));
-
+  const defaultMeasure = (y) => { const ms = measuresFor(y); return ms.includes('revised') ? 'revised' : ms.includes('proposed') ? 'proposed' : ms.includes('adopted') ? 'adopted' : ms[0]; };
   function defaultCompare(y, m) {
-    const tries = [key(y - 1, m), key(y - 1, 'adopted'), key(y - 1, 'actual'), m !== 'adopted' ? key(y, 'adopted') : ''];
-    return tries.find((k) => k && series(k)) || '';
+    return [key(y - 1, m), key(y - 1, 'adopted'), key(y - 1, 'actual')].find((k) => series(k)) || '';
   }
 
-  function readURL() {
-    const q = new URLSearchParams(location.search);
+  /* ---------- routing ---------- */
+  function parseHash() {
+    const raw = location.hash.replace(/^#\/?/, '');
+    const [path, qs = ''] = raw.split('?');
+    const parts = path.split('/').filter(Boolean).map(decodeURIComponent);
+    const q = new URLSearchParams(qs);
+    let r = { name: 'home' };
+    if (parts[0] === 'department' && parts[1]) {
+      r = parts[2] === 'bureau' && parts[3] ? { name: 'bureau', dept: parts[1], bureau: parts[3] } : { name: 'dept', dept: parts[1] };
+    }
+    return { r, q };
+  }
+  function applyQuery(q) {
     const ys = years();
-    S.y = ys.includes(+q.get('y')) ? +q.get('y') : D.newest_year;
-    if (!ys.includes(S.y)) S.y = ys[0];
+    S.y = ys.includes(+q.get('y')) ? +q.get('y') : ys.includes(D.newest_year) ? D.newest_year : ys[0];
     const ms = measuresFor(S.y);
-    S.m = ms.includes(q.get('m')) ? q.get('m') : (ms.includes('proposed') ? 'proposed' : ms.includes('adopted') ? 'adopted' : ms[0]);
-    S.c = q.has('c') ? (series(q.get('c')) ? q.get('c') : '') : defaultCompare(S.y, S.m);
-    if (S.c === key(S.y, S.m)) S.c = '';
+    S.m = ms.includes(q.get('m')) ? q.get('m') : defaultMeasure(S.y);
+    const c = (q.get('c') || '').replace('-', '|');
+    S.c = q.has('c') ? (series(c) && c !== key(S.y, S.m) ? c : '') : defaultCompare(S.y, S.m);
     S.k = q.get('k') === 'revenue' ? 'revenue' : 'expense';
     S.f = D.funds.includes(q.get('f')) ? q.get('f') : '';
-    S.d = D.departments.includes(q.get('d')) ? q.get('d') : '';
-    S.b = S.d && q.get('b') ? q.get('b') : '';
-    tableState.q = q.get('q') || '';
   }
-  function writeURL(push) {
+  function query(over = {}) {
+    const s = { ...S, ...over };
     const q = new URLSearchParams();
-    q.set('y', S.y); q.set('m', S.m);
-    if (S.c !== defaultCompare(S.y, S.m)) q.set('c', S.c);
-    if (S.k !== 'expense') q.set('k', S.k);
-    if (S.f) q.set('f', S.f);
-    if (S.d) q.set('d', S.d);
-    if (S.b) q.set('b', S.b);
-    const url = `${location.pathname}?${q}${location.hash}`;
-    if (push) history.pushState(null, '', url); else history.replaceState(null, '', url);
+    q.set('y', s.y); q.set('m', s.m);
+    if (s.c !== defaultCompare(s.y, s.m)) q.set('c', s.c ? s.c.replace('|', '-') : 'none');
+    if (s.k !== 'expense') q.set('k', s.k);
+    if (s.f) q.set('f', s.f);
+    return q.toString();
   }
-  function go(patch, push = true) {
-    const before = { ...S };
-    Object.assign(S, patch);
-    if ('y' in patch || 'm' in patch) {
-      const ms = measuresFor(S.y);
-      if (!ms.includes(S.m)) S.m = ms.includes('adopted') ? 'adopted' : ms[0];
-      if (!('c' in patch)) S.c = defaultCompare(S.y, S.m);
-    }
-    if (S.c === key(S.y, S.m)) S.c = '';
-    if (before.d !== S.d || before.b !== S.b || before.f !== S.f || before.k !== S.k) { tableState.shown = PAGE_SIZE; }
-    writeURL(push);
-    render();
-    if (push && (before.d !== S.d || before.b !== S.b || before.f !== S.f)) {
-      window.scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-      $('hero-title').focus({ preventScroll: true }); // announce the new view to screen readers
-    }
+  const deptHash = (dept, over) => `#/department/${slug(D.departments[dept])}?${query(over)}`;
+  const bureauHash = (dept, fund, bureau, over) => `#/department/${slug(D.departments[dept])}/bureau/${bureauSlug(fund, bureau)}?${query(over)}`;
+  const homeHash = (over) => `#/?${query(over)}`;
+
+  function navigate(hash, replace = false) {
+    if (replace) { history.replaceState(null, '', hash); onRoute(false); } else { location.hash = hash; }
+  }
+  const currentHash = () => (route.name === 'home' ? homeHash : route.name === 'dept' ? (o) => deptHash(route.deptIdx, o) : (o) => bureauHash(route.deptIdx, route.fund, route.bureauIdx, o));
+
+  /* ---------- shared UI pieces ---------- */
+  function statusHTML() {
+    const draft = S.m === 'proposed' || S.m === 'revised';
+    return `<span class="status${draft ? ' not-adopted' : ''}">${S.y}: ${STATUS[S.m]}</span>`;
   }
 
-  /* ---------- controls ---------- */
-  function renderControls() {
-    $('year-select').innerHTML = years().map((y) => `<option value="${y}" ${y === S.y ? 'selected' : ''}>${y}</option>`).join('');
-    $('measure-group').innerHTML = measuresFor(S.y).map((m) => {
-      const col = series(key(S.y, m)).column;
-      const note = typeof col === 'string' && col.endsWith('_revised') ? ' (revised)' : '';
-      return `<button type="button" role="radio" aria-checked="${m === S.m}" data-m="${m}" title="${LABEL[m]}${note}">${LABEL[m]}</button>`;
-    }).join('');
-    $('kind-group').innerHTML = [['expense', 'Expenses'], ['revenue', 'Revenue']].map(([k, l]) =>
-      `<button type="button" role="radio" aria-checked="${k === S.k}" data-k="${k}">${l}</button>`).join('');
-    const fundsHere = new Set(rows(key(S.y, S.m)).map((r) => r.fund));
-    $('fund-select').innerHTML = `<option value="">All funds</option>` + D.funds
-      .map((f, i) => fundsHere.has(i) || f === S.f ? `<option value="${esc(f)}" ${f === S.f ? 'selected' : ''}>${esc(f)}</option>` : '').join('');
-    const opts = Object.keys(D.series).filter((k) => k !== key(S.y, S.m))
+  function filtersHTML({ fund = true } = {}) {
+    const k = key(S.y, S.m);
+    const yrs = years().map((y) => `<option value="${y}" ${y === S.y ? 'selected' : ''}>${y}</option>`).join('');
+    const opts = Object.keys(D.series).filter((x) => x !== k)
       .sort((a, b) => parseKey(b).y - parseKey(a).y || ORDER.indexOf(parseKey(a).m) - ORDER.indexOf(parseKey(b).m));
-    $('compare-select').innerHTML = `<option value="">Nothing</option>` +
-      opts.map((k) => `<option value="${k}" ${k === S.c ? 'selected' : ''}>${esc(seriesLabel(k))}</option>`).join('');
+    const cmp = `<option value="none" ${!S.c ? 'selected' : ''}>No comparison</option>` + opts.map((x) => `<option value="${x}" ${x === S.c ? 'selected' : ''}>${esc(seriesLabel(x))}</option>`).join('');
+    const present = new Set(rows(k).map((r) => r.fund));
+    const funds = `<option value="">All funds</option>` + D.funds.map((f, i) => (present.has(i) || f === S.f ? `<option value="${esc(f)}" ${f === S.f ? 'selected' : ''}>${esc(f)}</option>` : '')).join('');
+    const tabs = (name, items, cur) => `<div class="tabs" role="radiogroup" aria-label="${name}">${items.map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === cur}" data-tab="${name}" data-v="${v}">${esc(l)}</button>`).join('')}</div>`;
+    return `<div class="filters">
+        <div class="field"><label class="field-label" for="f-y">Fiscal year</label><select id="f-y" data-sel="y">${yrs}</select></div>
+        <div class="field"><label class="field-label" for="f-c">Compare with</label><select id="f-c" data-sel="c">${cmp}</select></div>
+        ${fund ? `<div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select></div>` : ''}
+      </div>
+      <div class="filters">
+        <div class="field field-wide"><span class="field-label" id="lbl-m">Figure</span>${tabs('m', measuresFor(S.y).map((m) => [m, LABEL[m]]), S.m)}</div>
+        <div class="field field-wide"><span class="field-label" id="lbl-k">Show</span>${tabs('k', [['expense', 'Expenses'], ['revenue', 'Revenue']], S.k)}</div>
+      </div>`;
   }
 
-  function wireControls() {
-    $('year-select').addEventListener('change', (e) => go({ y: +e.target.value }));
-    $('fund-select').addEventListener('change', (e) => go({ f: e.target.value, d: '', b: '' }));
-    $('compare-select').addEventListener('change', (e) => go({ c: e.target.value }));
-    const radio = (groupId, attr, apply) => {
-      const g = $(groupId);
-      g.addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) apply(b.dataset[attr]); });
-      g.addEventListener('keydown', (e) => {
-        if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return;
-        const btns = [...g.querySelectorAll('button')];
-        const i = btns.findIndex((b) => b.getAttribute('aria-checked') === 'true');
-        const n = btns[(i + (e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : -1) + btns.length) % btns.length];
-        e.preventDefault(); apply(n.dataset[attr]);
-        requestAnimationFrame(() => g.querySelector(`[data-${attr}="${n.dataset[attr]}"]`)?.focus());
-      });
-    };
-    radio('measure-group', 'm', (m) => go({ m }));
-    radio('kind-group', 'k', (k) => go({ k, d: '', b: '' }));
-    $('theme-toggle').addEventListener('click', () => {
-      const dark = getComputedStyle(document.documentElement).colorScheme.includes('dark');
-      const next = dark ? 'light' : 'dark';
-      document.documentElement.dataset.theme = next;
-      try { localStorage.setItem('theme', next); } catch (e) { /* storage unavailable */ }
-      renderCatChart();
-      renderRevExp();
-    });
-    window.addEventListener('popstate', () => { readURL(); render(); });
-    document.addEventListener('click', (e) => {
-      const nav = e.target.closest('[data-nav]');
-      if (!nav) return;
-      const a = e.target.closest('a');
-      if (a && !a.hasAttribute('data-nav')) return; // source links open the PDF instead
-      e.preventDefault();
-      go(JSON.parse(nav.dataset.nav));
-    });
+  function onFilter(name, v) {
+    const over = {};
+    if (name === 'y') {
+      const ms = measuresFor(+v);
+      over.y = +v; over.m = ms.includes(S.m) ? S.m : defaultMeasure(+v);
+      over.c = defaultCompare(+v, over.m);
+    } else if (name === 'm') {
+      over.m = v; over.c = defaultCompare(S.y, v);
+    } else if (name === 'c') {
+      over.c = v === 'none' ? '' : v;
+    } else if (name === 'k') {
+      over.k = v;
+    } else if (name === 'f') {
+      over.f = v;
+    }
+    navigate(currentHash()(over), true);
   }
 
-  /* ---------- hero / badge ---------- */
-  function badge() {
-    const k = key(S.y, S.m), s = series(k), book = bookYearOf(k);
-    const col = typeof s.column === 'string' ? s.column : '';
-    const el = $('status-badge');
-    const kindWord = S.k === 'revenue' ? 'revenue' : 'spending';
-    const text = {
-      proposed: [`${S.y}: Proposed, not adopted${col.endsWith('_revised') ? ' (revised proposal)' : ''}`, 'warn'],
-      adopted: [`${S.y}: Adopted budget · from the ${book} book`, 'ok'],
-      amended: [`${S.y}: Amended budget (mid-year changes) · from the ${book} book`, ''],
-      projected: [`${S.y}: Projected year-end estimate${col.endsWith('_revised') ? ' (revised)' : ''} · from the ${book} book`, ''],
-      actual: [`${S.y}: Actual ${kindWord} · reported in the ${book} book`, 'ok'],
-    }[S.m];
-    el.textContent = text[0];
-    el.className = 'badge ' + text[1];
-  }
+  function destroyCharts() { charts.forEach((c) => c.destroy()); charts = []; }
+  const chartTheme = () => ({
+    tip: { backgroundColor: '#000', borderColor: '#262626', borderWidth: 1, titleColor: '#fff', bodyColor: '#fff', padding: 10 },
+    tick: '#b3b3b3', grid: '#262626',
+  });
+  const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  function scopeName() {
-    if (S.b) return S.b.split('::')[1];
-    if (S.d) return S.d + (S.f ? ` (${S.f})` : '');
-    return S.f || 'City of Lancaster';
-  }
-
-  function renderHero() {
+  /* ---------- home ---------- */
+  function homeView() {
     const k = key(S.y, S.m);
     const list = scoped(k);
     const total = sum(list);
-    const kindWord = S.k === 'revenue' ? 'revenue' : 'expenses';
-    $('hero-eyebrow').textContent = S.f || S.d ? 'City of Lancaster, PA' : 'All funds';
-    const scope = /(expense|revenue|fees|income)$/i.test(scopeName()) ? scopeName() : `${scopeName()} ${kindWord}`;
-    $('hero-title').textContent = `${scope}: ${S.y} ${LABEL[S.m].toLowerCase()}`;
-    document.title = `${scope} ${S.y} · Lancaster Budget Explorer`;
+    const kindWord = S.k === 'revenue' ? 'Revenue' : 'Expenses';
+    const scope = S.f ? S.f : 'City of Lancaster';
+    document.title = `${scope} ${kindWord}: ${seriesLabel(k)} · Lancaster Budget Explorer`;
 
-    let link = '', note = '';
-    const g = aggregate(list, () => 'all', () => '').get('all');
-    if (g) {
-      let printed = null;
-      if (S.b) printed = printedSection(S.b.split('::')[1], k, g.doc, g.minP, g.maxP);
-      else if (S.f && !S.d) printed = printedFund(S.f, S.k, k);
-      if (printed) {
-        attachPrinted(g, printed, k);
-        const diff = total - g.printed;
-        note = Math.abs(diff) < 0.5 ? `Matches the printed total on page ${g.page}.`
-          : Math.abs(diff) <= 5
-            ? `Sum of line items. The book prints ${money(g.printed)} on page ${g.page}; the ${money(Math.abs(diff))} gap is the city's rounding.`
-            : `Sum of line items. The book prints ${money(g.printed)} on page ${g.page}; the lines add up to ${money(Math.abs(diff))} ${diff > 0 ? 'more' : 'less'} than that total.`;
-      } else if (!S.f && !S.d) {
-        note = 'Sum of every fund below; each fund total links to the page where the city prints it.';
-      } else {
-        note = `Sum of ${g.n} line items, ${g.minP === g.maxP ? `page ${g.minP}` : `pages ${g.minP}–${g.maxP}`} of the ${bookYearOf(k)} book.`;
-      }
-      link = pdfLink(g.doc, g.page, money(total), `aria-label="${money(total)}, source page ${g.page}"`);
-    }
-    $('hero-total').innerHTML = g ? link : '<span class="empty">No figures</span>';
-
-    let cmp = '';
-    if (S.c) {
-      const ct = sum(scoped(S.c));
-      const p = pct(total, ct);
-      cmp = `${money(ct)} in ${seriesLabel(S.c)}` + (p == null ? '' : ` · ${p >= 0 ? '+' : '−'}${Math.abs(p).toFixed(1)}%`);
-    }
-    $('hero-sub').innerHTML = [note, cmp && `Compared with ${esc(cmp)}.`].filter(Boolean).join(' ');
-    badge();
-  }
-
-  function renderCrumbs() {
-    const up = S.b ? { b: '' } : { d: '', b: '' };
-    const back = S.d ? `<button type="button" class="back-btn" data-nav='${esc(JSON.stringify(up))}'>← Back</button>` : '';
-    const parts = [`<a href="#" data-nav='{"d":"","b":""}'>${esc(S.f || 'All funds')}</a>`];
-    if (S.d) parts.push(S.b ? `<a href="#" data-nav='${esc(JSON.stringify({ b: '' }))}'>${esc(S.d)}</a>` : `<span aria-current="page">${esc(S.d)}</span>`);
-    if (S.b) parts.push(`<span aria-current="page">${esc(S.b.split('::')[1])}</span>`);
-    $('crumbs').innerHTML = back + parts.join('<span aria-hidden="true">›</span>');
-  }
-
-  /* ---------- bar cards ---------- */
-  function legendHTML() {
-    const sel = `<span><i class="swatch" style="background:var(--sel)"></i>${esc(seriesLabel(key(S.y, S.m)))}</span>`;
-    const cmp = S.c ? `<span><i class="swatch" style="background:var(--cmp)"></i>${esc(seriesLabel(S.c))}</span>` : '';
-    return `<div class="legend" aria-hidden="true">${sel}${cmp}</div>`;
-  }
-
-  /** items: [{key,label,sel(agg|undefined),cmp(agg|undefined),nav,meta,missingSel,missingCmp}] */
-  function cardsHTML(items, total, { limit = 0 } = {}) {
-    if (!items.length) return `<p class="empty">No ${S.k === 'revenue' ? 'revenue' : 'expense'} lines here for ${esc(seriesLabel(key(S.y, S.m)))}.</p>`;
-    const max = Math.max(1, ...items.flatMap((i) => [i.sel?.total || 0, i.cmp?.total || 0]));
-    const selYear = String(S.y), cmpLabel = S.c ? parseKey(S.c).y + (parseKey(S.c).y === S.y ? ' ' + LABEL[parseKey(S.c).m].slice(0, 4) + '.' : '') : '';
-    const li = items.map((it, idx) => {
-      const sh = total && it.sel ? (it.sel.total / total) * 100 : null;
-      const share = sh == null ? '' : ` <span class="card-share">${sh > 0 && sh < 0.1 ? '<0.1' : sh.toFixed(1)}% of total</span>`;
-      const title = it.nav
-        ? `<button type="button" data-nav='${esc(JSON.stringify(it.nav))}'>${esc(it.label)}<span class="chev" aria-hidden="true">›</span></button>`
-        : esc(it.label);
-      const p = it.sel && it.cmp ? pct(it.sel.total, it.cmp.total) : null;
-      const delta = p == null ? '' : `<span class="delta ${Math.abs(p) < 0.05 ? 'flat' : p > 0 ? 'up' : 'down'}">${p > 0 ? '▲' : p < 0 ? '▼' : '■'} ${Math.abs(p).toFixed(1)}%<span class="sr-only"> ${p >= 0 ? 'increase' : 'decrease'} from ${esc(seriesLabel(S.c))}</span></span>`;
-      const bar = (agg, cls, label, missing) => {
-        const v = agg ? agg.total : 0;
-        const w = Math.max(0, (v / max) * 100);
-        const value = agg ? `${pdfLink(agg.doc, agg.page, money(v))}${srcLink(agg)}` : `<span class="empty">${missing || '$0'}</span>`;
-        return `<div class="bar-row"><span class="bar-label">${esc(label)}</span><div class="bar-track" aria-hidden="true"><div class="bar-fill ${cls}" style="width:${w}%"></div></div><span class="bar-value ${cls}">${value}</span></div>`;
-      };
-      return `<li class="card ${it.nav ? 'clickable' : ''}" ${it.nav ? `data-nav='${esc(JSON.stringify(it.nav))}'` : ''} ${limit && idx >= limit ? 'hidden' : ''}>
-        <div class="card-head"><h3 class="card-title">${title}${share}</h3>${delta}</div>
-        ${it.meta ? `<div class="card-meta">${it.meta}</div>` : ''}
-        ${S.c ? bar(it.cmp, 'cmp', cmpLabel, it.missingCmp) : ''}
-        ${bar(it.sel, '', selYear, it.missingSel)}
-      </li>`;
-    }).join('');
-    const more = limit && items.length > limit ? `<button type="button" class="more-btn" data-more>Show all ${items.length}</button>` : '';
-    return `${legendHTML()}<ul class="cards">${li}</ul>${more}`;
-  }
-
-  function mergeAggs(selMap, cmpMap) {
+    const by = (l) => aggregate(l, (r) => r.dept, (r) => D.departments[r.dept]);
+    const selMap = by(list), cmpMap = S.c ? by(scoped(S.c)) : new Map();
     const keys = new Set([...selMap.keys(), ...cmpMap.keys()]);
-    return [...keys].map((k) => {
-      const s = selMap.get(k), c = cmpMap.get(k);
-      return { key: k, label: (s || c).label, sel: s, cmp: c };
-    }).sort((a, b) => (b.sel?.total || 0) - (a.sel?.total || 0) || (b.cmp?.total || 0) - (a.cmp?.total || 0));
+    const items = [...keys].map((d) => ({ dept: d, sel: selMap.get(d), cmp: cmpMap.get(d) }))
+      .sort((a, b) => (b.sel?.total || 0) - (a.sel?.total || 0) || (b.cmp?.total || 0) - (a.cmp?.total || 0));
+    const max = Math.max(1, ...items.flatMap((i) => [Math.abs(i.sel?.total || 0), Math.abs(i.cmp?.total || 0)]));
+    const bar = (agg, cls, label) => `<div><div class="bar-label ${cls}"><span>${esc(label)}</span><span>${agg ? money(agg.total) : '<span class="missing">Not in this book</span>'}</span></div>
+        <div class="track"><div class="fill ${cls}" style="width:${agg ? Math.max(0, (agg.total / max) * 100) : 0}%"></div></div></div>`;
+    const cards = items.map((it) => {
+      const sh = total > 0 && it.sel ? (it.sel.total / total) * 100 : null;
+      const share = sh == null ? '' : `<span class="share">(${sh > 0 && sh < 0.1 ? '<0.1' : sh.toFixed(1)}% of Total ${esc(seriesLabel(k))} ${kindWord === 'Revenue' ? 'Revenue' : 'Budget'})</span>`;
+      const h = deptHash(it.dept);
+      return `<li class="card" data-go="${esc(h)}"><div class="card-top"><h3><a href="${esc(h)}">${esc(D.departments[it.dept])}</a>${share}</h3>
+        <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div>
+        <div class="bars">${S.c ? bar(it.cmp, 'cmp', seriesLabel(S.c)) : ''}${bar(it.sel, 'sel', seriesLabel(k))}</div></li>`;
+    }).join('');
+
+    return `<header class="page-head"><h1 id="page-h">${esc(scope)} ${kindWord}: ${esc(seriesLabel(k))}</h1>
+        <p class="big-total" aria-live="polite">${money(total)}</p>${statusHTML()}</header>
+      ${filtersHTML()}
+      <ul class="cards" aria-label="Departments">${cards || '<li class="empty center">No lines for this selection.</li>'}</ul>
+      <p class="hint">Select any department to see its detailed breakdown.</p>
+      <section class="panel" aria-labelledby="re-title"><h2 class="panel-title" id="re-title">Revenue vs. Expenses by Fund: ${esc(seriesLabel(k))}</h2>
+        <div class="chart-box"><canvas id="re-chart" role="img" aria-label="Revenue and expenses by fund"></canvas></div>
+        <div class="table-scroll"><table class="table" id="re-table"></table></div></section>`;
   }
 
-  function fundCards() {
+  function revExpAfter() {
     const k = key(S.y, S.m);
-    const byFund = (list) => aggregate(list, (r) => r.fund, (r) => D.funds[r.fund]);
-    const items = mergeAggs(byFund(scoped(k)), S.c ? byFund(scoped(S.c)) : new Map());
-    const covSel = new Set(series(k).funds), covCmp = S.c ? new Set(series(S.c).funds) : null;
-    for (const it of items) {
-      const fname = it.label;
-      if (it.sel) attachPrinted(it.sel, printedFund(fname, S.k, k), k);
-      if (it.cmp) attachPrinted(it.cmp, printedFund(fname, S.k, S.c), S.c);
-      it.nav = { f: fname, d: '', b: '' };
-      const fi = fundIdx(fname);
-      if (!covSel.has(fi)) it.missingSel = `Not in the ${bookYearOf(k)} book`;
-      if (covCmp && !covCmp.has(fi)) it.missingCmp = `Not in the ${bookYearOf(S.c)} book`;
-      const notes = [];
-      for (const [agg, kk] of [[it.sel, k], [it.cmp, S.c]]) {
-        if (agg && agg.printed != null && Math.abs(agg.total - agg.printed) > 5) { // ≤$5 is the city's whole-dollar rounding
-          notes.push(`${esc(seriesLabel(kk))}: book prints ${money(agg.printed)} (lines sum ${money(agg.total)})`);
-        }
-      }
-      if (notes.length) it.meta = notes.join(' · ');
+    const all = rows(k);
+    const data = [...new Set(all.map((r) => r.fund))].map((fi) => {
+      const fr = all.filter((r) => r.fund === fi);
+      return { fund: D.funds[fi], rev: sum(fr.filter(isRevenue)), exp: sum(fr.filter((r) => !isRevenue(r))) };
+    }).sort((a, b) => b.exp - a.exp);
+    const th = chartTheme();
+    if (window.Chart) {
+      charts.push(new Chart($('re-chart'), {
+        type: 'bar',
+        data: { labels: data.map((d) => d.fund.replace(' Fund', '')), datasets: [
+          { label: 'Revenue', data: data.map((d) => d.rev), backgroundColor: PALETTE[0], borderRadius: 2 },
+          { label: 'Expenses', data: data.map((d) => d.exp), backgroundColor: PALETTE[1], borderRadius: 2 }] },
+        options: {
+          indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
+          plugins: { legend: { position: 'bottom', labels: { color: '#fff', boxWidth: 12, boxHeight: 12 } }, tooltip: { ...th.tip, callbacks: { label: (c) => `${c.dataset.label}: ${money(c.raw)}` } } },
+          scales: { x: { ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid } }, y: { ticks: { color: '#fff' }, grid: { display: false } } },
+        },
+      }));
     }
-    return cardsHTML(items, sum(scoped(k)));
+    const dcell = (n) => `<span class="${n >= 0 ? 'up' : 'down'}">${money(n)}</span>`;
+    $('re-table').innerHTML = `<thead><tr><th scope="col">Fund</th><th scope="col" class="num">Revenue</th><th scope="col" class="num">Expenses</th><th scope="col" class="num">Revenue minus expenses</th></tr></thead>
+      <tbody>${data.map((d) => `<tr><th scope="row">${esc(d.fund)}</th><td class="num">${money(d.rev)}</td><td class="num">${money(d.exp)}</td><td class="num">${dcell(d.rev - d.exp)}</td></tr>`).join('')}</tbody>
+      <tfoot><tr><td>All funds</td><td class="num">${money(data.reduce((t, d) => t + d.rev, 0))}</td><td class="num">${money(data.reduce((t, d) => t + d.exp, 0))}</td><td class="num">${dcell(data.reduce((t, d) => t + d.rev - d.exp, 0))}</td></tr></tfoot>`;
   }
 
-  function deptCards() {
-    const k = key(S.y, S.m);
-    const by = (list) => aggregate(list, (r) => r.dept, (r) => D.departments[r.dept]);
-    const items = mergeAggs(by(scoped(k, { depth: 1 })), S.c ? by(scoped(S.c, { depth: 1 })) : new Map());
-    for (const it of items) {
-      it.nav = { d: it.label, b: '' };
-      const fs = new Set([...(it.sel?.funds || []), ...(it.cmp?.funds || [])]);
-      if (!S.f && fs.size > 1) it.meta = `${fs.size} funds`;
-    }
-    return cardsHTML(items, sum(scoped(k, { depth: 1 })), { limit: 12 });
-  }
-
-  function bureauCards() {
-    const k = key(S.y, S.m);
-    const by = (list) => aggregate(list, bureauKey, (r) => D.bureaus[r.bureau]);
-    const items = mergeAggs(by(scoped(k, { depth: 2 })), S.c ? by(scoped(S.c, { depth: 2 })) : new Map());
-    const multiFund = new Set(items.map((i) => i.key.split('::')[0])).size > 1;
-    for (const it of items) {
-      if (it.sel) attachPrinted(it.sel, printedSection(it.label, k, it.sel.doc, it.sel.minP, it.sel.maxP), k);
-      if (it.cmp) attachPrinted(it.cmp, printedSection(it.label, S.c, it.cmp.doc, it.cmp.minP, it.cmp.maxP), S.c);
-      it.nav = { b: it.key };
-      if (multiFund) it.meta = esc(it.key.split('::')[0]);
-    }
-    return cardsHTML(items, sum(scoped(k, { depth: 2 })));
-  }
-
-  /* Category breakdown donut. Color follows the category (its index), never its rank. */
-  const catColor = (i) => `var(--c${(i % 8) + 1})`;
-  function categoryDonutHTML() {
-    const k = key(S.y, S.m);
-    const groups = [...aggregate(scoped(k), (r) => r.cat, (r) => D.categories[r.cat]).values()].sort((a, b) => b.total - a.total);
-    const total = groups.reduce((t, g) => t + g.total, 0);
+  /* ---------- department / bureau pages ---------- */
+  function pieSection(title, groups, { clickable, note } = {}) {
+    const total = groups.reduce((t, g) => t + Math.max(0, g.total), 0);
     if (!groups.length || total <= 0) return '';
-    const legend = groups.map((g) => `<li><i class="swatch" style="background:${catColor(g.key)}"></i><span class="dl-name">${esc(g.label)}</span><span class="dl-val">${pdfLink(g.doc, g.page, money(g.total))} <span class="card-share">${((g.total / total) * 100).toFixed(1)}%</span></span></li>`).join('');
-    return `<div class="donut-wrap"><div class="donut-box"><canvas id="cat-chart" role="img" aria-label="${esc(seriesLabel(k))} by category: ${esc(groups.map((g) => `${g.label} ${money(g.total)}`).join(', '))}"></canvas></div><ul class="donut-legend">${legend}</ul></div>`;
+    const items = groups.map((g) => {
+      const body = `<span class="nm" title="${esc(g.label)}">${esc(g.label)}</span><span class="vl">${money(g.total)} (${((g.total / total) * 100).toFixed(1)}%)${g.sub ? ' · ' + esc(g.sub) : ''}</span>`;
+      return `<li><i class="sw" style="background:${g.color}"></i><div class="body">${clickable && g.href ? `<a href="${esc(g.href)}">${body}</a>` : body}</div></li>`;
+    }).join('');
+    const id = `pie-${slug(title)}`;
+    return `<section class="panel" aria-labelledby="${id}-t"><h2 class="panel-title" id="${id}-t">${esc(title)}</h2>${note ? `<p class="panel-note">${esc(note)}</p>` : ''}
+      <div class="pie-wrap"><div class="pie-box"><canvas id="${id}" role="img" aria-label="${esc(title)}: ${esc(groups.slice(0, 6).map((g) => `${g.label} ${money(g.total)}`).join(', '))}"></canvas></div>
+      <ul class="legend-list">${items}</ul></div></section>`;
   }
-  function renderCatChart() {
-    if (catChart) { catChart.destroy(); catChart = null; }
-    const cv = $('cat-chart');
+  function drawPie(title, groups) {
+    const cv = $(`pie-${slug(title)}`);
     if (!cv || !window.Chart) return;
-    const groups = [...aggregate(scoped(key(S.y, S.m)), (r) => r.cat, (r) => D.categories[r.cat]).values()].sort((a, b) => b.total - a.total);
-    const css = getComputedStyle(document.documentElement);
-    const col = (i) => css.getPropertyValue(`--c${(i % 8) + 1}`).trim();
-    catChart = new Chart(cv, {
-      type: 'doughnut',
-      data: { labels: groups.map((g) => g.label), datasets: [{ data: groups.map((g) => Math.max(0, g.total)), backgroundColor: groups.map((g) => col(g.key)), borderColor: css.getPropertyValue('--surface').trim(), borderWidth: 2 }] },
-      options: {
-        cutout: '58%', responsive: true, maintainAspectRatio: false,
-        animation: matchMedia('(prefers-reduced-motion: reduce)').matches ? false : { duration: 300 },
-        plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${c.label}: ${money(c.raw)}` } } },
-      },
-    });
+    const th = chartTheme(), total = groups.reduce((t, g) => t + Math.max(0, g.total), 0);
+    // Slices beyond the first seven fold into one grey "other" slice; the legend still lists every item.
+    const shown = groups.slice(0, PIE_SLICES), rest = groups.slice(PIE_SLICES);
+    const data = shown.map((g) => ({ label: g.label, v: Math.max(0, g.total), c: g.color }));
+    if (rest.length) data.push({ label: `All other (${rest.length})`, v: rest.reduce((t, g) => t + Math.max(0, g.total), 0), c: OTHER_COLOR });
+    charts.push(new Chart(cv, {
+      type: 'pie',
+      data: { labels: data.map((d) => d.label), datasets: [{ data: data.map((d) => d.v), backgroundColor: data.map((d) => d.c), borderColor: '#0d0d0d', borderWidth: 2 }] },
+      options: { responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
+        plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { label: (c) => `${c.label}: ${money(c.raw)} (${((c.raw / total) * 100).toFixed(1)}%)` } } } },
+    }));
   }
 
-  function categoryCards() {
-    const k = key(S.y, S.m);
-    const by = (list) => aggregate(list, (r) => r.cat, (r) => D.categories[r.cat]);
-    return cardsHTML(mergeAggs(by(scoped(k)), S.c ? by(scoped(S.c)) : new Map()), sum(scoped(k)));
+  function categoryGroups(selRows, cmpRows) {
+    const by = (l) => aggregate(l, (r) => r.cat, (r) => D.categories[r.cat]);
+    const s = by(selRows), c = by(cmpRows);
+    return [...new Set([...s.keys(), ...c.keys()])].map((i) => ({ idx: i, label: D.categories[i], total: s.get(i)?.total || 0, cmpTotal: c.get(i)?.total || 0, color: catColor(i) }))
+      .sort((a, b) => b.total - a.total || b.cmpTotal - a.cmpTotal);
   }
 
-  /* ---------- line-item table ---------- */
-  function tableHTML(depth) {
+  function entityView({ title, subtitle, selRows, cmpRows, parentHash, parentLabel, bureauPie, deptPicker }) {
+    const k = key(S.y, S.m), kindWord = S.k === 'revenue' ? 'Revenue' : 'Budget';
+    const total = sum(selRows), cmpTotal = sum(cmpRows);
+    const cats = categoryGroups(selRows, cmpRows);
+    const withColor = (g, i) => ({ ...g, color: g.color || (i < PIE_SLICES ? PALETTE[i] : OTHER_COLOR) });
+
+    let html = `<div class="dept-top"><a class="btn btn-primary" href="${esc(parentHash)}">← ${esc(parentLabel)}</a></div>`;
+    if (deptPicker) html += `<div class="field dept-picker" style="margin-inline:auto"><label class="field-label" for="dept-pick">Department</label>${deptPicker}</div>`;
+    html += `<header><h2 class="dept-name" id="page-h" tabindex="-1">${esc(title)}</h2>
+      <p class="dept-total">Total ${kindWord}: ${money(total)}</p><p class="dept-sub">${subtitle}</p><p class="center">${statusHTML()}</p></header>`;
+    html += `<div class="dept-filters">${filtersHTML({ fund: !!deptPicker })}</div>`;
+
+    html += pieSection(`${title} ${seriesLabel(k)} ${kindWord} Breakdown`, cats);
+
+    if (cats.length) {
+      html += `<section class="panel" aria-labelledby="yoy-t"><h2 class="panel-title" id="yoy-t">${esc(title)} Total ${S.k === 'revenue' ? 'Revenue' : 'Budgeted Cost'}: ${S.c ? 'Comparison' : 'by Category'}</h2>
+        <div class="chart-scroll"><div class="chart-box"><canvas id="yoy-chart" role="img" aria-label="${esc(title)} by category, ${esc(S.c ? seriesLabel(S.c) + ' compared with ' : '')}${esc(seriesLabel(k))}"></canvas></div></div></section>`;
+    }
+    if (bureauPie) html += bureauPie;
+
+    html += `<div class="totals">${S.c ? `<section class="panel" aria-label="${esc(seriesLabel(S.c))} total"><h2 class="total-label">${esc(seriesLabel(S.c))} Total</h2><p class="total-value">${money(cmpTotal)}</p></section>` : ''}
+      <section class="panel" aria-label="${esc(seriesLabel(k))} total"><h2 class="total-label">${esc(seriesLabel(k))} Total</h2><p class="total-value">${money(total)}</p></section></div>`;
+
+    const chg = (a, b) => { const d = a - b, p = pctOf(d, b); return `<span class="${d > 0 ? 'up' : d < 0 ? 'down' : 'flat'}">${money(d)}${p == null ? '' : ` (${p.toFixed(1)}%)`}</span>`; };
+    html += `<section class="panel" aria-labelledby="cat-t"><h2 class="total-label" id="cat-t">Budget Categories</h2><div class="table-scroll"><table class="table">
+      <thead><tr><th scope="col">Category</th>${S.c ? `<th scope="col" class="num">${esc(seriesLabel(S.c))}</th>` : ''}<th scope="col" class="num">${esc(seriesLabel(k))}</th>${S.c ? '<th scope="col" class="num">Change</th>' : ''}</tr></thead>
+      <tbody>${cats.map((g) => `<tr><td>${esc(g.label)}</td>${S.c ? `<td class="num">${money(g.cmpTotal)}</td>` : ''}<td class="num">${money(g.total)}</td>${S.c ? `<td class="num">${chg(g.total, g.cmpTotal)}</td>` : ''}</tr>`).join('')}</tbody></table></div></section>`;
+
+    if (S.c) {
+      html += `<section class="panel" aria-labelledby="ov-t"><h2 class="total-label" id="ov-t">Overall Year-Over-Year Change</h2>
+        <p class="overall"><span class="lbl">Total ${kindWord} Change:</span><span class="val">${chg(total, cmpTotal)}</span></p>
+        <div class="chart-box short"><canvas id="ov-chart" role="img" aria-label="${esc(seriesLabel(S.c))} ${money(cmpTotal)} compared with ${esc(seriesLabel(k))} ${money(total)}"></canvas></div></section>`;
+    }
+    html += `<section class="panel" aria-labelledby="li-t"><h2 class="total-label" id="li-t">Line Items</h2><div id="li-holder"></div></section>`;
+    return { html, cats };
+  }
+
+  function entityCharts(selRows, cmpRows, cats, bureauGroups) {
+    const k = key(S.y, S.m), th = chartTheme();
+    drawPie(`${$('page-h').textContent} ${seriesLabel(k)} ${S.k === 'revenue' ? 'Revenue' : 'Budget'} Breakdown`, cats);
+    if (bureauGroups) drawPie(bureauGroups.title, bureauGroups.groups);
+    const yoy = $('yoy-chart');
+    if (yoy && window.Chart) {
+      const ds = [];
+      if (S.c) ds.push({ label: seriesLabel(S.c), data: cats.map((g) => g.cmpTotal), backgroundColor: '#ffca41', borderRadius: 2 });
+      ds.push({ label: seriesLabel(k), data: cats.map((g) => g.total), backgroundColor: '#41ffca', borderRadius: 2 });
+      charts.push(new Chart(yoy, { type: 'bar', data: { labels: cats.map((g) => g.label), datasets: ds },
+        options: { responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
+          plugins: { legend: { position: 'bottom', align: 'end', labels: { color: '#fff', boxWidth: 12, boxHeight: 12 } }, tooltip: { ...th.tip, callbacks: { label: (c) => `${c.dataset.label}: ${money(c.raw)}` } } },
+          scales: { x: { ticks: { color: '#fff', font: { size: 11 } }, grid: { color: th.grid } }, y: { ticks: { color: th.tick, font: { size: 11 }, callback: (n) => short(n) }, grid: { color: th.grid } } } } }));
+    }
+    const ov = $('ov-chart');
+    if (ov && window.Chart) {
+      charts.push(new Chart(ov, { type: 'bar', data: { labels: [seriesLabel(S.c), seriesLabel(k)], datasets: [{ data: [sum(cmpRows), sum(selRows)], backgroundColor: ['#ffca41', '#41ffca'], borderRadius: 2 }] },
+        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
+          plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { label: (c) => money(c.raw) } } },
+          scales: { x: { ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid }, beginAtZero: true }, y: { ticks: { color: '#fff' }, grid: { display: false } } } } }));
+    }
+  }
+
+  /* line-item table (sortable, searchable) */
+  function lineTable(selRows, cmpRows, showBureau) {
     const k = key(S.y, S.m);
-    const selRows = scoped(k, { depth }), cmpRows = S.c ? scoped(S.c, { depth }) : [];
-    const byCode = new Map();
-    const seen = { sel: new Map(), cmp: new Map() };
+    const map = new Map(), seen = { sel: new Map(), cmp: new Map() };
     const put = (r, slot) => {
-      // The same account code can be printed on two lines; pair them by occurrence.
-      const base = `${r.code}::${r.fund}`;
-      const nth = seen[slot].get(base) || 0;
-      seen[slot].set(base, nth + 1);
-      const id = `${base}::${nth}`;
-      let e = byCode.get(id);
-      if (!e) { e = { code: r.code, name: r.name, fund: r.fund, bureau: r.bureau, cat: r.cat }; byCode.set(id, e); }
+      const base = `${r.code}::${r.fund}`, n = seen[slot].get(base) || 0;
+      seen[slot].set(base, n + 1);
+      const id = `${base}::${n}`;
+      let e = map.get(id);
+      if (!e) { e = { code: r.code, name: r.name, fund: r.fund, bureau: r.bureau, cat: r.cat }; map.set(id, e); }
       if (slot === 'sel') { e.name = r.name; e.bureau = r.bureau; e.cat = r.cat; }
       e[slot] = r;
     };
-    cmpRows.forEach((r) => put(r, 'cmp'));
-    selRows.forEach((r) => put(r, 'sel'));
-    let list = [...byCode.values()];
-    const q = tableState.q.trim().toLowerCase();
+    cmpRows.forEach((r) => put(r, 'cmp')); selRows.forEach((r) => put(r, 'sel'));
+    let list = [...map.values()];
+    const q = T.q.trim().toLowerCase();
     if (q) list = list.filter((e) => `${e.code} ${e.name} ${D.bureaus[e.bureau]} ${D.funds[e.fund]} ${D.categories[e.cat]}`.toLowerCase().includes(q));
     const val = (e, s) => (e[s] ? e[s].v : 0);
-    const sorters = {
-      code: (e) => e.code, name: (e) => e.name.toLowerCase(), cat: (e) => D.categories[e.cat],
-      sel: (e) => val(e, 'sel'), cmp: (e) => val(e, 'cmp'), chg: (e) => val(e, 'sel') - val(e, 'cmp'),
-    };
-    const f = sorters[tableState.sort] || sorters.sel;
-    list.sort((a, b) => { const x = f(a), y = f(b); return (x < y ? -1 : x > y ? 1 : 0) * tableState.dir; });
-
-    const showWhere = depth < 3;
-    const th = (id, label, cls = '') => {
-      const sort = tableState.sort === id ? (tableState.dir > 0 ? 'ascending' : 'descending') : 'none';
-      return `<th scope="col" class="${cls}" aria-sort="${sort}"><button type="button" data-sort="${id}">${label}</button></th>`;
-    };
-    const cell = (r) => (r ? `${pdfLink(r.doc, r.p, money(r.v))}<span class="src">p.${r.p}</span>` : '<span class="empty">—</span>');
-    const body = list.slice(0, tableState.shown).map((e) => {
-      const d = S.c ? val(e, 'sel') - val(e, 'cmp') : null;
-      const where = showWhere ? `<span class="sub">${esc(D.bureaus[e.bureau])}${S.f ? '' : ' · ' + esc(D.funds[e.fund])}</span>` : '';
-      return `<tr><td class="code hide-sm">${esc(e.code)}</td><td>${esc(e.name)}<span class="sub code-sm">${esc(e.code)}</span>${where}</td><td class="hide-sm">${esc(D.categories[e.cat])}</td>
-        ${S.c ? `<td class="num">${cell(e.cmp)}</td>` : ''}<td class="num">${cell(e.sel)}</td>
-        ${S.c ? `<td class="num hide-sm"><span class="delta ${d === 0 ? 'flat' : d > 0 ? 'up' : 'down'}">${d === 0 ? '—' : (d > 0 ? '+' : '−') + money(Math.abs(d)).slice(1)}</span></td>` : ''}</tr>`;
+    const sorters = { code: (e) => e.code, name: (e) => e.name.toLowerCase(), cat: (e) => D.categories[e.cat], sel: (e) => val(e, 'sel'), cmp: (e) => val(e, 'cmp'), chg: (e) => val(e, 'sel') - val(e, 'cmp') };
+    const f = sorters[T.sort] || sorters.sel;
+    list.sort((a, b) => { const x = f(a), y = f(b); return (x < y ? -1 : x > y ? 1 : 0) * T.dir; });
+    const th = (id, label, cls = '') => `<th scope="col" class="${cls}" aria-sort="${T.sort === id ? (T.dir > 0 ? 'ascending' : 'descending') : 'none'}"><button type="button" data-sort="${id}">${label}</button></th>`;
+    const body = list.slice(0, T.shown).map((e) => {
+      const d = val(e, 'sel') - val(e, 'cmp');
+      const where = showBureau ? `<span class="sub">${esc(D.bureaus[e.bureau])}</span>` : '';
+      return `<tr><td class="code hide-sm">${esc(e.code)}</td><td>${esc(e.name)}${where}</td><td class="hide-sm">${esc(D.categories[e.cat])}</td>
+        ${S.c ? `<td class="num">${e.cmp ? money(e.cmp.v) : '—'}</td>` : ''}<td class="num">${e.sel ? money(e.sel.v) : '—'}</td>
+        ${S.c ? `<td class="num hide-sm"><span class="${d > 0 ? 'up' : d < 0 ? 'down' : 'flat'}">${d === 0 ? '—' : money(d)}</span></td>` : ''}</tr>`;
     }).join('');
-    const totSel = list.reduce((t, e) => t + val(e, 'sel'), 0), totCmp = list.reduce((t, e) => t + val(e, 'cmp'), 0);
-    const more = list.length > tableState.shown ? `<button type="button" class="more-btn" data-more-rows>Show ${Math.min(PAGE_SIZE, list.length - tableState.shown)} more of ${list.length - tableState.shown}</button>` : '';
-    return `
-      <div class="table-tools">
-        <label class="sr-only" for="line-search">Search line items</label>
-        <input type="search" id="line-search" placeholder="Search by name, account, bureau…" value="${esc(tableState.q)}" autocomplete="off">
-        <span class="table-count" aria-live="polite">${list.length.toLocaleString()} line item${list.length === 1 ? '' : 's'}</span>
-      </div>
-      <p class="panel-note">Each amount links to its page in the budget book. Lines that are $0 in both columns are omitted.</p>
-      <div class="table-scroll"><table class="data-table">
-        <thead><tr>${th('code', 'Account', 'hide-sm')}${th('name', 'Line item')}${th('cat', 'Category', 'hide-sm')}
-          ${S.c ? th('cmp', esc(seriesLabel(S.c)), 'num') : ''}${th('sel', esc(seriesLabel(k)), 'num')}${S.c ? th('chg', 'Change', 'num hide-sm') : ''}</tr></thead>
-        <tbody>${body || `<tr><td colspan="6" class="empty">No matching line items.</td></tr>`}</tbody>
-        <tfoot><tr><td class="hide-sm"></td><td>Total${q ? ' (matching)' : ''}</td><td class="hide-sm"></td>${S.c ? `<td class="num">${money(totCmp)}</td>` : ''}<td class="num">${money(totSel)}</td>${S.c ? `<td class="num hide-sm">${(totSel - totCmp >= 0 ? '+' : '−') + money(Math.abs(totSel - totCmp)).slice(1)}</td>` : ''}</tr></tfoot>
-      </table></div>${more}`;
+    const ts = list.reduce((t, e) => t + val(e, 'sel'), 0), tc = list.reduce((t, e) => t + val(e, 'cmp'), 0);
+    const left = list.length - T.shown;
+    return `<div class="table-tools"><label class="sr-only" for="li-search">Search line items</label>
+        <input type="search" id="li-search" placeholder="Search line items, account numbers…" value="${esc(T.q)}" autocomplete="off">
+        <span class="count" aria-live="polite">${list.length.toLocaleString()} line item${list.length === 1 ? '' : 's'}</span></div>
+      <div class="table-scroll"><table class="table"><thead><tr>${th('code', 'Account', 'hide-sm')}${th('name', 'Line item')}${th('cat', 'Category', 'hide-sm')}${S.c ? th('cmp', esc(seriesLabel(S.c)), 'num') : ''}${th('sel', esc(seriesLabel(k)), 'num')}${S.c ? th('chg', 'Change', 'num hide-sm') : ''}</tr></thead>
+        <tbody>${body || '<tr><td colspan="6" class="empty">No matching line items.</td></tr>'}</tbody>
+        <tfoot><tr><td class="hide-sm"></td><td>Total${q ? ' (matching)' : ''}</td><td class="hide-sm"></td>${S.c ? `<td class="num">${money(tc)}</td>` : ''}<td class="num">${money(ts)}</td>${S.c ? `<td class="num hide-sm">${money(ts - tc)}</td>` : ''}</tr></tfoot></table></div>
+      ${left > 0 ? `<button type="button" class="btn btn-outline more" data-more>Show ${Math.min(PAGE_SIZE, left)} more</button>` : ''}`;
   }
-
-  function wireTable(container, depth) {
-    const rerender = (keepFocus) => {
-      const holder = container.querySelector('[data-table]');
-      holder.innerHTML = tableHTML(depth);
-      wireTable(container, depth);
-      if (keepFocus) { const s = holder.querySelector('#line-search'); s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
-    };
-    const holder = container.querySelector('[data-table]');
+  function mountLines(selRows, cmpRows, showBureau) {
+    const holder = $('li-holder');
     if (!holder) return;
-    holder.querySelector('#line-search').addEventListener('input', (e) => { tableState.q = e.target.value; tableState.shown = PAGE_SIZE; rerender(true); });
-    holder.querySelectorAll('[data-sort]').forEach((b) => b.addEventListener('click', () => {
-      const id = b.dataset.sort;
-      tableState.dir = tableState.sort === id ? -tableState.dir : (['code', 'name', 'cat'].includes(id) ? 1 : -1);
-      tableState.sort = id;
-      rerender(false);
-      container.querySelector(`[data-sort="${id}"]`)?.focus();
-    }));
-    holder.querySelector('[data-more-rows]')?.addEventListener('click', () => { tableState.shown += PAGE_SIZE; rerender(false); });
+    const paint = (focus) => {
+      holder.innerHTML = lineTable(selRows, cmpRows, showBureau);
+      const s = $('li-search');
+      s.addEventListener('input', (e) => { T.q = e.target.value; T.shown = PAGE_SIZE; paint(true); });
+      holder.querySelectorAll('[data-sort]').forEach((b) => b.addEventListener('click', () => {
+        const id = b.dataset.sort;
+        T.dir = T.sort === id ? -T.dir : (['code', 'name', 'cat'].includes(id) ? 1 : -1); T.sort = id;
+        paint(false); holder.querySelector(`[data-sort="${id}"]`)?.focus();
+      }));
+      holder.querySelector('[data-more]')?.addEventListener('click', () => { T.shown += PAGE_SIZE; paint(false); });
+      if (focus) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
+    };
+    paint(false);
   }
 
-  /* ---------- views ---------- */
-  function render() {
-    renderControls();
-    renderHero();
-    renderCrumbs();
+  const notFound = (what) => ({ html: `<div class="dept-top"><a class="btn btn-primary" href="${esc(homeHash())}">← All departments</a></div><header class="page-head"><h1 id="page-h" tabindex="-1">${esc(what)} not found</h1><p class="muted">That link doesn't match anything in the current data.</p></header>` });
+
+  function deptPage() {
+    const di = D.departments.findIndex((d) => slug(d) === route.dept);
+    if (di < 0) return notFound('Department');
+    route.deptIdx = di;
+    const k = key(S.y, S.m), name = D.departments[di];
+    const selRows = scoped(k, { dept: di }), cmpRows = S.c ? scoped(S.c, { dept: di }) : [];
+    // If this department has nothing of the chosen kind, say so rather than showing zeros.
+    const picker = `<select id="dept-pick" data-pick="dept">${D.departments.map((d, i) => `<option value="${esc(slug(d))}" ${i === di ? 'selected' : ''}>${esc(d)}</option>`).join('')}</select>`;
+    const bureaus = aggregate(selRows, bureauKey, (r) => D.bureaus[r.bureau]);
+    const funds = new Set(selRows.map((r) => r.fund));
+    const subtitle = selRows.length
+      ? `${bureaus.size} bureau${bureaus.size === 1 ? '' : 's'}${funds.size ? ' · ' + [...funds].map((f) => esc(D.funds[f])).join(', ') : ''} · ${selRows.length.toLocaleString()} line items`
+      : `No ${S.k === 'revenue' ? 'revenue' : 'expense'} lines for this department in ${esc(seriesLabel(k))}.`;
+    const groups = [...bureaus.values()].sort((a, b) => b.total - a.total).map((g, i) => ({
+      label: g.label, total: g.total, color: i < PIE_SLICES ? PALETTE[i] : OTHER_COLOR,
+      sub: [...g.funds].length ? D.funds[[...g.funds][0]] : '', href: bureauHash(di, g.sample.fund, g.sample.bureau),
+    }));
+    const multiFund = funds.size > 1;
+    groups.forEach((g) => { if (!multiFund) g.sub = ''; });
+    const bTitle = `${S.k === 'revenue' ? 'Revenue Source' : 'Bureau'} Breakdown`;
+    const bureauPie = pieSection(bTitle, groups, { clickable: true, note: 'Select a bureau to see its line items.' });
+    document.title = `${name} ${seriesLabel(k)} · Lancaster Budget Explorer`;
+    const v = entityView({ title: name, subtitle, selRows, cmpRows, parentHash: homeHash(), parentLabel: 'All departments', bureauPie, deptPicker: picker });
+    return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats, { title: bTitle, groups }); mountLines(selRows, cmpRows, true); } };
+  }
+
+  function bureauPage() {
+    const di = D.departments.findIndex((d) => slug(d) === route.dept);
+    if (di < 0) return notFound('Department');
+    route.deptIdx = di;
+    const all = rows(key(S.y, S.m)).concat(S.c ? rows(S.c) : []);
+    const hit = all.find((r) => r.dept === di && bureauSlug(r.fund, r.bureau) === route.bureau);
+    if (!hit) return notFound('Bureau');
+    route.fund = hit.fund; route.bureauIdx = hit.bureau;
+    const k = key(S.y, S.m), bk = bureauKey(hit), name = D.bureaus[hit.bureau];
+    const selRows = scoped(k, { dept: di, bureau: bk }), cmpRows = S.c ? scoped(S.c, { dept: di, bureau: bk }) : [];
+    document.title = `${name} ${seriesLabel(k)} · Lancaster Budget Explorer`;
+    const sub = `${esc(D.departments[di])} · ${esc(D.funds[hit.fund])} · ${selRows.length.toLocaleString()} line items`;
+    const v = entityView({ title: name, subtitle: sub, selRows, cmpRows, parentHash: deptHash(di), parentLabel: D.departments[di] });
+    return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats, null); mountLines(selRows, cmpRows, false); } };
+  }
+
+  /* ---------- render / events ---------- */
+  function onRoute(scroll = true) {
+    if (!D) return;
+    const { r, q } = parseHash();
+    route = r;
+    if (q.get('c') === 'none') { applyQuery(q); S.c = ''; } else applyQuery(q);
+    T.sort = 'sel'; T.dir = -1; T.q = ''; T.shown = PAGE_SIZE;
+    destroyCharts();
+    let page;
+    if (route.name === 'home') page = { html: homeView(), after: revExpAfter };
+    else if (route.name === 'dept') page = deptPage();
+    else page = bureauPage();
+    $('view').innerHTML = page.html;
+    page.after?.();
+    if (scroll) {
+      window.scrollTo({ top: 0 });
+      $('page-h')?.focus({ preventScroll: true });
+    }
+  }
+
+  function wire() {
+    window.addEventListener('hashchange', () => onRoute(true));
     const view = $('view');
-    const kindWord = S.k === 'revenue' ? 'revenue' : 'expenses';
-    let html = '', depth = 3;
-    if (!S.d) {
-      depth = 1;
-      if (!S.f) html += `<section class="panel" id="funds" aria-labelledby="funds-title"><h2 id="funds-title">By fund</h2><p class="panel-note">Select a fund to focus every view on it. Totals link to the page where the book prints them.</p>${fundCards()}</section>`;
-      html += `<section class="panel" aria-labelledby="dept-title"><h2 id="dept-title">By department${S.f ? ` · ${esc(S.f)}` : ''}</h2><p class="panel-note">Select a department to see its bureaus.</p>${deptCards()}</section>`;
-      html += `<section class="panel" aria-labelledby="all-title"><h2 id="all-title">All ${kindWord} line items${S.f ? ` · ${esc(S.f)}` : ''}</h2><div data-table>${tableHTML(1)}</div></section>`;
-    } else if (!S.b) {
-      depth = 2;
-      html += `<div class="two-col"><section class="panel" aria-labelledby="bur-title"><h2 id="bur-title">Bureaus</h2><p class="panel-note">Select a bureau to see its line items.</p>${bureauCards()}</section>`;
-      html += `<section class="panel" aria-labelledby="cat-title"><h2 id="cat-title">By category</h2><p class="panel-note">${esc(S.d)} ${kindWord} by type of spending or revenue.</p>${categoryDonutHTML()}${categoryCards()}</section></div>`;
-      html += `<section class="panel" aria-labelledby="all-title"><h2 id="all-title">${esc(S.d)} line items</h2><div data-table>${tableHTML(2)}</div></section>`;
-    } else {
-      html += `<section class="panel" aria-labelledby="li-title"><h2 id="li-title">Line items · ${esc(S.b.split('::')[1])}</h2><p class="panel-note">${esc(S.b.split('::')[0])} · ${esc(S.d)}. Sort by any column; search by name or account number.</p><div data-table>${tableHTML(3)}</div></section>`;
-      html += `<section class="panel" aria-labelledby="cat-title"><h2 id="cat-title">By category</h2>${categoryDonutHTML()}${categoryCards()}</section>`;
-    }
-    view.innerHTML = html;
-    view.querySelectorAll('[data-more]').forEach((b) => b.addEventListener('click', () => {
-      b.closest('section').querySelectorAll('.card[hidden]').forEach((c) => { c.hidden = false; });
-      b.remove();
-    }));
-    wireTable(view, depth);
-    renderCatChart();
-    renderRevExp();
-  }
-
-  /* ---------- revenue vs expense ---------- */
-  function renderRevExp() {
-    const k = key(S.y, S.m);
-    const all = rows(k);
-    const fundsHere = [...new Set(all.map((r) => r.fund))];
-    const data = fundsHere.map((fi) => {
-      const fr = all.filter((r) => r.fund === fi);
-      const rev = fr.filter(isRevenue), exp = fr.filter((r) => !isRevenue(r));
-      const mk = (list, kind) => {
-        const g = aggregate(list, () => 1, () => '').get(1);
-        if (g) attachPrinted(g, printedFund(D.funds[fi], kind, k), k);
-        return g;
-      };
-      return { fund: D.funds[fi], rev: mk(rev, 'revenue'), exp: mk(exp, 'expense') };
-    }).sort((a, b) => (b.exp?.total || 0) - (a.exp?.total || 0));
-
-    $('rev-exp-note').textContent = `${seriesLabel(k)} · all funds. Revenue is the sum of each fund's revenue lines as printed, which can include transfers between funds and planned use of reserves (fund balance).`;
-    const css = getComputedStyle(document.documentElement);
-    const v = (n) => css.getPropertyValue(n).trim();
-    if (window.Chart) {
-      const cfg = {
-        type: 'bar',
-        data: {
-          labels: data.map((d) => d.fund.replace(' Fund', '').replace('Management', 'Mgmt.')),
-          datasets: [
-            { label: 'Revenue', data: data.map((d) => d.rev?.total || 0), backgroundColor: v('--rev'), borderRadius: 4, borderSkipped: 'start', barPercentage: 0.8, categoryPercentage: 0.7 },
-            { label: 'Expenses', data: data.map((d) => d.exp?.total || 0), backgroundColor: v('--exp'), borderRadius: 4, borderSkipped: 'start', barPercentage: 0.8, categoryPercentage: 0.7 },
-          ],
-        },
-        options: {
-          indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: matchMedia('(prefers-reduced-motion: reduce)').matches ? false : { duration: 300 },
-          plugins: {
-            legend: { position: 'top', align: 'start', labels: { color: v('--text-2'), boxWidth: 12, boxHeight: 12, useBorderRadius: true, borderRadius: 3 } },
-            tooltip: { callbacks: { label: (c) => `${c.dataset.label}: ${money(c.raw)}` } },
-          },
-          scales: {
-            x: { ticks: { color: v('--text-3'), callback: (n) => short(n) }, grid: { color: v('--border') }, border: { display: false } },
-            y: { ticks: { color: v('--text-2') }, grid: { display: false }, border: { color: v('--border') } },
-          },
-        },
-      };
-      if (chart) chart.destroy();
-      chart = new Chart($('rev-exp-chart'), cfg);
-    }
-    const cell = (g) => (g ? `${pdfLink(g.doc, g.page, money(g.total))}${srcLink(g)}` : '<span class="empty">—</span>');
-    const body = data.map((d) => {
-      const diff = (d.rev?.total || 0) - (d.exp?.total || 0);
-      return `<tr><th scope="row">${esc(d.fund)}</th><td class="num">${cell(d.rev)}</td><td class="num">${cell(d.exp)}</td><td class="num"><span class="delta ${diff >= 0 ? 'down' : 'up'}">${diff >= 0 ? '+' : '−'}${money(Math.abs(diff)).slice(1)}</span></td></tr>`;
-    }).join('');
-    const tr = data.reduce((t, d) => t + (d.rev?.total || 0), 0), te = data.reduce((t, d) => t + (d.exp?.total || 0), 0);
-    $('rev-exp-table').innerHTML = `<caption>Revenue minus expenses by fund. Amounts link to the page where the book prints the fund total, or to the fund's first line-item page when it prints none.</caption>
-      <thead><tr><th scope="col">Fund</th><th scope="col" class="num">Revenue</th><th scope="col" class="num">Expenses</th><th scope="col" class="num">Revenue − expenses</th></tr></thead>
-      <tbody>${body}</tbody>
-      <tfoot><tr><td>All funds</td><td class="num">${money(tr)}</td><td class="num">${money(te)}</td><td class="num">${tr - te >= 0 ? '+' : '−'}${money(Math.abs(tr - te)).slice(1)}</td></tr></tfoot>`;
+    view.addEventListener('change', (e) => {
+      const sel = e.target.closest('select');
+      if (!sel) return;
+      if (sel.dataset.pick) navigate(`#/department/${sel.value}?${query()}`);
+      else if (sel.dataset.sel) onFilter(sel.dataset.sel, sel.value);
+    });
+    view.addEventListener('click', (e) => {
+      const tab = e.target.closest('[data-tab]');
+      if (tab) { onFilter(tab.dataset.tab, tab.dataset.v); return; }
+      const card = e.target.closest('[data-go]');
+      if (card && !e.target.closest('a')) navigate(card.dataset.go);
+    });
+    view.addEventListener('keydown', (e) => {
+      const b = e.target.closest('[data-tab]');
+      if (!b || !['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+      const btns = [...b.parentElement.querySelectorAll('button')], i = btns.indexOf(b);
+      const n = btns[(i + (e.key === 'ArrowRight' ? 1 : -1) + btns.length) % btns.length];
+      e.preventDefault(); onFilter(n.dataset.tab, n.dataset.v);
+      requestAnimationFrame(() => $('view').querySelector(`[data-tab="${n.dataset.tab}"][data-v="${n.dataset.v}"]`)?.focus());
+    });
+    $('about-btn').addEventListener('click', () => $('about').scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth' }));
   }
 
   /* ---------- about ---------- */
+  function scrubPages(text) {
+    // Notes quote source page numbers; the site does not show page references.
+    return text.replace(/\s*(?:\(|,)?\s*(?:on |from |at )?\b(?:pp?\.?|pages?)\s*\d+(?:\s*[-–]\s*\d+)?(?:\s*(?:and|,)\s*(?:pp?\.?|pages?)?\s*\d+)*\)?/gi, '').replace(/\(\s*\)/g, '').replace(/\s{2,}/g, ' ').trim();
+  }
   function renderAbout() {
     const used = D.books.filter((b) => b.used);
     const figs = (b) => Object.values(D.series).filter((s) => s.year + D.rule[s.measure].book_offset === b.year && D.docs[Array.isArray(s.doc) ? s.doc[0] : s.doc] === b.doc)
-      .sort((a, c) => a.year - c.year || ORDER.indexOf(a.measure) - ORDER.indexOf(c.measure))
-      .map((s) => `${s.year} ${LABEL[s.measure].toLowerCase()}${typeof s.column === 'string' && s.column.endsWith('_revised') ? ' (revised)' : ''}`);
-    const books = used.map((b) => {
-      const f = figs(b);
-      return `<li><a href="${PDF_BASE + encodeURIComponent(b.doc)}" target="_blank" rel="noopener">${esc(b.doc)}</a> (${b.year} book): ${f.length ? 'supplies ' + f.join(', ') : 'no figures shown under the selection rule'}.</li>`;
-    }).join('');
-    const ignored = D.books.filter((b) => !b.used).map((b) => `<li>${esc(b.doc)} — another edition of the ${b.year} book; not used.</li>`).join('');
-    const issues = D.known_issues.map((i) => {
-      const di = D.docs.indexOf(i.source_doc);
-      const where = di >= 0 ? pdfLink(di, +i.source_page, `${esc(i.source_doc)}, p.${esc(i.source_page)}`) : `${esc(i.source_doc)}, p.${esc(i.source_page)}`;
-      return `<li><strong>${esc(i.label)}</strong> (${where}): ${esc(i.note)}</li>`;
-    }).join('');
+      .sort((a, c) => a.year - c.year || ORDER.indexOf(a.measure) - ORDER.indexOf(c.measure)).map((s) => `${s.year} ${LABEL[s.measure].toLowerCase()}`);
+    const books = used.map((b) => { const f = figs(b); return `<li>${esc(b.doc.replace(/\.pdf$/i, ''))} (${b.year} book): ${f.length ? 'supplies ' + f.join(', ') : 'no figures under the selection rule'}.</li>`; }).join('');
+    const issues = D.known_issues.map((i) => `<li>${esc(i.source_doc.replace(/\.pdf$/i, ''))}: ${esc(scrubPages(i.note))}</li>`).join('');
     $('about-body').innerHTML = `
       <h3>Sources</h3>
       <p>Every figure comes from the City of Lancaster's published budget books. Each book reports several years side by side; this site picks one figure per account, year and measure:</p>
       <ul>
-        <li><strong>Proposed</strong> appears only for the newest year (${D.newest_year}), using the revised proposal when the book has one. A proposal is not the adopted budget.</li>
-        <li>For every other year, <strong>adopted</strong>, <strong>amended</strong> and <strong>projected</strong> come from the <em>next</em> year's book (the revised projection when present), and <strong>actual</strong> comes from the book two years later.</li>
+        <li><strong>Proposed</strong> and <strong>Revised Proposed</strong> appear only for the newest year (${D.newest_year}). Both columns come from the ${D.newest_year} book, so you can compare what changed between them. Neither is an adopted budget.</li>
+        <li>For every other year, <strong>adopted</strong>, <strong>amended</strong> and <strong>projected</strong> (the revised projection when present) come from the <em>next</em> year's book, and <strong>actual</strong> comes from the book two years later.</li>
         <li>A book's own-year proposal is never shown for older years, and year-to-date columns are not shown.</li>
       </ul>
-      <p>Books in use:</p><ul>${books}${ignored}</ul>
-      <p>Years appear as soon as the books that report them have been processed. Fund totals link to the page where the book prints them; department totals link to their first line-item page; every line item links to its own page.</p>
+      <p>Books in use:</p><ul>${books}</ul>
+      <p>Years appear as soon as the books that report them have been processed.</p>
       <h3>Validation</h3>
-      <p>Line items were extracted from the PDFs by script (scanned books were OCR'd first). Every total the book prints (each section, department, fund and staffing schedule) was recomputed from the extracted lines; differences of up to $5 are allowed for the city's rounding to whole dollars. Figures are shown exactly as printed, never adjusted. Where overlapping books disagree on the same figure, the rule above decides and the disagreement is listed in <a href="data/conflicts.json">conflicts.json</a> (${D.conflict_count} so far). Lines of $0 are left out.</p>
-      <h3>Known problems in the source PDFs</h3>
-      <p>These validation failures come from errors in the city's documents, not the extraction. They were reviewed by a person.</p>
+      <p>Line items were extracted from the PDFs by script (scanned books were OCR'd first). Every total the book prints (each section, department, fund and staffing schedule) was recomputed from the extracted lines; differences of up to $5 are allowed for the city's rounding to whole dollars. Figures are shown as printed, never adjusted. Where overlapping books disagree on the same figure, the rule above decides and the disagreement is logged (${D.conflict_count} so far). Lines of $0 are left out.</p>
+      <h3>Known problems in the source books</h3>
+      <p>These come from errors in the city's documents, not the extraction. A person reviewed each one.</p>
       <ul>${issues || '<li>None recorded.</li>'}</ul>
       <h3>Get the data</h3>
-      <p><a href="data/budget.json">budget.json</a> (all figures shown here), <a href="data/staffing.json">staffing.json</a> (budgeted positions), <a href="data/conflicts.json">conflicts.json</a>. The extraction scripts and CSVs are in the project repository.</p>`;
+      <p><a href="data/budget.json">budget.json</a> (every figure shown here), <a href="data/staffing.json">staffing.json</a> (budgeted positions), <a href="data/conflicts.json">conflicts.json</a>. The extraction scripts and tables are in the project repository.</p>`;
     $('generated').textContent = `Data built ${D.generated.slice(0, 10)}.`;
   }
 
-  /* ---------- boot ---------- */
   async function boot() {
     try {
       const res = await fetch('data/budget.json', { cache: 'no-cache' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       D = await res.json();
     } catch (err) {
-      $('hero-title').textContent = 'Could not load the budget data';
-      $('hero-sub').textContent = `data/budget.json: ${err.message}. If you opened index.html from disk, serve the folder over HTTP instead.`;
+      $('view').innerHTML = `<header class="page-head"><h1>Could not load the budget data</h1><p class="muted">data/budget.json: ${esc(err.message)}. If you opened index.html from disk, serve the folder over HTTP instead.</p></header>`;
       return;
     }
-    readURL();
-    wireControls();
+    wire();
     renderAbout();
-    render();
-    if (location.hash) document.getElementById(location.hash.slice(1))?.scrollIntoView();
+    onRoute(false);
   }
   boot();
 })();
