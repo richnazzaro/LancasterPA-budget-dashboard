@@ -1,20 +1,25 @@
-"""Extract a scanned (image-only) City of Lancaster budget PDF via OCR.
+"""Extract a City of Lancaster budget book whose layout is set by a config file.
 
 Usage:
-    python scripts/extract_scanned.py "/path/to/2026-Adopted-Budget-2026.pdf"
-    python scripts/extract_scanned.py PDF --config config/<doc>.json
+    python scripts/extract_layout.py "/path/to/2026-Adopted-Budget-2026.pdf"
+    python scripts/extract_layout.py PDF --config config/<doc>.json
+
+Works for scanned (image-only) books and for text-layer books alike. The
+config's "source" picks where word boxes come from:
+  "ocr"   render + Tesseract (scripts/ocr_pages.py; cached and git-ignored)
+  "text"  the PDF's own text layer (pdfplumber)
 
 Steps:
-  1. OCR every page to word boxes (scripts/ocr_pages.py; cached and git-ignored).
-  2. Read each page's column header, check it against the per-document config
-     (config/<pdf stem>.json), and assign every number to a column by its
+  1. Get word boxes for every page.
+  2. Read each page's column header and check it against the per-document
+     config (config/<pdf stem>.json). Assign every number to a column by its
      x-position on the page, not by its order in the line.
   3. Rebuild line items, section TOTAL rows and staffing schedules, and
      re-check every printed total exactly as extract_budget.py does.
-  4. Write the same four tables as the text-layer extractor, plus
-     ocr_cells_<doc>.csv: every amount cell that OCR did not read cleanly.
+  4. Write the same four tables as extract_budget.py, plus
+     ocr_cells_<doc>.csv: every amount cell that was not read cleanly.
 
-Any number that OCR could not read as a well-formed amount fails the run,
+Any number that could not be read as a well-formed amount fails the run,
 unless a person has fixed it in data/ocr_corrections.csv (with evidence).
 Corrected values still have to pass the printed-total checks.
 """
@@ -49,6 +54,10 @@ RE_NOISE = re.compile(r"^[|—_\-–©‘’'\"“”~.,:;=»«]+$")
 # --------------------------------------------------------------------------
 # OCR words -> lines
 # --------------------------------------------------------------------------
+
+class HeaderMismatch(ValueError):
+    pass
+
 
 class Word:
     __slots__ = ("text", "left", "top", "right", "bottom", "conf")
@@ -86,11 +95,86 @@ def load_page_lines(tsv_path):
     return sorted(lines, key=lambda l: l.top)
 
 
+def load_text_page_lines(page, glyphs=None):
+    """Word boxes from a PDF text layer, grouped into lines like the OCR path.
+
+    Words that touch (a font change mid-word: "RECEIVE"+"D") are merged.
+    Bold table rows and regular-weight notes can overlap vertically, so words
+    of different weight share a line only when their tops are within 1pt.
+    """
+    words = page.extract_words(extra_attrs=["fontname"], keep_blank_chars=False)
+    for w in words:  # glyphs with no Unicode mapping, e.g. "(cid:20)" -> "1"
+        for cid, ch in (glyphs or {}).items():
+            if cid.startswith("_"):
+                continue
+            w["text"] = w["text"].replace(cid, ch)
+    rows = []   # [top, bold, [words]]
+    for w in sorted(words, key=lambda w: (w["top"], w["x0"])):
+        bold = "Bold" in w["fontname"]
+        for row in rows:
+            gap = abs(row[0] - w["top"])
+            if gap <= 1.0 or (row[1] == bold and gap <= 2.5):
+                row[2].append(w)
+                break
+        else:
+            rows.append([w["top"], bold, [w]])
+    lines = []
+    for top, _, ws in rows:
+        ws.sort(key=lambda w: w["x0"])
+        merged = []
+        for w in ws:
+            if merged and w["x0"] - merged[-1]["x1"] < 0.6:
+                merged[-1] = {**merged[-1], "text": merged[-1]["text"] + w["text"],
+                              "x1": w["x1"], "bottom": max(merged[-1]["bottom"], w["bottom"])}
+            else:
+                merged.append(dict(w))
+        lines.append(Line([Word(w["text"], w["x0"], w["top"], w["x1"] - w["x0"],
+                                w["bottom"] - w["top"], 100.0) for w in merged]))
+    return sorted(lines, key=lambda l: l.top)
+
+
+def iter_pages(pdf_path, cfg):
+    """Yield (page_no, lines, unit) from OCR word boxes or the text layer.
+
+    `unit` is the size of one PDF point in the word coordinates (pixels at
+    the OCR resolution, or 1 for the text layer), for distance thresholds.
+    """
+    if cfg.get("source", "ocr") == "text":
+        import pdfplumber
+        with pdfplumber.open(pdf_path) as pdf:
+            for i, page in enumerate(pdf.pages):
+                yield i + 1, load_text_page_lines(page, cfg.get("glyph_map")), 1.0
+        return
+    dpi = cfg["ocr"]["dpi"]
+    for tsv in sorted(cache_dir(pdf_path, dpi).glob("page_*.tsv")):
+        yield int(tsv.stem.split("_")[1]), load_page_lines(tsv), dpi / 72
+
+
 # --------------------------------------------------------------------------
 # Column header -> x anchors
 # --------------------------------------------------------------------------
 
-def header_columns(lines, layout):
+def find_layout(lines, layouts, unit=1.0):
+    """Try each configured layout; return (layout, anchors, texts, end) or None.
+
+    A page whose header looks like a table header but matches no layout is an
+    error, so a year with an unexpected column order fails loudly.
+    """
+    errors = []
+    for layout in layouts:
+        try:
+            found = header_columns(lines, layout, unit)
+        except HeaderMismatch as e:
+            errors.append(str(e))
+            continue
+        if found:
+            return (layout, *found)
+    if errors:
+        raise HeaderMismatch("; ".join(errors))
+    return None
+
+
+def header_columns(lines, layout, unit=1.0):
     """Find the column header and match it to the configured columns.
 
     Returns (anchors, header_texts, header_end_index) or None if this is not
@@ -101,10 +185,11 @@ def header_columns(lines, layout):
     end = next((i for i, l in enumerate(lines[:8]) if last.search(l.text)), None)
     if end is None:
         return None
+    line_of = {id(w): i for i, l in enumerate(lines[:end + 1]) for w in l.words}
     words = sorted((w for l in lines[:end + 1] for w in l.words), key=lambda w: w.left)
     clusters = []
     for w in words:
-        if clusters and w.left <= clusters[-1]["right"] + 5:
+        if clusters and w.left <= clusters[-1]["right"] + 5 * unit:
             clusters[-1]["words"].append(w)
             clusters[-1]["right"] = max(clusters[-1]["right"], w.right)
         else:
@@ -115,11 +200,11 @@ def header_columns(lines, layout):
     clusters = clusters[-len(columns):]
     texts, anchors = [], []
     for cl, col in zip(clusters, columns):
-        ws = sorted(cl["words"], key=lambda w: (round(w.top / 15), w.left))
+        ws = sorted(cl["words"], key=lambda w: (line_of[id(w)], w.left))
         text = " ".join(w.text for w in ws)
         m = re.search(col["header"], text)
         if not m:
-            raise ValueError(f"header column {text!r} does not match {col['header']!r}")
+            raise HeaderMismatch(f"header column {text!r} does not match {col['header']!r}")
         texts.append((text, m.groups()))
         anchors.append(sum(w.xc for w in cl["words"]) / len(cl["words"]))
     return anchors, texts, end
@@ -135,7 +220,7 @@ OCR_DIGIT_FIXES = str.maketrans({"O": "0", "o": "0", "l": "1", "I": "1", "S": "5
 def read_amount(raw):
     """Parse one OCR'd amount cell. Returns (value or None, flags list)."""
     flags = []
-    text = raw.strip().lstrip("$")
+    text = raw.strip().replace("$", "")
     # Marks picked up from rules next to the digits ("~—«-17,753,825",
     # "26,022,439+"). A lone leading "-" is kept: it may be a minus sign.
     m = re.match(r"^([^\d(]*)(.*?)([^\d)]*)$", text)
@@ -143,7 +228,7 @@ def read_amount(raw):
     if head not in ("", "-"):
         head = ""
     text = head + core
-    if text != raw.strip():
+    if text != raw.strip().replace("$", ""):
         flags.append("stripped_marks")
     if re.fullmatch(r"[\d,.()\-OolIS]+", text) and re.search(r"[OolIS]", text):
         text = text.translate(OCR_DIGIT_FIXES)
@@ -162,9 +247,9 @@ def read_amount(raw):
     return to_number(text), flags
 
 
-def assign_cells(words, anchors):
+def assign_cells(words, anchors, single_pitch=300):
     """Group amount words by nearest column anchor."""
-    pitch = min(b - a for a, b in zip(anchors, anchors[1:])) if len(anchors) > 1 else 300
+    pitch = min(b - a for a, b in zip(anchors, anchors[1:])) if len(anchors) > 1 else single_pitch
     cells = [[] for _ in anchors]
     stray = []
     for w in words:
@@ -177,9 +262,9 @@ def assign_cells(words, anchors):
     return cells, stray
 
 
-def parse_amounts(words, anchors, keys):
+def parse_amounts(words, anchors, keys, single_pitch=300):
     """Return ({key: value}, [cell problems]) for one table row."""
-    cells, stray = assign_cells(words, anchors)
+    cells, stray = assign_cells(words, anchors, single_pitch)
     values, problems = {}, []
     for key, cell in zip(keys, cells):
         if not cell:
@@ -221,8 +306,17 @@ def load_corrections(source_doc):
 def extract(pdf_path, cfg):
     source_doc = cfg["source_doc"]
     li = cfg["line_items"]
-    columns = [(c["fiscal_year"], c["doc_type"]) for c in li["columns"]]
-    keys = [f"{doc}_{fy}" for fy, doc in columns]
+    layouts = li.get("layouts") or [{"name": "main", "columns": li["columns"],
+                                     "header_last_line": li["header_last_line"]}]
+    columns, keys = [], []          # union over layouts, in config order
+    for lay in layouts:
+        lay["keys"] = [f"{c['doc_type']}_{c['fiscal_year']}" for c in lay["columns"]]
+        for c, k in zip(lay["columns"], lay["keys"]):
+            if k not in keys:
+                keys.append(k)
+                columns.append((c["fiscal_year"], c["doc_type"]))
+    inherit = li.get("inherit_header", False)
+    prev_header = None
     re_total = re.compile(li["total_prefix"])
     fund_and_department = make_fund_mapper(
         cfg["funds"], cfg["general_fund_departments"],
@@ -232,6 +326,8 @@ def extract(pdf_path, cfg):
     st_keys = [(f"count_{c['fiscal_year']}_{c['doc_type']}",
                 f"salary_{c['fiscal_year']}_{c['doc_type']}") for c in st["columns"]]
     st_flat = [k for pair in st_keys for k in pair]
+    if st.get("count_pattern"):
+        STAFF_FIELD["count"] = re.compile(st["count_pattern"])
 
     corrections = load_corrections(source_doc)
     used_corrections = set()
@@ -239,25 +335,31 @@ def extract(pdf_path, cfg):
     items, sections, staff, staff_checks, unparsed, cell_log = [], [], [], [], [], []
     open_items, leaf_totals = [], []
     staff_unit, open_positions, open_staff_groups = None, [], []
+    units_without_total = []
     seen_pages = {}
     page_kinds = {}
 
-    tsv_dir = cache_dir(pdf_path, cfg["ocr"]["dpi"])
-    for tsv in sorted(tsv_dir.glob("page_*.tsv")):
-        page_no = int(tsv.stem.split("_")[1])
-        meta = json.loads(tsv.with_suffix(".json").read_text())
-        lines = load_page_lines(tsv)
+    for page_no, lines, unit in iter_pages(pdf_path, cfg):
         if not lines:
             page_kinds[page_no] = "blank"
             continue
-        header = header_columns(lines, li)
+        header = find_layout(lines, layouts, unit)
+        if header is None and inherit and prev_header and \
+                _continues_table(lines, prev_header, unit):
+            # Continuation page printed without the column header: reuse the
+            # previous page's columns (numbers must still line up with them).
+            header = (*prev_header[:3], -1)
+        prev_header = header
 
         # ---------------- line-item pages --------------------------------
         if header:
             page_kinds[page_no] = "line_items"
-            anchors, header_texts, end = header
+            layout, anchors, header_texts, end = header
+            lkeys = layout["keys"]
+            single = 80 * unit
             ytd_as_of = next((g[0] for _, g in header_texts if g), "")
-            amount_left = anchors[0] - 0.5 * (anchors[1] - anchors[0])
+            amount_left = anchors[0] - 0.5 * (
+                anchors[1] - anchors[0] if len(anchors) > 1 else single)
             body = lines[end + 1:]
             fingerprint = "\n".join(l.text for l in body)
             if fingerprint in seen_pages:
@@ -282,7 +384,7 @@ def extract(pdf_path, cfg):
                         and RE_OBJ.match(left_ws[1].text):
                     org, obj = left_ws[0].text, left_ws[1].text
                     label = f"{org}-{obj}"
-                    values, problems = parse_amounts(amt_ws, anchors, keys)
+                    values, problems = parse_amounts(amt_ws, anchors, lkeys, single)
                     values = _apply_corrections(values, problems, corrections,
                                                 used_corrections, page_no, label)
                     fund, dept = fund_and_department(org)
@@ -312,24 +414,28 @@ def extract(pdf_path, cfg):
                     if not amt_ws:          # heading such as "TOTAL GENERAL FUND"
                         state = "heading"
                         continue
-                    printed, problems = parse_amounts(amt_ws, anchors, keys)
+                    printed, problems = parse_amounts(amt_ws, anchors, lkeys, single)
                     printed = _apply_corrections(printed, problems, corrections,
                                                  used_corrections, page_no, f"TOTAL {label}")
                     _log_cells(cell_log, page_no, f"TOTAL {label}", problems)
-                    printed = [printed[k] if printed[k] is not None else 0 for k in keys]
+                    printed = [printed[k] if printed[k] is not None else 0 for k in lkeys]
                     if open_items:
                         level, n_members = "section", len(open_items)
                         for it in open_items:
                             it["bureau"] = label
-                        sums = [sum(it[k] or 0 for it in open_items) for k in keys]
+                        sums = [sum(it.get(k) or 0 for it in open_items) for k in lkeys]
                         diffs = [s - p for s, p in zip(sums, printed)]
-                        leaf_totals.append(printed)
+                        leaf_totals.append(dict(zip(lkeys, printed)))
                         open_items = []
+                    elif not any(printed):
+                        # A bureau with no lines and an all-zero total.
+                        level, n_members, diffs = "section", 0, [0] * len(lkeys)
                     else:
                         level = "rollup"
-                        n_members, diffs = find_rollup(leaf_totals, printed)
+                        n_members, diffs = find_rollup(
+                            [[lt.get(k, 0) for k in lkeys] for lt in leaf_totals], printed)
                     sections.append(total_check(level, label, page_no, n_members,
-                                                diffs, printed, keys))
+                                                diffs, printed, lkeys))
                     state = "heading"
                     continue
 
@@ -361,17 +467,31 @@ def extract(pdf_path, cfg):
                 "passed": False})
             continue
         seen_pages[fingerprint] = page_no
-        for line in lines:
+        # Everything down to the "APPROPRIATION CODE ..." column header is
+        # page furniture (some books print sideways labels such as "NOINU").
+        header_end = next((i for i, l in enumerate(lines) if "APPROPRIATION" in l.text), -1)
+        org_left = None
+        for line in lines[header_end + 1:]:
             toks = _tokens(line)
             text = " ".join(toks)
-            if len(toks) >= 4 and RE_ORG.match(toks[0]) and RE_OBJ.match(toks[1]):
-                org, obj = toks[0], toks[1]
-                fields, problems = parse_staff_row(toks[2:], st_keys)
+            if len(toks) >= 3 and re.fullmatch(r"\d{6,8}", toks[0]):
+                org_left = line.words[0].left
+                # <org> <object> ...; a few rows print a malformed or missing
+                # object code ("61090", none at all). Keep what is printed.
+                org = toks[0]
+                has_obj = re.fullmatch(r"\d{5,6}", toks[1]) is not None
+                obj = toks[1] if has_obj else ""
+                fields, problems = parse_staff_row(toks[2 if has_obj else 1:], st_keys,
+                                                   st.get("row"))
+                if not RE_OBJ.match(obj):
+                    problems.append({"column": "object_code", "ocr_text": obj,
+                                     "problem": "object_code_as_printed", "value": obj})
                 label = f"{org}-{obj} {fields['position_title']}".strip()
                 _log_cells(cell_log, page_no, label, problems)
                 fund, dept = fund_and_department(org)
                 pos = {"org_code": org, "object_code": obj, "fund": fund,
                        "department": dept, "unit": staff_unit, **fields,
+                       "_count_seen": fields.pop("_count_seen"),
                        "source_page": page_no,
                        "ocr_flags": "; ".join(
                            f"{p['column']}:{p['problem']}" for p in problems)}
@@ -407,16 +527,60 @@ def extract(pdf_path, cfg):
                 else:
                     unparsed.append({"source_page": page_no, "text": text})
                 continue
+            # A count or salary printed a few points off its row lands on a
+            # line of its own; give it back to the position above.
+            if open_positions and len(toks) == 1:
+                prev = open_positions[-1]
+                ck, sk = st_keys[0]
+                if STAFF_FIELD["count"].match(toks[0]) and prev.get("_count_seen") is False:
+                    prev[ck] = float(toks[0])
+                    prev["_count_seen"] = True
+                    prev["ocr_flags"] = (prev["ocr_flags"] + "; count on next line").strip("; ")
+                    continue
+                if RE_SALARY.fullmatch(toks[0]) and "no_salary_printed" in prev["ocr_flags"]:
+                    prev[sk] = read_salary(toks[0])[0] or 0
+                    prev["ocr_flags"] = prev["ocr_flags"].replace(
+                        f"{sk}:no_salary_printed", "salary on next line")
+                    continue
+            # Uncoded rows inside a schedule ("Available for Merit - AFSCME
+            # 23,535", "Bonus & Merit Pay") count toward the subtotal; they
+            # take the codes of the position above them.
+            if open_positions and toks and not toks[0].isdigit() \
+                    and re.search(r"[A-Za-z]{3}", text) \
+                    and RE_SALARY.fullmatch(toks[-1]) and len(toks) > 1:
+                prev = open_positions[-1]
+                value, flags = read_salary(toks[-1])
+                pos = {**{k: prev[k] for k in ("org_code", "object_code", "fund",
+                                               "department", "unit")},
+                       "position_title": " ".join(toks[:-1]), "bargaining_unit": "",
+                       "ft_pt": "", **{k: 0.0 for k in st_flat},
+                       st_keys[0][1]: value or 0, "source_page": page_no,
+                       "ocr_flags": "uncoded row"}
+                staff.append(pos)
+                open_positions.append(pos)
+                continue
+            # Unit headings start at or left of the code column; an all-caps
+            # title alone in the title column is a vacancy line, not a heading.
             if (text.isupper() and not re.search(r"\d", text) and len(text) > 3
+                    and (org_left is None or line.words[0].left <= org_left + 5 * unit)
                     and "STAFFING SCHEDULE" not in text
                     and text not in {"CITY OF LANCASTER"}
                     and not text.startswith(("APPROPRIATION", "TOTAL"))):
-                staff_unit = " ".join(w.text for w in line.words
-                                      if not RE_NOISE.match(w.text)).title()
+                new_unit = " ".join(w.text for w in line.words
+                                    if not RE_NOISE.match(w.text)).title()
+                if new_unit != staff_unit and (open_staff_groups or open_positions):
+                    # The previous unit printed no "TOTAL EMPLOYEES" row (older
+                    # books skip it); its object subtotals were still checked.
+                    units_without_total.append((page_no, staff_unit))
+                    open_staff_groups, open_positions = [], []
+                staff_unit = new_unit
                 continue
             if re.match(r"^\d{7,8} ", text):
                 unparsed.append({"source_page": page_no, "text": text})
 
+    if units_without_total:
+        print(f"Staffing units with no printed unit total (object subtotals still "
+              f"checked): {len(units_without_total)}")
     if open_items:
         unparsed.append({"source_page": -1,
                          "text": f"{len(open_items)} line items never closed by a TOTAL"})
@@ -428,6 +592,26 @@ def extract(pdf_path, cfg):
             columns, keys, page_kinds)
 
 
+def _continues_table(lines, prev_header, unit):
+    """Does a header-less page continue the previous page's table?
+
+    Most of its coded rows must carry exactly one number per column, and
+    nothing on it may look like a staffing schedule.
+    """
+    text = "\n".join(l.text for l in lines)
+    if "STAFFING" in text or re.search(r"\bEMPLOYEES\b", text):
+        return False
+    n_cols = len(prev_header[1])
+    rows = [l for l in lines if len(l.words) > 2 and (
+        (RE_ORG.match(l.words[0].text) and RE_OBJ.match(l.words[1].text))
+        or l.words[0].text == "TOTAL")]
+    if not rows:
+        return False
+    fits = sum(sum(bool(re.fullmatch(r"\(?-?[\d,]+\)?", w.text)) for w in l.words[2:]) == n_cols
+               for l in rows)
+    return fits >= 0.8 * len(rows)
+
+
 def _clean(line):
     return " ".join(_tokens(line))
 
@@ -436,46 +620,86 @@ def _tokens(line):
     """Words with stray border marks trimmed ("+=MAYOR" -> "MAYOR", "1000." -> "1000")."""
     toks = (w.text if w.text == "&" else re.sub(r"^[^\w(]+|[^\w)]+$", "", w.text)
             for w in line.words)
-    return [t for t in toks if t]
+    out = []
+    for t in toks:
+        if re.fullmatch(r"\d{13,14}", t):     # "56289100611500": org+object run together
+            out += [t[:-6], t[-6:]]
+        elif t:
+            out.append(t)
+    return out
 
 
 RE_COUNT = re.compile(r"^\d+\.\d{2}$")
 
 
-def parse_staff_row(rest, st_keys):
-    """Parse '<title> <BU> <FT|PT> (<count> <salary>)...' from the right.
+STAFF_FIELD = {
+    "count": re.compile(r"^\d+\.\d{1,2}$"),
+    "ft_pt": re.compile(r"^(FT|PT|F|P|[FP][A-Za-z1])$"),
+    "bargaining_unit": re.compile(r"^(\d{4}|[A-Z])$"),
+}
+# A salary cell: 52,530 / 643,122.78 / (250,000) for allowances.
+RE_SALARY = re.compile(r"\(?[\d,]+(\.\d{1,2})?\)?")
+DEFAULT_STAFF_ROW = ["title", "bargaining_unit", "ft_pt", "count", "salary"]
 
-    Bonus rows have no count (and sometimes no FT/PT); their count is 0.
+
+def read_salary(raw):
+    """Salary cell; staffing pages sometimes print cents ("643,122.78")."""
+    if re.fullmatch(r"\d{1,3}(,\d{3})*\.\d{1,2}", raw):
+        return float(raw.replace(",", "")), []
+    return read_amount(raw)
+
+
+def parse_staff_row(rest, st_keys, row_order=None):
+    """Parse the fields after <org> <object>, in the book's column order.
+
+    `row_order` comes from the config, e.g. ["title", "bargaining_unit",
+    "ft_pt", "count", "salary"] or ["ft_pt", "bargaining_unit", "count",
+    "title", "salary"]. Fields left of the title are read from the left,
+    fields right of it from the right. A field that is not there (bonus rows
+    have no count or FT/PT) is left blank, count 0.
     """
-    rest, fields, problems = list(rest), {}, []
-    for count_key, salary_key in reversed(st_keys):
-        raw = rest.pop() if rest else ""
-        value, flags = read_amount(raw) if raw else (None, ["missing"])
-        if flags:
-            problems.append({"column": salary_key, "ocr_text": raw,
-                             "problem": "+".join(flags), "value": value})
-        fields[salary_key] = value if value is not None else 0
-        fields[count_key] = float(rest.pop()) if rest and RE_COUNT.match(rest[-1]) else 0.0
-    ftpt = ""
-    if rest and re.fullmatch(r"[FP][A-Za-z1]", rest[-1]):
-        ftpt = rest.pop()
-        if ftpt not in ("FT", "PT"):
-            problems.append({"column": "ft_pt", "ocr_text": ftpt,
-                             "problem": "ft_pt_misread", "value": ftpt[0] + "T"})
-            ftpt = ftpt[0] + "T"
-    bu = rest.pop() if rest and re.fullmatch(r"\d{4}", rest[-1]) else ""
-    title = " ".join(rest)
-    return {"position_title": title, "bargaining_unit": bu, "ft_pt": ftpt,
-            **{k: fields[k] for pair in st_keys for k in pair}}, problems
+    order = row_order or DEFAULT_STAFF_ROW
+    count_key, salary_key = st_keys[0]
+    t = order.index("title")
+    rest, got, problems = list(rest), {}, []
+    for field in order[:t]:
+        if rest and (field not in STAFF_FIELD or STAFF_FIELD[field].match(rest[0])):
+            got[field] = rest.pop(0)
+    for field in reversed(order[t + 1:]):
+        if not rest:
+            break
+        if field == "salary":
+            if RE_SALARY.fullmatch(rest[-1]):
+                got[field] = rest.pop()
+        elif STAFF_FIELD[field].match(rest[-1]):
+            got[field] = rest.pop()
+    raw = got.get("salary", "")
+    # A position printed with no salary (a vacancy) is blank, not an error;
+    # the subtotal check decides whether anything is really missing.
+    value, flags = read_salary(raw) if raw else (0, ["no_salary_printed"])
+    if flags:
+        problems.append({"column": salary_key, "ocr_text": raw,
+                         "problem": "+".join(flags), "value": value})
+    ftpt = got.get("ft_pt", "")
+    if ftpt and ftpt not in ("FT", "PT", "F", "P"):
+        problems.append({"column": "ft_pt", "ocr_text": ftpt,
+                         "problem": "ft_pt_misread", "value": ftpt[0] + "T"})
+        ftpt = ftpt[0] + "T"
+    ftpt = {"F": "FT", "P": "PT"}.get(ftpt, ftpt)
+    return {"position_title": " ".join(rest),
+            "bargaining_unit": got.get("bargaining_unit", ""), "ft_pt": ftpt,
+            count_key: float(got["count"]) if "count" in got else 0.0,
+            "_count_seen": "count" in got,
+            salary_key: value if value is not None else 0}, problems
 
 
 def parse_staff_total(toks, n_pairs):
     """'... <count> <salary>' x n_pairs -> (label words, [c, s, ...], problems)."""
     toks, nums, problems = list(toks), [], []
     for _ in range(n_pairs):
-        if len(toks) < 2 or not RE_COUNT.match(toks[-2]):
+        if len(toks) < 2 or not STAFF_FIELD["count"].match(toks[-2]):
             return toks, None, problems
-        salary, flags = read_amount(toks.pop())
+        salary, flags = read_salary(toks.pop())
         count = float(toks.pop())
         if flags:
             problems.append({"column": "salary", "ocr_text": str(salary),
@@ -559,8 +783,9 @@ def main():
     cfg = json.loads(cfg_path.read_text())
     if cfg["source_doc"] != args.pdf.name:
         sys.exit(f"{cfg_path} is for {cfg['source_doc']}, not {args.pdf.name}")
-    ocr_document(args.pdf, cfg["ocr"]["dpi"],
-                 fallback_rotate=cfg["ocr"].get("fallback_rotate", 0))
+    if cfg.get("source", "ocr") == "ocr":
+        ocr_document(args.pdf, cfg["ocr"]["dpi"],
+                     fallback_rotate=cfg["ocr"].get("fallback_rotate", 0))
 
     (items, sections, staff, staff_checks, unparsed, cell_log,
      columns, keys, page_kinds) = extract(args.pdf, cfg)
@@ -575,7 +800,8 @@ def main():
     wide.to_csv(args.out / f"line_items_{doc}.csv", index=False)
     to_long(items, columns, keys, args.pdf.name).to_csv(
         args.out / f"budget_long_{doc}.csv", index=False)
-    pd.DataFrame(staff).to_csv(args.out / f"staffing_{doc}.csv", index=False)
+    pd.DataFrame(staff).drop(columns=["_count_seen"], errors="ignore").to_csv(
+        args.out / f"staffing_{doc}.csv", index=False)
     pd.DataFrame(cell_log).to_csv(args.out / f"ocr_cells_{doc}.csv", index=False)
 
     checks = pd.DataFrame(sections + staff_checks + cell_checks(cell_log))

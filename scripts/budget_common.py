@@ -130,6 +130,8 @@ def to_long(items, amount_columns, amount_keys, source_doc):
     rows = []
     for it in items:
         for (fy, doc), key in zip(amount_columns, amount_keys):
+            if it.get(key) is None or it[key] != it[key]:   # column not on this page
+                continue
             rows.append({
                 "fiscal_year": fy,
                 "doc_type": doc,

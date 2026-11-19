@@ -41,18 +41,32 @@ A single budget book carries several years. The 2027 book has 2025 actual, 2026 
 ### Validation
 Each section, department, and fund total and each staffing subtotal printed in the PDF is recomputed from the parsed rows. Differences of up to $5 are allowed for the city's cent rounding. The script exits with an error if any check fails, unless that failure is listed in `data/known_issues.csv` with a note explaining the source-document error.
 
-### Scanned PDFs (OCR)
-Some budget books, including the 2026 adopted budget, have no text layer. They go through an OCR path that produces the same four tables:
+### Other budget books (2022–2026): config-driven extractor
+`scripts/extract_budget.py` is hard-wired to the 2027 book's 8 columns. Every other book goes through `scripts/extract_layout.py`, which takes its page layout from `config/<pdf name>.json`:
 
 ```bash
-brew install tesseract
-python scripts/extract_scanned.py "Budget PDFs - City/2026-Adopted-Budget-2026.pdf"
+python scripts/extract_layout.py "/path/to/Budget PDFs - City/2024-Adopted-Budget.pdf"
 ```
 
-- `scripts/ocr_pages.py` renders each page at 300 DPI, turns it upright using Tesseract's orientation detection, erases table rules, and saves Tesseract word boxes to `data/ocr_cache/` (git-ignored, keyed by the PDF's hash). The first run takes about a minute; later runs reuse the cache.
-- `scripts/extract_scanned.py` reads the column header on each page and checks it against `config/<pdf name>.json`. It assigns each number to a column by its position on the page, then runs the same TOTAL-row and staffing checks as the text-layer extractor.
-- `config/<pdf name>.json` holds everything that varies by year: column order, fiscal year and doc_type per column, staffing columns, and the fund and department code maps. For another scanned year, copy the 2026 file and edit what differs.
-- An amount OCR can't read cleanly fails the run until a person fixes it in `data/ocr_corrections.csv`, with evidence from the page image. Every flagged cell is listed in `ocr_cells_<doc>.csv`. Corrected values still have to re-add to the printed totals.
-- `scripts/crosscheck.py` compares one book's column with another book's reprint of the same year, account by account. It writes `crosscheck_*.csv`, for example 2026 PROPOSED in the 2026 book vs 2026 ORIGINAL BUDGET in the 2027 book.
+| Book | Source | Notes |
+|---|---|---|
+| 2022, 2023, 2024, 2025 | PDF text layer | 2024 splits some departments into a 5-column page plus a separate "2024" page, and some continuation pages have no column header (`layouts`, `inherit_header` in its config) |
+| 2026 | OCR (image-only PDF) | needs `brew install tesseract` |
+
+The config holds everything that varies by year:
+- **Line-item columns:** a header regex, fiscal year and doc_type for each column, labelled as printed (e.g. `proposed` even in an "Adopted" book).
+- **Staffing:** the order of fields in a staffing row.
+- **Codes:** the fund and department code maps.
+- **Text layer:** a glyph map for unmapped characters.
+
+A page whose header matches no configured layout stops the run.
+
+**OCR** (`"source": "ocr"`): `scripts/ocr_pages.py` renders each page at 300 DPI, turns it upright using Tesseract's orientation detection, erases table rules, and caches word boxes in `data/ocr_cache/` (git-ignored, keyed by the PDF's hash).
+
+**Checks** are the same as for 2027: every printed section TOTAL in every column, roll-ups, staffing subtotals, and duplicate pages.
+- An amount that can't be read cleanly fails the run until a person fixes it in `data/ocr_corrections.csv`, with evidence. Flagged cells are listed in `ocr_cells_<doc>.csv`.
+- `scripts/review_failures.py <doc>` drafts `known_issues.csv` rows for the failures that remain. It spells out the arithmetic, for example "the gap is exactly twice line X": the city prints some negative amounts without a sign. A person reads the drafts before appending them.
+
+**Cross-book check:** `scripts/crosscheck.py` compares book B's "B PROPOSED" with book B+1's "B ORIGINAL BUDGET", account by account. It writes `crosscheck_*.csv`, which separates adoption changes from possible misreads. Add `--loose` for figures that should only be close, such as B-1 PROJECTED vs the next book's B-1 ACTUAL.
 
 `scripts/budget_common.py` holds the parts both extractors share.

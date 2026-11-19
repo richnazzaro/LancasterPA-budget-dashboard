@@ -14,8 +14,10 @@ on OCR'd digits. Every account is classified:
                          re-adds correctly, so the OCR'd digits are confirmed:
                          the figure changed between the two documents
                          (e.g. proposed -> adopted)
-    possible_ocr_error   amounts differ and the first book's section total does
-                         not re-add: needs a look at the page image
+    possible_ocr_error   amounts differ, the first book was OCR'd, and its
+                         section total does not re-add: needs a look at the
+                         page image. (A text-layer book cannot have OCR
+                         errors, so its differences are always budget_change.)
     renamed              same account code, amounts agree, name differs
     moved_or_recoded     only in one book, but an account with the same amount
                          and object code (or same org and name) is in the other
@@ -25,12 +27,13 @@ Writes data/processed/crosscheck_<a column>_<a doc>_vs_<b column>_<b doc>.csv.
 """
 
 import argparse
+import json
 import re
 from pathlib import Path
 
 import pandas as pd
 
-from budget_common import OUT_DIR, ROUNDING_TOLERANCE
+from budget_common import OUT_DIR, ROOT, ROUNDING_TOLERANCE
 
 
 def doc_name(path):
@@ -56,11 +59,29 @@ def load(path, column):
     return agg
 
 
+def digit_pattern(a, b):
+    """'1 digit: 7->1' when two amounts differ in one digit (an OCR-style
+    misread); 'round' when the change is a multiple of 100 (a typical
+    adoption change); '' otherwise."""
+    if pd.isna(a) or pd.isna(b):
+        return ""
+    sa, sb = str(int(abs(a))), str(int(abs(b)))
+    if len(sa) == len(sb):
+        d = [(x, y) for x, y in zip(sa, sb) if x != y]
+        if len(d) == 1:
+            return f"1 digit: {d[0][0]}->{d[0][1]}"
+    if (a - b) % 100 == 0:
+        return "round"
+    return ""
+
+
 def crosscheck(a_path, a_col, b_path, b_col):
     a, b = load(a_path, a_col), load(b_path, b_col)
     a_checks = pd.read_csv(Path(a_path).parent / f"validation_{doc_name(a_path)}.csv")
     a_checks = a_checks[a_checks.level == "section"]
     sec_diff = {r.label: abs(getattr(r, f"diff_{a_col}")) for r in a_checks.itertuples()}
+    cfg_path = ROOT / "config" / f"{doc_name(a_path)}.json"
+    a_is_ocr = cfg_path.exists() and json.loads(cfg_path.read_text()).get("source", "ocr") == "ocr"
 
     m = a.merge(b, on="account_code", how="outer", suffixes=("_a", "_b"), indicator="side")
     rows = []
@@ -72,10 +93,11 @@ def crosscheck(a_path, a_col, b_path, b_col):
         if r.side == "both":
             diff = r.amount_a - r.amount_b
             rec["diff"] = diff
+            rec["digit_pattern"] = digit_pattern(r.amount_a, r.amount_b)
             if abs(diff) <= 1:
                 same_name = norm_name(r.account_name_a) == norm_name(r.account_name_b)
                 rec["status"] = "match" if same_name else "renamed"
-            elif sec_diff.get(r.bureau_a, 0) <= ROUNDING_TOLERANCE:
+            elif not a_is_ocr or sec_diff.get(r.bureau_a, 0) <= ROUNDING_TOLERANCE:
                 rec["status"] = "budget_change"
             else:
                 rec["status"] = "possible_ocr_error"
@@ -112,7 +134,20 @@ def main():
     ap.add_argument("b_csv")
     ap.add_argument("b_column")
     ap.add_argument("--out", type=Path, default=OUT_DIR)
+    ap.add_argument("--loose", action="store_true",
+                    help="figures expected to be close but not equal (e.g. projected vs "
+                         "actual): report gap sizes only, no classification")
     args = ap.parse_args()
+    if args.loose:
+        a, b = load(args.a_csv, args.a_column), load(args.b_csv, args.b_column)
+        m = a.merge(b, on="account_code", suffixes=("_a", "_b"))
+        gap = (m.amount_b - m.amount_a).abs()
+        print(f"{doc_name(args.a_csv)} {args.a_column} vs {doc_name(args.b_csv)} "
+              f"{args.b_column}: {len(m)} accounts; equal {(gap <= 1).mean():.0%}; "
+              f"median gap {gap.median():,.0f}; 90th pct {gap.quantile(.9):,.0f}; "
+              f"total |gap| {gap.sum():,.0f} on total {m.amount_a.abs().sum():,.0f} "
+              f"({gap.sum() / max(m.amount_a.abs().sum(), 1):.1%})")
+        return
     out = crosscheck(args.a_csv, args.a_column, args.b_csv, args.b_column)
     name = (f"crosscheck_{args.a_column}_{doc_name(args.a_csv)}"
             f"_vs_{args.b_column}_{doc_name(args.b_csv)}.csv")

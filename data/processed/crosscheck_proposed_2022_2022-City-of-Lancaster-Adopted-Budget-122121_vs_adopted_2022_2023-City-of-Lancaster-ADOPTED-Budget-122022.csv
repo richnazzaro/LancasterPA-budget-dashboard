@@ -1,0 +1,970 @@
+account_code,account_name_a,account_name_b,bureau_a,page_a,page_b,amount_a,amount_b,diff,digit_pattern,status
+1000001-401200,Real Estate Tax Lien Proc,Real Estate Tax Lien Proceeds,Tax Revenues,40.0,43.0,1100000.0,1100000.0,0.0,round,renamed
+1404000-820500,MIS Projects,IT Projects,Information Services Exp,77.0,81.0,125000.0,125000.0,0.0,round,renamed
+1406000-812000,Contributions,LEMSA,Community Involvement Exp,82.0,86.0,150000.0,150000.0,0.0,round,renamed
+56000000-408101,Stormwater Mgmt Fee,Stormwater Management Fees,SWM Revenue,170.0,187.0,4600000.0,4600000.0,0.0,round,renamed
+1000004-415600,Neigh Engage Fundraising,,Other Income,49.0,,0.0,,,,only_in_a
+1402000-741000,Professional Services,,Procurement & Collection Exp,74.0,,0.0,,,,only_in_a
+1609000-611000,Salary - Bureau Chief,,Lanc Office of Promotion,133.0,,0.0,,,,only_in_a
+1609000-611500,Salary - Personnel,,Lanc Office of Promotion,133.0,,0.0,,,,only_in_a
+1609000-618500,Overtime,,Lanc Office of Promotion,133.0,,0.0,,,,only_in_a
+1609000-716000,Rental of Parking Lot,,Lanc Office of Promotion,133.0,,0.0,,,,only_in_a
+1609000-722000,Maint. - Communications,,Lanc Office of Promotion,133.0,,0.0,,,,only_in_a
+1609000-732000,Dues & Subscriptions,,Lanc Office of Promotion,133.0,,0.0,,,,only_in_a
+1609000-734000,Postage,,Lanc Office of Promotion,133.0,,0.0,,,,only_in_a
+1609000-736000,Telephone,,Lanc Office of Promotion,133.0,,0.0,,,,only_in_a
+1609000-741000,Professional Services,,Lanc Office of Promotion,133.0,,0.0,,,,only_in_a
+1609000-760300,Office Supplies,,Lanc Office of Promotion,133.0,,0.0,,,,only_in_a
+1609000-853800,Marketing,,Lanc Office of Promotion,134.0,,0.0,,,,only_in_a
+1609000-854000,Merchandise Purchases,,Lanc Office of Promotion,134.0,,0.0,,,,only_in_a
+1850000-722000,Maint. - Communications,,Motor Vehicles Exp,150.0,,0.0,,,,only_in_a
+1863000-732000,Dues & Subscriptions,,Parks Trees,161.0,,0.0,,,,only_in_a
+1863000-744000,Contract Services,,Parks Trees,161.0,,0.0,,,,only_in_a
+1863000-810000,Special Events,,Parks Trees,161.0,,0.0,,,,only_in_a
+56000000-406300,Interest on Investment,,SWM Revenue,170.0,,0.0,,,,only_in_a
+56000000-420000,Swr Grnds Exp Reimb,,SWM Revenue,170.0,,0.0,,,,only_in_a
+56088600-746300,Collection System Expense,,SWM Admin Exp,173.0,,0.0,,,,only_in_a
+56100000-400900,Lien Interest & Costs,,Wastewater Revenue,188.0,,0.0,,,,only_in_a
+56200000-400900,Lien Interest & Costs,,Water Revenue,210.0,,0.0,,,,only_in_a
+56200000-406300,Interest on Investment,,Water Revenue,210.0,,0.0,,,,only_in_a
+56289500-612000,Salary Temporary,,Water Meter Shop Exp,229.0,,0.0,,,,only_in_a
+56300000-406300,Interest on Investment,,SWR Revenue,239.0,,0.0,,,,only_in_a
+1102000-744000,,Contract Services,,,55.0,,0.0,,,only_in_b
+1103000-610900,,Salary - Director,,,58.0,,0.0,,,only_in_b
+1501001-619300,,Early Retirement Expense,,,91.0,,0.0,,,only_in_b
+1502001-613000,,Fire Deputy Chiefs,,,115.0,,0.0,,,only_in_b
+1607000-620100,,Educational Incentive,,,150.0,,0.0,,,only_in_b
+1810000-611000,,Salary - Bureau Chief,,,154.0,,0.0,,,only_in_b
+1820000-718000,,Rental of Uniforms,,,157.0,,0.0,,,only_in_b
+1820000-744000,,Contract Services,,,158.0,,0.0,,,only_in_b
+1860000-744500,,Training & School,,,171.0,,0.0,,,only_in_b
+1861000-740400,,Hazardous Waste Removal,,,173.0,,0.0,,,only_in_b
+56088700-612000,,Salary Temporary,,,201.0,,0.0,,,only_in_b
+56088800-612000,,Salary Temporary,,,198.0,,0.0,,,only_in_b
+56088800-618500,,Overtime,,,198.0,,0.0,,,only_in_b
+56088800-822500,,Landscaping Trees etc,,,199.0,,0.0,,,only_in_b
+56088800-827100,,Vehicle Lease Purchase,,,199.0,,0.0,,,only_in_b
+56289000-741001,,Professional Services - D&E,,,236.0,,0.0,,,only_in_b
+1000001-400000,City Real Estate Taxes,City Real Estate Taxes,Tax Revenues,39.0,42.0,29500000.0,29500000.0,0.0,round,match
+1000001-400200,Real Estate Transfer,Real Estate Transfer,Tax Revenues,39.0,42.0,1300000.0,1300000.0,0.0,round,match
+1000001-400300,Earned Income Tax,Earned Income Tax,Tax Revenues,39.0,42.0,6900000.0,6900000.0,0.0,round,match
+1000001-400400,Local Services Tax,Local Services Tax,Tax Revenues,39.0,42.0,1500000.0,1500000.0,0.0,round,match
+1000001-400500,Penalty Current Tax,Penalty Current Tax,Tax Revenues,39.0,42.0,120000.0,120000.0,0.0,round,match
+1000001-400900,Lien Interest & Costs,Lien Interest & Costs,Tax Revenues,39.0,42.0,0.0,0.0,0.0,round,match
+1000001-401000,Payment in Lieu of Taxes,Payment in Lieu of Taxes,Tax Revenues,39.0,42.0,2240000.0,2240000.0,0.0,round,match
+1000001-401100,Utility Tax Refund,Utility Tax Refund,Tax Revenues,39.0,42.0,38000.0,38000.0,0.0,round,match
+1000002-401400,Franchise Fee,Franchise Fee,Regulatory Revenues,41.0,44.0,560000.0,560000.0,0.0,round,match
+1000002-401500,Beverage License,Beverage License,Regulatory Revenues,41.0,44.0,32000.0,32000.0,0.0,round,match
+1000004-405500,Administrative Sundry,Administrative Sundry,Other Income,47.0,50.0,1500.0,1500.0,0.0,round,match
+1000004-405700,Sale of City Property/Svc,Sale of City Property/Svc,Other Income,47.0,50.0,165000.0,165000.0,0.0,round,match
+1000004-405800,Police Sundry,Police Sundry,Other Income,47.0,50.0,30000.0,30000.0,0.0,round,match
+1000004-405900,Fire Sundry,Fire Sundry,Other Income,47.0,50.0,15000.0,15000.0,0.0,round,match
+1000004-406000,EDNR Sundry,EDNR Sundry,Other Income,47.0,50.0,75000.0,75000.0,0.0,round,match
+1000004-406100,Public Works Sundry,Public Works Sundry,Other Income,47.0,50.0,7500.0,7500.0,0.0,round,match
+1000004-406300,Interest on Investment,Interest on Investment,Other Income,47.0,50.0,100.0,100.0,0.0,round,match
+1000004-406600,Federal Reimb-Salaries,Federal Reimb-Salaries,Other Income,47.0,50.0,1063000.0,1063000.0,0.0,round,match
+1000004-406601,Lead Reimb - Salaries,Lead Reimb - Salaries,Other Income,48.0,51.0,270500.0,270500.0,0.0,round,match
+1000004-406700,Federal Reimb-Fringes,Federal Reimb-Fringes,Other Income,48.0,51.0,513000.0,513000.0,0.0,round,match
+1000004-406701,Lead Reimb - Fringes,Lead Reimb - Fringes,Other Income,48.0,51.0,139000.0,139000.0,0.0,round,match
+1000004-406900,Fed.Reimb-Indirect Costs,Fed.Reimb-Indirect Costs,Other Income,48.0,51.0,55000.0,55000.0,0.0,round,match
+1000004-407100,Pension State Fund,Pension State Fund,Other Income,48.0,51.0,2780000.0,2780000.0,0.0,round,match
+1000004-407400,Harb Grant,Harb Grant,Other Income,48.0,51.0,8000.0,8000.0,0.0,round,match
+1000004-407500,Liquid Fuels Reimb.,Liquid Fuels Reimb.,Other Income,48.0,51.0,450000.0,450000.0,0.0,round,match
+1000004-415100,Anti-Auto Theft grant,Anti-Auto Theft grant,Other Income,48.0,51.0,320000.0,320000.0,0.0,round,match
+1000004-415500,Misc Grants & Gifts,Misc Grants & Gifts,Other Income,48.0,51.0,5000.0,5000.0,0.0,round,match
+1000004-415501,ARPA Revenue Replacement,ARPA Revenue Replacement,Other Income,49.0,52.0,4500000.0,4500000.0,0.0,round,match
+1000004-418100,Tax Certification Fees,Tax Certification Fees,Other Income,49.0,52.0,90000.0,90000.0,0.0,round,match
+1000004-419600,Marketing,Marketing,Other Income,49.0,52.0,0.0,0.0,0.0,round,match
+1000004-419900,Merchandise Sales,Merchandise Sales,Other Income,49.0,52.0,20000.0,20000.0,0.0,round,match
+1000004-499000,Fund Balance Reserve,Fund Balance Reserve,Other Income,49.0,52.0,2195775.0,2195775.0,0.0,round,match
+1101000-610500,Elected Official,Elected Official,Mayor's Office Exp,50.0,53.0,88883.0,88883.0,0.0,round,match
+1101000-611500,Salaried Personnel,Salaried Personnel,Mayor's Office Exp,50.0,53.0,419209.0,419209.0,0.0,round,match
+1101000-732000,Dues & Subscriptions,Dues & Subscriptions,Mayor's Office Exp,50.0,53.0,400.0,400.0,0.0,round,match
+1101000-734000,Postage,Postage,Mayor's Office Exp,50.0,53.0,900.0,900.0,0.0,round,match
+1101000-735000,Printing,Printing,Mayor's Office Exp,50.0,53.0,500.0,500.0,0.0,round,match
+1101000-736000,Telephone,Telephone,Mayor's Office Exp,50.0,53.0,2500.0,2500.0,0.0,round,match
+1101000-737000,Travel,Travel,Mayor's Office Exp,50.0,53.0,1000.0,1000.0,0.0,round,match
+1101000-741000,Professional Services,Professional Services,Mayor's Office Exp,50.0,53.0,500.0,500.0,0.0,round,match
+1101000-744500,Training & School,Training & School,Mayor's Office Exp,50.0,53.0,3000.0,3000.0,0.0,round,match
+1101000-760300,Office Supplies,Office Supplies,Mayor's Office Exp,50.0,53.0,1500.0,1500.0,0.0,round,match
+1102000-610900,Salary - Director,Salary - Director,Office of City Solicitor,52.0,55.0,128750.0,128750.0,0.0,round,match
+1102000-611500,Salary - Personnel,Salary - Personnel,Office of City Solicitor,52.0,55.0,43152.0,43152.0,0.0,round,match
+1102000-731000,Advertising,Advertising,Office of City Solicitor,52.0,55.0,1000.0,1000.0,0.0,round,match
+1102000-732000,Dues & Subscriptions,Dues & Subscriptions,Office of City Solicitor,52.0,55.0,1250.0,1250.0,0.0,round,match
+1102000-734000,Postage,Postage,Office of City Solicitor,52.0,55.0,150.0,150.0,0.0,round,match
+1102000-735000,Printing,Printing,Office of City Solicitor,52.0,55.0,200.0,200.0,0.0,round,match
+1102000-736000,Telephone,Telephone,Office of City Solicitor,52.0,55.0,1000.0,1000.0,0.0,round,match
+1102000-737000,Travel,Travel,Office of City Solicitor,52.0,55.0,250.0,250.0,0.0,round,match
+1102000-741000,Professional Services,Professional Services,Office of City Solicitor,52.0,55.0,134500.0,134500.0,0.0,round,match
+1102000-744500,Training/Education,Training/Education,Office of City Solicitor,52.0,55.0,2500.0,2500.0,0.0,round,match
+1102000-760300,Office Supplies,Office Supplies,Office of City Solicitor,52.0,56.0,1000.0,1000.0,0.0,round,match
+1102000-820000,Minor Equipment,Minor Equipment,Office of City Solicitor,53.0,56.0,500.0,500.0,0.0,round,match
+1103000-611000,Salary - Bureau Chief,Salary - Bureau Chief,Office of Neigh Engagement,55.0,58.0,115582.0,115582.0,0.0,round,match
+1103000-611500,Salary - Personnel,Salary - Personnel,Office of Neigh Engagement,55.0,58.0,142812.0,142812.0,0.0,round,match
+1103000-612000,Salary Temporary,Salary Temporary,Office of Neigh Engagement,55.0,58.0,10000.0,10000.0,0.0,round,match
+1103000-618500,Overtime,Overtime,Office of Neigh Engagement,55.0,58.0,5000.0,5000.0,0.0,round,match
+1103000-731000,Advertising,Advertising,Office of Neigh Engagement,55.0,58.0,5000.0,5000.0,0.0,round,match
+1103000-732000,Dues & Subscriptions,Dues & Subscriptions,Office of Neigh Engagement,55.0,58.0,5000.0,5000.0,0.0,round,match
+1103000-734000,Postage,Postage,Office of Neigh Engagement,55.0,58.0,500.0,500.0,0.0,round,match
+1103000-735000,Printing,Printing,Office of Neigh Engagement,55.0,58.0,500.0,500.0,0.0,round,match
+1103000-736000,Telephone,Telephone,Office of Neigh Engagement,55.0,58.0,4000.0,4000.0,0.0,round,match
+1103000-737000,Travel,Travel,Office of Neigh Engagement,55.0,59.0,5000.0,5000.0,0.0,round,match
+1103000-741000,Professional Services,Professional Services,Office of Neigh Engagement,56.0,59.0,20000.0,20000.0,0.0,round,match
+1103000-744000,Contract Services,Contract Services,Office of Neigh Engagement,56.0,59.0,5000.0,5000.0,0.0,round,match
+1103000-744500,Training/Education,Training/Education,Office of Neigh Engagement,56.0,59.0,3000.0,3000.0,0.0,round,match
+1103000-760300,Office Supplies,Office Supplies,Office of Neigh Engagement,56.0,59.0,2000.0,2000.0,0.0,round,match
+1103000-820000,Minor Equipment,Minor Equipment,Office of Neigh Engagement,56.0,59.0,1500.0,1500.0,0.0,round,match
+1103000-853800,Marketing,Marketing,Office of Neigh Engagement,56.0,59.0,15000.0,15000.0,0.0,round,match
+1104000-611000,Salary - Bureau Chief,Salary - Bureau Chief,Lanc Office of Promotions,58.0,61.0,63690.0,63690.0,0.0,round,match
+1104000-611500,Salary - Personnel,Salary - Personnel,Lanc Office of Promotions,58.0,61.0,209550.0,209550.0,0.0,round,match
+1104000-618500,Overtime,Overtime,Lanc Office of Promotions,58.0,61.0,200.0,200.0,0.0,round,match
+1104000-716000,Rental of Parking Lot,Rental of Parking Lot,Lanc Office of Promotions,58.0,61.0,6000.0,6000.0,0.0,round,match
+1104000-722000,Maint. - Communications,Maint. - Communications,Lanc Office of Promotions,58.0,61.0,4000.0,4000.0,0.0,round,match
+1104000-732000,Dues & Subscriptions,Dues & Subscriptions,Lanc Office of Promotions,58.0,61.0,2500.0,2500.0,0.0,round,match
+1104000-734000,Postage,Postage,Lanc Office of Promotions,58.0,61.0,1500.0,1500.0,0.0,round,match
+1104000-735000,Printing,Printing,Lanc Office of Promotions,58.0,61.0,500.0,500.0,0.0,round,match
+1104000-736000,Telephone,Telephone,Lanc Office of Promotions,58.0,61.0,1500.0,1500.0,0.0,round,match
+1104000-741000,Professional Services,Professional Services,Lanc Office of Promotions,59.0,62.0,2000.0,2000.0,0.0,round,match
+1104000-744500,Training/Education,Training/Education,Lanc Office of Promotions,59.0,62.0,1500.0,1500.0,0.0,round,match
+1104000-760300,Office Supplies,Office Supplies,Lanc Office of Promotions,59.0,62.0,2000.0,2000.0,0.0,round,match
+1104000-820000,Minor Equipment,Minor Equipment,Lanc Office of Promotions,59.0,62.0,2000.0,2000.0,0.0,round,match
+1104000-853800,Marketing,Marketing,Lanc Office of Promotions,59.0,62.0,91500.0,91500.0,0.0,round,match
+1104000-854000,Merchandise Purchases,Merchandise Purchases,Lanc Office of Promotions,59.0,62.0,30000.0,30000.0,0.0,round,match
+1201000-610500,Elected Official,Elected Official,City Council Exp,61.0,64.0,56500.0,56500.0,0.0,round,match
+1201000-737000,Travel,Travel,City Council Exp,61.0,64.0,5000.0,5000.0,0.0,round,match
+1201000-738000,Miscellaneous Expenses,Miscellaneous Expenses,City Council Exp,61.0,64.0,5000.0,5000.0,0.0,round,match
+1201000-744500,Training,Training,City Council Exp,61.0,64.0,3200.0,3200.0,0.0,round,match
+1202000-611500,Salaried Personnel,Salaried Personnel,City Clerk Exp,63.0,66.0,63382.0,63382.0,0.0,round,match
+1202000-612000,Salary Temporary,Salary Temporary,City Clerk Exp,63.0,66.0,100.0,100.0,0.0,round,match
+1202000-731000,Advertising,Advertising,City Clerk Exp,63.0,66.0,6000.0,6000.0,0.0,round,match
+1202000-734000,Postage,Postage,City Clerk Exp,63.0,66.0,100.0,100.0,0.0,round,match
+1202000-735000,Printing,Printing,City Clerk Exp,63.0,66.0,500.0,500.0,0.0,round,match
+1202000-736000,Telephone,Telephone,City Clerk Exp,63.0,66.0,550.0,550.0,0.0,round,match
+1202000-737000,Travel,Travel,City Clerk Exp,63.0,66.0,2000.0,2000.0,0.0,round,match
+1202000-738000,Miscellaneous Expenses,Miscellaneous Expenses,City Clerk Exp,63.0,66.0,1000.0,1000.0,0.0,round,match
+1202000-742500,Ordinance Codification,Ordinance Codification,City Clerk Exp,63.0,66.0,6000.0,6000.0,0.0,round,match
+1202000-744500,Training/Education,Training/Education,City Clerk Exp,63.0,66.0,1150.0,1150.0,0.0,round,match
+1202000-760300,Office Supplies,Office Supplies,City Clerk Exp,63.0,66.0,150.0,150.0,0.0,round,match
+1400000-610900,Salary - Director,Salary - Director,Director Admin Services Exp,67.0,70.0,137761.0,137761.0,0.0,round,match
+1400000-611500,Salaried Personnel,Salaried Personnel,Director Admin Services Exp,67.0,70.0,50531.0,50531.0,0.0,round,match
+1400000-612000,Salary Temporary,Salary Temporary,Director Admin Services Exp,67.0,70.0,0.0,0.0,0.0,round,match
+1400000-618500,Overtime,Overtime,Director Admin Services Exp,67.0,70.0,0.0,0.0,0.0,round,match
+1400000-714100,PC Lease,PC Lease,Director Admin Services Exp,67.0,70.0,48000.0,48000.0,0.0,round,match
+1400000-732000,Dues & Subscriptions,Dues & Subscriptions,Director Admin Services Exp,67.0,70.0,6100.0,6100.0,0.0,round,match
+1400000-734000,Postage,Postage,Director Admin Services Exp,67.0,70.0,150.0,150.0,0.0,round,match
+1400000-735000,Printing,Printing,Director Admin Services Exp,67.0,70.0,500.0,500.0,0.0,round,match
+1400000-736000,Telephone,Telephone,Director Admin Services Exp,67.0,70.0,650.0,650.0,0.0,round,match
+1400000-737000,Travel,Travel,Director Admin Services Exp,67.0,70.0,500.0,500.0,0.0,round,match
+1400000-741000,Professional Services,Professional Services,Director Admin Services Exp,68.0,71.0,175000.0,175000.0,0.0,round,match
+1400000-744500,Training & School,Training & School,Director Admin Services Exp,68.0,71.0,500.0,500.0,0.0,round,match
+1400000-760300,Office Supplies,Office Supplies,Director Admin Services Exp,68.0,71.0,1300.0,1300.0,0.0,round,match
+1400000-820000,Minor Equipment,Minor Equipment,Director Admin Services Exp,68.0,71.0,500.0,500.0,0.0,round,match
+1401000-611000,Salary - Bureau Chief,Salary - Bureau Chief,Accounting Exp,70.0,73.0,100888.0,100888.0,0.0,round,match
+1401000-611500,Salaried Personnel,Salaried Personnel,Accounting Exp,70.0,73.0,316227.0,316227.0,0.0,round,match
+1401000-731000,Advertising,Advertising,Accounting Exp,70.0,73.0,3000.0,3000.0,0.0,round,match
+1401000-732000,Dues & Subscriptions,Dues & Subscriptions,Accounting Exp,70.0,73.0,1200.0,1200.0,0.0,round,match
+1401000-734000,Postage,Postage,Accounting Exp,70.0,73.0,5000.0,5000.0,0.0,round,match
+1401000-735000,Printing,Printing,Accounting Exp,70.0,73.0,1600.0,1600.0,0.0,round,match
+1401000-736000,Telephone,Telephone,Accounting Exp,70.0,73.0,1400.0,1400.0,0.0,round,match
+1401000-737000,Travel,Travel,Accounting Exp,70.0,73.0,300.0,300.0,0.0,round,match
+1401000-741000,Professional Services,Professional Services,Accounting Exp,70.0,73.0,500.0,500.0,0.0,round,match
+1401000-741100,Audit Expense,Audit Expense,Accounting Exp,70.0,73.0,50000.0,50000.0,0.0,round,match
+1401000-743000,Bank Service Charges,Bank Service Charges,Accounting Exp,71.0,74.0,30000.0,30000.0,0.0,round,match
+1401000-743100,Credit Card Fees,Credit Card Fees,Accounting Exp,71.0,74.0,1000.0,1000.0,0.0,round,match
+1401000-744500,Training & School,Training & School,Accounting Exp,71.0,74.0,3000.0,3000.0,0.0,round,match
+1401000-760300,Office Supplies,Office Supplies,Accounting Exp,71.0,74.0,5000.0,5000.0,0.0,round,match
+1401000-820000,Minor Equipment,Minor Equipment,Accounting Exp,71.0,74.0,1500.0,1500.0,0.0,round,match
+1402000-611000,Salary - Bureau Chief,Salary - Bureau Chief,Procurement & Collection Exp,73.0,76.0,6436.0,6436.0,0.0,round,match
+1402000-611500,Salaried Personnel,Salaried Personnel,Procurement & Collection Exp,73.0,76.0,69781.0,69781.0,0.0,round,match
+1402000-618500,Overtime,Overtime,Procurement & Collection Exp,73.0,76.0,100.0,100.0,0.0,round,match
+1402000-718000,Rental of Uniforms,Rental of Uniforms,Procurement & Collection Exp,73.0,76.0,569.0,569.0,0.0,round,match
+1402000-723000,Maint. - Equipment,Maint. - Equipment,Procurement & Collection Exp,73.0,76.0,5406.0,5406.0,0.0,round,match
+1402000-729000,Maint. - Vehicles,Maint. - Vehicles,Procurement & Collection Exp,73.0,76.0,129.0,129.0,0.0,round,match
+1402000-731000,Advertising,Advertising,Procurement & Collection Exp,73.0,76.0,1000.0,1000.0,0.0,round,match
+1402000-732000,Dues & Subscriptions,Dues & Subscriptions,Procurement & Collection Exp,73.0,76.0,1150.0,1150.0,0.0,round,match
+1402000-734000,Postage,Postage,Procurement & Collection Exp,73.0,76.0,27115.0,27115.0,0.0,round,match
+1402000-735000,Printing,Printing,Procurement & Collection Exp,73.0,76.0,1167.0,1167.0,0.0,round,match
+1402000-736000,Telephone,Telephone,Procurement & Collection Exp,74.0,77.0,882.0,882.0,0.0,round,match
+1402000-737000,Travel,Travel,Procurement & Collection Exp,74.0,77.0,4200.0,4200.0,0.0,round,match
+1402000-738000,Miscellaneous Expenses,Miscellaneous Expenses,Procurement & Collection Exp,74.0,77.0,1500.0,1500.0,0.0,round,match
+1402000-744000,Contract Services,Contract Services,Procurement & Collection Exp,74.0,77.0,1076.0,1076.0,0.0,round,match
+1402000-744500,Training & School,Training & School,Procurement & Collection Exp,74.0,77.0,3332.0,3332.0,0.0,round,match
+1402000-760300,Office Supplies,Office Supplies,Procurement & Collection Exp,74.0,77.0,2164.0,2164.0,0.0,round,match
+1402000-765400,Gas Oil & Diesel,Gas Oil & Diesel,Procurement & Collection Exp,74.0,77.0,103.0,103.0,0.0,round,match
+1402000-820000,Minor Equipment,Minor Equipment,Procurement & Collection Exp,74.0,77.0,5583.0,5583.0,0.0,round,match
+1403000-610500,Elected Official,Elected Official,Controller/Treasurer Exp,65.0,68.0,17000.0,17000.0,0.0,round,match
+1404000-611000,Salary - Bureau Chief,Salary - Bureau Chief,Information Services Exp,76.0,80.0,123600.0,123600.0,0.0,round,match
+1404000-611500,Salaried Personnel,Salaried Personnel,Information Services Exp,76.0,80.0,272422.0,272422.0,0.0,round,match
+1404000-722000,Maint. - Communications,Maint. - Communications,Information Services Exp,76.0,80.0,6000.0,6000.0,0.0,round,match
+1404000-723000,Maint. - Equipment,Maint. - Equipment,Information Services Exp,76.0,80.0,50000.0,50000.0,0.0,round,match
+1404000-734000,Postage,Postage,Information Services Exp,76.0,80.0,100.0,100.0,0.0,round,match
+1404000-735000,Printing,Printing,Information Services Exp,76.0,80.0,50.0,50.0,0.0,round,match
+1404000-736000,Telephone,Telephone,Information Services Exp,76.0,80.0,4000.0,4000.0,0.0,round,match
+1404000-737000,Travel,Travel,Information Services Exp,76.0,80.0,1000.0,1000.0,0.0,round,match
+1404000-741000,Professional Services,Professional Services,Information Services Exp,76.0,80.0,100000.0,100000.0,0.0,round,match
+1404000-744000,Contract Services,Contract Services,Information Services Exp,77.0,81.0,500000.0,500000.0,0.0,round,match
+1404000-744500,Training & School,Training & School,Information Services Exp,77.0,81.0,5000.0,5000.0,0.0,round,match
+1404000-760300,Office Supplies,Office Supplies,Information Services Exp,77.0,81.0,500.0,500.0,0.0,round,match
+1404000-760600,Operating Supplies,Operating Supplies,Information Services Exp,77.0,81.0,2000.0,2000.0,0.0,round,match
+1404000-820000,Minor Equipment,Minor Equipment,Information Services Exp,77.0,81.0,10000.0,10000.0,0.0,round,match
+1404000-930000,GIS Projects,GIS Projects,Information Services Exp,77.0,81.0,10000.0,10000.0,0.0,round,match
+1405000-611000,Salary - Bureau Chief,Salary - Bureau Chief,Human Resources Exp,79.0,83.0,88117.0,88117.0,0.0,round,match
+1405000-611500,Salaried Personnel,Salaried Personnel,Human Resources Exp,79.0,83.0,319372.0,319372.0,0.0,round,match
+1405000-612000,Salary Temporary,Salary Temporary,Human Resources Exp,79.0,83.0,5000.0,5000.0,0.0,round,match
+1405000-622000,Employee Recognition,Employee Recognition,Human Resources Exp,79.0,83.0,7550.0,7550.0,0.0,round,match
+1405000-723000,Maint. - Equipment,Maint. - Equipment,Human Resources Exp,79.0,83.0,50.0,50.0,0.0,round,match
+1405000-731000,Advertising,Advertising,Human Resources Exp,79.0,83.0,700.0,700.0,0.0,round,match
+1405000-732000,Dues & Subscriptions,Dues & Subscriptions,Human Resources Exp,79.0,83.0,4135.0,4135.0,0.0,round,match
+1405000-734000,Postage,Postage,Human Resources Exp,79.0,83.0,3500.0,3500.0,0.0,round,match
+1405000-735000,Printing,Printing,Human Resources Exp,79.0,83.0,4800.0,4800.0,0.0,round,match
+1405000-736000,Telephone,Telephone,Human Resources Exp,79.0,83.0,1100.0,1100.0,0.0,round,match
+1405000-737000,Travel,Travel,Human Resources Exp,79.0,83.0,9900.0,9900.0,0.0,round,match
+1405000-741000,Professional Services,Professional Services,Human Resources Exp,80.0,84.0,228000.0,228000.0,0.0,round,match
+1405000-743500,Labor Relations Expense,Labor Relations Expense,Human Resources Exp,80.0,84.0,1350.0,1350.0,0.0,round,match
+1405000-744000,Contract Services,Contract Services,Human Resources Exp,80.0,84.0,49960.0,49960.0,0.0,round,match
+1405000-744500,Training & School,Training & School,Human Resources Exp,80.0,84.0,10770.0,10770.0,0.0,round,match
+1405000-760300,Office Supplies,Office Supplies,Human Resources Exp,80.0,84.0,5200.0,5200.0,0.0,round,match
+1405000-760600,Operating Supplies,Operating Supplies,Human Resources Exp,80.0,84.0,2500.0,2500.0,0.0,round,match
+1405000-820000,Minor Equipment,Minor Equipment,Human Resources Exp,80.0,84.0,5000.0,5000.0,0.0,round,match
+1406000-812500,Intermunicipal Committee,Intermunicipal Committee,Community Involvement Exp,82.0,86.0,1650.0,1650.0,0.0,round,match
+1406000-813500,PA League of Cities,PA League of Cities,Community Involvement Exp,82.0,86.0,19000.0,19000.0,0.0,round,match
+1406000-814000,Public Library,Public Library,Community Involvement Exp,82.0,86.0,100000.0,100000.0,0.0,round,match
+1406000-814300,Community Communications,Community Communications,Community Involvement Exp,82.0,86.0,105000.0,105000.0,0.0,round,match
+1406000-814500,Recreation Commission,Recreation Commission,Community Involvement Exp,82.0,86.0,305656.0,305656.0,0.0,round,match
+1406000-817500,Human Relation Commission,Human Relation Commission,Community Involvement Exp,82.0,86.0,7000.0,7000.0,0.0,round,match
+1406000-851300,LOOP,LOOP,Community Involvement Exp,82.0,86.0,25000.0,25000.0,0.0,round,match
+1407000-772000,Insurance Package,Insurance Package,Insurance Package Exp,83.0,87.0,760000.0,760000.0,0.0,round,match
+1407000-774000,Public Officials Bond,Public Officials Bond,Insurance Package Exp,83.0,87.0,4000.0,4000.0,0.0,round,match
+1408000-620200,Medical Insurance,Medical Insurance,Fringe Benefits Exp,84.0,88.0,380000.0,380000.0,0.0,round,match
+1408000-620300,Dental/Vision,Dental/Vision,Fringe Benefits Exp,84.0,88.0,15000.0,15000.0,0.0,round,match
+1408000-620800,Social Security,Social Security,Fringe Benefits Exp,84.0,88.0,1050000.0,1050000.0,0.0,round,match
+1408000-620900,Life Insurance,Life Insurance,Fringe Benefits Exp,84.0,88.0,70000.0,70000.0,0.0,round,match
+1408000-623000,Pension Contribution,Pension Contribution,Fringe Benefits Exp,84.0,88.0,880000.0,880000.0,0.0,round,match
+1408000-624000,Unemployment Compensation,Unemployment Compensation,Fringe Benefits Exp,84.0,88.0,10000.0,10000.0,0.0,round,match
+1408000-625000,Workers Compensation,Workers Compensation,Fringe Benefits Exp,84.0,88.0,550000.0,550000.0,0.0,round,match
+1408000-716000,Rental of Parking Lot,Rental of Parking Lot,Fringe Benefits Exp,84.0,88.0,50000.0,50000.0,0.0,round,match
+1409000-923000,Paying Agent Fees,Paying Agent Fees,Debt Service Exp,85.0,89.0,1500.0,1500.0,0.0,round,match
+1409000-924000,Debt Service - Interest,Debt Service - Interest,Debt Service Exp,85.0,89.0,2445000.0,2445000.0,0.0,round,match
+1409000-926000,Debt Service - Principal,Debt Service - Principal,Debt Service Exp,85.0,89.0,1175000.0,1175000.0,0.0,round,match
+1501000-402600,District Judge Fines,District Judge Fines,Public Safety Revenues,42.0,45.0,395000.0,395000.0,0.0,round,match
+1501000-402700,Parking Violations,Parking Violations,Public Safety Revenues,42.0,45.0,1575000.0,1575000.0,0.0,round,match
+1501000-402800,Reproducing Police Report,Reproducing Police Report,Public Safety Revenues,42.0,45.0,32000.0,32000.0,0.0,round,match
+1501000-402900,Burglar Alarm Svc Fee,Burglar Alarm Svc Fee,Public Safety Revenues,42.0,45.0,15000.0,15000.0,0.0,round,match
+1501000-403100,Police - School District,Police - School District,Public Safety Revenues,42.0,45.0,120000.0,120000.0,0.0,round,match
+1501000-403300,Drug Task Force Reimb.,Drug Task Force Reimb.,Public Safety Revenues,42.0,45.0,90000.0,90000.0,0.0,round,match
+1501000-403500,Pa Reimb Police Recruits,Pa Reimb Police Recruits,Public Safety Revenues,42.0,45.0,75000.0,75000.0,0.0,round,match
+1501000-403800,Warrant Squad Services,Warrant Squad Services,Public Safety Revenues,42.0,45.0,1500.0,1500.0,0.0,round,match
+1501000-404100,Police-Special Events OT,Police-Special Events OT,Public Safety Revenues,42.0,45.0,20000.0,20000.0,0.0,round,match
+1501000-416700,Police - SDL - SRO,Police - SDL - SRO,Public Safety Revenues,43.0,46.0,630000.0,630000.0,0.0,round,match
+1501001-611000,Salary - Bureau Chief,Salary - Bureau Chief,Police Bureau Exp,86.0,90.0,131840.0,131840.0,0.0,round,match
+1501001-611500,Salaried Personnel,Salaried Personnel,Police Bureau Exp,86.0,90.0,1290870.0,1290870.0,0.0,round,match
+1501001-613100,Police Captains,Police Captains,Police Bureau Exp,86.0,90.0,407927.0,407927.0,0.0,round,match
+1501001-613200,Police Lieutenants,Police Lieutenants,Police Bureau Exp,86.0,90.0,1313808.0,1313808.0,0.0,round,match
+1501001-613300,Police Sergeants,Police Sergeants,Police Bureau Exp,86.0,90.0,4537300.0,4537300.0,0.0,round,match
+1501001-614000,Patrolmen,Patrolmen,Police Bureau Exp,86.0,90.0,6423228.0,6423228.0,0.0,round,match
+1501001-615000,School Crossing Guards,School Crossing Guards,Police Bureau Exp,86.0,90.0,467974.0,467974.0,0.0,round,match
+1501001-615200,Community Service Aides,Community Service Aides,Police Bureau Exp,86.0,90.0,751603.0,751603.0,0.0,round,match
+1501001-618000,Police Acting Officers,Police Acting Officers,Police Bureau Exp,86.0,90.0,30000.0,30000.0,0.0,round,match
+1501001-618500,Police Overtime,Police Overtime,Police Bureau Exp,86.0,90.0,600000.0,600000.0,0.0,round,match
+1501001-618800,Police Cadet Training Program,Police Cadet Training Program,Police Bureau Exp,87.0,91.0,60000.0,60000.0,0.0,round,match
+1501001-619000,Police Sick Bonus,Police Sick Bonus,Police Bureau Exp,87.0,91.0,25000.0,25000.0,0.0,round,match
+1501001-620100,Educational Incentive,Educational Incentive,Police Bureau Exp,87.0,91.0,68250.0,68250.0,0.0,round,match
+1501001-620200,Medical Insurance,Medical Insurance,Police Bureau Exp,87.0,91.0,2880000.0,2880000.0,0.0,round,match
+1501001-620201,Medical Ins - Retirees,Medical Ins - Retirees,Police Bureau Exp,87.0,91.0,1700000.0,1700000.0,0.0,round,match
+1501001-620300,Dental/Vision,Dental/Vision,Police Bureau Exp,87.0,91.0,150000.0,150000.0,0.0,round,match
+1501001-621000,Uniform Maintenance Allow,Uniform Maintenance Allow,Police Bureau Exp,87.0,91.0,90500.0,90500.0,0.0,round,match
+1501001-623000,Pension Contribution,Pension Contribution,Police Bureau Exp,87.0,91.0,4532000.0,4532000.0,0.0,round,match
+1501001-714100,PC Lease,PC Lease,Police Bureau Exp,87.0,91.0,4500.0,4500.0,0.0,round,match
+1501001-716000,Rental of Parking Lot,Rental of Parking Lot,Police Bureau Exp,87.0,91.0,100000.0,100000.0,0.0,round,match
+1501001-722000,Maint. - Communications,Maint. - Communications,Police Bureau Exp,88.0,92.0,124000.0,124000.0,0.0,round,match
+1501001-723000,Maint. - Equipment,Maint. - Equipment,Police Bureau Exp,88.0,92.0,67320.0,67320.0,0.0,round,match
+1501001-729000,Maint. - Vehicles,Maint. - Vehicles,Police Bureau Exp,88.0,92.0,115000.0,115000.0,0.0,round,match
+1501001-732000,Dues & Subscriptions,Dues & Subscriptions,Police Bureau Exp,88.0,92.0,183000.0,183000.0,0.0,round,match
+1501001-734000,Postage,Postage,Police Bureau Exp,88.0,92.0,7500.0,7500.0,0.0,round,match
+1501001-735000,Printing,Printing,Police Bureau Exp,88.0,92.0,10000.0,10000.0,0.0,round,match
+1501001-736000,Telephone,Telephone,Police Bureau Exp,88.0,92.0,105000.0,105000.0,0.0,round,match
+1501001-737000,Travel,Travel,Police Bureau Exp,89.0,93.0,18000.0,18000.0,0.0,round,match
+1501001-738000,Miscellaneous Expenses,Miscellaneous Expenses,Police Bureau Exp,89.0,93.0,6000.0,6000.0,0.0,round,match
+1501001-738001,Misc - Police Athletic League,Misc - Police Athletic League,Police Bureau Exp,89.0,93.0,5000.0,5000.0,0.0,round,match
+1501001-741000,Professional Services,Professional Services,Police Bureau Exp,89.0,93.0,41500.0,41500.0,0.0,round,match
+1501001-741005,Prof Serv Community Engagement,Prof Serv Community Engagement,Police Bureau Exp,89.0,93.0,5000.0,5000.0,0.0,round,match
+1501001-743500,Labor Relations Expense,Labor Relations Expense,Police Bureau Exp,89.0,93.0,40000.0,40000.0,0.0,round,match
+1501001-743700,Laboratory Tests,Laboratory Tests,Police Bureau Exp,89.0,93.0,25000.0,25000.0,0.0,round,match
+1501001-744500,Training & School,Training & School,Police Bureau Exp,89.0,93.0,89990.0,89990.0,0.0,round,match
+1501001-747200,K-9 Patrol,K-9 Patrol,Police Bureau Exp,89.0,93.0,8000.0,8000.0,0.0,round,match
+1501001-749000,Civil Service Board,Civil Service Board,Police Bureau Exp,90.0,94.0,500.0,500.0,0.0,round,match
+1501001-760300,Office Supplies,Office Supplies,Police Bureau Exp,90.0,94.0,12000.0,12000.0,0.0,round,match
+1501001-760600,Operating Supplies,Operating Supplies,Police Bureau Exp,90.0,94.0,50000.0,50000.0,0.0,round,match
+1501001-761200,Uniforms,Uniforms,Police Bureau Exp,90.0,94.0,100000.0,100000.0,0.0,round,match
+1501001-762700,Evidence Supplies,Evidence Supplies,Police Bureau Exp,90.0,94.0,12000.0,12000.0,0.0,round,match
+1501001-763000,Ammunition,Ammunition,Police Bureau Exp,90.0,94.0,35000.0,35000.0,0.0,round,match
+1501001-763300,Less Lethal Equip,Less Lethal Equip,Police Bureau Exp,90.0,94.0,71000.0,71000.0,0.0,round,match
+1501001-763400,Weapons,Weapons,Police Bureau Exp,90.0,94.0,10000.0,10000.0,0.0,round,match
+1501001-765400,Gas Oil & Diesel,Gas Oil & Diesel,Police Bureau Exp,90.0,94.0,130000.0,130000.0,0.0,round,match
+1501001-772000,Insurance Package,Insurance Package,Police Bureau Exp,90.0,94.0,425000.0,425000.0,0.0,round,match
+1501001-815000,Shelter Expense,Shelter Expense,Police Bureau Exp,91.0,94.0,5000.0,5000.0,0.0,round,match
+1501001-816000,Drug Task Force Assmnt,Drug Task Force Assmnt,Police Bureau Exp,91.0,95.0,59322.0,59322.0,0.0,round,match
+1501001-816100,Community Safety Coalitio,Community Safety Coalitio,Police Bureau Exp,91.0,95.0,200000.0,200000.0,0.0,round,match
+1501001-820000,Minor Equipment,Minor Equipment,Police Bureau Exp,91.0,95.0,260000.0,260000.0,0.0,round,match
+1501001-820100,Bicycles & Accessories,Bicycles & Accessories,Police Bureau Exp,91.0,95.0,5000.0,5000.0,0.0,round,match
+1501001-827000,Vehicles,Vehicles,Police Bureau Exp,91.0,95.0,247817.0,247817.0,0.0,round,match
+1501001-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,Police Bureau Exp,91.0,95.0,50000.0,50000.0,0.0,round,match
+1501001-924000,Debt Service - Interest,Debt Service - Interest,Police Bureau Exp,91.0,95.0,194090.0,194090.0,0.0,round,match
+1501001-926000,Debt Service - Principal,Debt Service - Principal,Police Bureau Exp,91.0,95.0,403270.0,403270.0,0.0,round,match
+1502000-404200,Fire Inspection,Fire Inspection,Public Safety Revenues,43.0,46.0,185000.0,185000.0,0.0,round,match
+1502001-611000,Salary - Bureau Chief,Salary - Bureau Chief,Fire Bureau Exp,102.0,115.0,126372.0,126372.0,0.0,round,match
+1502001-611500,Salaried Personnel,Salaried Personnel,Fire Bureau Exp,102.0,115.0,169363.0,169363.0,0.0,round,match
+1502001-613100,Fire Captains,Fire Captains,Fire Bureau Exp,102.0,115.0,915784.0,915784.0,0.0,round,match
+1502001-613200,Fire Lieutenants,Fire Lieutenants,Fire Bureau Exp,102.0,115.0,1444259.0,1444259.0,0.0,round,match
+1502001-614100,Firefighters,Firefighters,Fire Bureau Exp,102.0,115.0,3751984.0,3751984.0,0.0,round,match
+1502001-618500,Fire Overtime,Fire Overtime,Fire Bureau Exp,102.0,115.0,300000.0,300000.0,0.0,round,match
+1502001-619000,Fire Sick Bonus,Fire Sick Bonus,Fire Bureau Exp,102.0,115.0,7500.0,7500.0,0.0,round,match
+1502001-620100,Educational Incentive,Educational Incentive,Fire Bureau Exp,102.0,116.0,35000.0,35000.0,0.0,round,match
+1502001-620200,Medical Insurance,Medical Insurance,Fire Bureau Exp,103.0,116.0,1075000.0,1075000.0,0.0,round,match
+1502001-620201,Medical Ins - Retirees,Medical Ins - Retirees,Fire Bureau Exp,103.0,116.0,1350000.0,1350000.0,0.0,round,match
+1502001-620300,Dental/Vision,Dental/Vision,Fire Bureau Exp,103.0,116.0,110000.0,110000.0,0.0,round,match
+1502001-621000,Uniform Maintenance Allow,Uniform Maintenance Allow,Fire Bureau Exp,103.0,116.0,40000.0,40000.0,0.0,round,match
+1502001-623000,Pension Contribution,Pension Contribution,Fire Bureau Exp,103.0,116.0,2335134.0,2335134.0,0.0,round,match
+1502001-714100,PC Lease,PC Lease,Fire Bureau Exp,103.0,116.0,30000.0,30000.0,0.0,round,match
+1502001-716000,Rental of Parking Lot,Rental of Parking Lot,Fire Bureau Exp,103.0,116.0,1000.0,1000.0,0.0,round,match
+1502001-722000,Maint. - Communications,Maint. - Communications,Fire Bureau Exp,103.0,116.0,5000.0,5000.0,0.0,round,match
+1502001-723000,Maint. - Equipment,Maint. - Equipment,Fire Bureau Exp,103.0,117.0,20000.0,20000.0,0.0,round,match
+1502001-729000,Maint. - Vehicles,Maint. - Vehicles,Fire Bureau Exp,103.0,117.0,75000.0,75000.0,0.0,round,match
+1502001-734000,Postage,Postage,Fire Bureau Exp,104.0,117.0,2000.0,2000.0,0.0,round,match
+1502001-735000,Printing,Printing,Fire Bureau Exp,104.0,117.0,1000.0,1000.0,0.0,round,match
+1502001-736000,Telephone,Telephone,Fire Bureau Exp,104.0,117.0,15000.0,15000.0,0.0,round,match
+1502001-737000,Travel,Travel,Fire Bureau Exp,104.0,117.0,10000.0,10000.0,0.0,round,match
+1502001-738000,Miscellaneous Expenses,Miscellaneous Expenses,Fire Bureau Exp,104.0,117.0,15000.0,15000.0,0.0,round,match
+1502001-741000,Professional Services,Professional Services,Fire Bureau Exp,104.0,117.0,17000.0,17000.0,0.0,round,match
+1502001-743500,Labor Relations Expense,Labor Relations Expense,Fire Bureau Exp,104.0,117.0,20000.0,20000.0,0.0,round,match
+1502001-744500,Training & School,Training & School,Fire Bureau Exp,104.0,117.0,125000.0,125000.0,0.0,round,match
+1502001-749000,Civil Service Board,Civil Service Board,Fire Bureau Exp,104.0,117.0,10000.0,10000.0,0.0,round,match
+1502001-760300,Office Supplies,Office Supplies,Fire Bureau Exp,104.0,118.0,5000.0,5000.0,0.0,round,match
+1502001-760600,Operating Supplies,Operating Supplies,Fire Bureau Exp,104.0,118.0,12500.0,12500.0,0.0,round,match
+1502001-761200,Uniforms,Uniforms,Fire Bureau Exp,105.0,118.0,50000.0,50000.0,0.0,round,match
+1502001-764200,Fire Prevention Supplies,Fire Prevention Supplies,Fire Bureau Exp,105.0,118.0,5000.0,5000.0,0.0,round,match
+1502001-764500,Protective Clothing,Protective Clothing,Fire Bureau Exp,105.0,118.0,100000.0,100000.0,0.0,round,match
+1502001-765400,Gas Oil & Diesel,Gas Oil & Diesel,Fire Bureau Exp,105.0,118.0,30000.0,30000.0,0.0,round,match
+1502001-767200,Misc. Vehicle Parts,Misc. Vehicle Parts,Fire Bureau Exp,105.0,118.0,25000.0,25000.0,0.0,round,match
+1502001-820000,Minor Equipment,Minor Equipment,Fire Bureau Exp,105.0,118.0,90000.0,90000.0,0.0,round,match
+1502001-820200,Safety Equipment,Safety Equipment,Fire Bureau Exp,105.0,118.0,5000.0,5000.0,0.0,round,match
+1502001-822000,Communication Equipment,Communication Equipment,Fire Bureau Exp,105.0,118.0,20000.0,20000.0,0.0,round,match
+1502001-823000,Furniture & Equipment,Furniture & Equipment,Fire Bureau Exp,105.0,118.0,30000.0,30000.0,0.0,round,match
+1502001-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,Fire Bureau Exp,105.0,119.0,415000.0,415000.0,0.0,round,match
+1502001-924000,Debt Service - Interest,Debt Service - Interest,Fire Bureau Exp,106.0,119.0,142813.0,142813.0,0.0,round,match
+1502001-926000,Debt Service - Principal,Debt Service - Principal,Fire Bureau Exp,106.0,119.0,296730.0,296730.0,0.0,round,match
+1502001-940000,Grants Match,Grants Match,Fire Bureau Exp,106.0,119.0,8000.0,8000.0,0.0,round,match
+1601000-610900,Salary - Director,Salary - Director,Director CPED Exp,111.0,129.0,151199.0,151199.0,0.0,round,match
+1601000-611000,Salary - Bureau Chief,Salary - Bureau Chief,Director CPED Exp,111.0,129.0,97850.0,97850.0,0.0,round,match
+1601000-611500,Salaried Personnel,Salaried Personnel,Director CPED Exp,111.0,129.0,57482.0,57482.0,0.0,round,match
+1601000-612000,Salary Temporary,Salary Temporary,Director CPED Exp,111.0,129.0,500.0,500.0,0.0,round,match
+1601000-618500,Overtime,Overtime,Director CPED Exp,111.0,129.0,500.0,500.0,0.0,round,match
+1601000-620200,Medical Insurance,Medical Insurance,Director CPED Exp,111.0,129.0,1100000.0,1100000.0,0.0,round,match
+1601000-620300,Dental/Vision,Dental/Vision,Director CPED Exp,111.0,129.0,29000.0,29000.0,0.0,round,match
+1601000-714100,PC Lease,PC Lease,Director CPED Exp,111.0,129.0,28000.0,28000.0,0.0,round,match
+1601000-723000,Maint. - Equipment,Maint. - Equipment,Director CPED Exp,111.0,130.0,250.0,250.0,0.0,round,match
+1601000-731000,Advertising,Advertising,Director CPED Exp,112.0,130.0,500.0,500.0,0.0,round,match
+1601000-732000,Dues & Subscriptions,Dues & Subscriptions,Director CPED Exp,112.0,130.0,2000.0,2000.0,0.0,round,match
+1601000-734000,Postage,Postage,Director CPED Exp,112.0,130.0,500.0,500.0,0.0,round,match
+1601000-735000,Printing,Printing,Director CPED Exp,112.0,130.0,2000.0,2000.0,0.0,round,match
+1601000-736000,Telephone,Telephone,Director CPED Exp,112.0,130.0,5000.0,5000.0,0.0,round,match
+1601000-737000,Travel,Travel,Director CPED Exp,112.0,130.0,1500.0,1500.0,0.0,round,match
+1601000-741000,Professional Services,Professional Services,Director CPED Exp,112.0,130.0,100000.0,100000.0,0.0,round,match
+1601000-744500,Training & School,Training & School,Director CPED Exp,112.0,131.0,4000.0,4000.0,0.0,round,match
+1601000-760300,Office Supplies,Office Supplies,Director CPED Exp,113.0,131.0,1000.0,1000.0,0.0,round,match
+1601000-760600,Operating Supplies,Operating Supplies,Director CPED Exp,113.0,131.0,1000.0,1000.0,0.0,round,match
+1601000-765400,Gas Oil & Diesel,Gas Oil & Diesel,Director CPED Exp,113.0,131.0,150.0,150.0,0.0,round,match
+1601000-811000,Contributions to Econ Dev,Contributions to Econ Dev,Director CPED Exp,113.0,131.0,75000.0,75000.0,0.0,round,match
+1601000-820000,Minor Equipment,Minor Equipment,Director CPED Exp,113.0,131.0,800.0,800.0,0.0,round,match
+1601001-401700,Building Permits,Building Permits,"Health, Housing & Codes Revenues",44.0,47.0,600000.0,600000.0,0.0,round,match
+1601001-401900,Plumbing Licenses,Plumbing Licenses,"Health, Housing & Codes Revenues",44.0,47.0,40000.0,40000.0,0.0,round,match
+1601001-402200,Housing License Multi-Fam,Housing License Multi-Fam,"Health, Housing & Codes Revenues",44.0,47.0,730000.0,730000.0,0.0,round,match
+1601001-402400,Zoning Permits,Zoning Permits,"Health, Housing & Codes Revenues",44.0,47.0,30000.0,30000.0,0.0,round,match
+1601001-402500,Health Licenses & Permits,Health Licenses & Permits,"Health, Housing & Codes Revenues",44.0,47.0,95000.0,95000.0,0.0,round,match
+1602000-611000,Salary - Bureau Chief,Salary - Bureau Chief,Planning Exp,115.0,133.0,78795.0,78795.0,0.0,round,match
+1602000-611500,Salaried Personnel,Salaried Personnel,Planning Exp,115.0,133.0,322207.0,322207.0,0.0,round,match
+1602000-612000,Salary Temporary,Salary Temporary,Planning Exp,115.0,133.0,21500.0,21500.0,0.0,round,match
+1602000-618500,Overtime,Overtime,Planning Exp,115.0,133.0,150.0,150.0,0.0,round,match
+1602000-723000,Maint. - Equipment,Maint. - Equipment,Planning Exp,115.0,133.0,1800.0,1800.0,0.0,round,match
+1602000-731000,Advertising,Advertising,Planning Exp,115.0,133.0,15000.0,15000.0,0.0,round,match
+1602000-732000,Dues & Subscriptions,Dues & Subscriptions,Planning Exp,115.0,133.0,3400.0,3400.0,0.0,round,match
+1602000-733000,Map Reproduction,Map Reproduction,Planning Exp,115.0,133.0,500.0,500.0,0.0,round,match
+1602000-734000,Postage,Postage,Planning Exp,115.0,133.0,1300.0,1300.0,0.0,round,match
+1602000-735000,Printing,Printing,Planning Exp,116.0,134.0,3000.0,3000.0,0.0,round,match
+1602000-736000,Telephone,Telephone,Planning Exp,116.0,134.0,3000.0,3000.0,0.0,round,match
+1602000-737000,Travel,Travel,Planning Exp,116.0,134.0,2000.0,2000.0,0.0,round,match
+1602000-741000,Professional Services,Professional Services,Planning Exp,116.0,134.0,150000.0,150000.0,0.0,round,match
+1602000-744500,Training & School,Training & School,Planning Exp,116.0,134.0,2000.0,2000.0,0.0,round,match
+1602000-760300,Office Supplies,Office Supplies,Planning Exp,116.0,134.0,800.0,800.0,0.0,round,match
+1602000-760600,Operating Supplies,Operating Supplies,Planning Exp,116.0,134.0,1000.0,1000.0,0.0,round,match
+1602000-765400,Gas Oil & Diesel,Gas Oil & Diesel,Planning Exp,116.0,134.0,800.0,800.0,0.0,round,match
+1602000-820000,Minor Equipment,Minor Equipment,Planning Exp,116.0,134.0,1000.0,1000.0,0.0,round,match
+1602000-827100,Vehicle Lease Purchase,Vehicle Lease Purchase,Planning Exp,116.0,134.0,6500.0,6500.0,0.0,round,match
+1603000-611000,Salary - Bureau Chief,Salary - Bureau Chief,Building Code Administration,118.0,136.0,87011.0,87011.0,0.0,round,match
+1603000-611500,Salaried Personnel,Salaried Personnel,Building Code Administration,118.0,136.0,356643.0,356643.0,0.0,round,match
+1603000-618500,Overtime,Overtime,Building Code Administration,118.0,136.0,500.0,500.0,0.0,round,match
+1603000-620100,Educational Incentive,Educational Incentive,Building Code Administration,118.0,136.0,7000.0,7000.0,0.0,round,match
+1603000-723000,Maint. - Equipment,Maint. - Equipment,Building Code Administration,118.0,136.0,4500.0,4500.0,0.0,round,match
+1603000-731000,Advertising,Advertising,Building Code Administration,118.0,136.0,1000.0,1000.0,0.0,round,match
+1603000-732000,Dues & Subscriptions,Dues & Subscriptions,Building Code Administration,118.0,136.0,2000.0,2000.0,0.0,round,match
+1603000-734000,Postage,Postage,Building Code Administration,118.0,136.0,3000.0,3000.0,0.0,round,match
+1603000-735000,Printing,Printing,Building Code Administration,118.0,136.0,6000.0,6000.0,0.0,round,match
+1603000-736000,Telephone,Telephone,Building Code Administration,118.0,136.0,8600.0,8600.0,0.0,round,match
+1603000-737000,Travel,Travel,Building Code Administration,119.0,137.0,5000.0,5000.0,0.0,round,match
+1603000-740500,Abatement of Nuisances,Abatement of Nuisances,Building Code Administration,119.0,137.0,4000.0,4000.0,0.0,round,match
+1603000-741000,Professional Services,Professional Services,Building Code Administration,119.0,137.0,40000.0,40000.0,0.0,round,match
+1603000-744000,Contract Services,Contract Services,Building Code Administration,119.0,137.0,2000.0,2000.0,0.0,round,match
+1603000-744500,Training & School,Training & School,Building Code Administration,119.0,137.0,8000.0,8000.0,0.0,round,match
+1603000-748500,Plumbing Board,Plumbing Board,Building Code Administration,119.0,137.0,500.0,500.0,0.0,round,match
+1603000-760300,Office Supplies,Office Supplies,Building Code Administration,119.0,137.0,3000.0,3000.0,0.0,round,match
+1603000-760600,Operating Supplies,Operating Supplies,Building Code Administration,119.0,137.0,3000.0,3000.0,0.0,round,match
+1603000-765400,Gas Oil & Diesel,Gas Oil & Diesel,Building Code Administration,119.0,137.0,3500.0,3500.0,0.0,round,match
+1603000-820000,Minor Equipment,Minor Equipment,Building Code Administration,119.0,137.0,6000.0,6000.0,0.0,round,match
+1603000-827100,Vehicle Lease Purchase,Vehicle Lease Purchase,Building Code Administration,119.0,137.0,15000.0,15000.0,0.0,round,match
+1604000-611000,Salary - Bureau Chief,Salary - Bureau Chief,Property Maintenance & Housing Inspections,121.0,140.0,78795.0,78795.0,0.0,round,match
+1604000-611500,Salary - Personnel,Salary - Personnel,Property Maintenance & Housing Inspections,121.0,140.0,701124.0,701124.0,0.0,round,match
+1604000-612000,Salary Temporary,Salary Temporary,Property Maintenance & Housing Inspections,121.0,140.0,20000.0,20000.0,0.0,round,match
+1604000-618500,Overtime,Overtime,Property Maintenance & Housing Inspections,121.0,140.0,500.0,500.0,0.0,round,match
+1604000-620100,Educational Incentive,Educational Incentive,Property Maintenance & Housing Inspections,121.0,140.0,7000.0,7000.0,0.0,round,match
+1604000-723000,Maint. - Equipment,Maint. - Equipment,Property Maintenance & Housing Inspections,121.0,140.0,3500.0,3500.0,0.0,round,match
+1604000-731000,Advertising,Advertising,Property Maintenance & Housing Inspections,121.0,140.0,1800.0,1800.0,0.0,round,match
+1604000-732000,Dues & Subscriptions,Dues & Subscriptions,Property Maintenance & Housing Inspections,121.0,140.0,700.0,700.0,0.0,round,match
+1604000-734000,Postage,Postage,Property Maintenance & Housing Inspections,122.0,141.0,5000.0,5000.0,0.0,round,match
+1604000-735000,Printing,Printing,Property Maintenance & Housing Inspections,122.0,141.0,4500.0,4500.0,0.0,round,match
+1604000-736000,Telephone,Telephone,Property Maintenance & Housing Inspections,122.0,141.0,7200.0,7200.0,0.0,round,match
+1604000-737000,Travel,Travel,Property Maintenance & Housing Inspections,122.0,141.0,6500.0,6500.0,0.0,round,match
+1604000-740500,Abatement of Nuisances,Abatement of Nuisances,Property Maintenance & Housing Inspections,122.0,141.0,20000.0,20000.0,0.0,round,match
+1604000-741000,Professional Services,Professional Services,Property Maintenance & Housing Inspections,122.0,141.0,10000.0,10000.0,0.0,round,match
+1604000-744000,Contract Services,Contract Services,Property Maintenance & Housing Inspections,122.0,141.0,400.0,400.0,0.0,round,match
+1604000-744500,Training/Education,Training/Education,Property Maintenance & Housing Inspections,122.0,141.0,4000.0,4000.0,0.0,round,match
+1604000-760300,Office Supplies,Office Supplies,Property Maintenance & Housing Inspections,122.0,141.0,3600.0,3600.0,0.0,round,match
+1604000-760600,Operating Supplies,Operating Supplies,Property Maintenance & Housing Inspections,122.0,141.0,5875.0,5875.0,0.0,round,match
+1604000-765400,Gas Oil & Diesel,Gas Oil & Diesel,Property Maintenance & Housing Inspections,123.0,142.0,5200.0,5200.0,0.0,round,match
+1604000-820000,Minor Equipment,Minor Equipment,Property Maintenance & Housing Inspections,123.0,142.0,4000.0,4000.0,0.0,round,match
+1604000-827100,Vehicle Lease Purchase,Vehicle Lease Purchase,Property Maintenance & Housing Inspections,123.0,142.0,33000.0,33000.0,0.0,round,match
+1605000-611000,Salary - Bureau Chief,Salary - Bureau Chief,Lead Safety & Community Development,125.0,145.0,78795.0,78795.0,0.0,round,match
+1605000-611500,Salaried Personnel,Salaried Personnel,Lead Safety & Community Development,125.0,145.0,633767.0,633767.0,0.0,round,match
+1605000-618500,Overtime,Overtime,Lead Safety & Community Development,125.0,145.0,0.0,0.0,0.0,round,match
+1605000-620100,Educational Incentive,Educational Incentive,Lead Safety & Community Development,125.0,145.0,0.0,0.0,0.0,round,match
+1605000-734000,Postage,Postage,Lead Safety & Community Development,125.0,145.0,0.0,0.0,0.0,round,match
+1606000-611500,Salary - Personnel,Salary - Personnel,Office of Public Art,127.0,148.0,65000.0,65000.0,0.0,round,match
+1606000-723000,Maint. - Equipment,Maint. - Equipment,Office of Public Art,127.0,148.0,250.0,250.0,0.0,round,match
+1606000-731000,Advertising,Advertising,Office of Public Art,127.0,148.0,2100.0,2100.0,0.0,round,match
+1606000-732000,Dues & Subscriptions,Dues & Subscriptions,Office of Public Art,127.0,148.0,1770.0,1770.0,0.0,round,match
+1606000-734000,Postage,Postage,Office of Public Art,127.0,148.0,200.0,200.0,0.0,round,match
+1606000-735000,Printing,Printing,Office of Public Art,127.0,148.0,1300.0,1300.0,0.0,round,match
+1606000-736000,Telephone,Telephone,Office of Public Art,127.0,148.0,950.0,950.0,0.0,round,match
+1606000-737000,Travel,Travel,Office of Public Art,127.0,148.0,3000.0,3000.0,0.0,round,match
+1606000-741000,Professional Services,Professional Services,Office of Public Art,127.0,148.0,18000.0,18000.0,0.0,round,match
+1606000-744500,Training/Education,Training/Education,Office of Public Art,127.0,148.0,700.0,700.0,0.0,round,match
+1606000-760300,Office Supplies,Office Supplies,Office of Public Art,127.0,148.0,1000.0,1000.0,0.0,round,match
+1606000-820000,Minor Equipment,Minor Equipment,Office of Public Art,128.0,149.0,250.0,250.0,0.0,round,match
+1607000-611000,Salary - Bureau Chief,Salary - Bureau Chief,Bureau of Health,130.0,150.0,71070.0,71070.0,0.0,round,match
+1607000-611500,Salary - Personnel,Salary - Personnel,Bureau of Health,130.0,150.0,271427.0,271427.0,0.0,round,match
+1607000-618500,Overtime,Overtime,Bureau of Health,130.0,150.0,200.0,200.0,0.0,round,match
+1607000-723000,Maint. - Equipment,Maint. - Equipment,Bureau of Health,130.0,150.0,1000.0,1000.0,0.0,round,match
+1607000-729000,Maint. - Vehicles,Maint. - Vehicles,Bureau of Health,130.0,150.0,3000.0,3000.0,0.0,round,match
+1607000-731000,Advertising,Advertising,Bureau of Health,130.0,150.0,450.0,450.0,0.0,round,match
+1607000-732000,Dues & Subscriptions,Dues & Subscriptions,Bureau of Health,130.0,150.0,50.0,50.0,0.0,round,match
+1607000-734000,Postage,Postage,Bureau of Health,130.0,150.0,1500.0,1500.0,0.0,round,match
+1607000-735000,Printing,Printing,Bureau of Health,130.0,150.0,1750.0,1750.0,0.0,round,match
+1607000-736000,Telephone,Telephone,Bureau of Health,130.0,150.0,3000.0,3000.0,0.0,round,match
+1607000-737000,Travel,Travel,Bureau of Health,131.0,151.0,450.0,450.0,0.0,round,match
+1607000-740500,Abatement of Nuisances,Abatement of Nuisances,Bureau of Health,131.0,151.0,3500.0,3500.0,0.0,round,match
+1607000-741000,Professional Services,Professional Services,Bureau of Health,131.0,151.0,500.0,500.0,0.0,round,match
+1607000-744000,Contract Services,Contract Services,Bureau of Health,131.0,151.0,100.0,100.0,0.0,round,match
+1607000-744500,Training/Education,Training/Education,Bureau of Health,131.0,151.0,2000.0,2000.0,0.0,round,match
+1607000-760300,Office Supplies,Office Supplies,Bureau of Health,131.0,151.0,3500.0,3500.0,0.0,round,match
+1607000-760600,Operating Supplies,Operating Supplies,Bureau of Health,131.0,151.0,4000.0,4000.0,0.0,round,match
+1607000-765400,Gas Oil & Diesel,Gas Oil & Diesel,Bureau of Health,131.0,151.0,3500.0,3500.0,0.0,round,match
+1607000-820000,Minor Equipment,Minor Equipment,Bureau of Health,131.0,151.0,5000.0,5000.0,0.0,round,match
+1607000-827100,Vehicle Lease Purchase,Vehicle Lease Purchase,Bureau of Health,131.0,151.0,21000.0,21000.0,0.0,round,match
+1810000-610900,Salary - Director,Salary - Director,Director Public Works Exp,135.0,154.0,154805.0,154805.0,0.0,round,match
+1810000-611500,Salaried Personnel,Salaried Personnel,Director Public Works Exp,135.0,154.0,70719.0,70719.0,0.0,round,match
+1810000-620200,Medical Insurance,Medical Insurance,Director Public Works Exp,135.0,154.0,1350000.0,1350000.0,0.0,round,match
+1810000-620300,Dental/Vision,Dental/Vision,Director Public Works Exp,135.0,154.0,36000.0,36000.0,0.0,round,match
+1810000-714100,PC Lease,PC Lease,Director Public Works Exp,135.0,154.0,19000.0,19000.0,0.0,round,match
+1810000-731000,Advertising,Advertising,Director Public Works Exp,135.0,154.0,10500.0,10500.0,0.0,round,match
+1810000-732000,Dues & Subscriptions,Dues & Subscriptions,Director Public Works Exp,135.0,154.0,1000.0,1000.0,0.0,round,match
+1810000-734000,Postage,Postage,Director Public Works Exp,135.0,154.0,1500.0,1500.0,0.0,round,match
+1810000-735000,Printing,Printing,Director Public Works Exp,135.0,155.0,3000.0,3000.0,0.0,round,match
+1810000-736000,Telephone,Telephone,Director Public Works Exp,135.0,155.0,1300.0,1300.0,0.0,round,match
+1810000-737000,Travel,Travel,Director Public Works Exp,136.0,155.0,3500.0,3500.0,0.0,round,match
+1810000-741000,Professional Services,Professional Services,Director Public Works Exp,136.0,155.0,15000.0,15000.0,0.0,round,match
+1810000-744500,Training & School,Training & School,Director Public Works Exp,136.0,155.0,2000.0,2000.0,0.0,round,match
+1810000-760300,Office Supplies,Office Supplies,Director Public Works Exp,136.0,155.0,1300.0,1300.0,0.0,round,match
+1810000-827100,Vehicle Lease Purchase,Vehicle Lease Purchase,Director Public Works Exp,136.0,155.0,0.0,0.0,0.0,round,match
+1810001-404300,Tsfr'd From Utility Funds,Tsfr'd From Utility Funds,Public Works Revenues,45.0,48.0,4000000.0,4000000.0,0.0,round,match
+1810001-404400,Rent of City Property,Rent of City Property,Public Works Revenues,45.0,48.0,200000.0,200000.0,0.0,round,match
+1810001-404500,SF - Admin Indirect Costs,SF - Admin Indirect Costs,Public Works Revenues,45.0,48.0,441609.0,441609.0,0.0,round,match
+1810001-404600,WF - Admin Indirect Costs,WF - Admin Indirect Costs,Public Works Revenues,45.0,48.0,815000.0,815000.0,0.0,round,match
+1810001-404800,Right of Way Permit Fees,Right of Way Permit Fees,Public Works Revenues,45.0,48.0,425000.0,425000.0,0.0,round,match
+1810001-405000,Sewer Vehicle Maintenance,Sewer Vehicle Maintenance,Public Works Revenues,45.0,48.0,14500.0,14500.0,0.0,round,match
+1810001-405100,Water Vehicle Maintenance,Water Vehicle Maintenance,Public Works Revenues,45.0,48.0,20000.0,20000.0,0.0,round,match
+1810001-417900,TF - Admin Indirect Costs,TF - Admin Indirect Costs,Public Works Revenues,45.0,48.0,150000.0,150000.0,0.0,round,match
+1810001-420000,Sewer Direct Costs,Sewer Direct Costs,Public Works Revenues,45.0,48.0,12000.0,12000.0,0.0,round,match
+1810001-420200,SWMF Admin Indirect Costs,SWMF Admin Indirect Costs,Public Works Revenues,46.0,49.0,340000.0,340000.0,0.0,round,match
+1820000-611000,Salary - Bureau Chief,Salary - Bureau Chief,Engineering Exp,138.0,157.0,24263.0,24263.0,0.0,round,match
+1820000-611500,Salaried Personnel,Salaried Personnel,Engineering Exp,138.0,157.0,173838.0,173838.0,0.0,round,match
+1820000-612000,Salary Temporary,Salary Temporary,Engineering Exp,138.0,157.0,20000.0,20000.0,0.0,round,match
+1820000-618500,Overtime,Overtime,Engineering Exp,138.0,157.0,0.0,0.0,0.0,round,match
+1820000-729000,Maint. - Vehicles,Maint. - Vehicles,Engineering Exp,138.0,157.0,2500.0,2500.0,0.0,round,match
+1820000-732000,Dues & Subscriptions,Dues & Subscriptions,Engineering Exp,138.0,157.0,2500.0,2500.0,0.0,round,match
+1820000-734000,Postage,Postage,Engineering Exp,138.0,157.0,3000.0,3000.0,0.0,round,match
+1820000-735000,Printing,Printing,Engineering Exp,138.0,157.0,4500.0,4500.0,0.0,round,match
+1820000-736000,Telephone,Telephone,Engineering Exp,138.0,157.0,6500.0,6500.0,0.0,round,match
+1820000-737000,Travel,Travel,Engineering Exp,139.0,158.0,1500.0,1500.0,0.0,round,match
+1820000-741000,Professional Services,Professional Services,Engineering Exp,139.0,158.0,337500.0,337500.0,0.0,round,match
+1820000-744500,Training & School,Training & School,Engineering Exp,139.0,158.0,3500.0,3500.0,0.0,round,match
+1820000-760300,Office Supplies,Office Supplies,Engineering Exp,139.0,158.0,1500.0,1500.0,0.0,round,match
+1820000-765400,Gas Oil & Diesel,Gas Oil & Diesel,Engineering Exp,139.0,158.0,3000.0,3000.0,0.0,round,match
+1820000-820000,Minor Equipment,Minor Equipment,Engineering Exp,139.0,158.0,3400.0,3400.0,0.0,round,match
+1820000-820200,Safety Equipment,Safety Equipment,Engineering Exp,139.0,158.0,1200.0,1200.0,0.0,round,match
+1820000-827000,Vehicles,Vehicles,Engineering Exp,139.0,158.0,5833.0,5833.0,0.0,round,match
+1830000-611000,Salary - Bureau Chief,Salary - Bureau Chief,Traffic Exp,146.0,164.0,27260.0,27260.0,0.0,round,match
+1830000-611500,Salaried Personnel,Salaried Personnel,Traffic Exp,146.0,164.0,279435.0,279435.0,0.0,round,match
+1830000-618500,Overtime,Overtime,Traffic Exp,146.0,164.0,2500.0,2500.0,0.0,round,match
+1830000-718000,Rental of Uniforms,Rental of Uniforms,Traffic Exp,146.0,164.0,2815.0,2815.0,0.0,round,match
+1830000-723000,Maint. - Equipment,Maint. - Equipment,Traffic Exp,146.0,164.0,1000.0,1000.0,0.0,round,match
+1830000-729000,Maint. - Vehicles,Maint. - Vehicles,Traffic Exp,146.0,164.0,6000.0,6000.0,0.0,round,match
+1830000-736000,Telephone,Telephone,Traffic Exp,146.0,164.0,3500.0,3500.0,0.0,round,match
+1830000-737000,Travel,Travel,Traffic Exp,146.0,164.0,850.0,850.0,0.0,round,match
+1830000-741000,Professional Services,Professional Services,Traffic Exp,147.0,165.0,18500.0,18500.0,0.0,round,match
+1830000-744000,Contract Services,Contract Services,Traffic Exp,147.0,165.0,30000.0,30000.0,0.0,round,match
+1830000-744500,Training & School,Training & School,Traffic Exp,147.0,165.0,800.0,800.0,0.0,round,match
+1830000-754000,Street Lighting,Street Lighting,Traffic Exp,147.0,165.0,350000.0,350000.0,0.0,round,match
+1830000-754500,Traffic Signals,Traffic Signals,Traffic Exp,147.0,165.0,32250.0,32250.0,0.0,round,match
+1830000-760300,Office Supplies,Office Supplies,Traffic Exp,147.0,165.0,400.0,400.0,0.0,round,match
+1830000-760600,Operating Supplies,Operating Supplies,Traffic Exp,147.0,165.0,2500.0,2500.0,0.0,round,match
+1830000-765400,Gas Oil & Diesel,Gas Oil & Diesel,Traffic Exp,147.0,165.0,9000.0,9000.0,0.0,round,match
+1830000-767800,Sign Materials,Sign Materials,Traffic Exp,148.0,166.0,60000.0,60000.0,0.0,round,match
+1830000-768100,Marking Materials,Marking Materials,Traffic Exp,148.0,166.0,100000.0,100000.0,0.0,round,match
+1830000-768700,Traffic Signal Parts,Traffic Signal Parts,Traffic Exp,148.0,166.0,23000.0,23000.0,0.0,round,match
+1830000-820000,Minor Equipment,Minor Equipment,Traffic Exp,148.0,166.0,27775.0,27775.0,0.0,round,match
+1830000-824500,Street Light Standards,Street Light Standards,Traffic Exp,148.0,166.0,4000.0,4000.0,0.0,round,match
+1830000-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,Traffic Exp,148.0,166.0,40500.0,40500.0,0.0,round,match
+1841000-611000,Salary - Bureau Chief,Salary - Bureau Chief,Streets Administration Exp,141.0,160.0,22377.0,22377.0,0.0,round,match
+1841000-611500,Salaried Personnel,Salaried Personnel,Streets Administration Exp,141.0,160.0,0.0,0.0,0.0,round,match
+1841000-620100,Educational Incentive,Educational Incentive,Streets Administration Exp,141.0,160.0,3150.0,3150.0,0.0,round,match
+1841000-718000,Rental of Uniforms,Rental of Uniforms,Streets Administration Exp,141.0,160.0,5844.0,5844.0,0.0,round,match
+1841000-723000,Maint. - Equipment,Maint. - Equipment,Streets Administration Exp,141.0,160.0,300.0,300.0,0.0,round,match
+1841000-729000,Maint. - Vehicles,Maint. - Vehicles,Streets Administration Exp,141.0,160.0,70000.0,70000.0,0.0,round,match
+1841000-735000,Printing,Printing,Streets Administration Exp,141.0,160.0,200.0,200.0,0.0,round,match
+1841000-736000,Telephone,Telephone,Streets Administration Exp,141.0,160.0,9500.0,9500.0,0.0,round,match
+1841000-737000,Travel,Travel,Streets Administration Exp,141.0,160.0,1500.0,1500.0,0.0,round,match
+1841000-741000,Professional Services,Professional Services,Streets Administration Exp,142.0,161.0,0.0,0.0,0.0,round,match
+1841000-744000,Contract Services,Contract Services,Streets Administration Exp,142.0,161.0,1000.0,1000.0,0.0,round,match
+1841000-744500,Training & School,Training & School,Streets Administration Exp,142.0,161.0,1500.0,1500.0,0.0,round,match
+1841000-760300,Office Supplies,Office Supplies,Streets Administration Exp,142.0,161.0,600.0,600.0,0.0,round,match
+1841000-760600,Operating Supplies,Operating Supplies,Streets Administration Exp,142.0,161.0,4500.0,4500.0,0.0,round,match
+1841000-765400,Gas Oil & Diesel,Gas Oil & Diesel,Streets Administration Exp,142.0,161.0,40000.0,40000.0,0.0,round,match
+1841000-820000,Minor Equipment,Minor Equipment,Streets Administration Exp,142.0,161.0,3000.0,3000.0,0.0,round,match
+1841000-820200,Safety Equipment,Safety Equipment,Streets Administration Exp,142.0,161.0,800.0,800.0,0.0,round,match
+1843000-611500,Salaried Personnel,Salaried Personnel,Street Maintenance Exp,144.0,162.0,535540.0,535540.0,0.0,round,match
+1843000-618500,Overtime,Overtime,Street Maintenance Exp,144.0,162.0,17500.0,17500.0,0.0,round,match
+1843000-760600,Operating Supplies,Operating Supplies,Street Maintenance Exp,144.0,162.0,7500.0,7500.0,0.0,round,match
+1843000-768400,Road Paving Materials,Road Paving Materials,Street Maintenance Exp,144.0,162.0,4000.0,4000.0,0.0,round,match
+1843000-769000,Construction Material,Construction Material,Street Maintenance Exp,144.0,162.0,2500.0,2500.0,0.0,round,match
+1843000-820000,Minor Equipment,Minor Equipment,Street Maintenance Exp,144.0,162.0,15000.0,15000.0,0.0,round,match
+1843000-826000,Construction/Resurfacing,Construction/Resurfacing,Street Maintenance Exp,144.0,162.0,0.0,0.0,0.0,round,match
+1843000-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,Street Maintenance Exp,144.0,162.0,98940.0,98940.0,0.0,round,match
+1850000-611000,Salary - Bureau Chief,Salary - Bureau Chief,Motor Vehicles Exp,150.0,168.0,22377.0,22377.0,0.0,round,match
+1850000-611500,Salaried Personnel,Salaried Personnel,Motor Vehicles Exp,150.0,168.0,276973.0,276973.0,0.0,round,match
+1850000-618500,Overtime,Overtime,Motor Vehicles Exp,150.0,168.0,4500.0,4500.0,0.0,round,match
+1850000-620100,Educational Incentive,Educational Incentive,Motor Vehicles Exp,150.0,168.0,3300.0,3300.0,0.0,round,match
+1850000-718000,Rental of Uniforms,Rental of Uniforms,Motor Vehicles Exp,150.0,168.0,2350.0,2350.0,0.0,round,match
+1850000-723000,Maint. - Equipment,Maint. - Equipment,Motor Vehicles Exp,150.0,168.0,300.0,300.0,0.0,round,match
+1850000-729000,Maint. - Vehicles,Maint. - Vehicles,Motor Vehicles Exp,150.0,168.0,4000.0,4000.0,0.0,round,match
+1850000-735000,Printing,Printing,Motor Vehicles Exp,150.0,168.0,500.0,500.0,0.0,round,match
+1850000-736000,Telephone,Telephone,Motor Vehicles Exp,150.0,168.0,1000.0,1000.0,0.0,round,match
+1850000-744500,Training & School,Training & School,Motor Vehicles Exp,150.0,168.0,550.0,550.0,0.0,round,match
+1850000-760300,Office Supplies,Office Supplies,Motor Vehicles Exp,151.0,168.0,600.0,600.0,0.0,round,match
+1850000-760600,Operating Supplies,Operating Supplies,Motor Vehicles Exp,151.0,169.0,5000.0,5000.0,0.0,round,match
+1850000-765400,Gas Oil & Diesel,Gas Oil & Diesel,Motor Vehicles Exp,151.0,169.0,7000.0,7000.0,0.0,round,match
+1850000-766300,Tires & Batteries,Tires & Batteries,Motor Vehicles Exp,151.0,169.0,1800.0,1800.0,0.0,round,match
+1850000-767200,Misc. Vehicle Parts,Misc. Vehicle Parts,Motor Vehicles Exp,151.0,169.0,2700.0,2700.0,0.0,round,match
+1850000-820000,Minor Equipment,Minor Equipment,Motor Vehicles Exp,151.0,169.0,85000.0,85000.0,0.0,round,match
+1850000-827000,Vehicles,Vehicles,Motor Vehicles Exp,151.0,169.0,19650.0,19650.0,0.0,round,match
+1860000-611500,Salaried Personnel,Salaried Personnel,Parks Administration Exp,153.0,171.0,0.0,0.0,0.0,round,match
+1860000-620100,Educational Incentive,Educational Incentive,Parks Administration Exp,153.0,171.0,7500.0,7500.0,0.0,round,match
+1860000-718000,Rental of Uniforms,Rental of Uniforms,Parks Administration Exp,153.0,171.0,19856.0,19856.0,0.0,round,match
+1860000-729000,Maint. - Vehicles,Maint. - Vehicles,Parks Administration Exp,153.0,171.0,27000.0,27000.0,0.0,round,match
+1860000-731000,Advertising,Advertising,Parks Administration Exp,153.0,171.0,300.0,300.0,0.0,round,match
+1860000-734000,Postage,Postage,Parks Administration Exp,153.0,171.0,250.0,250.0,0.0,round,match
+1860000-736000,Telephone,Telephone,Parks Administration Exp,153.0,171.0,8000.0,8000.0,0.0,round,match
+1860000-737000,Travel,Travel,Parks Administration Exp,153.0,171.0,700.0,700.0,0.0,round,match
+1860000-744000,Contract Services,Contract Services,Parks Administration Exp,153.0,171.0,45000.0,45000.0,0.0,round,match
+1860000-745000,Solid Waste Disposal,Solid Waste Disposal,Parks Administration Exp,153.0,172.0,23000.0,23000.0,0.0,round,match
+1860000-760300,Office Supplies,Office Supplies,Parks Administration Exp,154.0,172.0,1000.0,1000.0,0.0,round,match
+1860000-765400,Gas Oil & Diesel,Gas Oil & Diesel,Parks Administration Exp,154.0,172.0,40000.0,40000.0,0.0,round,match
+1860000-820000,Minor Equipment,Minor Equipment,Parks Administration Exp,154.0,172.0,1000.0,1000.0,0.0,round,match
+1861000-611000,Salary - Bureau Chief,Salary - Bureau Chief,Parks Buildings Exp,155.0,173.0,35709.0,35709.0,0.0,round,match
+1861000-611500,Salaried Personnel,Salaried Personnel,Parks Buildings Exp,155.0,173.0,622553.0,622553.0,0.0,round,match
+1861000-618500,Overtime,Overtime,Parks Buildings Exp,155.0,173.0,2500.0,2500.0,0.0,round,match
+1861000-721000,Maint. - Buildings,Maint. - Buildings,Parks Buildings Exp,155.0,173.0,65000.0,65000.0,0.0,round,match
+1861000-723000,Maint. - Equipment,Maint. - Equipment,Parks Buildings Exp,155.0,173.0,45000.0,45000.0,0.0,round,match
+1861000-736000,Telephone,Telephone,Parks Buildings Exp,155.0,173.0,30005.0,30005.0,0.0,round,match
+1861000-744000,Contract Services,Contract Services,Parks Buildings Exp,155.0,173.0,121172.0,121172.0,0.0,round,match
+1861000-744500,Training & School,Training & School,Parks Buildings Exp,155.0,173.0,1000.0,1000.0,0.0,round,match
+1861000-752000,Power Electric,Power Electric,Parks Buildings Exp,155.0,174.0,236530.0,236530.0,0.0,round,match
+1861000-760600,Operating Supplies,Operating Supplies,Parks Buildings Exp,156.0,174.0,82000.0,82000.0,0.0,round,match
+1861000-760700,Custodial Supplies,Custodial Supplies,Parks Buildings Exp,156.0,174.0,30000.0,30000.0,0.0,round,match
+1861000-766000,Heating Oil,Heating Oil,Parks Buildings Exp,156.0,174.0,79958.0,79958.0,0.0,round,match
+1861000-820000,Minor Equipment,Minor Equipment,Parks Buildings Exp,156.0,174.0,5000.0,5000.0,0.0,round,match
+1861000-827000,Vehicles,Vehicles,Parks Buildings Exp,156.0,174.0,39809.0,39809.0,0.0,round,match
+1861000-829000,Capital Outlay,Capital Outlay,Parks Buildings Exp,156.0,174.0,39000.0,39000.0,0.0,round,match
+1862000-611000,Salary - Bureau Chief,Salary - Bureau Chief,Parks Parks Exp,158.0,176.0,44356.0,44356.0,0.0,round,match
+1862000-611500,Salaried Personnel,Salaried Personnel,Parks Parks Exp,158.0,176.0,620746.0,620746.0,0.0,round,match
+1862000-618500,Overtime,Overtime,Parks Parks Exp,158.0,176.0,15000.0,15000.0,0.0,round,match
+1862000-723000,Maint-Equipment,Maint-Equipment,Parks Parks Exp,158.0,176.0,12000.0,12000.0,0.0,round,match
+1862000-727000,Maint-Parks,Maint-Parks,Parks Parks Exp,158.0,176.0,80000.0,80000.0,0.0,round,match
+1862000-727500,Maint-Pools,Maint-Pools,Parks Parks Exp,158.0,176.0,29000.0,29000.0,0.0,round,match
+1862000-744500,Training & School,Training & School,Parks Parks Exp,158.0,176.0,1000.0,1000.0,0.0,round,match
+1862000-752000,Power Electric,Power Electric,Parks Parks Exp,158.0,176.0,28000.0,28000.0,0.0,round,match
+1862000-760600,Operating Supplies,Operating Supplies,Parks Parks Exp,158.0,176.0,25000.0,25000.0,0.0,round,match
+1862000-760700,Custodial Supplies,Custodial Supplies,Parks Parks Exp,159.0,177.0,4000.0,4000.0,0.0,round,match
+1862000-820000,Minor Equipment,Minor Equipment,Parks Parks Exp,159.0,177.0,8000.0,8000.0,0.0,round,match
+1862000-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,Parks Parks Exp,159.0,177.0,56796.0,56796.0,0.0,round,match
+1862000-829000,Capital Outlay,Capital Outlay,Parks Parks Exp,159.0,177.0,17000.0,17000.0,0.0,round,match
+1863000-611500,Salaried Personnel,Salaried Personnel,Parks Trees,161.0,180.0,0.0,0.0,0.0,round,match
+1863000-618500,Overtime,Overtime,Parks Trees,161.0,180.0,0.0,0.0,0.0,round,match
+1863000-723000,Maint. - Equipment,Maint. - Equipment,Parks Trees,161.0,180.0,0.0,0.0,0.0,round,match
+1863000-744500,Training & School,Training & School,Parks Trees,161.0,180.0,0.0,0.0,0.0,round,match
+1863000-760600,Operating Supplies,Operating Supplies,Parks Trees,161.0,180.0,0.0,0.0,0.0,round,match
+1863000-820000,Minor Equipment,Minor Equipment,Parks Trees,162.0,180.0,0.0,0.0,0.0,round,match
+1864000-611000,Salary - Bureau Chief,Salary - Bureau Chief,Parks Central Market/Visitor Center,163.0,181.0,9848.0,9848.0,0.0,round,match
+1864000-611500,Salaried Personnel,Salaried Personnel,Parks Central Market/Visitor Center,163.0,181.0,77625.0,77625.0,0.0,round,match
+1864000-618500,Overtime,Overtime,Parks Central Market/Visitor Center,163.0,181.0,1000.0,1000.0,0.0,round,match
+1864000-721000,Maint-Buildings,Maint-Buildings,Parks Central Market/Visitor Center,163.0,181.0,3000.0,3000.0,0.0,round,match
+1864000-723000,Maint. - Equipment,Maint. - Equipment,Parks Central Market/Visitor Center,163.0,181.0,2400.0,2400.0,0.0,round,match
+1864000-744000,Contract Services,Contract Services,Parks Central Market/Visitor Center,163.0,181.0,11514.0,11514.0,0.0,round,match
+1864000-752000,Power Electric,Power Electric,Parks Central Market/Visitor Center,163.0,181.0,2500.0,2500.0,0.0,round,match
+1864000-760600,Operating Supplies,Operating Supplies,Parks Central Market/Visitor Center,163.0,181.0,5000.0,5000.0,0.0,round,match
+1864000-766000,Heating Oil,Heating Oil,Parks Central Market/Visitor Center,163.0,181.0,14813.0,14813.0,0.0,round,match
+1864000-829000,Capital Outlay,Capital Outlay,Parks Central Market/Visitor Center,164.0,182.0,13000.0,13000.0,0.0,round,match
+56000000-407100,Pension State Fund,Pension State Fund,SWM Revenue,170.0,187.0,85500.0,85500.0,0.0,round,match
+56000000-408000,Miscellaneous Revenue,Miscellaneous Revenue,SWM Revenue,170.0,187.0,4000.0,4000.0,0.0,round,match
+56084200-611000,Salary - Bureau Chief,Salary - Bureau Chief,SWM Street Cleaning Exp,177.0,195.0,22377.0,22377.0,0.0,round,match
+56084200-611500,Salaried Personnel,Salaried Personnel,SWM Street Cleaning Exp,177.0,195.0,543218.0,543218.0,0.0,round,match
+56084200-618500,Overtime,Overtime,SWM Street Cleaning Exp,177.0,195.0,18000.0,18000.0,0.0,round,match
+56084200-718000,Rental of Uniforms,Rental of Uniforms,SWM Street Cleaning Exp,177.0,195.0,5844.0,5844.0,0.0,round,match
+56084200-729000,Maint. - Vehicles,Maint. - Vehicles,SWM Street Cleaning Exp,177.0,195.0,65000.0,65000.0,0.0,round,match
+56084200-745000,Solid Waste Disposal,Solid Waste Disposal,SWM Street Cleaning Exp,177.0,195.0,45000.0,45000.0,0.0,round,match
+56084200-760600,Operating Supplies,Operating Supplies,SWM Street Cleaning Exp,177.0,195.0,2000.0,2000.0,0.0,round,match
+56084200-765400,Gas Oil & Diesel,Gas Oil & Diesel,SWM Street Cleaning Exp,177.0,195.0,25000.0,25000.0,0.0,round,match
+56084200-825600,Mach/Equip Lease Purch,Mach/Equip Lease Purch,SWM Street Cleaning Exp,177.0,195.0,82438.0,82438.0,0.0,round,match
+56088600-611000,Salary - Bureau Chief,Salary - Bureau Chief,SWM Admin Exp,171.0,188.0,114018.0,114018.0,0.0,round,match
+56088600-611500,Salaried Personnel,Salaried Personnel,SWM Admin Exp,171.0,188.0,524084.0,524084.0,0.0,round,match
+56088600-612000,Salary Temporary,Salary Temporary,SWM Admin Exp,171.0,188.0,20000.0,20000.0,0.0,round,match
+56088600-618500,Overtime,Overtime,SWM Admin Exp,171.0,188.0,1500.0,1500.0,0.0,round,match
+56088600-620200,Medical Insurance,Medical Insurance,SWM Admin Exp,171.0,188.0,300000.0,300000.0,0.0,round,match
+56088600-620300,Dental/Vision,Dental/Vision,SWM Admin Exp,171.0,188.0,13000.0,13000.0,0.0,round,match
+56088600-620800,Social Security,Social Security,SWM Admin Exp,171.0,188.0,90000.0,90000.0,0.0,round,match
+56088600-620900,Life Insurance,Life Insurance,SWM Admin Exp,171.0,188.0,3000.0,3000.0,0.0,round,match
+56088600-623000,Pension Contribution,Pension Contribution,SWM Admin Exp,171.0,188.0,101000.0,101000.0,0.0,round,match
+56088600-624000,Unemployment Compensation,Unemployment Compensation,SWM Admin Exp,171.0,188.0,2500.0,2500.0,0.0,round,match
+56088600-625000,Workers Compensation,Workers Compensation,SWM Admin Exp,171.0,188.0,20000.0,20000.0,0.0,round,match
+56088600-714100,PC Lease,PC Lease,SWM Admin Exp,172.0,189.0,4000.0,4000.0,0.0,round,match
+56088600-716000,Rental of Parking Lot,Rental of Parking Lot,SWM Admin Exp,172.0,189.0,8000.0,8000.0,0.0,round,match
+56088600-718000,Rental of Uniforms,Rental of Uniforms,SWM Admin Exp,172.0,189.0,1200.0,1200.0,0.0,round,match
+56088600-723000,Maint. - Equipment,Maint. - Equipment,SWM Admin Exp,172.0,189.0,10000.0,10000.0,0.0,round,match
+56088600-729000,Maint. - Vehicles,Maint. - Vehicles,SWM Admin Exp,172.0,189.0,1000.0,1000.0,0.0,round,match
+56088600-731000,Advertising,Advertising,SWM Admin Exp,172.0,189.0,5000.0,5000.0,0.0,round,match
+56088600-734000,Postage,Postage,SWM Admin Exp,172.0,189.0,128000.0,128000.0,0.0,round,match
+56088600-735000,Printing,Printing,SWM Admin Exp,172.0,189.0,10000.0,10000.0,0.0,round,match
+56088600-736000,Telephone,Telephone,SWM Admin Exp,172.0,189.0,6000.0,6000.0,0.0,round,match
+56088600-737000,Travel,Travel,SWM Admin Exp,172.0,189.0,10000.0,10000.0,0.0,round,match
+56088600-741000,Professional Services,Professional Services,SWM Admin Exp,172.0,189.0,162500.0,162500.0,0.0,round,match
+56088600-741003,Prof. Services-Consent Decree,Prof. Services-Consent Decree,SWM Admin Exp,172.0,190.0,50000.0,50000.0,0.0,round,match
+56088600-743100,Credit Card Fees,Credit Card Fees,SWM Admin Exp,173.0,190.0,1300.0,1300.0,0.0,round,match
+56088600-744000,Contract Services,Contract Services,SWM Admin Exp,173.0,190.0,70000.0,70000.0,0.0,round,match
+56088600-744500,Training & School,Training & School,SWM Admin Exp,173.0,190.0,6000.0,6000.0,0.0,round,match
+56088600-760300,Office Supplies,Office Supplies,SWM Admin Exp,173.0,190.0,4000.0,4000.0,0.0,round,match
+56088600-765400,Gas Oil & Diesel,Gas Oil & Diesel,SWM Admin Exp,173.0,190.0,1000.0,1000.0,0.0,round,match
+56088600-772000,Insurance Package,Insurance Package,SWM Admin Exp,173.0,190.0,18000.0,18000.0,0.0,round,match
+56088600-820000,Minor Equipment,Minor Equipment,SWM Admin Exp,173.0,190.0,16000.0,16000.0,0.0,round,match
+56088600-820200,Safety Equipment,Safety Equipment,SWM Admin Exp,173.0,190.0,1200.0,1200.0,0.0,round,match
+56088600-825000,Computer Equip/Software,Computer Equip/Software,SWM Admin Exp,173.0,190.0,60000.0,60000.0,0.0,round,match
+56088600-827100,Vehicle Lease Purchase,Vehicle Lease Purchase,SWM Admin Exp,173.0,190.0,6300.0,6300.0,0.0,round,match
+56088600-911000,Indirect Costs,Indirect Costs,SWM Admin Exp,174.0,191.0,337000.0,337000.0,0.0,round,match
+56088600-923000,Paying Agent Fees,Paying Agent Fees,SWM Admin Exp,174.0,191.0,60.0,60.0,0.0,round,match
+56088600-924000,Debt Service - Interest,Debt Service - Interest,SWM Admin Exp,174.0,191.0,567000.0,567000.0,0.0,round,match
+56088600-926000,Debt Service - Principal,Debt Service - Principal,SWM Admin Exp,174.0,191.0,560000.0,560000.0,0.0,round,match
+56088700-611000,Salary - Bureau Chief,Salary - Bureau Chief,SWM Grounds Maint Exp,179.0,201.0,10043.0,10043.0,0.0,round,match
+56088700-611500,Salaried Personnel,Salaried Personnel,SWM Grounds Maint Exp,179.0,201.0,165475.0,165475.0,0.0,round,match
+56088700-618500,Overtime,Overtime,SWM Grounds Maint Exp,179.0,201.0,5000.0,5000.0,0.0,round,match
+56088700-718000,Rental of Uniforms,Rental of Uniforms,SWM Grounds Maint Exp,179.0,201.0,2081.0,2081.0,0.0,round,match
+56088700-723000,Maint. - Equipment,Maint. - Equipment,SWM Grounds Maint Exp,179.0,201.0,3200.0,3200.0,0.0,round,match
+56088700-729000,Maint. - Vehicles,Maint. - Vehicles,SWM Grounds Maint Exp,179.0,201.0,9000.0,9000.0,0.0,round,match
+56088700-744000,Contract Services,Contract Services,SWM Grounds Maint Exp,179.0,201.0,12000.0,12000.0,0.0,round,match
+56088700-760600,Operating Supplies,Operating Supplies,SWM Grounds Maint Exp,179.0,201.0,40000.0,40000.0,0.0,round,match
+56088700-820000,Minor Equipment,Minor Equipment,SWM Grounds Maint Exp,179.0,201.0,3000.0,3000.0,0.0,round,match
+56088700-822500,Landscaping Trees etc,Landscaping Trees etc,SWM Grounds Maint Exp,179.0,202.0,100000.0,100000.0,0.0,round,match
+56088700-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,SWM Grounds Maint Exp,180.0,202.0,55524.0,55524.0,0.0,round,match
+56088800-611000,Salary - Bureau Chief,Salary - Bureau Chief,SWM Trees Exp,182.0,198.0,10043.0,10043.0,0.0,round,match
+56088800-611500,Salary - Personnel,Salary - Personnel,SWM Trees Exp,182.0,198.0,285544.0,285544.0,0.0,round,match
+56088800-723000,Maint. - Equipment,Maint. - Equipment,SWM Trees Exp,182.0,198.0,2000.0,2000.0,0.0,round,match
+56088800-732000,Dues & Subscriptions,Dues & Subscriptions,SWM Trees Exp,182.0,198.0,100.0,100.0,0.0,round,match
+56088800-744000,Contract Services,Contract Services,SWM Trees Exp,182.0,198.0,1000.0,1000.0,0.0,round,match
+56088800-744500,Training/Education,Training/Education,SWM Trees Exp,182.0,198.0,200.0,200.0,0.0,round,match
+56088800-760600,Operating Supplies,Operating Supplies,SWM Trees Exp,182.0,199.0,9000.0,9000.0,0.0,round,match
+56088800-810000,Special Events,Special Events,SWM Trees Exp,182.0,199.0,200.0,200.0,0.0,round,match
+56088800-820000,Minor Equipment,Minor Equipment,SWM Trees Exp,182.0,199.0,3200.0,3200.0,0.0,round,match
+56100000-404400,Rent of City Property,Rent of City Property,Wastewater Revenue,188.0,207.0,40000.0,40000.0,0.0,round,match
+56100000-406300,Interest on Investment,Interest on Investment,Wastewater Revenue,188.0,207.0,500.0,500.0,0.0,round,match
+56100000-407100,Pension State Fund,Pension State Fund,Wastewater Revenue,188.0,207.0,228000.0,228000.0,0.0,round,match
+56100000-408000,Miscellaneous Revenue,Miscellaneous Revenue,Wastewater Revenue,188.0,207.0,50000.0,50000.0,0.0,round,match
+56100000-408100,Sewage Treatment,Sewage Treatment,Wastewater Revenue,188.0,207.0,14000000.0,14000000.0,0.0,round,match
+56100000-408200,Industrial Waste Surchg,Industrial Waste Surchg,Wastewater Revenue,188.0,207.0,640000.0,640000.0,0.0,round,match
+56100000-408300,Bulk Sewage Treatment,Bulk Sewage Treatment,Wastewater Revenue,188.0,207.0,3750000.0,3750000.0,0.0,round,match
+56100000-408400,SLSA Operating Charges,SLSA Operating Charges,Wastewater Revenue,188.0,207.0,158000.0,158000.0,0.0,round,match
+56100000-408600,Industrial Waste Permits,Industrial Waste Permits,Wastewater Revenue,189.0,207.0,10000.0,10000.0,0.0,round,match
+56100000-408700,Industrial Waste Penalty,Industrial Waste Penalty,Wastewater Revenue,189.0,208.0,0.0,0.0,0.0,round,match
+56100000-408800,"Fats, Oils and Grease Permits","Fats, Oils and Grease Permits",Wastewater Revenue,189.0,208.0,5000.0,5000.0,0.0,round,match
+56100000-408801,"Fats, Oils and Grease Penalty","Fats, Oils and Grease Penalty",Wastewater Revenue,189.0,208.0,0.0,0.0,0.0,round,match
+56188000-611000,Salary - Bureau Chief,Salary - Bureau Chief,Sewer Administration Exp,190.0,209.0,142615.0,142615.0,0.0,round,match
+56188000-611500,Salaried Personnel,Salaried Personnel,Sewer Administration Exp,190.0,209.0,350172.0,350172.0,0.0,round,match
+56188000-612000,Salary Temporary,Salary Temporary,Sewer Administration Exp,190.0,209.0,10000.0,10000.0,0.0,round,match
+56188000-618500,Overtime,Overtime,Sewer Administration Exp,190.0,209.0,1000.0,1000.0,0.0,round,match
+56188000-619200,OPEB Contribution,OPEB Contribution,Sewer Administration Exp,190.0,209.0,33100.0,33100.0,0.0,round,match
+56188000-620100,Educational Incentive,Educational Incentive,Sewer Administration Exp,190.0,209.0,22000.0,22000.0,0.0,round,match
+56188000-620200,Medical Insurance,Medical Insurance,Sewer Administration Exp,190.0,209.0,1000000.0,1000000.0,0.0,round,match
+56188000-620300,Dental/Vision,Dental/Vision,Sewer Administration Exp,190.0,209.0,35000.0,35000.0,0.0,round,match
+56188000-620800,Social Security,Social Security,Sewer Administration Exp,190.0,209.0,265000.0,265000.0,0.0,round,match
+56188000-620900,Life Insurance,Life Insurance,Sewer Administration Exp,191.0,210.0,7500.0,7500.0,0.0,round,match
+56188000-623000,Pension Contribution,Pension Contribution,Sewer Administration Exp,191.0,210.0,288000.0,288000.0,0.0,round,match
+56188000-624000,Unemployment Compensation,Unemployment Compensation,Sewer Administration Exp,191.0,210.0,2500.0,2500.0,0.0,round,match
+56188000-625000,Workers Compensation,Workers Compensation,Sewer Administration Exp,191.0,210.0,60000.0,60000.0,0.0,round,match
+56188000-714100,PC Lease,PC Lease,Sewer Administration Exp,191.0,210.0,11000.0,11000.0,0.0,round,match
+56188000-716000,Rental of Parking Lot,Rental of Parking Lot,Sewer Administration Exp,191.0,210.0,4000.0,4000.0,0.0,round,match
+56188000-718000,Rental of Uniforms,Rental of Uniforms,Sewer Administration Exp,191.0,210.0,30400.0,30400.0,0.0,round,match
+56188000-723000,Maint. - Equipment,Maint. - Equipment,Sewer Administration Exp,191.0,210.0,10600.0,10600.0,0.0,round,match
+56188000-731000,Advertising,Advertising,Sewer Administration Exp,191.0,210.0,2000.0,2000.0,0.0,round,match
+56188000-734000,Postage,Postage,Sewer Administration Exp,191.0,210.0,148700.0,148700.0,0.0,round,match
+56188000-735000,Printing,Printing,Sewer Administration Exp,191.0,210.0,14300.0,14300.0,0.0,round,match
+56188000-736000,Telephone,Telephone,Sewer Administration Exp,191.0,210.0,45000.0,45000.0,0.0,round,match
+56188000-737000,Travel,Travel,Sewer Administration Exp,192.0,211.0,7000.0,7000.0,0.0,round,match
+56188000-740000,Utility Assistance Program,Utility Assistance Program,Sewer Administration Exp,192.0,211.0,27500.0,27500.0,0.0,round,match
+56188000-740100,Nutrient Credit Purchase,Nutrient Credit Purchase,Sewer Administration Exp,192.0,211.0,250000.0,250000.0,0.0,round,match
+56188000-741000,Professional Services,Professional Services,Sewer Administration Exp,192.0,211.0,738000.0,738000.0,0.0,round,match
+56188000-743000,Bank Service Charges,Bank Service Charges,Sewer Administration Exp,192.0,211.0,14500.0,14500.0,0.0,round,match
+56188000-743100,Credit Card Fees,Credit Card Fees,Sewer Administration Exp,192.0,211.0,7100.0,7100.0,0.0,round,match
+56188000-744000,Contract Services,Contract Services,Sewer Administration Exp,192.0,211.0,89700.0,89700.0,0.0,round,match
+56188000-744500,Training & School,Training & School,Sewer Administration Exp,193.0,211.0,30000.0,30000.0,0.0,round,match
+56188000-760300,Office Supplies,Office Supplies,Sewer Administration Exp,193.0,212.0,5000.0,5000.0,0.0,round,match
+56188000-772000,Insurance Package,Insurance Package,Sewer Administration Exp,193.0,212.0,210000.0,210000.0,0.0,round,match
+56188000-820000,Minor Equipment,Minor Equipment,Sewer Administration Exp,193.0,212.0,8500.0,8500.0,0.0,round,match
+56188000-820200,Safety Equipment,Safety Equipment,Sewer Administration Exp,193.0,212.0,25000.0,25000.0,0.0,round,match
+56188000-825000,Computer Equip/Software,Computer Equip/Software,Sewer Administration Exp,193.0,212.0,20000.0,20000.0,0.0,round,match
+56188000-827100,Vehicle Lease Purchase,Vehicle Lease Purchase,Sewer Administration Exp,193.0,212.0,1650.0,1650.0,0.0,round,match
+56188000-911000,Indirect Costs,Indirect Costs,Sewer Administration Exp,193.0,212.0,445000.0,445000.0,0.0,round,match
+56188000-923000,Paying Agent Fees,Paying Agent Fees,Sewer Administration Exp,193.0,212.0,500.0,500.0,0.0,round,match
+56188000-924000,Debt Service - Interest,Debt Service - Interest,Sewer Administration Exp,193.0,212.0,2046000.0,2046000.0,0.0,round,match
+56188000-926000,Debt Service - Principal,Debt Service - Principal,Sewer Administration Exp,194.0,212.0,1465000.0,1465000.0,0.0,round,match
+56188100-611500,Salaried Personnel,Salaried Personnel,Sewer Collections Exp,196.0,216.0,1246565.0,1246565.0,0.0,round,match
+56188100-618500,Overtime,Overtime,Sewer Collections Exp,196.0,216.0,60000.0,60000.0,0.0,round,match
+56188100-729000,Maint. - Vehicles,Maint. - Vehicles,Sewer Collections Exp,196.0,216.0,175000.0,175000.0,0.0,round,match
+56188100-744000,Contract Services,Contract Services,Sewer Collections Exp,196.0,216.0,200000.0,200000.0,0.0,round,match
+56188100-747000,Trench Paving,Trench Paving,Sewer Collections Exp,196.0,216.0,300000.0,300000.0,0.0,round,match
+56188100-760300,Office Supplies,Office Supplies,Sewer Collections Exp,196.0,216.0,1500.0,1500.0,0.0,round,match
+56188100-760600,Operating Supplies,Operating Supplies,Sewer Collections Exp,196.0,216.0,650000.0,650000.0,0.0,round,match
+56188100-765400,Gas Oil & Diesel,Gas Oil & Diesel,Sewer Collections Exp,196.0,216.0,80000.0,80000.0,0.0,round,match
+56188100-820000,Minor Equipment,Minor Equipment,Sewer Collections Exp,197.0,217.0,10000.0,10000.0,0.0,round,match
+56188100-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,Sewer Collections Exp,197.0,217.0,419000.0,419000.0,0.0,round,match
+56188200-611500,Salaried Personnel,Salaried Personnel,Sewer Pumping Stations Exp,199.0,220.0,884763.0,884763.0,0.0,round,match
+56188200-618500,Overtime,Overtime,Sewer Pumping Stations Exp,199.0,220.0,29000.0,29000.0,0.0,round,match
+56188200-721000,Maint. - Buildings,Maint. - Buildings,Sewer Pumping Stations Exp,199.0,220.0,2500.0,2500.0,0.0,round,match
+56188200-723000,Maint. - Equipment,Maint. - Equipment,Sewer Pumping Stations Exp,199.0,220.0,130000.0,130000.0,0.0,round,match
+56188200-752000,Power Electric-Main PS,Power Electric-Main PS,Sewer Pumping Stations Exp,199.0,220.0,450000.0,450000.0,0.0,round,match
+56188200-760600,Operating Supplies,Operating Supplies,Sewer Pumping Stations Exp,199.0,220.0,2400.0,2400.0,0.0,round,match
+56188200-766000,Heating Oil,Heating Oil,Sewer Pumping Stations Exp,199.0,220.0,25000.0,25000.0,0.0,round,match
+56188200-820000,Minor Equipment,Minor Equipment,Sewer Pumping Stations Exp,200.0,220.0,5000.0,5000.0,0.0,round,match
+56188200-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,Sewer Pumping Stations Exp,200.0,220.0,57400.0,57400.0,0.0,round,match
+56188200-829000,Capital Outlay,Capital Outlay,Sewer Pumping Stations Exp,200.0,221.0,50000.0,50000.0,0.0,round,match
+56188300-611500,Salaried Personnel,Salaried Personnel,Sewer Treatment Exp,202.0,224.0,1071787.0,1071787.0,0.0,round,match
+56188300-618500,Overtime,Overtime,Sewer Treatment Exp,202.0,224.0,40000.0,40000.0,0.0,round,match
+56188300-721000,Maint. - Buildings,Maint. - Buildings,Sewer Treatment Exp,202.0,224.0,50000.0,50000.0,0.0,round,match
+56188300-723000,Maint. - Equipment,Maint. - Equipment,Sewer Treatment Exp,202.0,224.0,515000.0,515000.0,0.0,round,match
+56188300-729000,Maint. - Vehicles,Maint. - Vehicles,Sewer Treatment Exp,202.0,224.0,18000.0,18000.0,0.0,round,match
+56188300-746000,Meter Expense,Meter Expense,Sewer Treatment Exp,202.0,224.0,300000.0,300000.0,0.0,round,match
+56188300-746500,Water Utility Expense,Water Utility Expense,Sewer Treatment Exp,202.0,224.0,140000.0,140000.0,0.0,round,match
+56188300-748000,Sludge,Sludge,Sewer Treatment Exp,203.0,225.0,1836000.0,1836000.0,0.0,round,match
+56188300-752000,Power Electric,Power Electric,Sewer Treatment Exp,203.0,225.0,1100000.0,1100000.0,0.0,round,match
+56188300-760600,Operating Supplies,Operating Supplies,Sewer Treatment Exp,203.0,225.0,49000.0,49000.0,0.0,round,match
+56188300-761500,Laboratory Supplies,Laboratory Supplies,Sewer Treatment Exp,203.0,225.0,75000.0,75000.0,0.0,round,match
+56188300-761800,Chemicals,Chemicals,Sewer Treatment Exp,203.0,225.0,657000.0,657000.0,0.0,round,match
+56188300-765400,Gas Oil & Diesel,Gas Oil & Diesel,Sewer Treatment Exp,203.0,225.0,16000.0,16000.0,0.0,round,match
+56188300-766000,Heating Oil,Heating Oil,Sewer Treatment Exp,204.0,225.0,70000.0,70000.0,0.0,round,match
+56188300-820000,Minor Equipment,Minor Equipment,Sewer Treatment Exp,204.0,225.0,25000.0,25000.0,0.0,round,match
+56188300-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,Sewer Treatment Exp,204.0,225.0,23700.0,23700.0,0.0,round,match
+56188300-829000,Capital Outlay,Capital Outlay,Sewer Treatment Exp,204.0,226.0,75000.0,75000.0,0.0,round,match
+56188400-611501,Salary - Direct Invoice,Salary - Direct Invoice,Sewer Grounds Maintenance Exp,206.0,229.0,11000.0,11000.0,0.0,round,match
+56188400-629901,Fringe - Direct Invoice,Fringe - Direct Invoice,Sewer Grounds Maintenance Exp,206.0,229.0,5500.0,5500.0,0.0,round,match
+56188400-760601,Equip/Op Supplies Direct Invoi,Equip/Op Supplies Direct Invoi,Sewer Grounds Maintenance Exp,206.0,229.0,18000.0,18000.0,0.0,round,match
+56200000-404400,Rent of City Property,Rent of City Property,Water Revenue,210.0,233.0,300000.0,300000.0,0.0,round,match
+56200000-407100,Pension State Fund,Pension State Fund,Water Revenue,210.0,233.0,340000.0,340000.0,0.0,round,match
+56200000-407700,Water Rents,Water Rents,Water Revenue,210.0,233.0,31675000.0,31675000.0,0.0,round,match
+56200000-407900,Reimb. - Meter Labor,Reimb. - Meter Labor,Water Revenue,210.0,233.0,195000.0,195000.0,0.0,round,match
+56200000-408000,Miscellaneous Revenue,Miscellaneous Revenue,Water Revenue,210.0,233.0,40000.0,40000.0,0.0,round,match
+56200000-420000,Swr Grnds Exp Reimb,Swr Grnds Exp Reimb,Water Revenue,210.0,233.0,0.0,0.0,0.0,round,match
+56289000-611000,Salary - Bureau Chief,Salary - Bureau Chief,Water Administration Exp,211.0,234.0,198000.0,198000.0,0.0,round,match
+56289000-611500,Salaried Personnel,Salaried Personnel,Water Administration Exp,211.0,234.0,733747.0,733747.0,0.0,round,match
+56289000-612000,Salary Temporary,Salary Temporary,Water Administration Exp,211.0,234.0,8000.0,8000.0,0.0,round,match
+56289000-618500,Overtime,Overtime,Water Administration Exp,211.0,234.0,1000.0,1000.0,0.0,round,match
+56289000-619200,OPEB Contribution,OPEB Contribution,Water Administration Exp,211.0,234.0,393000.0,393000.0,0.0,round,match
+56289000-620100,Educational Incentive,Educational Incentive,Water Administration Exp,211.0,234.0,30000.0,30000.0,0.0,round,match
+56289000-620200,Medical Insurance,Medical Insurance,Water Administration Exp,211.0,234.0,1700000.0,1700000.0,0.0,round,match
+56289000-620300,Dental/Vision,Dental/Vision,Water Administration Exp,211.0,234.0,52000.0,52000.0,0.0,round,match
+56289000-620800,Social Security,Social Security,Water Administration Exp,211.0,234.0,400000.0,400000.0,0.0,round,match
+56289000-620900,Life Insurance,Life Insurance,Water Administration Exp,212.0,234.0,12000.0,12000.0,0.0,round,match
+56289000-623000,Pension Contribution,Pension Contribution,Water Administration Exp,212.0,235.0,430000.0,430000.0,0.0,round,match
+56289000-624000,Unemployment Compensation,Unemployment Compensation,Water Administration Exp,212.0,235.0,10000.0,10000.0,0.0,round,match
+56289000-625000,Workers Compensation,Workers Compensation,Water Administration Exp,212.0,235.0,120000.0,120000.0,0.0,round,match
+56289000-714100,PC Lease,PC Lease,Water Administration Exp,212.0,235.0,16000.0,16000.0,0.0,round,match
+56289000-716000,Rental of Parking Lot,Rental of Parking Lot,Water Administration Exp,212.0,235.0,9000.0,9000.0,0.0,round,match
+56289000-718000,Rental of Uniforms,Rental of Uniforms,Water Administration Exp,212.0,235.0,42200.0,42200.0,0.0,round,match
+56289000-723000,Maint. - Equipment,Maint. - Equipment,Water Administration Exp,212.0,235.0,22000.0,22000.0,0.0,round,match
+56289000-731000,Advertising,Advertising,Water Administration Exp,212.0,235.0,5000.0,5000.0,0.0,round,match
+56289000-734000,Postage,Postage,Water Administration Exp,212.0,235.0,334000.0,334000.0,0.0,round,match
+56289000-735000,Printing,Printing,Water Administration Exp,212.0,235.0,25000.0,25000.0,0.0,round,match
+56289000-736000,Telephone,Telephone,Water Administration Exp,213.0,236.0,119600.0,119600.0,0.0,round,match
+56289000-737000,Travel,Travel,Water Administration Exp,213.0,236.0,7000.0,7000.0,0.0,round,match
+56289000-738000,Miscellaneous Expenses,Miscellaneous Expenses,Water Administration Exp,213.0,236.0,1200.0,1200.0,0.0,round,match
+56289000-740000,Utility Assistance Program,Utility Assistance Program,Water Administration Exp,213.0,236.0,22500.0,22500.0,0.0,round,match
+56289000-741000,Professional Services,Professional Services,Water Administration Exp,213.0,236.0,494300.0,494300.0,0.0,round,match
+56289000-743000,Bank Service Charges,Bank Service Charges,Water Administration Exp,213.0,236.0,35000.0,35000.0,0.0,round,match
+56289000-743100,Credit Card Fees,Credit Card Fees,Water Administration Exp,213.0,236.0,8200.0,8200.0,0.0,round,match
+56289000-744000,Contract Services,Contract Services,Water Administration Exp,213.0,237.0,89000.0,89000.0,0.0,round,match
+56289000-744500,Training & School,Training & School,Water Administration Exp,214.0,237.0,20000.0,20000.0,0.0,round,match
+56289000-760300,Office Supplies,Office Supplies,Water Administration Exp,214.0,237.0,7000.0,7000.0,0.0,round,match
+56289000-772000,Insurance Package,Insurance Package,Water Administration Exp,214.0,237.0,245000.0,245000.0,0.0,round,match
+56289000-820000,Minor Equipment,Minor Equipment,Water Administration Exp,214.0,237.0,13000.0,13000.0,0.0,round,match
+56289000-820200,Safety Equipment,Safety Equipment,Water Administration Exp,214.0,237.0,55000.0,55000.0,0.0,round,match
+56289000-825000,Computer Equip/Software,Computer Equip/Software,Water Administration Exp,214.0,237.0,15000.0,15000.0,0.0,round,match
+56289000-911000,Indirect Costs,Indirect Costs,Water Administration Exp,214.0,237.0,815000.0,815000.0,0.0,round,match
+56289000-914000,Revenue Tsfr'd to City,Revenue Tsfr'd to City,Water Administration Exp,214.0,238.0,4000000.0,4000000.0,0.0,round,match
+56289000-923000,Paying Agent Fees,Paying Agent Fees,Water Administration Exp,215.0,238.0,1500.0,1500.0,0.0,round,match
+56289000-924000,Debt Service - Interest,Debt Service - Interest,Water Administration Exp,215.0,238.0,7812000.0,7812000.0,0.0,round,match
+56289000-926000,Debt Service - Principal,Debt Service - Principal,Water Administration Exp,215.0,238.0,4720000.0,4720000.0,0.0,round,match
+56289100-611500,Salaried Personnel,Salaried Personnel,Water Susquehanna Trmt Plant E,218.0,241.0,1033185.0,1033185.0,0.0,round,match
+56289100-612000,Salary Temporary,Salary Temporary,Water Susquehanna Trmt Plant E,218.0,241.0,6500.0,6500.0,0.0,round,match
+56289100-618500,Overtime,Overtime,Water Susquehanna Trmt Plant E,218.0,241.0,115000.0,115000.0,0.0,round,match
+56289100-721000,Maint. - Buildings,Maint. - Buildings,Water Susquehanna Trmt Plant E,218.0,241.0,350000.0,350000.0,0.0,round,match
+56289100-722000,Maint. - Communications,Maint. - Communications,Water Susquehanna Trmt Plant E,218.0,241.0,12000.0,12000.0,0.0,round,match
+56289100-723000,Maint. - Equipment,Maint. - Equipment,Water Susquehanna Trmt Plant E,218.0,241.0,300000.0,300000.0,0.0,round,match
+56289100-729000,Maint. - Vehicles,Maint. - Vehicles,Water Susquehanna Trmt Plant E,218.0,241.0,15000.0,15000.0,0.0,round,match
+56289100-746500,Water Utility Expense,Water Utility Expense,Water Susquehanna Trmt Plant E,219.0,242.0,16500.0,16500.0,0.0,round,match
+56289100-748000,Sludge,Sludge,Water Susquehanna Trmt Plant E,219.0,242.0,130000.0,130000.0,0.0,round,match
+56289100-752000,Power Electric,Power Electric,Water Susquehanna Trmt Plant E,219.0,242.0,825000.0,825000.0,0.0,round,match
+56289100-760600,Operating Supplies,Operating Supplies,Water Susquehanna Trmt Plant E,219.0,242.0,10000.0,10000.0,0.0,round,match
+56289100-761800,Chemicals,Chemicals,Water Susquehanna Trmt Plant E,219.0,242.0,694603.0,694603.0,0.0,round,match
+56289100-765400,Gas Oil & Diesel,Gas Oil & Diesel,Water Susquehanna Trmt Plant E,219.0,242.0,78000.0,78000.0,0.0,round,match
+56289100-766000,Heating Oil,Heating Oil,Water Susquehanna Trmt Plant E,219.0,242.0,50000.0,50000.0,0.0,round,match
+56289100-820000,Minor Equipment,Minor Equipment,Water Susquehanna Trmt Plant E,219.0,242.0,7500.0,7500.0,0.0,round,match
+56289100-827000,Vehicles,Vehicles,Water Susquehanna Trmt Plant E,219.0,242.0,77400.0,77400.0,0.0,round,match
+56289100-829000,Capital Outlay,Capital Outlay,Water Susquehanna Trmt Plant E,219.0,242.0,125000.0,125000.0,0.0,round,match
+56289200-611500,Salaried Personnel,Salaried Personnel,Water Conestoga Trmt Plant Exp,221.0,245.0,970189.0,970189.0,0.0,round,match
+56289200-612000,Salary Temporary,Salary Temporary,Water Conestoga Trmt Plant Exp,221.0,245.0,6000.0,6000.0,0.0,round,match
+56289200-618500,Overtime,Overtime,Water Conestoga Trmt Plant Exp,221.0,245.0,60000.0,60000.0,0.0,round,match
+56289200-721000,Maint. - Buildings,Maint. - Buildings,Water Conestoga Trmt Plant Exp,221.0,245.0,200000.0,200000.0,0.0,round,match
+56289200-723000,Maint. - Equipment,Maint. - Equipment,Water Conestoga Trmt Plant Exp,221.0,245.0,300000.0,300000.0,0.0,round,match
+56289200-729000,Maint. - Vehicles,Maint. - Vehicles,Water Conestoga Trmt Plant Exp,222.0,246.0,26000.0,26000.0,0.0,round,match
+56289200-748000,Sludge,Sludge,Water Conestoga Trmt Plant Exp,222.0,246.0,150000.0,150000.0,0.0,round,match
+56289200-752000,Power Electric,Power Electric,Water Conestoga Trmt Plant Exp,222.0,246.0,575000.0,575000.0,0.0,round,match
+56289200-760600,Operating Supplies,Operating Supplies,Water Conestoga Trmt Plant Exp,222.0,246.0,28000.0,28000.0,0.0,round,match
+56289200-761800,Chemicals,Chemicals,Water Conestoga Trmt Plant Exp,222.0,246.0,573455.0,573455.0,0.0,round,match
+56289200-765400,Gas Oil & Diesel,Gas Oil & Diesel,Water Conestoga Trmt Plant Exp,222.0,246.0,62000.0,62000.0,0.0,round,match
+56289200-766000,Heating Oil,Heating Oil,Water Conestoga Trmt Plant Exp,222.0,246.0,59000.0,59000.0,0.0,round,match
+56289200-827000,Vehicles,Vehicles,Water Conestoga Trmt Plant Exp,223.0,246.0,38900.0,38900.0,0.0,round,match
+56289200-829000,Capital Outlay,Capital Outlay,Water Conestoga Trmt Plant Exp,223.0,247.0,0.0,0.0,0.0,round,match
+56289400-611500,Salaried Personnel,Salaried Personnel,Water Transmission/Dist Exp,225.0,250.0,1380349.0,1380349.0,0.0,round,match
+56289400-612000,Salary Temporary,Salary Temporary,Water Transmission/Dist Exp,225.0,250.0,19000.0,19000.0,0.0,round,match
+56289400-618500,Overtime,Overtime,Water Transmission/Dist Exp,225.0,250.0,60000.0,60000.0,0.0,round,match
+56289400-723000,Maint. - Equipment,Maint. - Equipment,Water Transmission/Dist Exp,225.0,250.0,7000.0,7000.0,0.0,round,match
+56289400-725000,Maint. - Mains,Maint. - Mains,Water Transmission/Dist Exp,225.0,250.0,165000.0,165000.0,0.0,round,match
+56289400-728000,Maint. - Service Lines,Maint. - Service Lines,Water Transmission/Dist Exp,225.0,250.0,60000.0,60000.0,0.0,round,match
+56289400-729000,Maint. - Vehicles,Maint. - Vehicles,Water Transmission/Dist Exp,225.0,250.0,100000.0,100000.0,0.0,round,match
+56289400-741000,Professional Services,Professional Services,Water Transmission/Dist Exp,225.0,250.0,16000.0,16000.0,0.0,round,match
+56289400-744000,Contract Services,Contract Services,Water Transmission/Dist Exp,226.0,251.0,35000.0,35000.0,0.0,round,match
+56289400-747000,Trench Paving,Trench Paving,Water Transmission/Dist Exp,226.0,251.0,500000.0,500000.0,0.0,round,match
+56289400-747500,Curb & Sidewalk,Curb & Sidewalk,Water Transmission/Dist Exp,226.0,251.0,75000.0,75000.0,0.0,round,match
+56289400-748200,Stone,Stone,Water Transmission/Dist Exp,226.0,251.0,110000.0,110000.0,0.0,round,match
+56289400-748400,Spoil Removal,Spoil Removal,Water Transmission/Dist Exp,226.0,251.0,40000.0,40000.0,0.0,round,match
+56289400-760600,Operating Supplies,Operating Supplies,Water Transmission/Dist Exp,226.0,251.0,165000.0,165000.0,0.0,round,match
+56289400-765400,Gas Oil & Diesel,Gas Oil & Diesel,Water Transmission/Dist Exp,226.0,251.0,62000.0,62000.0,0.0,round,match
+56289400-820000,Minor Equipment,Minor Equipment,Water Transmission/Dist Exp,226.0,251.0,39000.0,39000.0,0.0,round,match
+56289400-824000,Hydrants,Hydrants,Water Transmission/Dist Exp,227.0,251.0,70000.0,70000.0,0.0,round,match
+56289400-827000,Vehicles,Vehicles,Water Transmission/Dist Exp,227.0,252.0,33433.0,33433.0,0.0,round,match
+56289400-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,Water Transmission/Dist Exp,227.0,252.0,138195.0,138195.0,0.0,round,match
+56289400-829000,Capital Outlay,Capital Outlay,Water Transmission/Dist Exp,227.0,252.0,300000.0,300000.0,0.0,round,match
+56289500-611500,Salaried Personnel,Salaried Personnel,Water Meter Shop Exp,229.0,256.0,540727.0,540727.0,0.0,round,match
+56289500-618500,Overtime,Overtime,Water Meter Shop Exp,229.0,256.0,10000.0,10000.0,0.0,round,match
+56289500-726000,Maint. - Meters,Maint. - Meters,Water Meter Shop Exp,229.0,256.0,50000.0,50000.0,0.0,round,match
+56289500-729000,Maint. - Vehicles,Maint. - Vehicles,Water Meter Shop Exp,229.0,256.0,12500.0,12500.0,0.0,round,match
+56289500-765400,Gas Oil & Diesel,Gas Oil & Diesel,Water Meter Shop Exp,229.0,256.0,15000.0,15000.0,0.0,round,match
+56289500-823500,Meters,Meters,Water Meter Shop Exp,229.0,256.0,50000.0,50000.0,0.0,round,match
+56289500-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,Water Meter Shop Exp,229.0,256.0,47700.0,47700.0,0.0,round,match
+56289600-611000,Salary - Bureau Chief,Salary - Bureau Chief,Water Grounds Maintenance Exp,231.0,258.0,0.0,0.0,0.0,round,match
+56289600-611500,Salaried Personnel,Salaried Personnel,Water Grounds Maintenance Exp,231.0,258.0,260397.0,260397.0,0.0,round,match
+56289600-612000,Salary Temporary,Salary Temporary,Water Grounds Maintenance Exp,231.0,258.0,10000.0,10000.0,0.0,round,match
+56289600-618500,Overtime,Overtime,Water Grounds Maintenance Exp,231.0,258.0,8500.0,8500.0,0.0,round,match
+56289600-718000,Rental of Uniforms,Rental of Uniforms,Water Grounds Maintenance Exp,231.0,258.0,5100.0,5100.0,0.0,round,match
+56289600-721000,Maint. - Buildings,Maint. - Buildings,Water Grounds Maintenance Exp,231.0,258.0,500.0,500.0,0.0,round,match
+56289600-723000,Maint. - Equipment,Maint. - Equipment,Water Grounds Maintenance Exp,231.0,258.0,5000.0,5000.0,0.0,round,match
+56289600-729000,Maint. - Vehicles,Maint. - Vehicles,Water Grounds Maintenance Exp,231.0,258.0,8000.0,8000.0,0.0,round,match
+56289600-760600,Operating Supplies,Operating Supplies,Water Grounds Maintenance Exp,231.0,258.0,13500.0,13500.0,0.0,round,match
+56289600-765400,Gas Oil & Diesel,Gas Oil & Diesel,Water Grounds Maintenance Exp,231.0,258.0,9000.0,9000.0,0.0,round,match
+56289600-820000,Minor Equipment,Minor Equipment,Water Grounds Maintenance Exp,231.0,258.0,10200.0,10200.0,0.0,round,match
+56289600-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,Water Grounds Maintenance Exp,232.0,259.0,27000.0,27000.0,0.0,round,match
+56289800-611500,Salaried Personnel,Salaried Personnel,Water Laboratory Exp,234.0,261.0,311917.0,311917.0,0.0,round,match
+56289800-618500,Overtime,Overtime,Water Laboratory Exp,234.0,261.0,500.0,500.0,0.0,round,match
+56289800-723000,Maint. - Equipment,Maint. - Equipment,Water Laboratory Exp,234.0,261.0,1500.0,1500.0,0.0,round,match
+56289800-744000,Contract Services,Contract Services,Water Laboratory Exp,234.0,261.0,49900.0,49900.0,0.0,round,match
+56289800-761500,Laboratory Supplies,Laboratory Supplies,Water Laboratory Exp,234.0,261.0,62000.0,62000.0,0.0,round,match
+56289800-827000,Vehicles,Vehicles,Water Laboratory Exp,234.0,261.0,0.0,0.0,0.0,round,match
+56300000-400500,Penalty Current Tax,Penalty Current Tax,SWR Revenue,239.0,266.0,55000.0,55000.0,0.0,round,match
+56300000-402600,SWR Admin Tickets,SWR Admin Tickets,SWR Revenue,239.0,266.0,50000.0,50000.0,0.0,round,match
+56300000-407100,Pension State Fund,Pension State Fund,SWR Revenue,239.0,266.0,39000.0,39000.0,0.0,round,match
+56300000-407300,Act 101 Recycling,Act 101 Recycling,SWR Revenue,239.0,266.0,150000.0,150000.0,0.0,round,match
+56300000-408000,Miscellaneous Revenue,Miscellaneous Revenue,SWR Revenue,239.0,266.0,60000.0,60000.0,0.0,round,match
+56300000-413600,Discounts Taken (contra),Discounts Taken (contra),SWR Revenue,239.0,266.0,-40000.0,-40000.0,0.0,round,match
+56300000-417200,Trash Fees,Trash Fees,SWR Revenue,239.0,266.0,5198140.0,5198140.0,0.0,round,match
+56300000-417300,LCSWMA Rebate,LCSWMA Rebate,SWR Revenue,239.0,266.0,195840.0,195840.0,0.0,round,match
+56387000-611000,Salary - Bureau Chief,Salary - Bureau Chief,SWR Expenses,240.0,267.0,99494.0,99494.0,0.0,round,match
+56387000-611500,Salaried Personnel,Salaried Personnel,SWR Expenses,240.0,267.0,472203.0,472203.0,0.0,round,match
+56387000-612000,Salary Temporary,Salary Temporary,SWR Expenses,240.0,267.0,3000.0,3000.0,0.0,round,match
+56387000-618500,Overtime,Overtime,SWR Expenses,240.0,267.0,3000.0,3000.0,0.0,round,match
+56387000-620200,Medical Insurance,Medical Insurance,SWR Expenses,240.0,267.0,175000.0,175000.0,0.0,round,match
+56387000-620300,Dental/Vision,Dental/Vision,SWR Expenses,240.0,267.0,6000.0,6000.0,0.0,round,match
+56387000-620800,Social Security,Social Security,SWR Expenses,240.0,267.0,53000.0,53000.0,0.0,round,match
+56387000-620900,Life Insurance,Life Insurance,SWR Expenses,240.0,267.0,1300.0,1300.0,0.0,round,match
+56387000-623000,Pension Contribution,Pension Contribution,SWR Expenses,241.0,268.0,52000.0,52000.0,0.0,round,match
+56387000-624000,Unemployment Compensation,Unemployment Compensation,SWR Expenses,241.0,268.0,2000.0,2000.0,0.0,round,match
+56387000-625000,Workers Compensation,Workers Compensation,SWR Expenses,241.0,268.0,10000.0,10000.0,0.0,round,match
+56387000-712500,Space Rental,Space Rental,SWR Expenses,241.0,268.0,48500.0,48500.0,0.0,round,match
+56387000-714100,PC Lease,PC Lease,SWR Expenses,241.0,268.0,4700.0,4700.0,0.0,round,match
+56387000-716000,Rental of Parking Lot,Rental of Parking Lot,SWR Expenses,241.0,268.0,2000.0,2000.0,0.0,round,match
+56387000-718000,Rental of Uniforms,Rental of Uniforms,SWR Expenses,241.0,268.0,4950.0,4950.0,0.0,round,match
+56387000-723000,Maint. - Equipment,Maint. - Equipment,SWR Expenses,241.0,268.0,20000.0,20000.0,0.0,round,match
+56387000-729000,Maint. - Vehicles,Maint. - Vehicles,SWR Expenses,241.0,268.0,12000.0,12000.0,0.0,round,match
+56387000-731000,Advertising,Advertising,SWR Expenses,241.0,268.0,13000.0,13000.0,0.0,round,match
+56387000-732000,Dues & Subscriptions,Dues & Subscriptions,SWR Expenses,242.0,269.0,2500.0,2500.0,0.0,round,match
+56387000-734000,Postage,Postage,SWR Expenses,242.0,269.0,61790.0,61790.0,0.0,round,match
+56387000-735000,Printing,Printing,SWR Expenses,242.0,269.0,6300.0,6300.0,0.0,round,match
+56387000-736000,Telephone,Telephone,SWR Expenses,242.0,269.0,9850.0,9850.0,0.0,round,match
+56387000-737000,Travel,Travel,SWR Expenses,242.0,269.0,4000.0,4000.0,0.0,round,match
+56387000-741000,Professional Services,Professional Services,SWR Expenses,242.0,269.0,15000.0,15000.0,0.0,round,match
+56387000-743100,Credit Card Fees,Credit Card Fees,SWR Expenses,242.0,269.0,2500.0,2500.0,0.0,round,match
+56387000-744500,Training & School,Training & School,SWR Expenses,242.0,269.0,5000.0,5000.0,0.0,round,match
+56387000-745100,Hauling Fees,Hauling Fees,SWR Expenses,242.0,269.0,2446038.0,2446038.0,0.0,round,match
+56387000-745200,Tipping Fees,Tipping Fees,SWR Expenses,242.0,269.0,1930580.0,1930580.0,0.0,round,match
+56387000-752000,Power Electric,Power Electric,SWR Expenses,243.0,270.0,2600.0,2600.0,0.0,round,match
+56387000-760300,Office Supplies,Office Supplies,SWR Expenses,243.0,270.0,3500.0,3500.0,0.0,round,match
+56387000-760600,Operating Supplies,Operating Supplies,SWR Expenses,243.0,270.0,75000.0,75000.0,0.0,round,match
+56387000-765400,Gas Oil & Diesel,Gas Oil & Diesel,SWR Expenses,243.0,270.0,9000.0,9000.0,0.0,round,match
+56387000-766000,Heating Oil,Heating Oil,SWR Expenses,243.0,270.0,5800.0,5800.0,0.0,round,match
+56387000-772000,Insurance Package,Insurance Package,SWR Expenses,243.0,270.0,8000.0,8000.0,0.0,round,match
+56387000-820000,Minor Equipment,Minor Equipment,SWR Expenses,243.0,270.0,8000.0,8000.0,0.0,round,match
+56387000-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,SWR Expenses,243.0,270.0,20710.0,20710.0,0.0,round,match
+56387000-911000,Indirect Costs,Indirect Costs,SWR Expenses,243.0,270.0,149633.0,149633.0,0.0,round,match
+56387000-924000,Debt Service - Interest,Debt Service - Interest,SWR Expenses,243.0,270.0,0.0,0.0,0.0,round,match
