@@ -181,6 +181,6 @@ staffing_object,Bureau Of Water: Transmission & Distribution / 611500,255,28,0.0
 staffing_object,Bureau Of Water: Meter Shop / 611500,257,11,0.0,True,,,,,,,,,,,,,"[10.7, 590682]","[10.7, 590682]",
 staffing_object,Bureau Of Water: Grounds Maintenance / 611500,260,8,0.0,True,,,,,,,,,,,,,"[5.9, 262971]","[5.9, 262971]",
 staffing_object,Bureau Of Water: Laboratory / 611500,262,5,0.0,True,,,,,,,,,,,,,"[5.0, 321273]","[5.0, 321273]",
-staffing_object,Bureau Of Solid Waste & Recycling: Administration / 611000,271,2,100000.0,False,,,,,,,,,,,,,"[1.08, 131065]","[1.08, 31065]","Text layer, every cell read cleanly (no OCR). The MANAGER SUSTAINABLE OPERATIONS salary prints as 20,000, but the subtotal 131,065 = 11,065 + 120,000. The leading digit appears clipped in the PDF."
+staffing_object,Bureau Of Solid Waste & Recycling: Administration / 611000,271,2,0.0,True,,,,,,,,,,,,,"[1.08, 131065]","[1.08, 131065]",
 staffing_object,Bureau Of Solid Waste & Recycling: Administration / 6115,273,26,0.0,True,,,,,,,,,,,,,"[9.43, 489922]","[9.43, 489922]",
 staffing_unit,Bureau Of Solid Waste & Recycling: Administration,273,2,0.0,True,,,,,,,,,,,,,"[10.51, 620987]","[10.51, 620987]",

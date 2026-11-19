@@ -43,6 +43,7 @@ from ocr_pages import cache_dir, ocr_document
 CONFIG_DIR = ROOT / "config"
 CORRECTIONS_FILE = ROOT / "data" / "ocr_corrections.csv"
 SIGN_FILE = ROOT / "data" / "sign_corrections.csv"
+STAFF_FIX_FILE = ROOT / "data" / "staffing_corrections.csv"
 
 RE_ORG = re.compile(r"^\d{7,8}$")
 RE_OBJ = re.compile(r"^\d{6}$")
@@ -332,6 +333,7 @@ def extract(pdf_path, cfg):
 
     corrections = load_corrections(source_doc)
     signs, used_signs = load_signs(source_doc), set()
+    staff_fixes, used_staff_fixes = load_staff_fixes(source_doc), set()
     used_corrections = set()
 
     items, sections, staff, staff_checks, unparsed, cell_log = [], [], [], [], [], []
@@ -498,8 +500,11 @@ def extract(pdf_path, cfg):
                        "department": dept, "unit": staff_unit, **fields,
                        "_count_seen": fields.pop("_count_seen"),
                        "source_page": page_no,
+                       "as_printed": _apply_staff_fixes(fields, staff_fixes,
+                                                        used_staff_fixes, page_no, org, obj),
                        "ocr_flags": "; ".join(
                            f"{p['column']}:{p['problem']}" for p in problems)}
+                pos.update({k: fields[k] for k in st_flat})
                 staff.append(pos)
                 open_positions.append(pos)
                 continue
@@ -589,6 +594,9 @@ def extract(pdf_path, cfg):
     if open_items:
         unparsed.append({"source_page": -1,
                          "text": f"{len(open_items)} line items never closed by a TOTAL"})
+    for key in sorted(set(staff_fixes) - used_staff_fixes):
+        unparsed.append({"source_page": key[0],
+                         "text": f"staffing correction for {key[1:]} matched no position"})
     for key in sorted(set(signs) - used_signs):
         unparsed.append({"source_page": key[0],
                          "text": f"sign correction for {key[1]} / {key[2]} matched no line"})
@@ -747,6 +755,31 @@ def load_signs(source_doc):
     df = pd.read_csv(SIGN_FILE, dtype=str, keep_default_na=False)
     df = df[df.source_doc == source_doc]
     return {(int(r.source_page), r.account_code, r.column): r for r in df.itertuples()}
+
+
+def load_staff_fixes(source_doc):
+    """Staffing cells corrected because a printed subtotal proves the value
+    (data/staffing_corrections.csv)."""
+    if not STAFF_FIX_FILE.exists():
+        return {}
+    df = pd.read_csv(STAFF_FIX_FILE, dtype=str, keep_default_na=False)
+    df = df[df.source_doc == source_doc]
+    return {(int(r.source_page), r.org_code, r.object_code, r.position_title, r.column,
+             r.printed_value): r for r in df.itertuples()}
+
+
+def _apply_staff_fixes(fields, fixes, used, page_no, org, obj):
+    """Apply logged corrections to one position; return "col=printed" for audit."""
+    printed = []
+    for column in [k for k in fields if k.startswith(("salary_", "count_"))]:
+        value = fields[column]
+        key = (page_no, org, obj, fields["position_title"], column,
+               f"{value:g}" if isinstance(value, float) else str(value))
+        if key in fixes:
+            printed.append(f"{column}={key[-1]}")
+            fields[column] = to_number(fixes[key].corrected_value)
+            used.add(key)
+    return "; ".join(printed)
 
 
 def _apply_signs(values, signs, used, page_no, label):
