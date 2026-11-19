@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lancaster Budget Explorer</title>
+  <meta name="description" content="Explore the City of Lancaster, PA budget: totals by fund, department, bureau and line item, each linked to its page in the city's budget book.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='1' y='9' width='3' height='6' rx='1' fill='%2319a070'/%3E%3Crect x='6.5' y='5' width='3' height='10' rx='1' fill='%23c98500'/%3E%3Crect x='12' y='1' width='3' height='14' rx='1' fill='%2319a070'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+  <script>try{var t=localStorage.getItem('theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="wrap header-row">
+      <a class="brand" href="./">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>Lancaster Budget Explorer</span>
+      </a>
+      <nav class="header-nav" aria-label="Site">
+        <a href="#about">About the data</a>
+        <button type="button" id="theme-toggle" class="icon-btn" aria-label="Switch color theme">◐</button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="wrap">
+    <section class="hero" aria-labelledby="hero-title">
+      <p class="eyebrow" id="hero-eyebrow">City of Lancaster, PA</p>
+      <h1 id="hero-title" tabindex="-1">Loading budget…</h1>
+      <p class="hero-total" id="hero-total" aria-live="polite"></p>
+      <p class="hero-sub" id="hero-sub"></p>
+      <p class="badge-row"><span class="badge" id="status-badge"></span></p>
+    </section>
+
+    <section class="controls" aria-label="Choose what to show">
+      <div class="control">
+        <label for="year-select">Year</label>
+        <select id="year-select"></select>
+      </div>
+      <div class="control control-wide">
+        <span class="control-label" id="measure-label">Figure</span>
+        <div class="segmented" id="measure-group" role="radiogroup" aria-labelledby="measure-label"></div>
+      </div>
+      <div class="control control-wide">
+        <span class="control-label" id="kind-label">Show</span>
+        <div class="segmented" id="kind-group" role="radiogroup" aria-labelledby="kind-label"></div>
+      </div>
+      <div class="control">
+        <label for="fund-select">Fund</label>
+        <select id="fund-select"></select>
+      </div>
+      <div class="control">
+        <label for="compare-select">Compare with</label>
+        <select id="compare-select"></select>
+      </div>
+    </section>
+
+    <nav class="crumbs" id="crumbs" aria-label="Breadcrumb"></nav>
+
+    <div id="view"></div>
+
+    <section class="panel" id="rev-exp" aria-labelledby="rev-exp-title">
+      <h2 id="rev-exp-title">Revenue vs. expenses by fund</h2>
+      <p class="panel-note" id="rev-exp-note"></p>
+      <div class="chart-box"><canvas id="rev-exp-chart" role="img" aria-label="Revenue and expenses by fund"></canvas></div>
+      <div class="table-scroll"><table class="data-table" id="rev-exp-table"></table></div>
+    </section>
+
+    <section class="panel about" id="about" aria-labelledby="about-title">
+      <h2 id="about-title">About the data</h2>
+      <div id="about-body"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>An independent transparency project. Figures are copied from the City of Lancaster's published budget books; each links to its page. <span id="generated"></span></p>
+    </div>
+  </footer>
+
+  <div class="tooltip" id="tooltip" role="tooltip" hidden></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha512-CQBWl4fJHWbryGE+Pc7UAxWMUMNMWzWxF4SQo9CgkJIN1kx6djDQZjh3Y8SZ1d+6I+1zze6Z7kHXO7q3UyZAWw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="app.js"></script>
+</body>
+</html>

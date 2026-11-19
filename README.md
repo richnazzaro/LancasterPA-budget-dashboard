@@ -13,7 +13,7 @@ This repository provides public visibility into the City of Lancaster, PA budget
 - `scripts/`: Python scripts for PDF extraction and data normalization.
 - `data/processed/`: Extracted tables (see below).
 - `data/known_issues.csv`: Validation failures caused by errors in the source PDFs, reviewed by a person.
-- `web/`: Static site files for the GitHub Pages frontend (not built yet).
+- `web/`: Static dashboard for GitHub Pages (plain HTML/CSS/JS, Chart.js from a CDN, no build step).
 
 ## Setup
 ```bash
@@ -47,3 +47,13 @@ The 2026 adopted budget PDF has no text layer. It has to be OCR'd before extract
 brew install ocrmypdf   # installs Tesseract and Ghostscript too
 ocrmypdf "Budget PDFs - City/2026-Adopted-Budget-2026.pdf" "Budget PDFs - City/2026-Adopted-Budget-2026-ocr.pdf"
 ```
+
+## Dashboard
+```bash
+python3 scripts/build_dataset.py   # data/processed/budget_long_*.csv -> web/data/*.json
+python3 scripts/check_dataset.py   # every shown total vs the CSVs and the printed fund totals
+python3 -m http.server 8765 --directory web   # then open http://localhost:8765
+```
+`build_dataset.py` picks one figure per account, year and measure: **proposed** only for the newest book's year (the revised proposal when present); for every other year, **adopted**, **amended** and **projected** (revised when present) from the next year's book and **actual** from the book two years later. Year-to-date columns and older books' own-year proposals are never shown. New `budget_long_*.csv` files are picked up automatically. Disagreements between overlapping books go to `web/data/conflicts.json`.
+
+`web/pdfs` is a symlink to `Budget PDFs - City/`, so every figure links to `pdfs/<book>.pdf#page=N`. The Pages workflow (`.github/workflows/pages.yml`) rebuilds the data and copies the PDFs into the published site.
