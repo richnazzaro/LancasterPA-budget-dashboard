@@ -189,3 +189,7 @@ select { appearance: none; width: 100%; height: 40px; background: var(--bg) url(
 }
 @media (prefers-reduced-motion: reduce) { .fill, .card { transition: none; } }
 @media (forced-colors: active) { .fill { background: CanvasText !important; } .fill.cmp { background: GrayText !important; } }
+
+/* Source links: the amount is the link; quiet until hovered or focused. */
+a.src { color: inherit; text-decoration: none; border-bottom: 1px dotted transparent; }
+a.src:hover, a.src:focus-visible { border-bottom-color: currentColor; }
