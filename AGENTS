@@ -1,0 +1,4 @@
+## Agents and Tasks
+- **Budget Extractor**: Automates PDF parsing into a standardized 'Long Table' format. Handles OCR and multi-line text extraction.
+- **Data Normalizer**: Manages the crosswalk table for department/account renaming between fiscal years.
+- **Dashboard Builder**: Generates the static frontend using Chart.js/D3 for bureau-level overviews.
