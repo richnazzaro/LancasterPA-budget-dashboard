@@ -3,8 +3,10 @@
 
 1. Every series total per fund and revenue/expense equals the sum of the chosen
    column in the designated book's budget_long CSV (exact, to the dollar).
-2. Proposed-type measures ("proposed", "revised") exist only for the newest
-   year, and both exist when the newest book has both columns.
+2. One kind of figure per year: the newest year has "proposed" and "revised" (both
+   when the newest book has both columns); every earlier year has "actual" when any
+   book reports an audited actual for it, otherwise "projected"; never adopted,
+   amended or year-to-date.
 3. Every fund roll-up the book prints is within $5 of the shown line-item sum
    (known source-PDF issues are reported, not failed).
 Exits 1 on any failure of checks 1-2. Standard library only.
@@ -65,6 +67,26 @@ def main() -> int:
     if not stray and not missing:
         print(f"ok   proposed-type series: {', '.join(sorted(proposed_keys))} (newest year {newest} only)")
     failures += len(stray) + len(missing)
+
+    # one kind per year
+    raw_cols = defaultdict(set)  # fiscal year -> doc_types present in any book
+    for (fy, c, *_rest) in raw:
+        raw_cols[fy].add(c)
+    by_year = defaultdict(set)
+    for sr in budget["series"].values():
+        by_year[sr["year"]].add(sr["measure"])
+    bad_years = 0
+    for y, got in sorted(by_year.items()):
+        if y == newest:
+            want = {"proposed", "revised"} & {m for m, c in (("proposed", "proposed"), ("revised", "proposed_revised")) if c in raw_cols[str(y)]}
+        elif "actual" in raw_cols[str(y)]:
+            want = {"actual"}
+        else:
+            want = {"projected"}
+        ok = got == want
+        bad_years += not ok
+        print(f"{'ok  ' if ok else 'FAIL'} {y}: shows {', '.join(sorted(got))}" + ("" if ok else f" (expected {', '.join(sorted(want))})"))
+    failures += bad_years
 
     print("\nPrinted fund roll-ups vs shown sums:")
     # A book can print the same roll-up more than once (e.g. before and after a late section).

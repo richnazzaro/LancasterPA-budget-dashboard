@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Build the dashboard's JSON from every data/processed/budget_long_*.csv.
 
-Which figure is shown (the project's selection rule):
-  * Proposed figures only for the newest book's own year, as two measures:
-    "proposed" (the original proposal) and "revised" (proposed_revised), when present.
-  * Every other year Y shows adopted, amended and projected from book Y+1
-    (projected_revised preferred) and actual from book Y+2.
-  * A book's own-year proposed column is never shown for older books.
-  * Year-to-date columns are never shown.
+Which figure is shown (the project's selection rule): ONE kind of figure per year.
+  * Newest year (the newest book's own year): "proposed" (the original proposal)
+    and "revised" (proposed_revised), when the book has them.
+  * Any earlier year with an audited actual in the book two years later: "actual" only.
+  * The year before the newest, which has no actual yet: "projected" only, from
+    the next book (projected_revised preferred).
+  * Adopted, amended, year-to-date and older books' own-year proposals are never shown.
 
 Figures are copied exactly as extracted: nothing is rounded, filled or adjusted.
 When a non-designated book carries the same account/year/measure with a
@@ -34,14 +34,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-MEASURES = ["adopted", "amended", "projected", "actual", "proposed", "revised"]
+MEASURES = ["actual", "projected", "proposed", "revised"]
 PROPOSED_MEASURES = {"proposed", "revised"}  # shown only for the newest year
 # measure -> (book offset from the figure's fiscal year, source columns in preference order)
 RULE = {
     "proposed": (0, ["proposed"]),
     "revised": (0, ["proposed_revised"]),
-    "adopted": (1, ["adopted"]),
-    "amended": (1, ["amended"]),
     "projected": (1, ["projected_revised", "projected"]),
     "actual": (2, ["actual"]),
 }
@@ -163,34 +161,52 @@ def build(processed: Path, out: Path) -> dict:
             candidates[(measure, fy, r["account_code"], nth)].append(
                 (designated_for_figure, cols.index(r["doc_type"]), r, book, amount))
 
+    # Pass 1: for every (year, measure, account line) take the designated book's figure.
+    picks = defaultdict(list)  # (fy, measure) -> [(code, row, book, amount, cands)]
+    for (measure, fy, code, nth), cands in sorted(candidates.items()):
+        pool = [c for c in cands if c[0]]
+        if not pool:
+            continue  # designated book not loaded yet: show nothing rather than guess
+        pool.sort(key=lambda c: c[1])
+        _, _, row, book, amount = pool[0]
+        picks[(fy, measure)].append((code, row, book, amount, cands))
+
+    # One kind per year: proposed/revised for the newest year, else actual, else projected.
+    kept = set()
+    for fy in {fy for fy, _ in picks}:
+        have = {m for f, m in picks if f == fy}
+        if fy == newest:
+            kept |= {(fy, m) for m in PROPOSED_MEASURES & have}
+        elif "actual" in have:
+            kept.add((fy, "actual"))
+        elif "projected" in have:
+            kept.add((fy, "projected"))
+
+    # Pass 2: intern what is kept, log disagreements between books.
     series = defaultdict(lambda: {"a": [], "v": [], "p": [], "d": [], "c": []})
     covered = defaultdict(set)  # funds present in the designated book, zero lines included
-    for (measure, fy, code, nth), cands in sorted(candidates.items()):
-        chosen_pool = [c for c in cands if c[0]]
-        if not chosen_pool:
-            continue  # designated book not loaded yet: show nothing rather than guess
-        chosen_pool.sort(key=lambda c: c[1])
-        _, _, row, book, amount = chosen_pool[0]
-        covered[f"{fy}|{measure}"].add(funds(row["fund"]))
-        for other in cands:
-            if other[3] is not book and other[4] != amount:
-                conflicts.append({
-                    "kind": "value", "account_code": code, "fiscal_year": fy,
-                    "measure": measure, "used": amount, "used_doc": book["doc"],
-                    "used_page": int(row["source_page"]), "other": other[4],
-                    "other_doc": other[3]["doc"], "other_page": int(other[2]["source_page"]),
-                    "other_column": other[2]["doc_type"]})
-        if amount == 0:
-            continue  # zero lines add size without adding information
-        acct = accounts((code, row["account_name"], funds(row["fund"]),
-                         depts(row["department"]), bureaus(row["bureau"]),
-                         cats(row["category"])))
-        s = series[f"{fy}|{measure}"]
-        s["a"].append(acct)
-        s["v"].append(amount)
-        s["p"].append(int(row["source_page"]))
-        s["d"].append(docs(book["doc"]))
-        s["c"].append(row["doc_type"])
+    for (fy, measure) in sorted(kept):
+        for code, row, book, amount, cands in picks[(fy, measure)]:
+            covered[f"{fy}|{measure}"].add(funds(row["fund"]))
+            for other in cands:
+                if other[3] is not book and other[4] != amount:
+                    conflicts.append({
+                        "kind": "value", "account_code": code, "fiscal_year": fy,
+                        "measure": measure, "used": amount, "used_doc": book["doc"],
+                        "used_page": int(row["source_page"]), "other": other[4],
+                        "other_doc": other[3]["doc"], "other_page": int(other[2]["source_page"]),
+                        "other_column": other[2]["doc_type"]})
+            if amount == 0:
+                continue  # zero lines add size without adding information
+            acct = accounts((code, row["account_name"], funds(row["fund"]),
+                             depts(row["department"]), bureaus(row["bureau"]),
+                             cats(row["category"])))
+            s = series[f"{fy}|{measure}"]
+            s["a"].append(acct)
+            s["v"].append(amount)
+            s["p"].append(int(row["source_page"]))
+            s["d"].append(docs(book["doc"]))
+            s["c"].append(row["doc_type"])
 
     out_series = {}
     for key, s in sorted(series.items()):
@@ -202,7 +218,7 @@ def build(processed: Path, out: Path) -> dict:
         entry["column"] = s["c"][0] if len(set(s["c"])) == 1 else s["c"]
         out_series[key] = entry
 
-    printed = printed_totals(processed, designated, newest, docs, bureaus)
+    printed = printed_totals(processed, designated, newest, docs, bureaus, set(out_series))
 
     book_list = sorted(({"doc": b["doc"], "year": b["year"], "csv": b["csv"],
                          "used": designated.get(b["year"]) is b} for b in books.values()),
@@ -249,7 +265,7 @@ def missing_bureaus(known_issues: list) -> dict:
     return out
 
 
-def printed_totals(processed: Path, designated: dict, newest: int, docs, bureaus) -> list:
+def printed_totals(processed: Path, designated: dict, newest: int, docs, bureaus, shown_keys: set) -> list:
     """Printed section (bureau) and fund roll-up totals from the validation files,
     restricted to the columns the selection rule uses, so the UI can link each
     total to the page where the city prints it."""
@@ -274,6 +290,8 @@ def printed_totals(processed: Path, designated: dict, newest: int, docs, bureaus
                     continue
                 # keep only the preferred column for each measure
                 key = f"{fy}|{measure}"
+                if key not in shown_keys:
+                    continue  # only totals for figures the site actually shows
                 rank = RULE[measure][1].index(doc_type)
                 if key not in values or rank < values[key][1]:
                     values[key] = (parse_amount(text), rank)

@@ -1,5 +1,5 @@
-/* Lancaster Budget Explorer. Flat and dark: black page, near-black panels, system type,
-   gold for the comparison figure and mint for the selected figure. */
+/* Flat and dark: black page, near-black panels, system type, gold for the comparison figure and mint for
+   the selected figure. ALL brand and chart colors live in the :root block below; JS reads them from here. */
 :root {
   color-scheme: dark;
   --bg: #000;
@@ -11,8 +11,13 @@
   --muted-bg: #262626;
   --fg: #fff;
   --muted: #b3b3b3;
-  --mint: #41ffca;
-  --gold: #ffca41;
+  --sel: #41ffca;   /* selected figure */
+  --cmp: #ffca41;   /* comparison figure */
+  --mint: var(--sel);
+  --gold: var(--cmp);
+  /* categorical colors for pies and category legends, in fixed order */
+  --cat-1: #3987e5; --cat-2: #d95926; --cat-3: #199e70; --cat-4: #c98500; --cat-5: #d55181; --cat-6: #9085e9; --cat-7: #0ca30c; --cat-8: #e66767;
+  --cat-other: #777;
   --red: #ff6b6b;
   --blue: #429eff;
   --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -203,3 +208,10 @@ a.src:hover, a.src:focus-visible { border-bottom-color: currentColor; }
 details.values { margin-top: 12px; }
 details.values summary { cursor: pointer; color: var(--muted); font-size: 14px; }
 details.values summary:hover { color: var(--fg); }
+
+/* Trend legend */
+.trend-legend { list-style: none; margin: 0 0 8px; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; justify-content: flex-end; font-size: 13px; color: var(--fg); }
+.trend-legend li { display: inline-flex; align-items: center; gap: 8px; }
+.trend-legend .ln { width: 24px; height: 0; border-top: 2px solid var(--sel); display: inline-block; }
+.trend-legend .ln.dashed { border-top-style: dashed; }
+.trend-legend .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }

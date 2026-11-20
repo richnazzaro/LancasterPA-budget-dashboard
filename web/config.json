@@ -1,0 +1,16 @@
+{
+  "entity": {
+    "name": "City of Lancaster, PA",
+    "short": "City of Lancaster",
+    "kind": "city",
+    "possessive": "the City of Lancaster's"
+  },
+  "site_title": "Lancaster Budget Explorer",
+  "description": "City of Lancaster, PA budget by department, bureau and line item, from the city's published budget books.",
+  "footer": "An independent transparency project using the City of Lancaster's published budget books.",
+  "default_fund": "General Fund",
+  "paths": {
+    "data": "data/",
+    "pdfs": "pdfs/"
+  }
+}
