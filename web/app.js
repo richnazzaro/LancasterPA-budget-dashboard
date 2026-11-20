@@ -309,7 +309,7 @@
     ].filter(Boolean).join('');
     const rowsHtml = pts.map((p) => `<tr><th scope="row">${p.y}</th><td>${LABEL[p.m]}</td><td class="num">${p.v == null ? '—' : money(p.v)}</td></tr>`).join('');
     return `<section class="panel" aria-labelledby="tr-t"><h2 class="panel-title" id="tr-t">${esc(title)}</h2>
-      <p class="panel-note">${S.k === 'revenue' ? 'Revenue' : 'Expenses'}${S.f ? ' · ' + esc(S.f) : ''}. Each year shows one kind of figure: actual, projected or proposed.</p>
+      <p class="panel-note">${kindWordPlain()}${S.f ? ' · ' + esc(S.f) : ''}. Each year shows one kind of figure: actual, projected or proposed.</p>
       <ul class="trend-legend" aria-hidden="true">${legend}</ul>
       <div class="chart-box short"><canvas id="trend-chart" role="img" aria-label="Totals by year, ${pts[0].y} to ${pts[pts.length - 1].y}. Solid line: actual. Dashed line: projected. Small dot: proposed. Ring: revised. The table below has the values."></canvas></div>
       <details class="values"><summary>Show values</summary><div class="table-scroll"><table class="table"><thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Total</th></tr></thead><tbody>${rowsHtml}</tbody></table></div></details></section>`;
@@ -497,7 +497,7 @@
     const k = key(S.y, S.m);
     const list = scoped(k);
     const total = sum(list);
-    const kindWord = S.k === 'revenue' ? 'Revenue' : 'Expenses';
+    const kindWord = kindWordPlain();
     const scope = S.f ? S.f : CFG.entity.short;
     document.title = `${scope} ${kindWord}: ${seriesLabel(k)} · ${CFG.site_title}`;
 
@@ -506,7 +506,7 @@
     const keys = new Set([...selMap.keys(), ...cmpMap.keys()]);
     const items = [...keys].map((d) => ({ id: d, name: O.departments[d].name, href: deptHash(d), sel: selMap.get(d), cmp: cmpMap.get(d) }))
       .sort((a, b) => (b.sel?.total || 0) - (a.sel?.total || 0) || (b.cmp?.total || 0) - (a.cmp?.total || 0));
-    const cards = cardList(items, { total, k, shareOf: `Total ${seriesLabel(k)} ${kindWord === 'Revenue' ? 'Revenue' : 'Budget'}`, level: 2 });
+    const cards = cardList(items, { total, k, shareOf: `Total ${seriesLabel(k)} ${kindWord}`, level: 2 });
 
     return `<header class="page-head"><h1 id="page-h">${esc(scope)} ${kindWord}: ${esc(seriesLabel(k))}</h1>
         <p class="big-total" aria-live="polite">${(() => { const pf = S.f ? printedFund(S.f, S.k, k) : null; return pf ? src(money(total), k, pf.doc, pf.page) : money(total); })()}</p>${drawNote(k)}${statusHTML()}${rollupNote(list)}</header>
@@ -514,8 +514,8 @@
       <p class="hint hint-top">Select any department to see its detailed breakdown. Amounts open the source page in the budget book.</p>
       <ul class="cards" aria-label="Departments">${cards || '<li class="empty center">No lines for this selection.</li>'}</ul>
       ${trendHTML({}, 'Totals by Year')}
-      <section class="panel" aria-labelledby="re-title"><h2 class="panel-title" id="re-title">Revenue vs. Expenses by Fund: ${esc(seriesLabel(k))}</h2>
-        <div class="chart-box"><canvas id="re-chart" role="img" aria-label="Revenue and expenses by fund"></canvas></div>
+      <section class="panel" aria-labelledby="re-title"><h2 class="panel-title" id="re-title">Income vs. Spending by Fund: ${esc(seriesLabel(k))}</h2>
+        <div class="chart-box"><canvas id="re-chart" role="img" aria-label="Income and spending by fund"></canvas></div>
         <div class="table-scroll"><table class="table" id="re-table"></table></div></section>`;
   }
 
@@ -531,8 +531,8 @@
       charts.push(new Chart($('re-chart'), {
         type: 'bar',
         data: { labels: data.map((d) => d.fund.replace(' Fund', '')), datasets: [
-          { label: 'Revenue', data: data.map((d) => d.rev), backgroundColor: PALETTE[0], borderRadius: 2 },
-          { label: 'Expenses', data: data.map((d) => d.exp), backgroundColor: PALETTE[1], borderRadius: 2 }] },
+          { label: 'Income', data: data.map((d) => d.rev), backgroundColor: PALETTE[0], borderRadius: 2 },
+          { label: 'Spending', data: data.map((d) => d.exp), backgroundColor: PALETTE[1], borderRadius: 2 }] },
         options: {
           indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
           plugins: { legend: { position: 'bottom', labels: { color: INK, boxWidth: 12, boxHeight: 12 } }, tooltip: { ...th.tip, callbacks: { label: (c) => `${c.dataset.label}: ${money(c.raw)}` } } },
@@ -543,7 +543,7 @@
     const pr = (d, kind) => printedFund(d.fund, kind, k);
     const lk = (d, kind, n) => { const x = pr(d, kind); return x ? src(money(n), k, x.doc, x.page) : money(n); };
     const dcell = (n) => { const r = Math.round(n); return `<span class="${r > 0 ? 'up' : r < 0 ? 'down' : 'flat'}">${money(n)}</span>`; };
-    $('re-table').innerHTML = `<thead><tr><th scope="col">Fund</th><th scope="col" class="num">Revenue</th><th scope="col" class="num">Expenses</th><th scope="col" class="num">Revenue minus expenses</th></tr></thead>
+    $('re-table').innerHTML = `<thead><tr><th scope="col">Fund</th><th scope="col" class="num">Income</th><th scope="col" class="num">Spending</th><th scope="col" class="num">Income minus spending</th></tr></thead>
       <tbody>${data.map((d) => `<tr><th scope="row">${esc(d.fund)}</th><td class="num">${lk(d, 'revenue', d.rev)}</td><td class="num">${lk(d, 'expense', d.exp)}</td><td class="num">${dcell(d.rev - d.exp)}</td></tr>`).join('')}</tbody>
       <tfoot><tr><td>All funds</td><td class="num">${money(data.reduce((t, d) => t + d.rev, 0))}</td><td class="num">${money(data.reduce((t, d) => t + d.exp, 0))}</td><td class="num">${dcell(data.reduce((t, d) => t + d.rev - d.exp, 0))}</td></tr></tfoot>`;
   }

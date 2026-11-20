@@ -30,7 +30,7 @@ Clicking a dollar amount opens the budget-book PDF **at the page it came from**.
   - for the General Fund, a short note under the total when part of the revenue is **drawn from the reserve** (the "Fund Balance Reserve" revenue lines, object `499000`): "Balanced by drawing $4.8M from the reserve". It links to the Reserve Fund view and, through the amount, to the source page. It is summed from the data for each figure (2027 Revised $4,782,815; 2027 Proposed $4,268,753; 2026 Projected $6,315,053; none in the Actual years) and shown only where there is a draw;
   - one card per department, with bars comparing the selected figure (blue) with the comparison figure (amber);
   - a "Totals by Year" line chart;
-  - a "Revenue vs. Expenses by Fund" chart.
+  - an "Income vs. Spending by Fund" chart.
 - **Departments and bureaus follow the city's 2027 org chart** (`Budget PDFs - City/2027 Org Chart.pdf`). Every budget line is placed in an org-chart bureau by its account number (org code), so every year is grouped the same way, even where an older book printed a group under another department or name. For example, Human Resources appears under Executive in every year. The full mapping, with the evidence for each choice, is in [`data/org_structure_2027.csv`](data/org_structure_2027.csv).
 - **Department page** (`#/department/public-safety`), modeled on the LA Controller's budget site:
   - total and status;
