@@ -674,6 +674,7 @@
     const only = S.c ? all.filter((e) => !e.sel).length : 0;
     return `${all.length.toLocaleString()} line item${all.length === 1 ? '' : 's'}${only ? ` (${only.toLocaleString()} only in ${seriesLabel(S.c)})` : ''}`;
   }
+  let lastList = [];
   function lineTable(selRows, cmpRows, showBureau) {
     const k = key(S.y, S.m);
     const all = mergeLines(selRows, cmpRows);
@@ -687,20 +688,41 @@
     const th = (id, label, cls = '') => `<th scope="col" class="${cls}" aria-sort="${T.sort === id ? (T.dir > 0 ? 'ascending' : 'descending') : 'none'}"><button type="button" data-sort="${id}">${label}</button></th>`;
     const body = list.slice(0, T.shown).map((e) => {
       const d = val(e, 'sel') - val(e, 'cmp');
-      const where = showBureau ? `<span class="sub">${esc(bureauName(e.bureau))}</span>` : '';
-      return `<tr><td class="code hide-sm">${esc(e.code)}</td><td>${esc(e.name)}${where}</td><td class="hide-sm">${esc(D.categories[e.cat])}</td>
+      const sub = [e.code, showBureau ? bureauName(e.bureau) : ''].filter(Boolean).map(esc).join(' · ');
+      const draw = /^Fund Balance Reserve/i.test(e.name) && /-499000$/.test(e.code) ? '<span class="sub">Money drawn from the reserve</span>' : '';
+      return `<tr><td>${esc(e.name)}<span class="sub">${sub}</span>${draw}</td><td class="hide-sm">${esc(D.categories[e.cat])}</td>
         ${S.c ? `<td class="num">${e.cmp ? src(money(e.cmp.v), S.c, e.cmp.d, e.cmp.p) : '—'}</td>` : ''}<td class="num">${e.sel ? src(money(e.sel.v), k, e.sel.d, e.sel.p) : '—'}${S.c && d !== 0 ? `<span class="chg-sm ${d > 0 ? 'up' : 'down'}" aria-label="Change from ${esc(seriesLabel(S.c))}: ${money(d)}">${money(d)}</span>` : ''}</td>
         ${S.c ? `<td class="num hide-sm"><span class="${d > 0 ? 'up' : d < 0 ? 'down' : 'flat'}">${d === 0 ? '—' : money(d)}</span></td>` : ''}</tr>`;
     }).join('');
     const ts = list.reduce((t, e) => t + val(e, 'sel'), 0), tc = list.reduce((t, e) => t + val(e, 'cmp'), 0);
     const left = list.length - T.shown;
+    lastList = list;
     return `<div class="table-tools"><label class="sr-only" for="li-search">Search line items</label>
         <input type="search" id="li-search" placeholder="Search line items, account numbers…" value="${esc(T.q)}" autocomplete="off">
+        <button type="button" class="btn btn-outline export-btn" data-export>Export this view (CSV)</button>
         <span class="count" aria-live="polite">${q ? `${list.length.toLocaleString()} matching of ${all.length.toLocaleString()} line items` : lineCountText(selRows, cmpRows, all)}</span></div>
-      <div class="table-scroll"><table class="table"><thead><tr>${th('code', 'Account', 'hide-sm')}${th('name', 'Line item')}${th('cat', 'Category', 'hide-sm')}${S.c ? th('cmp', esc(seriesLabel(S.c)), 'num') : ''}${th('sel', esc(seriesLabel(k)), 'num')}${S.c ? th('chg', 'Change', 'num hide-sm') : ''}</tr></thead>
-        <tbody>${body || '<tr><td colspan="6" class="empty">No matching line items.</td></tr>'}</tbody>
-        <tfoot><tr><td class="hide-sm"></td><td>Total${q ? ' (matching)' : ''}</td><td class="hide-sm"></td>${S.c ? `<td class="num">${money(tc)}</td>` : ''}<td class="num">${money(ts)}</td>${S.c ? `<td class="num hide-sm">${money(ts - tc)}</td>` : ''}</tr></tfoot></table></div>
+      <div class="table-scroll"><table class="table"><thead><tr>${th('name', 'Line item and account')}${th('cat', 'Category', 'hide-sm')}${S.c ? th('cmp', esc(seriesLabel(S.c)), 'num') : ''}${th('sel', esc(seriesLabel(k)), 'num')}${S.c ? th('chg', 'Change', 'num hide-sm') : ''}</tr></thead>
+        <tbody>${body || '<tr><td colspan="5" class="empty">No matching line items.</td></tr>'}</tbody>
+        <tfoot><tr><td>Total${q ? ' (matching)' : ''}</td><td class="hide-sm"></td>${S.c ? `<td class="num">${money(tc)}</td>` : ''}<td class="num">${money(ts)}</td>${S.c ? `<td class="num hide-sm">${money(ts - tc)}</td>` : ''}</tr></tfoot></table></div>
       ${left > 0 ? `<button type="button" class="btn btn-outline more" data-more>Show ${Math.min(PAGE_SIZE, left)} more</button>` : ''}`;
+  }
+  /* CSV of the line items matching the search (every row, in the table's order), built in the browser. Plain
+     ASCII minus signs, so spreadsheets read the numbers; source pages are the budget-book PDF pages. */
+  function exportCSV() {
+    const k = key(S.y, S.m), v = (e, sl) => (e[sl] ? e[sl].v : '');
+    const cell = (x) => { let t = x == null ? '' : String(x); if (/^[=+\-@]/.test(t) && Number.isNaN(Number(t))) t = `'${t}`; return /[",\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t; };
+    const head = ['Account', 'Line item', 'Department', 'Budget group', 'Fund', 'Category', S.c ? seriesLabel(S.c) : '', seriesLabel(k), S.c ? 'Change' : '', `Source book (${seriesLabel(k)})`, `Source page (${seriesLabel(k)})`, S.c ? `Source book (${seriesLabel(S.c)})` : '', S.c ? `Source page (${seriesLabel(S.c)})` : ''];
+    const lines = lastList.map((e) => {
+      const u = O.codes[e.code.split('-')[0]];
+      return [e.code, e.name, O.departments[O.units[u].dept].name, bureauName(e.bureau), D.funds[e.fund], D.categories[e.cat], S.c ? v(e, 'cmp') : '', v(e, 'sel'), S.c ? (e.sel ? e.sel.v : 0) - (e.cmp ? e.cmp.v : 0) : '',
+        e.sel ? D.docs[e.sel.d] : '', e.sel ? e.sel.p : '', S.c && e.cmp ? D.docs[e.cmp.d] : '', S.c && e.cmp ? e.cmp.p : ''];
+    });
+    const csv = [head, ...lines].map((r) => r.map(cell).join(',')).join('\r\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' }));
+    a.download = `${slug($('page-h')?.textContent || 'line-items')}-${S.y}-${S.m}-line-items.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
   function mountLines(selRows, cmpRows, showBureau) {
     const holder = $('li-holder');
@@ -714,6 +736,7 @@
         T.dir = T.sort === id ? -T.dir : (['code', 'name', 'cat'].includes(id) ? 1 : -1); T.sort = id;
         paint(false); holder.querySelector(`[data-sort="${id}"]`)?.focus();
       }));
+      holder.querySelector('[data-export]')?.addEventListener('click', exportCSV);
       holder.querySelector('[data-more]')?.addEventListener('click', () => { T.shown += PAGE_SIZE; paint(false); });
       if (focus) { s.focus(); s.setSelectionRange(s.value.length, s.value.length); }
     };
@@ -1201,7 +1224,7 @@
     if (q.get('c') === 'none') { applyQuery(q); S.c = ''; } else applyQuery(q);
     if (route.name !== 'home' && isReserve()) S.f = DEFAULT_FUND; // the reserve has no departments or bureaus
     if (route.name === 'changes' && S.y !== D.newest_year) { S.y = D.newest_year; S.m = defaultMeasure(S.y); S.c = defaultCompare(S.y, S.m); }
-    T.sort = 'sel'; T.dir = -1; T.q = ''; T.shown = PAGE_SIZE;
+    T.sort = 'sel'; T.dir = -1; T.q = route.name === 'dept' || route.name === 'bureau' ? (q.get('q') || '') : ''; T.shown = PAGE_SIZE;
     destroyCharts();
     let page;
     if (route.name === 'home') page = { html: homeView(), after: () => { if (isReserve()) drawReserve(); else { drawTrend(); revExpAfter(); } } };
@@ -1215,6 +1238,7 @@
     if (scroll) {
       window.scrollTo({ top: 0 });
       $('page-h')?.focus({ preventScroll: true });
+      if (T.q && $('sec-lines')) $('sec-lines').scrollIntoView(); // arrived from "Jump to…" with a line item: show the table
     }
   }
 
@@ -1278,6 +1302,65 @@
       requestAnimationFrame(() => $('view').querySelector(`[data-tab="${n.dataset.tab}"][data-v="${n.dataset.v}"]`)?.focus());
     });
     $('about-btn').addEventListener('click', () => $('about').scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth' }));
+  }
+
+  /* ---------- "Jump to…" search: departments, bureaus and line items ----------
+     A combobox with a listbox: arrow keys move, Enter opens, Escape closes. A line item opens its bureau (or
+     department) page with the line-item search pre-filled (the q= parameter). */
+  let jumpIndex = null;
+  function buildJumpIndex() {
+    const out = [];
+    O.departments.forEach((d, i) => out.push({ t: 'Department', name: d.name, sub: '', href: deptHash(i, { f: DEFAULT_FUND }), hay: d.name.toLowerCase(), rank: 0 }));
+    O.units.forEach((u, i) => { if (u.kind === 'bureau' && O.departments[u.dept].bureaus) out.push({ t: 'Bureau', name: u.name, sub: O.departments[u.dept].name, href: unitHash(i), hay: `${u.name} ${O.departments[u.dept].name}`.toLowerCase(), rank: 1 }); });
+    const seen = new Set();
+    D.accounts.forEach((a) => {
+      const id = `${a[0]}|${a[1]}`; if (seen.has(id)) return; seen.add(id);
+      const u = O.codes[a[0].split('-')[0]]; if (u == null) return;
+      const unit = O.units[u], dept = O.departments[unit.dept];
+      const over = { k: D.categories[a[5]] === 'Revenue' ? 'revenue' : 'expense', f: D.funds[a[2]] };
+      const base = dept.bureaus && unit.kind !== 'whole-department' ? unitHash(u, over) : deptHash(unit.dept, over);
+      out.push({ t: 'Line item', name: a[1], sub: `${a[0]} · ${unit.kind === 'bureau' ? unit.name : dept.name}`, href: `${base}&q=${encodeURIComponent(a[0])}`, hay: `${a[0]} ${a[1]} ${unit.name}`.toLowerCase(), rank: 2 });
+    });
+    return out;
+  }
+  function initJump() {
+    const input = $('jump-input'), list = $('jump-list'), status = $('jump-status');
+    if (!input || !list) return;
+    let items = [], active = -1;
+    const close = () => { list.hidden = true; input.setAttribute('aria-expanded', 'false'); input.removeAttribute('aria-activedescendant'); active = -1; };
+    const setActive = (i) => {
+      active = i;
+      list.querySelectorAll('[role=option]').forEach((o, n) => { o.setAttribute('aria-selected', String(n === i)); if (n === i) o.scrollIntoView({ block: 'nearest' }); });
+      if (i >= 0) input.setAttribute('aria-activedescendant', `jump-opt-${i}`); else input.removeAttribute('aria-activedescendant');
+    };
+    const go = (it) => { close(); input.value = ''; status.textContent = ''; location.hash = it.href; };
+    function render() {
+      const q = input.value.trim().toLowerCase();
+      if (!q) { close(); status.textContent = ''; return; }
+      jumpIndex = jumpIndex || buildJumpIndex();
+      const toks = q.split(/\s+/);
+      const hits = jumpIndex.filter((x) => toks.every((t) => x.hay.includes(t)));
+      hits.sort((a, b) => a.rank - b.rank || (b.hay.startsWith(q) - a.hay.startsWith(q)) || a.name.localeCompare(b.name));
+      const take = (t, n) => hits.filter((x) => x.t === t).slice(0, n);
+      items = [...take('Department', 4), ...take('Bureau', 6), ...take('Line item', 8)];
+      list.innerHTML = items.length ? items.map((it, i) => `<li role="option" id="jump-opt-${i}" aria-selected="false" data-i="${i}"><span class="jt">${it.t}</span><span class="jn">${esc(it.name)}</span>${it.sub ? `<span class="js">${esc(it.sub)}</span>` : ''}</li>`).join('')
+        : '<li class="jump-none" role="presentation">No matches</li>';
+      list.hidden = false; input.setAttribute('aria-expanded', 'true');
+      setActive(items.length ? 0 : -1);
+      status.textContent = items.length ? `${items.length} result${items.length === 1 ? '' : 's'}${hits.length > items.length ? ` shown of ${hits.length}` : ''}. Use the up and down arrow keys, then Enter.` : 'No matches.';
+    }
+    input.addEventListener('input', render);
+    input.addEventListener('focus', () => { if (input.value.trim()) render(); });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (list.hidden) { render(); return; }
+        if (items.length) setActive((active + (e.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length);
+      } else if (e.key === 'Enter') { if (!list.hidden && items[active]) { e.preventDefault(); go(items[active]); } }
+      else if (e.key === 'Escape') { if (!list.hidden) { e.preventDefault(); close(); } else input.value = ''; }
+    });
+    list.addEventListener('mousedown', (e) => { const li = e.target.closest('[data-i]'); if (li) { e.preventDefault(); go(items[+li.dataset.i]); } });
+    input.addEventListener('blur', () => setTimeout(close, 120));
   }
 
   /* ---------- about ---------- */
@@ -1368,6 +1451,7 @@
     $('footer-text').textContent = CFG.footer;
     if (CFG.tagline) $('tagline').textContent = CFG.tagline;
     wire();
+    initJump();
     renderAbout();
     onRoute(false);
   }
