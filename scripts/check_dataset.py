@@ -14,7 +14,10 @@
    revenue/expense, the unit (bureau) totals of each department add up to that department's
    total (department taken straight from the CSV), and the departments add up to the series total;
    departments with no bureaus have exactly one unit; every description has text.
-Exits 1 on any failure of checks 1, 2 and 4. Standard library only.
+5. Reserve draw: the "Fund Balance Reserve" revenue lines (object 499000) the General Fund view
+   shows as drawn from the reserve equal the sum of those lines in the source CSVs, and tie to the
+   Reserve Fund page's drawdown where both exist. A year that does not tie is reported (NOTE), not forced.
+Exits 1 on any failure of checks 1, 2, 4 and the CSV part of 5. Standard library only.
 """
 from __future__ import annotations
 
@@ -137,6 +140,50 @@ def check_org(budget: dict) -> int:
     return bad
 
 
+def check_reserve_draw(budget: dict) -> int:
+    """The General Fund's revenue includes money drawn from the reserve. Verify what the site shows."""
+    print("\nReserve draw (General Fund revenue lines 'Fund Balance Reserve', object 499000):")
+    acc = budget["accounts"]
+    is_draw = lambda a: acc[a][0].endswith("-499000") and acc[a][1].lower().startswith("fund balance reserve")
+    csv_sum = defaultdict(float)
+    for path in sorted((ROOT / "data" / "processed").glob("budget_long_*.csv")):
+        with path.open(newline="", encoding="utf-8") as f:
+            for r in csv.DictReader(f):
+                if r["object_code"] == "499000" and r["account_name"].lower().startswith("fund balance reserve") and r["amount"].strip():
+                    csv_sum[(r["fiscal_year"], r["doc_type"], r["source_doc"])] += float(r["amount"])
+    reserve = {(e["year"], e["measure"]): e for e in (budget.get("reserve") or {}).get("entries", [])}
+    bad = 0
+    for key, s in sorted(budget["series"].items()):
+        docs = s["doc"] if isinstance(s["doc"], list) else [s["doc"]] * len(s["a"])
+        cols = s["column"] if isinstance(s["column"], list) else [s["column"]] * len(s["a"])
+        shown = sum(v for a, v in zip(s["a"], s["v"]) if is_draw(a))
+        pairs = {(d, c) for a, d, c in zip(s["a"], docs, cols) if is_draw(a)}
+        expect = sum(csv_sum[(key.split("|")[0], c, budget["docs"][d])] for d, c in pairs)
+        ok = abs(shown - expect) < 0.5
+        bad += not ok
+        if not shown and not expect:
+            print(f"ok   {key:16s} no draw")
+            continue
+        line = f"{'ok  ' if ok else 'FAIL'} {key:16s} draw shown {shown:>12,.0f}  csv {expect:>12,.0f}"
+        e = reserve.get((s["year"], s["measure"]))
+        if e and shown:
+            by_t = defaultdict(int)
+            for ln in e["lines"]:
+                by_t[ln["t"]] += ln["v"]
+            drawdown = -(by_t["surplus"] + by_t["adjustment"])      # what the Fund Balance page takes out of the reserve
+            op = -(by_t["revenues"] + by_t["expenditures"])           # revenues less expenditures on the same page
+            gf = budget["funds"].index("General Fund")
+            gf_rev = sum(v for a, v in zip(s["a"], s["v"]) if acc[a][2] == gf and budget["categories"][acc[a][5]] == "Revenue")
+            gap_rev = by_t["revenues"] + shown - gf_rev
+            ties = abs(drawdown - shown) <= TOLERANCE and abs(op - shown) <= TOLERANCE and abs(gap_rev) <= TOLERANCE
+            line += f"  Reserve page drawdown {drawdown:,}, revenues+draw-GF revenue {gap_rev:+,.0f}: " + ("ties" if ties else f"DOES NOT TIE (drawdown off by {shown - drawdown:+,.0f}; revenues-expenditures off by {shown - op:+,.0f})" + ("  (page note: " + e["note"][:60] + "...)" if e.get("note") else ""))
+            line = line.replace("ok  ", "NOTE", 1) if not ties and ok else line
+        elif shown:
+            line += "  (no Reserve Fund page entry for this figure)"
+        print(line)
+    return bad
+
+
 def main() -> int:
     budget = json.loads((ROOT / "web" / "data" / "budget.json").read_text())
     acc = budget["accounts"]
@@ -239,6 +286,7 @@ def main() -> int:
 
     failures += check_reserve(budget)
     failures += check_org(budget)
+    failures += check_reserve_draw(budget)
 
     print(f"\n{failures} series mismatches")
     return 1 if failures else 0

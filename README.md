@@ -27,22 +27,23 @@ Clicking a dollar amount opens the budget-book PDF **at the page it came from**.
 ### What the site shows
 - **Home (all departments):**
   - the total for the selected fund, year and figure;
-  - one card per department, with bars comparing the selected figure (teal) with the comparison figure (orange);
+  - for the General Fund, a short note under the total when part of the revenue is **drawn from the reserve** (the "Fund Balance Reserve" revenue lines, object `499000`): "Balanced by drawing $4.8M from the reserve". It links to the Reserve Fund view and, through the amount, to the source page. It is summed from the data for each figure (2027 Revised $4,782,815; 2027 Proposed $4,268,753; 2026 Projected $6,315,053; none in the Actual years) and shown only where there is a draw;
+  - one card per department, with bars comparing the selected figure (blue) with the comparison figure (amber);
   - a "Totals by Year" line chart;
   - a "Revenue vs. Expenses by Fund" chart.
 - **Departments and bureaus follow the city's 2027 org chart** (`Budget PDFs - City/2027 Org Chart.pdf`). Every budget line is placed in an org-chart bureau by its account number (org code), so every year is grouped the same way, even where an older book printed a group under another department or name. For example, Human Resources appears under Executive in every year. The full mapping, with the evidence for each choice, is in [`data/org_structure_2027.csv`](data/org_structure_2027.csv).
 - **Department page** (`#/department/public-safety`), modeled on the LA Controller's budget site:
   - total and status;
   - **"What does this department do?"**: a collapsible description quoted from the city's `Org Descriptions 2027.pdf`, with a small link to its page in that PDF (closed by default; Legislative, City Controller, Public Safety and General Revenue have no department description in that PDF, so it is left out);
+  - a **bureau list** right after the controls: one card per bureau or office on the org chart (name, share of the department, selected-vs-comparison bars, the whole card is a link), with several budget groups combined where the chart has one bureau. Budget groups that are not a bureau (for example Administrative Services' city-wide Insurance, Fringe Benefits, Debt Service and Community Involvement budgets, or a department's fee revenue) form one card labelled "Department-wide costs (not a bureau)" or "Department revenue (not a bureau)". Departments with no bureaus on the chart (Legislative, City Controller, and General Revenue, which is not on the chart) have no bureau list and no bureau pages;
   - a category pie;
   - a by-category comparison chart;
-  - totals by year;
-  - a bureau breakdown (pie): the bureaus and offices on the org chart, several budget groups combined where the chart has one bureau. Budget groups that are not a bureau (for example Administrative Services' city-wide Insurance, Fringe Benefits, Debt Service and Community Involvement budgets, or a department's fee revenue) form one slice labelled "Department-wide costs (not a bureau)" or "Department revenue (not a bureau)". Departments with no bureaus on the chart (Legislative, City Controller, and General Revenue, which is not on the chart) have no bureau breakdown and no bureau pages;
+  - totals by year (in the 2027 year the small dot is Proposed and the larger ring is Revised, so both stay visible when they are nearly equal);
   - a category table with changes;
   - the overall year-over-year change;
   - a searchable, sortable line-item table.
 - **Bureau page** (`#/department/<dept>/bureau/<bureau>`, e.g. `#/department/administrative-services/bureau/bureau-of-treasury`): the same layout for one org-chart bureau, across all its funds and years, with **"What does this bureau do?"** from the descriptions PDF. Public Works bureaus also name their division. The department-wide group has a page too (`.../bureau/department-wide`) that lists the budget groups in it. Older bureau links (`.../bureau/<fund>--<printed group>`) redirect to the bureau that group now belongs to, or to the department page.
-- **Reserve Fund** (in the Fund selector): the General Fund balance, from each book's "Fund Balance Projection" page. It shows the year-end balance and how it changes each year, using the same one-figure-per-year rule. Where the city's page disagrees with itself, the Revised column is used and the difference is explained on the page.
+- **Reserve Fund** (in the Fund selector): the General Fund balance, from each book's "Fund Balance Projection" page. It shows the year-end balance and how it changes each year, using the same one-figure-per-year rule. Where the city's page disagrees with itself, the Revised column is used and the difference is explained on the page. A one-line note ties its "Revenues" to the General Fund revenue (revenues plus the reserve draw). For 2026 Projected and 2027 Revised the draw equals the page's drawdown; for 2027 Proposed the city's own page does not add up (a $475,000 gap, logged in the known issues), and `check_dataset.py` reports it rather than forcing it.
 - **About the data** (button in the header):
   - which book supplies each year;
   - how the figures were validated;
@@ -69,16 +70,18 @@ The JSON files can also be downloaded from the live site: `<site>/data/budget.js
 
 ## 3. How to use the site
 
-**Controls** (at the top of the home and department pages):
+**Controls** (at the top of the home, department and bureau pages): a one-line summary ("Viewing 2027 Revised · compared with 2026 Projected · General Fund · Spending") with a **Change** button that opens the controls (**Done** closes them). They start open on wide screens and closed on phones, and the site remembers your last choice in your browser. On department pages, only the funds that department has lines in are offered, and Spending / Income only appears where the department has both. Short "What do these mean?" and "What is a fund?" notes sit beside the controls.
 - **Fiscal year:** the year to show.
 - **Compare with:** any other year and figure (for example, 2026 Projected), or "No comparison".
 - **Fund:** a single fund, "All funds", or the Reserve Fund.
 - **Figure:** Proposed / Revised. This only appears for years that have more than one figure.
-- **Show:** Expenses / Revenue.
+- **Show:** Spending / Income.
 
 **On the pages:**
-- Click a **department card** to open its page. Use the **Department** dropdown on that page to switch departments, and the bureau breakdown to drill into a bureau.
+- Click a **department card** to open its page. Use the **Department** dropdown on that page to switch departments, and the bureau cards to drill into a bureau.
 - **Line items:**
+  - the count reads like "97 line items (1 only in 2026 Projected)": every line in the table, and how many exist only in the comparison figure; the header counts the same way;
+  - on phones each line's change shows under its amount;
   - type in the search box to filter by name, account number, bureau, fund or category;
   - click a column header to sort;
   - use "Show more" to load more rows.
