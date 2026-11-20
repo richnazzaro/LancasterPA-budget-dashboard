@@ -22,6 +22,8 @@ disagree on the same opening balance, the revised column is used and both figure
 
 Outputs (web/data/):
   budget.json     dimension tables + one column-oriented series per (year, measure)
+                  + an `org` block: 2027 org-chart departments/bureaus, org code -> unit,
+                  and description text with source pages (scripts/org_structure.py)
   staffing.json   positions per book (for a later personnel view)
   conflicts.json  disagreements between overlapping books
 
@@ -38,6 +40,8 @@ import sys
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
+
+from org_structure import build_org
 
 ROOT = Path(__file__).resolve().parent.parent
 MEASURES = ["actual", "projected", "proposed", "revised"]
@@ -254,6 +258,9 @@ def build(processed: Path, out: Path) -> dict:
         "missing_bureaus": missing_bureaus(known_issues),
         "reserve": reserve_fund(processed, designated, newest, docs),
         "conflict_count": len(conflicts),
+        # Departments and bureaus as on the 2027 org chart, with "what does it do" text
+        # (scripts/org_structure.py; data/org_*_2027.csv). Every org code above maps to a unit.
+        "org": build_org({a[0].split("-")[0] for a in accounts.items}),
     }
     out.mkdir(parents=True, exist_ok=True)
     write_json(out / "budget.json", budget)

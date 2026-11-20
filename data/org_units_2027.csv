@@ -1,0 +1,43 @@
+department,unit,kind,division,chart_page,descriptions,aliases,notes
+Executive,,department,,1,p1-executive-department[1-2],,"The Mayor's department. Chart p1 shows Chief of Staff, Office of the Solicitor and Bureau of Human Resources under the Mayor, so it keeps a bureau breakdown."
+Executive,Office of the Mayor,bureau,,1,p1-executive-department[3],,Chart p1: Mayor and Chief of Staff. The descriptions print no heading for it; the text is the Office of the Mayor paragraph on p1.
+Executive,Office of the Solicitor,bureau,,1,p1-executive-department[4],,The descriptions print no heading for it; the text is the Office of Solicitor paragraph on p1.
+Executive,Bureau of Human Resources,bureau,,1,p1-bureau-of-human-resources,,
+Legislative,,department,,1,,,Chart p1: Council with the City Clerk below it. No bureaus. The descriptions PDF has no Legislative section.
+Legislative,Legislative,whole-department,,1,,,City Council (1201000) and City Clerk (1202000).
+City Controller,,department,,1,,city-controller-treasurer,Chart p1: Controller. No bureaus. The descriptions PDF has no Controller section. Older pages were named 'City Controller / Treasurer'.
+City Controller,City Controller,whole-department,,1,,,
+Administrative Services,,department,,2,p2-department-of-administrative-services,,
+Administrative Services,Fund Development & Administration,bureau,,2,p2-office-of-director,,"Chart p1-2 box 'Fund Development & Administration'; the descriptions call it the Office of the Director (Director, Office Manager, Fund Development team)."
+Administrative Services,Bureau of Accounting & Finance,bureau,,2,p2-bureau-of-accounting-and-finance,,
+Administrative Services,Bureau of Treasury,bureau,,2,p2-bureau-of-treasury,,
+Administrative Services,Bureau of Data & Technology,bureau,,2,p3-bureau-of-data-and-technology,,
+Administrative Services,Department-wide (not a bureau),department-wide,,,,,"Community Involvement, Insurance Package, Fringe Benefits and Debt Service: city-wide budgets the department manages (descriptions p2)."
+Neighborhood Engagement,,department,,3,p4-department-of-neighborhood-engagement,,
+Neighborhood Engagement,Office of the Director,bureau,,3,,,Chart p3: Director of Neighborhood Engagement. No description of its own.
+Neighborhood Engagement,Bureau of Tourism & Promotion,bureau,,3,p4-bureau-of-tourism-and-promotion,,
+Neighborhood Engagement,Bureau of Civic Engagement,bureau,,3,p4-bureau-of-civic-engagement;p4-office-of-language-services,,Includes the chart's Office of Language Access and Reception boxes (no separate budget org codes). The descriptions call the language office 'Office of Language Services'; the chart says 'Office of Language Access'.
+Public Safety,,department,,1,,,The Mayor serves as Director of Public Safety (descriptions p1). The descriptions PDF has no department-level Public Safety section.
+Public Safety,Bureau of Police,bureau,,4,p5-bureau-of-police;p5-patrol-division;p6-criminal-investigation-division;p7-administrative-services-division,,
+Public Safety,Bureau of Fire,bureau,,5,p9-bureau-of-fire;p9-fire-suppression-division;p9-fire-marshal-division;p9-special-operations-division;p10-maintenance-division;p10-administrative-services-division,,
+Public Safety,Department-wide (not a bureau),department-wide,,,,,Police and fire fee revenue groups.
+Community Planning & Economic Development,,department,,6,p11-department-of-community-planning-and-economic-development,,
+Community Planning & Economic Development,Office of the Director,bureau,,6,,,Chart p6: Director of Community Planning & Economic Development with a 'Community Development' box beside it. No description of its own.
+Community Planning & Economic Development,Bureau of Planning,bureau,,6,p11-bureau-of-planning,,"Chart p6 lists Land Development, Zoning, Historic Preservation, Redevelopment and Public Art under it."
+Community Planning & Economic Development,Bureau of Building Codes Administration,bureau,,6,p11-bureau-of-building-code-administration,,The chart says 'Building Codes Administration'; the descriptions say 'Building Code Administration'.
+Community Planning & Economic Development,Bureau of Health,bureau,,6,p12-bureau-of-health,,Chart p6: Office of Community Health and Office of Healthy Homes under it.
+Community Planning & Economic Development,Bureau of Property Maintenance & Housing Inspections,bureau,,6,p12-bureau-of-property-maintenance-and-housing-inspections,,
+Community Planning & Economic Development,Department-wide (not a bureau),department-wide,,,,,License and permit fee revenue.
+Public Works,,department,,7,p13-department-of-public-works,,"Chart p7 has four divisions (Public Right of Way, Construction & Operations, Utilities, Sustainability & Environment); the descriptions name 7 bureaus and Construction Services under them. The breakdown uses those bureaus, with the division recorded."
+Public Works,Office of the Director,bureau,,7,,,Chart p7: Director of Public Works. No description of its own.
+Public Works,Bureau of Engineering,bureau,Public Right of Way,7,p15-bureau-of-engineering;p15-public-right-of-way-division,,Chart p7: Engineering and Transportation under Public Right of Way (City Engineer).
+Public Works,"Bureau of Streets, Traffic & Fleet",bureau,Construction & Operations,7,p14-bureau-of-streets-traffic-and-fleet;p14-construction-and-operations-division,,"Chart p7: 'Streets, Traffic, Fleet'."
+Public Works,Bureau of Parks & Public Property,bureau,Construction & Operations,7,p14-bureau-of-parks-and-public-property;p14-construction-and-operations-division,,
+Public Works,Bureau of Solid Waste & Recycling,bureau,Construction & Operations,7,p15-bureau-of-solid-waste-and-recycling;p14-construction-and-operations-division,,
+Public Works,Construction Services,bureau,Construction & Operations,7,p15-construction-services;p14-construction-and-operations-division,,"Chart p7: 'Construction', with T & D, Collections and Water Meters under it."
+Public Works,Bureau of Water,bureau,Utilities,7,p16-bureau-of-water;p16-utilities-division,,
+Public Works,Bureau of Wastewater Operations,bureau,Utilities,7,p16-bureau-of-wastewater-operations;p16-utilities-division,,
+Public Works,Bureau of Stormwater Management,bureau,Sustainability & Environment,7,p17-bureau-of-stormwater;p17-sustainability-and-the-environment-division,,Chart p7: Stormwater and Climate Action Plan under Sustainability & Environment. The descriptions heading is 'Bureau of Stormwater'; its text says 'Bureau of Stormwater Management'.
+Public Works,Department-wide (not a bureau),department-wide,,,,,Public Works fee revenue.
+General Revenue,,department,,,,,"Not on the org chart: city-wide General Fund revenue (taxes, license fees, other income). No bureaus."
+General Revenue,General Revenue,whole-department,,,,,
