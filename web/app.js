@@ -748,6 +748,28 @@
     $('generated').textContent = `Data built ${D.generated.slice(0, 10)}.`;
   }
 
+  /* Theme: follows the device until the visitor clicks the toggle; then an explicit choice is saved and set as
+     data-theme on <html> (the CSS and the inline script in index.html's <head> use it). Storage may be blocked. */
+  const isDark = () => matchMedia('(prefers-color-scheme: dark)').matches;
+  const currentTheme = () => document.documentElement.dataset.theme || (isDark() ? 'dark' : 'light');
+  function applyTheme(redraw = true) {
+    const t = currentTheme();
+    document.querySelector('meta[name=color-scheme]')?.setAttribute('content', document.documentElement.dataset.theme || 'light dark');
+    $('theme-toggle')?.setAttribute('aria-label', `Color theme: ${t}. Switch to ${t === 'dark' ? 'light' : 'dark'} theme.`);
+    loadTokens();
+    if (window.Chart) Chart.defaults.color = MUTED;
+    if (redraw) onRoute(false);
+  }
+  function initThemeToggle() {
+    $('theme-toggle')?.addEventListener('click', () => {
+      const next = currentTheme() === 'dark' ? 'light' : 'dark';
+      document.documentElement.dataset.theme = next;
+      try { localStorage.setItem('theme', next); } catch (e) { /* storage blocked: the choice lasts for this visit */ }
+      applyTheme();
+    });
+    applyTheme(false);
+  }
+
   async function boot() {
     try {
       CFG = await (await fetch('config.json', { cache: 'no-cache' })).json();
@@ -763,7 +785,8 @@
     // Charts are drawn on canvas, so wait for the web font before the first draw (but never more than 1.5s).
     await Promise.race([document.fonts?.ready, new Promise((r) => setTimeout(r, 1500))]);
     // Light/dark follows the device; redraw the charts in the new colors when it changes.
-    matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => { loadTokens(); if (window.Chart) Chart.defaults.color = MUTED; onRoute(false); });
+    matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => applyTheme());
+    initThemeToggle();
     DEFAULT_FUND = D.funds.includes(CFG.default_fund) ? CFG.default_fund : '';
     document.title = CFG.site_title;
     $('wordmark').textContent = CFG.site_title;
