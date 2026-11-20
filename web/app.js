@@ -3,7 +3,10 @@
  * Routes (hash-based, so GitHub Pages needs no server rules):
  *   #/                                        all departments
  *   #/department/<dept>                       one department
- *   #/department/<dept>/bureau/<fund--bureau> one bureau
+ *   #/department/<dept>/bureau/<unit>         one bureau (org-chart unit)
+ * Departments and bureaus follow the city's 2027 org chart (budget.json `org` block, built by
+ * scripts/org_structure.py): every line's org code maps to one unit, and each unit to one department.
+ * Older bureau links (#/department/<dept>/bureau/<fund--printed group>) redirect to the unit.
  * Shared query: y=year m=measure c=compare k=revenue f=fund
  */
 (() => {
@@ -28,7 +31,7 @@
   const PAGE_SIZE = 50;
   const PIE_SLICES = 7;
 
-  let D = null;
+  let D = null, O = null; // O = D.org (departments, units, org code -> unit)
   const rowCache = new Map();
   let charts = [];
   const S = { y: 0, m: '', c: '', k: 'expense', f: '' };
@@ -72,14 +75,15 @@
     const s = series(k);
     const out = s.a.map((acct, i) => {
       const a = D.accounts[acct];
-      return { code: a[0], name: a[1], fund: a[2], dept: a[3], bureau: a[4], cat: a[5], v: s.v[i], p: s.p[i], d: Array.isArray(s.doc) ? s.doc[i] : s.doc };
+      const unit = O.codes[a[0].split('-')[0]];
+      return { code: a[0], name: a[1], fund: a[2], dept: a[3], bureau: a[4], cat: a[5], v: s.v[i], p: s.p[i], d: Array.isArray(s.doc) ? s.doc[i] : s.doc,
+        unit, od: O.units[unit].dept }; // od: department on the 2027 org chart
     });
     rowCache.set(k, out);
     return out;
   }
   const isRevenue = (r) => D.categories[r.cat] === 'Revenue';
   const bureauKey = (r) => `${r.fund}|${r.bureau}`;
-  const orgOf = (r) => r.code.split('-')[0];
   const bureauSlug = (fund, bureau) => `${slug(D.funds[fund])}--${slug(D.bureaus[bureau])}`;
 
   function scoped(k, over = {}) {
@@ -87,9 +91,9 @@
     const f = D.funds.indexOf(S.f);
     return rows(k).filter((r) =>
       (kind === 'revenue') === isRevenue(r) &&
-      (over.orgs != null || f < 0 || r.fund === f) && // a bureau lives in one fund, so the fund filter is moot
-      (over.dept == null || r.dept === over.dept) &&
-      (over.orgs == null || over.orgs.has(orgOf(r))));
+      (over.unit != null || f < 0 || r.fund === f) && // a bureau page shows all of its funds
+      (over.dept == null || r.od === over.dept) &&
+      (over.unit == null || r.unit === over.unit));
   }
   function aggregate(list, keyFn, labelFn) {
     const m = new Map();
@@ -151,14 +155,14 @@
     if (!s.f) q.set('f', 'all'); else if (s.f !== DEFAULT_FUND) q.set('f', s.f);
     return q.toString();
   }
-  const deptHash = (dept, over) => `#/department/${slug(D.departments[dept])}?${query(over)}`;
-  const bureauHash = (dept, fund, bureau, over) => `#/department/${slug(D.departments[dept])}/bureau/${bureauSlug(fund, bureau)}?${query(over)}`;
+  const deptHash = (dept, over) => `#/department/${O.departments[dept].slug}?${query(over)}`;
+  const unitHash = (unit, over) => `#/department/${O.departments[O.units[unit].dept].slug}/bureau/${O.units[unit].slug}?${query(over)}`;
   const homeHash = (over) => `#/?${query(over)}`;
 
   function navigate(hash, replace = false) {
     if (replace) { history.replaceState(null, '', hash); onRoute(false); } else { location.hash = hash; }
   }
-  const currentHash = () => (route.name === 'home' ? homeHash : route.name === 'dept' ? (o) => deptHash(route.deptIdx, o) : (o) => bureauHash(route.deptIdx, route.fund, route.bureauIdx, o));
+  const currentHash = () => (route.name === 'home' ? homeHash : route.name === 'dept' ? (o) => deptHash(route.deptIdx, o) : (o) => unitHash(route.unitIdx, o));
 
   /* ---------- shared UI pieces ---------- */
   function statusHTML() {
@@ -399,7 +403,7 @@
     const scope = S.f ? S.f : CFG.entity.short;
     document.title = `${scope} ${kindWord}: ${seriesLabel(k)} · ${CFG.site_title}`;
 
-    const by = (l) => aggregate(l, (r) => r.dept, (r) => D.departments[r.dept]);
+    const by = (l) => aggregate(l, (r) => r.od, (r) => O.departments[r.od].name);
     const selMap = by(list), cmpMap = S.c ? by(scoped(S.c)) : new Map();
     const keys = new Set([...selMap.keys(), ...cmpMap.keys()]);
     const items = [...keys].map((d) => ({ dept: d, sel: selMap.get(d), cmp: cmpMap.get(d) }))
@@ -411,7 +415,7 @@
       const sh = total > 0 && it.sel ? (it.sel.total / total) * 100 : null;
       const share = sh == null ? '' : `<span class="share">(${sh > 0 && sh < 0.1 ? '<0.1' : sh.toFixed(1)}% of Total ${esc(seriesLabel(k))} ${kindWord === 'Revenue' ? 'Revenue' : 'Budget'})</span>`;
       const h = deptHash(it.dept);
-      return `<li class="card" data-go="${esc(h)}"><div class="card-top"><h3><a href="${esc(h)}">${esc(D.departments[it.dept])}</a>${share}</h3>
+      return `<li class="card" data-go="${esc(h)}"><div class="card-top"><h3><a href="${esc(h)}">${esc(O.departments[it.dept].name)}</a>${share}</h3>
         <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div>
         <div class="bars">${S.c ? bar(it.cmp, 'cmp', seriesLabel(S.c), S.c) : ''}${bar(it.sel, 'sel', seriesLabel(k), k)}</div></li>`;
     }).join('');
@@ -492,7 +496,7 @@
       .sort((a, b) => b.total - a.total || b.cmpTotal - a.cmpTotal);
   }
 
-  function entityView({ title, subtitle, selRows, cmpRows, parentHash, parentLabel, bureauPie, deptPicker, scope }) {
+  function entityView({ title, subtitle, selRows, cmpRows, parentHash, parentLabel, bureauPie, deptPicker, scope, about = '' }) {
     const k = key(S.y, S.m), kindWord = S.k === 'revenue' ? 'Revenue' : 'Budget';
     const total = sum(selRows), cmpTotal = sum(cmpRows);
     const fp = firstPage(selRows), cfp = firstPage(cmpRows);
@@ -503,7 +507,7 @@
     let html = `<div class="dept-top"><a class="btn btn-primary" href="${esc(parentHash)}">← ${esc(parentLabel)}</a></div>`;
     if (deptPicker) html += `<div class="field dept-picker" style="margin-inline:auto"><label class="field-label" for="dept-pick">Department</label>${deptPicker}</div>`;
     html += `<header><h2 class="dept-name" id="page-h" tabindex="-1">${esc(title)}</h2>
-      <p class="dept-total">Total ${kindWord}: ${totalLink}</p><p class="dept-sub">${subtitle}</p><p class="center">${statusHTML()}</p>${deptPicker ? rollupNote(selRows) : ''}</header>`;
+      <p class="dept-total">Total ${kindWord}: ${totalLink}</p><p class="dept-sub">${subtitle}</p><p class="center">${statusHTML()}</p>${deptPicker ? rollupNote(selRows) : ''}</header>${about}`;
     html += `<div class="dept-filters">${filtersHTML({ fund: !!deptPicker })}</div>`;
 
     html += pieSection(`${title} ${seriesLabel(k)} ${kindWord} Breakdown`, cats, { k });
@@ -615,54 +619,106 @@
 
   const notFound = (what) => ({ html: `<div class="dept-top"><a class="btn btn-primary" href="${esc(homeHash())}">← All departments</a></div><header class="page-head"><h1 id="page-h" tabindex="-1">${esc(what)} not found</h1><p class="muted">That link doesn't match anything in the current data.</p></header>` });
 
+  /* ---------- org chart: departments, bureaus and "what does it do" text ---------- */
+  const findDept = (sl) => O.departments.findIndex((d) => d.slug === sl || d.aliases.includes(sl));
+  const unitsOf = (di) => O.units.map((u, i) => ({ ...u, i })).filter((u) => u.dept === di);
+  // A department-wide group is not a bureau: budget lines the department manages (city-wide costs, fee revenue).
+  const unitLabel = (ui, kind = S.k) => (O.units[ui].kind === 'department-wide'
+    ? (kind === 'revenue' ? 'Department revenue (not a bureau)' : 'Department-wide costs (not a bureau)') : O.units[ui].name);
+  const descHref = (p) => `${CFG.paths.pdfs}${encodeURIComponent(O.desc_doc)}#page=${p}`;
+  function descBody(text) {
+    // Paragraphs are separated by blank lines; "• " starts a bullet, "### " a printed subheading.
+    let html = '', list = [];
+    const flush = () => { if (list.length) { html += `<ul>${list.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>`; list = []; } };
+    for (const para of text.split(/\n\n+/)) {
+      if (para.startsWith('• ')) { list.push(para.slice(2)); continue; }
+      flush();
+      html += para.startsWith('### ') ? `<h4>${esc(para.slice(4))}</h4>` : `<p>${esc(para)}</p>`;
+    }
+    flush();
+    return html;
+  }
+  function aboutHTML(question, entries, extra = '') {
+    if (!entries.length && !extra) return '';
+    const body = entries.map((e) => `<div class="org-entry">${e.h ? `<h3>${esc(e.h)}</h3>` : ''}${descBody(e.t)}
+        <a class="org-src" href="${esc(descHref(e.p))}" target="_blank" rel="noopener" aria-label="${esc(e.h || question.replace(/\?$/, ''))}: open in the city's 2027 organization descriptions (PDF)" title="Open in the city's 2027 organization descriptions">Source document ↗</a></div>`).join('');
+    return `<details class="org-about"><summary>${esc(question)}</summary><div class="org-about-body">${extra}${body}</div></details>`;
+  }
+  /* Old bureau links named a fund and a printed budget group ("general-fund--accounting-expense").
+     Find that group in any year and return the org unit its lines belong to. */
+  function legacyUnit(bureauPart) {
+    for (const kk of Object.keys(D.series)) {
+      const hit = rows(kk).find((r) => bureauSlug(r.fund, r.bureau) === bureauPart);
+      if (hit) return hit.unit;
+    }
+    return -1;
+  }
+
   function deptPage() {
-    const di = D.departments.findIndex((d) => slug(d) === route.dept);
+    const di = findDept(route.dept);
     if (di < 0) return notFound('Department');
+    if (O.departments[di].slug !== route.dept) return { redirect: deptHash(di) };
     route.deptIdx = di;
-    const k = key(S.y, S.m), name = D.departments[di];
+    const dept = O.departments[di];
+    const k = key(S.y, S.m), name = dept.name;
     const selRows = scoped(k, { dept: di }), cmpRows = S.c ? scoped(S.c, { dept: di }) : [];
-    // If this department has nothing of the chosen kind, say so rather than showing zeros.
-    const picker = `<select id="dept-pick" data-pick="dept">${D.departments.map((d, i) => `<option value="${esc(slug(d))}" ${i === di ? 'selected' : ''}>${esc(d)}</option>`).join('')}</select>`;
-    const bureaus = aggregate(selRows, bureauKey, (r) => D.bureaus[r.bureau]);
+    const picker = `<select id="dept-pick" data-pick="dept">${O.departments.map((d, i) => `<option value="${esc(d.slug)}" ${i === di ? 'selected' : ''}>${esc(d.name)}</option>`).join('')}</select>`;
     const funds = new Set(selRows.map((r) => r.fund));
+    const units = aggregate(selRows, (r) => r.unit, (r) => unitLabel(r.unit));
+    const nBureaus = [...units.keys()].filter((u) => O.units[u].kind === 'bureau').length;
+    const count = !dept.bureaus ? 'No bureaus' : nBureaus ? `${nBureaus} bureau${nBureaus === 1 ? '' : 's'}` : '';
     const subtitle = selRows.length
-      ? `${bureaus.size} bureau${bureaus.size === 1 ? '' : 's'}${funds.size ? ' · ' + [...funds].map((f) => esc(D.funds[f])).join(', ') : ''} · ${selRows.length.toLocaleString()} line items`
+      ? [count, [...funds].map((f) => esc(D.funds[f])).join(', '), `${selRows.length.toLocaleString()} line items`].filter(Boolean).join(' · ')
       : `No ${S.k === 'revenue' ? 'revenue' : 'expense'} lines for this department in ${esc(seriesLabel(k))}.`;
-    const groups = [...bureaus.values()].sort((a, b) => b.total - a.total).map((g, i) => ({
-      label: g.label, total: g.total, color: i < PIE_SLICES ? PALETTE[i] : OTHER_COLOR,
-      sub: [...g.funds].length ? D.funds[[...g.funds][0]] : '', href: bureauHash(di, g.sample.fund, g.sample.bureau),
-    }));
-    const multiFund = funds.size > 1;
-    groups.forEach((g) => { if (!multiFund) g.sub = ''; });
-    const bTitle = `${S.k === 'revenue' ? 'Revenue Source' : 'Bureau'} Breakdown`;
-    const bureauPie = pieSection(bTitle, groups, { clickable: true, note: 'Select a bureau to see its line items.' });
+    // Bureau breakdown: only for departments that have bureaus on the org chart. Several budget groups can
+    // make up one bureau; budget groups that are not a bureau form one "department-wide" slice, listed last.
+    let groups = [], bureauPie = '', bTitle = '';
+    if (dept.bureaus) {
+      groups = [...units.values()].sort((a, b) => (O.units[a.key].kind === 'department-wide') - (O.units[b.key].kind === 'department-wide') || b.total - a.total)
+        .map((g, i) => ({ label: g.label, total: g.total, color: i < PIE_SLICES ? PALETTE[i] : OTHER_COLOR, href: unitHash(g.key),
+          sub: O.units[g.key].division ? `${O.units[g.key].division} Division` : '' }));
+      bTitle = S.k === 'revenue' ? 'Revenue by Bureau' : 'Bureau Breakdown';
+      const hasWide = [...units.keys()].some((u) => O.units[u].kind === 'department-wide');
+      const note = 'Bureaus as on the city\'s 2027 org chart. Select one to see its line items.'
+        + (hasWide ? ` “${unitLabel(unitsOf(di).find((u) => u.kind === 'department-wide').i)}” collects budget groups that are not a bureau.` : '');
+      if (groups.length > 1) bureauPie = pieSection(bTitle, groups, { clickable: true, note });
+      else groups = [];
+    }
     document.title = `${name} ${seriesLabel(k)} · ${CFG.site_title}`;
-    const v = entityView({ title: name, subtitle, selRows, cmpRows, parentHash: homeHash(), parentLabel: 'All departments', bureauPie, deptPicker: picker, scope: { dept: di } });
-    return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats, { title: bTitle, groups }); mountLines(selRows, cmpRows, true); } };
+    const about = aboutHTML('What does this department do?', dept.desc);
+    const v = entityView({ title: name, subtitle, selRows, cmpRows, parentHash: homeHash(), parentLabel: 'All departments', bureauPie, deptPicker: picker, scope: { dept: di }, about });
+    return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats, groups.length ? { title: bTitle, groups } : null); mountLines(selRows, cmpRows, true); } };
   }
 
   function bureauPage() {
-    const di = D.departments.findIndex((d) => slug(d) === route.dept);
-    if (di < 0) return notFound('Department');
-    route.deptIdx = di;
-    // Bureau names change between books, so find it in any year, then match every year by org code.
-    const k = key(S.y, S.m);
-    let hit = null, hitKey = null;
-    for (const kk of [k, S.c, ...Object.keys(D.series)]) {
-      if (!kk) continue;
-      hit = rows(kk).find((r) => r.dept === di && bureauSlug(r.fund, r.bureau) === route.bureau);
-      if (hit) { hitKey = kk; break; }
+    const di = findDept(route.dept);
+    let ui = di < 0 ? -1 : unitsOf(di).find((u) => u.slug === route.bureau)?.i ?? -1;
+    if (ui < 0) {
+      // Old link, renamed department or a unit that moved: go to the unit if it has a page, else its department.
+      const lu = legacyUnit(route.bureau);
+      if (lu >= 0) return { redirect: O.departments[O.units[lu].dept].bureaus ? unitHash(lu) : deptHash(O.units[lu].dept) };
+      return di >= 0 ? { redirect: deptHash(di) } : notFound('Bureau');
     }
-    if (!hit) return notFound('Bureau');
-    route.fund = hit.fund; route.bureauIdx = hit.bureau;
-    const orgs = new Set(rows(hitKey).filter((r) => r.dept === di && r.fund === hit.fund && r.bureau === hit.bureau).map(orgOf));
-    const name = D.bureaus[hit.bureau];
-    const selRows = scoped(k, { dept: di, orgs }), cmpRows = S.c ? scoped(S.c, { dept: di, orgs }) : [];
-    const scope = { dept: di, orgs };
+    const unit = O.units[ui];
+    if (!O.departments[di].bureaus) return { redirect: deptHash(di) }; // no bureau pages for departments without bureaus
+    if (O.departments[di].slug !== route.dept) return { redirect: unitHash(ui) };
+    route.deptIdx = di; route.unitIdx = ui;
+    const k = key(S.y, S.m), name = unitLabel(ui);
+    const selRows = scoped(k, { unit: ui }), cmpRows = S.c ? scoped(S.c, { unit: ui }) : [];
+    const scope = { unit: ui };
+    const funds = [...new Set([...selRows, ...cmpRows].map((r) => r.fund))].map((f) => esc(D.funds[f]));
     document.title = `${name} ${seriesLabel(k)} · ${CFG.site_title}`;
-    const sub = `${esc(D.departments[di])} · ${esc(D.funds[hit.fund])} · ${selRows.length.toLocaleString()} line items`;
-    const v = entityView({ title: name, subtitle: sub, selRows, cmpRows, parentHash: deptHash(di), parentLabel: D.departments[di], scope });
-    return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats, null); mountLines(selRows, cmpRows, false); } };
+    const sub = [esc(O.departments[di].name), unit.division ? `${esc(unit.division)} Division` : '', ...funds, `${selRows.length.toLocaleString()} line items`].filter(Boolean).join(' · ');
+    let about;
+    if (unit.kind === 'department-wide') {
+      const groupsShown = [...new Set([...selRows, ...cmpRows].map((r) => D.bureaus[r.bureau]))].sort();
+      about = aboutHTML('What is this?', [], `<p>These budget lines are not a bureau on the city's 2027 org chart. They are budget groups the ${esc(O.departments[di].name)} department manages${groupsShown.length ? `, printed in the budget book as: ${esc(groupsShown.join('; '))}` : ''}.</p>`);
+    } else {
+      const q = /^Bureau\b/.test(unit.name) ? 'What does this bureau do?' : /^Office\b/.test(unit.name) ? 'What does this office do?' : `What does ${unit.name} do?`;
+      about = aboutHTML(q, unit.desc);
+    }
+    const v = entityView({ title: name, subtitle: sub, selRows, cmpRows, parentHash: deptHash(di), parentLabel: O.departments[di].name, scope, about });
+    return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats, null); mountLines(selRows, cmpRows, true); } };
   }
 
   /* ---------- render / events ---------- */
@@ -678,6 +734,7 @@
     if (route.name === 'home') page = { html: homeView(), after: () => { if (isReserve()) drawReserve(); else { drawTrend(); revExpAfter(); } } };
     else if (route.name === 'dept') page = deptPage();
     else page = bureauPage();
+    if (page.redirect) { navigate(page.redirect, true); return; }
     $('view').innerHTML = page.html;
     page.after?.();
     if (scroll) {
@@ -738,6 +795,8 @@
       <p>The <strong>Reserve Fund</strong> entry in the Fund selector is the General Fund's balance, from the budget book's Fund Balance Projection page. Each book prints the actual balance at the end of the year two years earlier; that is the <strong>actual</strong> year-end balance for that year (unaudited for recent years). The newest book also prints a projected balance for the prior year and proposed and revised balances for the newest year. The same one-kind-per-year rule applies. Where a book prints two columns that disagree, the revised column is used and the difference is stated on the page.</p>` : ''}
       <p>Books in use:</p><ul>${books}</ul>
       <p>Years appear as soon as the books that report them have been processed.</p>
+      <h3>Departments and bureaus</h3>
+      <p>Departments and bureaus follow the city's <a href="${CFG.paths.pdfs}${encodeURIComponent(O.chart_doc)}" target="_blank" rel="noopener">2027 organizational chart</a>. Each budget line belongs to a bureau by its account number, so older years are grouped the same way even where the budget book printed them under another department or name (for example, Human Resources is shown under Executive in every year). Budget groups that are not a bureau, such as city-wide insurance, benefits and debt service or fee revenue, are shown as a separate “department-wide” group. Descriptions of what each department and bureau does are quoted from the city's <a href="${CFG.paths.pdfs}${encodeURIComponent(O.desc_doc)}" target="_blank" rel="noopener">2027 organization descriptions</a>.</p>
       <h3>Validation</h3>
       <p>Line items were extracted from the PDFs by script (scanned books were OCR'd first). Every total the book prints (each section, department, fund and staffing schedule) was recomputed from the extracted lines; differences of up to $5 are allowed for the city's rounding to whole dollars. Figures are shown as printed, never adjusted. Where overlapping books disagree on the same figure, the rule above decides and the disagreement is logged (${D.conflict_count} so far). Lines of $0 are left out.</p>
       <h3>Known problems in the source books</h3>
@@ -754,6 +813,7 @@
       const res = await fetch(`${CFG.paths.data}budget.json`, { cache: 'no-cache' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       D = await res.json();
+      O = D.org;
     } catch (err) {
       $('view').innerHTML = `<header class="page-head"><h1>Could not load the budget data</h1><p class="muted">budget data: ${esc(err.message)}. If you opened index.html from disk, serve the folder over HTTP instead.</p></header>`;
       return;

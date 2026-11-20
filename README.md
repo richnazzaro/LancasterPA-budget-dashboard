@@ -30,16 +30,18 @@ Clicking a dollar amount opens the budget-book PDF **at the page it came from**.
   - one card per department, with bars comparing the selected figure (teal) with the comparison figure (orange);
   - a "Totals by Year" line chart;
   - a "Revenue vs. Expenses by Fund" chart.
+- **Departments and bureaus follow the city's 2027 org chart** (`Budget PDFs - City/2027 Org Chart.pdf`). Every budget line is placed in an org-chart bureau by its account number (org code), so every year is grouped the same way, even where an older book printed a group under another department or name. For example, Human Resources appears under Executive in every year. The full mapping, with the evidence for each choice, is in [`data/org_structure_2027.csv`](data/org_structure_2027.csv).
 - **Department page** (`#/department/public-safety`), modeled on the LA Controller's budget site:
   - total and status;
+  - **"What does this department do?"**: a collapsible description quoted from the city's `Org Descriptions 2027.pdf`, with a small link to its page in that PDF (closed by default; Legislative, City Controller, Public Safety and General Revenue have no department description in that PDF, so it is left out);
   - a category pie;
   - a by-category comparison chart;
   - totals by year;
-  - a bureau breakdown;
+  - a bureau breakdown (pie): the bureaus and offices on the org chart, several budget groups combined where the chart has one bureau. Budget groups that are not a bureau (for example Administrative Services' city-wide Insurance, Fringe Benefits, Debt Service and Community Involvement budgets, or a department's fee revenue) form one slice labelled "Department-wide costs (not a bureau)" or "Department revenue (not a bureau)". Departments with no bureaus on the chart (Legislative, City Controller, and General Revenue, which is not on the chart) have no bureau breakdown and no bureau pages;
   - a category table with changes;
   - the overall year-over-year change;
   - a searchable, sortable line-item table.
-- **Bureau page** (`#/department/<dept>/bureau/<fund--bureau>`): the same layout for a single bureau. Bureau names change between books, so years are matched by org code. A crosswalk of names is still to come.
+- **Bureau page** (`#/department/<dept>/bureau/<bureau>`, e.g. `#/department/administrative-services/bureau/bureau-of-treasury`): the same layout for one org-chart bureau, across all its funds and years, with **"What does this bureau do?"** from the descriptions PDF. Public Works bureaus also name their division. The department-wide group has a page too (`.../bureau/department-wide`) that lists the budget groups in it. Older bureau links (`.../bureau/<fund>--<printed group>`) redirect to the bureau that group now belongs to, or to the department page.
 - **Reserve Fund** (in the Fund selector): the General Fund balance, from each book's "Fund Balance Projection" page. It shows the year-end balance and how it changes each year, using the same one-figure-per-year rule. Where the city's page disagrees with itself, the Revised column is used and the difference is explained on the page.
 - **About the data** (button in the header):
   - which book supplies each year;
@@ -58,6 +60,8 @@ Funds: General, Stormwater Management, Sewer, Water, Solid Waste & Recycling, Li
 | Budgeted positions | [`web/data/staffing.json`](web/data/staffing.json) | Not on screen yet (personnel view planned) |
 | Books that disagree | [`web/data/conflicts.json`](web/data/conflicts.json) | Where overlapping books print different values for the same figure |
 | Tidy per-book tables (CSV) | [`data/processed/`](data/processed/) | `budget_long_*.csv` is the main table: one row per account, year and figure type, with `source_page`. Also: `line_items_*`, `staffing_*`, `fund_balance_*`, `validation_*`, `crosscheck_*` |
+| Org chart and descriptions (PDF) | `Budget PDFs - City/2027 Org Chart.pdf`, `Org Descriptions 2027.pdf` | Not budget books; the pipeline skips them |
+| Org structure | [`data/org_units_2027.csv`](data/org_units_2027.csv), [`data/org_structure_2027.csv`](data/org_structure_2027.csv), [`data/org_descriptions_2027.csv`](data/org_descriptions_2027.csv) | Departments and bureaus; org code → bureau, with notes; description text with its PDF page. Built into the `org` block of `budget.json` |
 | Reviewed source errors | [`data/known_issues.csv`](data/known_issues.csv) | Shown on the site under "Known problems in the source books" |
 | Audited corrections | `data/sign_corrections.csv`, `data/ocr_corrections.csv`, `data/staffing_corrections.csv` | Each correction lists its evidence and the value as printed |
 
@@ -95,7 +99,7 @@ The JSON files can also be downloaded from the live site: `<site>/data/budget.js
 ```
 Budget PDFs - City/   source budget books (2022–2027)
 config/               per-book layout settings for the extractor
-data/                 reviewed issues and audited corrections
+data/                 reviewed issues, audited corrections, 2027 org structure and descriptions
 data/processed/       extracted CSVs (committed; the site is built from them)
 scripts/              extraction, validation and site-data build (see docs/PIPELINE.md)
 web/                  the static site (index.html, app.js, styles.css, config.json, data/)

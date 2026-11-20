@@ -9,7 +9,12 @@
    amended or year-to-date.
 3. Every fund roll-up the book prints is within $5 of the shown line-item sum
    (known source-PDF issues are reported, not failed).
-Exits 1 on any failure of checks 1-2. Standard library only.
+4. Org structure (2027 org chart): every shown line's org code maps to an org unit; the
+   mapping in budget.json equals data/org_structure_2027.csv; for every year, figure and
+   revenue/expense, the unit (bureau) totals of each department add up to that department's
+   total (department taken straight from the CSV), and the departments add up to the series total;
+   departments with no bureaus have exactly one unit; every description has text.
+Exits 1 on any failure of checks 1, 2 and 4. Standard library only.
 """
 from __future__ import annotations
 
@@ -74,6 +79,61 @@ def check_reserve(budget: dict) -> int:
     for e in reserve["entries"]:
         if e.get("alt"):
             print(f"note {e['year']} actual: {e['sc']} column {e['lines'][0]['v']:,} used; other column(s) {[(a['sc'], a['v']) for a in e['alt']]} kept for the on-screen note")
+    return bad
+
+
+def check_org(budget: dict) -> int:
+    print("\nOrg structure (2027 org chart):")
+    org = budget.get("org")
+    if not org:
+        print("FAIL budget.json has no org block")
+        return 1
+    bad = 0
+    units, depts, codes = org["units"], org["departments"], org["codes"]
+    with (ROOT / "data" / "org_structure_2027.csv").open(newline="", encoding="utf-8") as f:
+        table = {r["org_code"]: (r["department"], r["unit"]) for r in csv.DictReader(f)}
+    built = {c: (depts[units[u]["dept"]]["name"], units[u]["name"]) for c, u in codes.items()}
+    if built != table:
+        diff = sorted(set(built.items()) ^ set(table.items()))
+        print(f"FAIL org.codes differs from org_structure_2027.csv: {diff[:10]}")
+        bad += 1
+    acc = budget["accounts"]
+    unmapped = set()
+    for key, s in budget["series"].items():
+        dept_total = defaultdict(float)   # (kind, department) via the CSV's department column
+        unit_total = defaultdict(float)   # (kind, department) via unit -> department
+        total = defaultdict(float)
+        for a, v in zip(s["a"], s["v"]):
+            org_code = acc[a][0].split("-")[0]
+            kind = "revenue" if budget["categories"][acc[a][5]] == "Revenue" else "expense"
+            total[kind] += v
+            if org_code not in codes or org_code not in table:
+                unmapped.add(org_code)
+                continue
+            dept_total[(kind, table[org_code][0])] += v
+            unit_total[(kind, depts[units[codes[org_code]]["dept"]]["name"])] += v
+        for dk in sorted(set(dept_total) | set(unit_total)):
+            if abs(dept_total[dk] - unit_total[dk]) >= 0.5:
+                bad += 1
+                print(f"FAIL {key:16s} {dk[1]:42s} {dk[0]:8s} bureaus {unit_total[dk]:>14,.0f}  department {dept_total[dk]:>14,.0f}")
+        for kind, t in sorted(total.items()):
+            d_sum = sum(v for (k, _), v in dept_total.items() if k == kind)
+            ok = abs(d_sum - t) < 0.5
+            bad += not ok
+            print(f"{'ok  ' if ok else 'FAIL'} {key:16s} {kind:8s} departments {d_sum:>14,.0f}  series {t:>14,.0f}  ({len([1 for (k, _) in dept_total if k == kind])} departments; each one's bureaus checked above)")
+    for c in sorted(unmapped):
+        print(f"FAIL org code {c} in budget.json has no org unit")
+    bad += len(unmapped)
+    for i, d in enumerate(depts):
+        mine = [u for u in units if u["dept"] == i]
+        ok = d["bureaus"] == any(u["kind"] == "bureau" for u in mine) and (d["bureaus"] or (len(mine) == 1 and mine[0]["kind"] == "whole-department"))
+        bad += not ok
+        print(f"{'ok  ' if ok else 'FAIL'} {d['name']}: {'bureaus: ' + ', '.join(u['name'] for u in mine) if d['bureaus'] else 'no bureaus'}")
+    for who in depts + units:
+        for e in who["desc"]:
+            if not e["t"].strip() or e["p"] < 1:
+                bad += 1
+                print(f"FAIL empty description or page for {who['name']}")
     return bad
 
 
@@ -178,6 +238,7 @@ def main() -> int:
     print(f"\n{undocumented} printed-total differences are not in known_issues.csv")
 
     failures += check_reserve(budget)
+    failures += check_org(budget)
 
     print(f"\n{failures} series mismatches")
     return 1 if failures else 0
