@@ -14,6 +14,12 @@ When a non-designated book carries the same account/year/measure with a
 different value, the designated book still wins and the disagreement is listed
 in web/data/conflicts.json.
 
+Reserve Fund (the General Fund balance projection, data/processed/fund_balance_<book>.csv) follows
+the same one-kind-per-year rule: actual year-end balance for each year up to two years before the
+newest (the opening balance printed in the book two years later), projected for the year before the
+newest, and proposed and revised for the newest year. When the newest book prints two columns that
+disagree on the same opening balance, the revised column is used and both figures are kept.
+
 Outputs (web/data/):
   budget.json     dimension tables + one column-oriented series per (year, measure)
   staffing.json   positions per book (for a later personnel view)
@@ -246,6 +252,7 @@ def build(processed: Path, out: Path) -> dict:
         # Bureaus a book omits entirely, read from the reviewed known-issue notes
         # ("... has no line-item pages for <bureau> (org N)"), keyed by source book.
         "missing_bureaus": missing_bureaus(known_issues),
+        "reserve": reserve_fund(processed, designated, newest, docs),
         "conflict_count": len(conflicts),
     }
     out.mkdir(parents=True, exist_ok=True)
@@ -253,6 +260,81 @@ def build(processed: Path, out: Path) -> dict:
     write_json(out / "conflicts.json", conflicts)
     write_json(out / "staffing.json", staffing(processed, designated, newest))
     return budget
+
+
+SCENARIO_PREFERENCE = ["revised", "single", "proposed"]  # which printed column wins when a book has several
+
+
+def _amount(text):
+    return int(round(float(text)))
+
+
+def reserve_fund(processed: Path, designated: dict, newest: int, docs) -> dict | None:
+    """Year-end General Fund balance entries, one kind per year (see module docstring)."""
+    books = {}
+    for by, book in sorted(designated.items()):
+        path = processed / f"fund_balance_{book['stem']}.csv"
+        if path.exists():
+            books[by] = (book, read_csv(path))
+    if not books:
+        return None
+
+    def pick(rows):
+        for sc in SCENARIO_PREFERENCE:
+            hit = [r for r in rows if r["scenario"] == sc]
+            if hit:
+                return sc, hit
+        return None, []
+
+    def line(t, r, fy, rt, label=None):
+        return {"t": t, "l": label or r["label"], "v": _amount(r["amount"]), "p": int(r["source_page"]), "fy": fy, "rt": rt}
+
+    entries = []
+    for by, (book, rows) in sorted(books.items()):
+        doc = docs(book["doc"])
+        openings = [r for r in rows if r["line_type"] == "beginning_balance"]
+        if openings:  # the audited/unaudited actual year-end balance of year by-2
+            y = int(openings[0]["as_of_date"][:4])
+            sc, hit = pick(openings)
+            r = hit[0]
+            entry = {"year": y, "measure": "actual", "doc": doc, "sc": sc, "basis": r["basis"], "lines": [line("ending", r, y, "beginning_balance")]}
+            others = [{"sc": o["scenario"], "v": _amount(o["amount"])} for o in openings if o is not r and _amount(o["amount"]) != _amount(r["amount"])]
+            if others:
+                entry["alt"] = others
+            entries.append(entry)
+        if by != newest:
+            continue
+        # The newest book: projected for the year before, proposed/revised for the newest year.
+        scenarios = sorted({r["scenario"] for r in rows}, key=SCENARIO_PREFERENCE.index)
+        checks_path = processed / f"fund_balance_checks_{book['stem']}.csv"
+        checks = read_csv(checks_path) if checks_path.exists() else []
+        def fy_rows(sc, fy):
+            return [r for r in rows if r["scenario"] == sc and int(r["fiscal_year"]) == fy and r["line_type"] != "beginning_balance"]
+        def block(sc, fy, begin_row, begin_rt, begin_fy):
+            ls = [line("beginning", begin_row, begin_fy, begin_rt)]
+            for r in fy_rows(sc, fy):
+                t = {"revenues": "revenues", "expenditures": "expenditures", "surplus_deficit": "surplus", "adjustment": "adjustment", "ending_balance": "ending"}[r["line_type"]]
+                ls.append(line(t, r, fy, r["line_type"]))
+            return ls
+        # projected: year newest-1, preferred scenario
+        sc = next(x for x in SCENARIO_PREFERENCE if x in scenarios)
+        begin = next(r for r in openings if r["scenario"] == sc)
+        entries.append({"year": newest - 1, "measure": "projected", "doc": doc, "sc": sc, "basis": "projected",
+                        "lines": block(sc, newest - 1, begin, "beginning_balance", newest - 2)})
+        # proposed / revised: the newest year, one entry per printed column
+        for sc in scenarios:
+            measure = "revised" if sc == "revised" else "proposed"
+            prev_end = next(r for r in rows if r["scenario"] == sc and int(r["fiscal_year"]) == newest - 1 and r["line_type"] == "ending_balance")
+            entry = {"year": newest, "measure": measure, "doc": doc, "sc": sc, "basis": "proposed",
+                     "lines": block(sc, newest, prev_end, "ending_balance", newest - 1)}
+            for c in checks:  # a printed column whose own lines do not add up
+                if c["level"] == "fund_balance_chain" and c["passed"] == "False" and c["label"].startswith(sc + ":") and str(newest) in c["label"]:
+                    gap = _amount(c["max_abs_diff"])
+                    usd = lambda n: ("-" if n < 0 else "") + f"${abs(n):,}"
+                    entry["note"] = (f"In the city's {by} book the {sc} column does not add up: its revenues plus expenditures ({usd(_amount(c['computed']))}) "
+                                     f"differ from its surplus plus adjustment lines ({usd(_amount(c['printed']))}) by ${gap:,}.")
+            entries.append(entry)
+    return {"name": "Reserve Fund", "entries": entries}
 
 
 def missing_bureaus(known_issues: list) -> dict:

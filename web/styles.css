@@ -215,3 +215,10 @@ details.values summary:hover { color: var(--fg); }
 .trend-legend .ln { width: 24px; height: 0; border-top: 2px solid var(--sel); display: inline-block; }
 .trend-legend .ln.dashed { border-top-style: dashed; }
 .trend-legend .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+/* Reserve Fund */
+.compare-line { margin: 8px 0 12px; color: var(--muted); font-size: 18px; }
+.trend-legend .sw { width: 14px; height: 14px; border-radius: 3px; background: var(--sel); display: inline-block; }
+.trend-legend .sw.hatched { background: repeating-linear-gradient(135deg, var(--c) 0 2px, transparent 2px 5px); border: 1.5px solid var(--c); }
+.table tr[aria-current="true"] { background: rgba(38, 38, 38, .55); }
+.table a { color: inherit; }

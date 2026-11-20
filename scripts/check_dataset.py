@@ -24,6 +24,59 @@ ROOT = Path(__file__).resolve().parent.parent
 TOLERANCE = 5
 
 
+def check_reserve(budget: dict) -> int:
+    """Reserve Fund: every line shown equals the CSV row (same book, column, year, type, label, page)
+    and the entries follow the one-kind-per-year rule."""
+    reserve = budget.get("reserve")
+    print("\nReserve Fund (General Fund balance):")
+    if not reserve:
+        print("     no fund_balance data")
+        return 0
+    rows = defaultdict(list)
+    for path in sorted((ROOT / "data" / "processed").glob("fund_balance_*.csv")):
+        if "_checks_" in path.name or "crossbook" in path.name:
+            continue
+        with path.open(newline="", encoding="utf-8") as f:
+            for r in csv.DictReader(f):
+                rows[(r["source_doc"], r["scenario"], int(r["fiscal_year"]), r["line_type"], r["label"])].append(r)
+    bad = 0
+    for e in reserve["entries"]:
+        doc = budget["docs"][e["doc"]]
+        for ln in e["lines"]:
+            hit = rows.get((doc, e["sc"], ln["fy"], ln["rt"], ln["l"]), [])
+            ok = len(hit) == 1 and abs(float(hit[0]["amount"]) - ln["v"]) < 0.5 and int(hit[0]["source_page"]) == ln["p"]
+            if not ok:
+                bad += 1
+                print(f"FAIL {e['year']} {e['measure']:9s} {ln['t']:12s} shown {ln['v']:>14,}  csv {[h['amount'] for h in hit]}")
+    newest = budget["newest_year"]
+    got = defaultdict(set)
+    for e in reserve["entries"]:
+        got[e["year"]].add(e["measure"])
+    for y, ms in sorted(got.items()):
+        want = {"proposed", "revised"} if y == newest else {"projected"} if y == newest - 1 else {"actual"}
+        if y == newest:
+            want &= {"proposed" if sc != "revised" else "revised" for (_, sc, fy, *_x) in rows if fy == newest}
+        ok = ms == want
+        bad += not ok
+        print(f"{'ok  ' if ok else 'FAIL'} {y}: {', '.join(sorted(ms))}" + ("" if ok else f" (expected {', '.join(sorted(want))})"))
+    # chain: beginning + surplus + adjustments = ending, and revenues + expenditures = surplus + adjustments
+    for e in reserve["entries"]:
+        by_t = defaultdict(int)
+        for ln in e["lines"]:
+            by_t[ln["t"]] += ln["v"]
+        if "revenues" not in by_t:
+            continue
+        end_gap = by_t["beginning"] + by_t["surplus"] + by_t["adjustment"] - by_t["ending"]
+        op_gap = by_t["revenues"] + by_t["expenditures"] - by_t["surplus"] - by_t["adjustment"]
+        flag = "ok  " if abs(end_gap) <= TOLERANCE and abs(op_gap) <= TOLERANCE else "NOTE"
+        print(f"{flag} {e['year']} {e['measure']:9s} balance chain off by {end_gap:+,}; revenues+expenditures vs surplus+adjustments off by {op_gap:+,}" + ("  (logged in known_issues.csv)" if flag == "NOTE" else ""))
+    # the displayed 2-column disagreement
+    for e in reserve["entries"]:
+        if e.get("alt"):
+            print(f"note {e['year']} actual: {e['sc']} column {e['lines'][0]['v']:,} used; other column(s) {[(a['sc'], a['v']) for a in e['alt']]} kept for the on-screen note")
+    return bad
+
+
 def main() -> int:
     budget = json.loads((ROOT / "web" / "data" / "budget.json").read_text())
     acc = budget["accounts"]
@@ -123,6 +176,8 @@ def main() -> int:
                 undocumented += 1
         print(f"{flag} {key:16s} {p['label']:42s} p.{p['page']:<4d} printed {printed:>14,.0f}  shown {s_sum:>14,.0f}  diff {diff:+,.0f}{extra}{tail}")
     print(f"\n{undocumented} printed-total differences are not in known_issues.csv")
+
+    failures += check_reserve(budget)
 
     print(f"\n{failures} series mismatches")
     return 1 if failures else 0
