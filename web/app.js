@@ -1589,6 +1589,13 @@
       <details class="values" id="about-issues" tabindex="-1"><summary>Show all ${D.known_issues.length} notes</summary><ul>${issues || '<li>None recorded.</li>'}</ul></details>
       <h2 class="about-h">Get the data</h2>
       <p><a href="${CFG.paths.data}budget.json">budget.json</a> (every figure shown here), <a href="${CFG.paths.data}staffing.json">staffing.json</a> (budgeted positions), <a href="${CFG.paths.data}conflicts.json">conflicts.json</a>, <a href="${CFG.paths.data}changes.json">changes.json</a> (what changed in ${D.newest_year}, with the fund shifts and position counts). The extraction scripts and tables are in the project repository.</p>`;
+    // Group each heading with what follows it, so wide screens can lay the sections out as a grid.
+    const ab = $('about-body'), secs = [];
+    [...ab.childNodes].forEach((n) => {
+      if (n.nodeType === 1 && n.classList.contains('about-h')) { secs.push(document.createElement('section')); secs[secs.length - 1].className = 'about-sec'; }
+      if (secs.length) secs[secs.length - 1].appendChild(n);
+    });
+    secs.forEach((x) => { if (x.querySelector('details, .about-wide') || /Known problems|Get the data/.test(x.firstChild.textContent)) x.classList.add('about-sec-wide'); ab.appendChild(x); });
     $('generated').textContent = `Data built ${D.generated.slice(0, 10)}.`;
   }
 
