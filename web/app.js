@@ -107,10 +107,11 @@
 
   /* Extra Fund-selector entries that are not budget lines. Placeholder for the "Reserve Fund" (General Fund
      balance projection: year-end balance and year-over-year change; Actual (unaudited) for past years,
-     Projected for the prior budget year, Proposed and Revised for the new year). When data/processed/
-     fund_balance_*.csv is built into the JSON, return ['Reserve Fund'] here when it exists and render it
-     in the route views; nothing is shown until then. */
-  const extraFundViews = () => [];
+     Projected for the prior budget year, Proposed and Revised for the new year). It appears when
+     budget.json has a `reserve` block (built from data/processed/fund_balance_*.csv) and is rendered by
+     reserveView() on the home route. */
+  const extraFundViews = () => (D.reserve ? [D.reserve.name] : []);
+  const isReserve = () => !!D.reserve && S.f === D.reserve.name;
 
   const years = () => [...new Set(Object.values(D.series).map((s) => s.year))].sort((a, b) => b - a);
   const measuresFor = (y) => ORDER.filter((m) => series(key(y, m)));
@@ -139,7 +140,7 @@
     const c = (q.get('c') || '').replace('-', '|');
     S.c = q.has('c') ? (series(c) && c !== key(S.y, S.m) ? c : '') : defaultCompare(S.y, S.m);
     S.k = q.get('k') === 'revenue' ? 'revenue' : 'expense';
-    S.f = q.get('f') === 'all' ? '' : D.funds.includes(q.get('f')) ? q.get('f') : DEFAULT_FUND; // opens on the default fund unless f=all
+    S.f = q.get('f') === 'all' ? '' : (D.funds.includes(q.get('f')) || extraFundViews().includes(q.get('f'))) ? q.get('f') : DEFAULT_FUND; // opens on the default fund unless f=all
   }
   function query(over = {}) {
     const s = { ...S, ...over };
@@ -165,7 +166,20 @@
     return `<span class="status${draft ? ' not-adopted' : ''}">${S.y}: ${STATUS[S.m]}</span>`;
   }
 
+  function reserveFiltersHTML() {
+    const ys = [...new Set(D.reserve.entries.map((e) => e.year))].sort((a, b) => b - a);
+    const ms = ORDER.filter((m) => resFind(S.y, m));
+    const funds = `<option value="">All funds</option>` + D.funds.map((f) => `<option value="${esc(f)}">${esc(f)}</option>`).join('')
+      + extraFundViews().map((f) => `<option value="${esc(f)}" ${f === S.f ? 'selected' : ''}>${esc(f)}</option>`).join('');
+    return `<div class="filters">
+        <div class="field"><label class="field-label" for="f-y">Fiscal year</label><select id="f-y" data-sel="y">${ys.map((y) => `<option value="${y}" ${y === S.y ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
+        <div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select></div>
+      </div>
+      ${ms.length > 1 ? `<div class="filters"><div class="field field-wide"><span class="field-label" id="lbl-m">Figure</span><div class="tabs" role="radiogroup" aria-label="m">${ms.map((m) => `<button type="button" role="radio" aria-checked="${m === S.m}" data-tab="m" data-v="${m}">${esc(LABEL[m])}</button>`).join('')}</div></div></div>` : ''}`;
+  }
+
   function filtersHTML({ fund = true } = {}) {
+    if (isReserve()) return reserveFiltersHTML();
     const k = key(S.y, S.m);
     const yrs = years().map((y) => `<option value="${y}" ${y === S.y ? 'selected' : ''}>${y}</option>`).join('');
     const opts = Object.keys(D.series).filter((x) => x !== k)
@@ -280,8 +294,104 @@
     return out.length ? `<div class="notice" role="note">${out.join('<br>')}</div>` : '';
   }
 
+  /* ---------- Reserve Fund (General Fund balance) ---------- */
+  const resFind = (y, m) => D.reserve.entries.find((e) => e.year === y && e.measure === m);
+  const resEnd = (e) => e.lines.find((l) => l.t === 'ending');
+  const resLabel = (e) => `${e.year} ${e.measure === 'actual' && e.basis === 'unaudited' ? 'Actual (unaudited)' : LABEL[e.measure]}`;
+  const resBookYear = (e) => (D.books.find((b) => b.doc === D.docs[e.doc]) || {}).year;
+  const srcDoc = (text, d, p) => `<a class="src" href="${pdfHref(d, p)}" target="_blank" rel="noopener" title="View in budget book" aria-label="${esc(text)}: open source page in the ${(D.books.find((b) => b.doc === D.docs[d]) || {}).year} budget book">${text}</a>`;
+  const RES_STATUS = { actual: 'Actual year-end balance', projected: 'Projected year-end balance', proposed: 'Proposed, not adopted', revised: 'Revised proposal, not adopted' };
+  function resChange(e) {
+    let base = null, from = '';
+    if (e.measure === 'actual') {
+      const pe = resFind(e.year - 1, 'actual');
+      if (pe) { base = resEnd(pe).v; from = `12/31/${e.year - 1}`; }
+    } else {
+      const b = e.lines.find((l) => l.t === 'beginning');
+      if (b) { base = b.v; from = `12/31/${b.fy}`; }
+    }
+    if (base == null) return null;
+    const d = resEnd(e).v - base;
+    return { d, p: pctOf(d, base), from };
+  }
+  const chgHTML = (c) => (c ? `<span class="${c.d > 0 ? 'up' : c.d < 0 ? 'down' : 'flat'}">${c.d > 0 ? '+' : ''}${money(c.d)}${c.p == null ? '' : `<span class="pct"> (${c.p > 0 ? '+' : ''}${c.p.toFixed(1)}%)</span>`}</span>` : '—');
+  function resLineLabel(l, e) {
+    if (l.t === 'beginning') return `Beginning balance (12/31/${l.fy})${e.measure === 'proposed' && e.year === D.newest_year ? ', proposed column' : ''}`;
+    if (l.t === 'ending') return `Ending balance (12/31/${e.measure === 'actual' ? e.year : l.fy})`;
+    if (l.t === 'revenues') return 'Revenues';
+    if (l.t === 'expenditures') return 'Expenditures';
+    if (l.t === 'surplus') return 'Operating surplus / (deficit)';
+    return l.l.replace(/^\((.*)\)$/, '$1');
+  }
+  const hatch = (color) => {
+    const c = document.createElement('canvas'); c.width = c.height = 10;
+    const x = c.getContext('2d');
+    x.globalAlpha = 0.25; x.fillStyle = color; x.fillRect(0, 0, 10, 10);
+    x.globalAlpha = 1; x.strokeStyle = color; x.lineWidth = 2; x.beginPath();
+    x.moveTo(0, 10); x.lineTo(10, 0); x.moveTo(-2, 2); x.lineTo(2, -2); x.moveTo(8, 12); x.lineTo(12, 8); x.stroke();
+    return x.createPattern(c, 'repeat');
+  };
+  const resColor = (e) => (e.measure === 'proposed' ? PALETTE[0] : e.measure === 'revised' ? PALETTE[1] : SEL);
+  const resSorted = () => D.reserve.entries.slice().sort((a, b) => a.year - b.year || ORDER.indexOf(a.measure) - ORDER.indexOf(b.measure));
+
+  function reserveView() {
+    const e = resFind(S.y, S.m) || resFind(S.y, ORDER.find((m) => resFind(S.y, m)));
+    if (!e) return `<header class="page-head"><h1 id="page-h" tabindex="-1">${esc(D.reserve.name)}</h1><p class="muted">No reserve figures for ${S.y}.</p></header>${reserveFiltersHTML()}`;
+    const end = resEnd(e), ch = resChange(e), name = D.reserve.name;
+    document.title = `${name} ${resLabel(e)} · ${CFG.site_title}`;
+    const notices = [];
+    if (e.alt) {
+      const alts = e.alt.map((a) => `${money(a.v)} (${a.sc} column)`).join(' and ');
+      notices.push(`The city's ${resBookYear(e)} budget book prints two different 12/31/${e.year} balances: ${alts} and ${money(end.v)} (${e.sc} column). The ${e.sc} figure, the city's latest, is shown.`);
+    }
+    if (e.note) notices.push(`${esc(e.note)} See “Known problems in the source books” below.`);
+    const entries = resSorted();
+    const colorsLegend = [
+      entries.some((x) => x.measure === 'actual') && `<li><i class="sw"></i>Actual</li>`,
+      entries.some((x) => x.measure === 'projected') && `<li><i class="sw hatched" style="--c:${SEL}"></i>Projected</li>`,
+      entries.some((x) => x.measure === 'proposed') && `<li><i class="sw hatched" style="--c:${PALETTE[0]}"></i>Proposed</li>`,
+      entries.some((x) => x.measure === 'revised') && `<li><i class="sw hatched" style="--c:${PALETTE[1]}"></i>Revised</li>`,
+    ].filter(Boolean).join('');
+    const yrRows = entries.map((x) => {
+      const xc = resChange(x), xe = resEnd(x);
+      return `<tr${x === e ? ' aria-current="true"' : ''}><th scope="row"><a href="${esc(homeHash({ y: x.year, m: x.measure }))}">${x.year}</a></th><td>${esc(x.measure === 'actual' && x.basis === 'unaudited' ? 'Actual (unaudited)' : LABEL[x.measure])}</td><td class="num">${srcDoc(money(xe.v), x.doc, xe.p)}</td><td class="num">${chgHTML(xc)}</td></tr>`;
+    }).join('');
+    const detail = e.lines.length > 1
+      ? `<div class="table-scroll"><table class="table"><thead><tr><th scope="col">Line</th><th scope="col" class="num">Amount</th></tr></thead><tbody>${e.lines.map((l) => `<tr><td>${esc(resLineLabel(l, e))}</td><td class="num">${srcDoc(money(l.v), e.doc, l.p)}</td></tr>`).join('')}</tbody></table></div>`
+      : `<p class="panel-note" style="margin:0 0 12px">For actual years the city's budget book prints only the closing balance.</p><div class="table-scroll"><table class="table"><tbody><tr><td>${esc(resLineLabel(end, e))}</td><td class="num">${srcDoc(money(end.v), e.doc, end.p)}</td></tr></tbody></table></div>`;
+    return `<header class="page-head"><h1 id="page-h" tabindex="-1">${esc(name)}: ${esc(resLabel(e))}</h1>
+        <p class="big-total" aria-live="polite">${srcDoc(money(end.v), e.doc, end.p)}</p>
+        <p class="compare-line">Year-end balance${ch ? ` · change from ${ch.from}: ${chgHTML(ch)}` : ''}</p>
+        <span class="status${e.measure === 'proposed' || e.measure === 'revised' ? ' not-adopted' : ''}">${e.year}: ${esc(RES_STATUS[e.measure])}</span>
+        ${notices.map((n) => `<div class="notice" role="note">${n}</div>`).join('')}</header>
+      ${reserveFiltersHTML()}
+      <p class="hint" style="margin-top:0">The General Fund's reserve: the cash balance carried from year to year.</p>
+      <section class="panel" aria-labelledby="rb-t"><h2 class="panel-title" id="rb-t">Year-End Balance, ${entries[0].year}–${entries[entries.length - 1].year}</h2>
+        <ul class="trend-legend" aria-hidden="true">${colorsLegend}</ul>
+        <div class="chart-box"><canvas id="res-chart" role="img" aria-label="Year-end General Fund balance by year: ${esc(entries.map((x) => `${x.year} ${LABEL[x.measure]} ${money(resEnd(x).v)}`).join(', '))}. The table below has the values."></canvas></div></section>
+      <section class="panel" aria-labelledby="rd-t"><h2 class="total-label" id="rd-t">${esc(resLabel(e))}: How the Balance Changes</h2>${detail}</section>
+      <section class="panel" aria-labelledby="ry-t"><h2 class="total-label" id="ry-t">Year-End Balance by Year</h2><div class="table-scroll"><table class="table tight">
+        <thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Year-end balance</th><th scope="col" class="num">Change</th></tr></thead><tbody>${yrRows}</tbody></table></div></section>`;
+  }
+  function drawReserve() {
+    const cv = $('res-chart');
+    if (!cv || !window.Chart) return;
+    const th = chartTheme(), entries = resSorted(), cur = resFind(S.y, S.m);
+    const dup = (y) => entries.filter((x) => x.year === y).length > 1;
+    const labels = entries.map((x) => (dup(x.year) ? `${x.year} ${LABEL[x.measure]}` : String(x.year)));
+    charts.push(new Chart(cv, { type: 'bar',
+      data: { labels, datasets: [{ data: entries.map((x) => resEnd(x).v),
+        backgroundColor: entries.map((x) => (x.measure === 'actual' ? SEL : hatch(resColor(x)))),
+        borderColor: entries.map((x) => (x === cur ? INK : resColor(x))), borderWidth: entries.map((x) => (x === cur ? 3 : x.measure === 'actual' ? 0 : 1.5)), borderRadius: 2 }] },
+      options: { responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
+        onClick: (_ev, els) => { if (els.length) { const x = entries[els[0].index]; navigate(homeHash({ y: x.year, m: x.measure }), true); } },
+        plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { title: (c) => resLabel(entries[c[0].dataIndex]), label: (c) => money(c.raw) } } },
+        scales: { x: { ticks: { color: INK, maxRotation: 45 }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid } } } } }));
+  }
+
   /* ---------- home ---------- */
   function homeView() {
+    if (isReserve()) return reserveView();
     const k = key(S.y, S.m);
     const list = scoped(k);
     const total = sum(list);
@@ -561,10 +671,11 @@
     const { r, q } = parseHash();
     route = r;
     if (q.get('c') === 'none') { applyQuery(q); S.c = ''; } else applyQuery(q);
+    if (route.name !== 'home' && isReserve()) S.f = DEFAULT_FUND; // the reserve has no departments or bureaus
     T.sort = 'sel'; T.dir = -1; T.q = ''; T.shown = PAGE_SIZE;
     destroyCharts();
     let page;
-    if (route.name === 'home') page = { html: homeView(), after: () => { drawTrend(); revExpAfter(); } };
+    if (route.name === 'home') page = { html: homeView(), after: () => { if (isReserve()) drawReserve(); else { drawTrend(); revExpAfter(); } } };
     else if (route.name === 'dept') page = deptPage();
     else page = bureauPage();
     $('view').innerHTML = page.html;
@@ -623,6 +734,8 @@
         <li><strong>${D.newest_year}: Proposed and Revised</strong>, both from the ${D.newest_year} book, so you can compare what changed between them. Neither is an adopted budget.</li>
       </ul>
       <p>Adopted and amended budgets, year-to-date columns and an older book's own-year proposal are not shown.</p>
+      ${D.reserve ? `<h3>Reserve Fund</h3>
+      <p>The <strong>Reserve Fund</strong> entry in the Fund selector is the General Fund's balance, from the budget book's Fund Balance Projection page. Each book prints the actual balance at the end of the year two years earlier; that is the <strong>actual</strong> year-end balance for that year (unaudited for recent years). The newest book also prints a projected balance for the prior year and proposed and revised balances for the newest year. The same one-kind-per-year rule applies. Where a book prints two columns that disagree, the revised column is used and the difference is stated on the page.</p>` : ''}
       <p>Books in use:</p><ul>${books}</ul>
       <p>Years appear as soon as the books that report them have been processed.</p>
       <h3>Validation</h3>
