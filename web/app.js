@@ -84,6 +84,9 @@
   }
   const isRevenue = (r) => D.categories[r.cat] === 'Revenue';
   const bureauKey = (r) => `${r.fund}|${r.bureau}`;
+  // Old budget-group names end in " Exp" / " Expense" (the book's section label). Show the plain name.
+  const plainName = (n) => String(n).replace(/\s+Exp(?:ense)?$/i, '');
+  const bureauName = (i) => plainName(D.bureaus[i]);
   const bureauSlug = (fund, bureau) => `${slug(D.funds[fund])}--${slug(D.bureaus[bureau])}`;
 
   function scoped(k, over = {}) {
@@ -177,10 +180,16 @@
       + extraFundViews().map((f) => `<option value="${esc(f)}" ${f === S.f ? 'selected' : ''}>${esc(f)}</option>`).join('');
     return `<div class="filters">
         <div class="field"><label class="field-label" for="f-y">Fiscal year</label><select id="f-y" data-sel="y">${ys.map((y) => `<option value="${y}" ${y === S.y ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
-        <div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select></div>
+        <div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select>${defineFund()}</div>
       </div>
-      ${ms.length > 1 ? `<div class="filters"><div class="field field-wide"><span class="field-label" id="lbl-m">Figure</span><div class="tabs" role="radiogroup" aria-label="m">${ms.map((m) => `<button type="button" role="radio" aria-checked="${m === S.m}" data-tab="m" data-v="${m}">${esc(LABEL[m])}</button>`).join('')}</div></div></div>` : ''}`;
+      ${ms.length > 1 ? `<div class="filters"><div class="field field-wide"><span class="field-label" id="lbl-m">Figure</span><div class="tabs" role="radiogroup" aria-label="m">${ms.map((m) => `<button type="button" role="radio" aria-checked="${m === S.m}" data-tab="m" data-v="${m}">${esc(LABEL[m])}</button>`).join('')}</div>${defineFigures()}</div></div>` : ''}`;
   }
+
+  /* Short plain definitions beside the controls. A <details> works on touch and with screen readers (no hover or title). */
+  const DEFINE_FIGURES = [['Proposed', 'the administration\'s first budget proposal.'], ['Revised', 'the revised proposal.'], ['Neither is adopted.', ''],
+    ['Projected', 'the city\'s year-end estimate.'], ['Actual', 'what was spent, reported in the budget book two years later.']];
+  const defineFigures = () => `<details class="define"><summary>What do these mean?</summary><ul>${DEFINE_FIGURES.map(([a, b]) => (b ? `<li><strong>${a}:</strong> ${b}</li>` : `<li class="aside">${a}</li>`)).join('')}</ul></details>`;
+  const defineFund = () => `<details class="define"><summary>What is a fund?</summary><p>A fund is a separate account the city keeps for a purpose. The General Fund pays for most city services; others, such as water, sewer and trash, are paid for by their own fees and are not mixed with it. The Reserve Fund is the General Fund's savings balance.</p></details>`;
 
   function filtersHTML({ fund = true } = {}) {
     if (isReserve()) return reserveFiltersHTML();
@@ -195,12 +204,12 @@
     const tabs = (name, items, cur) => `<div class="tabs" role="radiogroup" aria-label="${name}">${items.map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === cur}" data-tab="${name}" data-v="${v}">${esc(l)}</button>`).join('')}</div>`;
     return `<div class="filters">
         <div class="field"><label class="field-label" for="f-y">Fiscal year</label><select id="f-y" data-sel="y">${yrs}</select></div>
-        <div class="field"><label class="field-label" for="f-c">Compare with</label><select id="f-c" data-sel="c">${cmp}</select></div>
-        ${fund ? `<div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select></div>` : ''}
+        <div class="field"><label class="field-label" for="f-c">Compare with</label><select id="f-c" data-sel="c">${cmp}</select>${defineFigures()}</div>
+        ${fund ? `<div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select>${defineFund()}</div>` : ''}
       </div>
       <div class="filters">
-        ${measuresFor(S.y).length > 1 ? `<div class="field field-wide"><span class="field-label" id="lbl-m">Figure</span>${tabs('m', measuresFor(S.y).map((m) => [m, LABEL[m]]), S.m)}</div>` : ''}
-        <div class="field field-wide"><span class="field-label" id="lbl-k">Show</span>${tabs('k', [['expense', 'Expenses'], ['revenue', 'Revenue']], S.k)}</div>
+        ${measuresFor(S.y).length > 1 ? `<div class="field field-wide"><span class="field-label" id="lbl-m">Figure</span>${tabs('m', measuresFor(S.y).map((m) => [m, LABEL[m]]), S.m)}${defineFigures()}</div>` : ''}
+        <div class="field field-wide"><span class="field-label" id="lbl-k">Show: Spending / Income</span>${tabs('k', [['expense', 'Spending'], ['revenue', 'Income']], S.k)}</div>
       </div>`;
   }
 
@@ -298,6 +307,36 @@
     return out.length ? `<div class="notice" role="note">${out.join('<br>')}</div>` : '';
   }
 
+  /* ---------- Reserve draw: the General Fund's revenue includes money taken from the reserve ----------
+     These are the "Fund Balance Reserve" revenue lines (object 499000). The amount is summed from the lines
+     of the chosen figure, never typed in. scripts/check_dataset.py checks it against the CSVs and the Reserve Fund page. */
+  const isDraw = (r) => /^Fund Balance Reserve/i.test(r.name) && /-499000$/.test(r.code);
+  function reserveDraw(k, fundIdx) {
+    const l = rows(k).filter((r) => isDraw(r) && (fundIdx == null || r.fund === fundIdx));
+    if (!l.length) return null;
+    const v = sum(l);
+    return v > 0 ? { v, ...firstPage(l) } : null;
+  }
+  const millions = (n) => `$${(n / 1e6).toFixed(1)}M`;
+  function drawNote(k) {
+    if (!D.reserve) return '';
+    const gf = D.funds.indexOf(DEFAULT_FUND);
+    if (gf < 0 || S.f !== D.funds[gf]) return ''; // the draw sits in the General Fund; shown on that view
+    const dr = reserveDraw(k, gf);
+    if (!dr) return '';
+    return `<p class="draw-note">Balanced by drawing ${src(millions(dr.v), k, dr.d, dr.p)} from the reserve (Fund Balance Reserve). <a href="${esc(homeHash({ f: D.reserve.name }))}">See the Reserve Fund</a></p>`;
+  }
+  /* One line tying the Reserve page's "Revenues" to the General Fund's revenue elsewhere on the site. */
+  function reserveTie(e) {
+    const k = key(e.year, e.measure), rev = e.lines.find((l) => l.t === 'revenues');
+    if (!rev || !series(k)) return '';
+    const gf = D.funds.indexOf(DEFAULT_FUND), dr = reserveDraw(k, gf);
+    if (!dr) return '';
+    const gfRev = sum(rows(k).filter((r) => r.fund === gf && isRevenue(r)));
+    const gap = Math.round(rev.v + dr.v - gfRev), ties = Math.abs(gap) <= 5;
+    return `<p class="hint tie-note" style="margin-top:0">This page's revenues of ${srcDoc(money(rev.v), e.doc, rev.p)} plus ${src(money(dr.v), k, dr.d, dr.p)} drawn from the reserve (the “Fund Balance Reserve” revenue line) ${ties ? (gap === 0 ? 'equal' : 'equal, within the city\'s rounding,') : `come to ${money(rev.v + dr.v)}, ${money(Math.abs(gap))} ${gap > 0 ? 'more' : 'less'} than`} the General Fund's ${money(gfRev)} of revenue. <a href="${esc(homeHash({ f: DEFAULT_FUND, k: 'revenue', y: e.year, m: e.measure }))}">See General Fund revenue</a></p>`;
+  }
+
   /* ---------- Reserve Fund (General Fund balance) ---------- */
   const resFind = (y, m) => D.reserve.entries.find((e) => e.year === y && e.measure === m);
   const resEnd = (e) => e.lines.find((l) => l.t === 'ending');
@@ -369,7 +408,7 @@
         <span class="status${e.measure === 'proposed' || e.measure === 'revised' ? ' not-adopted' : ''}">${e.year}: ${esc(RES_STATUS[e.measure])}</span>
         ${notices.map((n) => `<div class="notice" role="note">${n}</div>`).join('')}</header>
       ${reserveFiltersHTML()}
-      <p class="hint" style="margin-top:0">The General Fund's reserve: the cash balance carried from year to year.</p>
+      <p class="hint" style="margin-top:0">The General Fund's reserve: the cash balance carried from year to year.</p>${reserveTie(e)}
       <section class="panel" aria-labelledby="rb-t"><h2 class="panel-title" id="rb-t">Year-End Balance, ${entries[0].year}–${entries[entries.length - 1].year}</h2>
         <ul class="trend-legend" aria-hidden="true">${colorsLegend}</ul>
         <div class="chart-box"><canvas id="res-chart" role="img" aria-label="Year-end General Fund balance by year: ${esc(entries.map((x) => `${x.year} ${LABEL[x.measure]} ${money(resEnd(x).v)}`).join(', '))}. The table below has the values."></canvas></div></section>
@@ -421,7 +460,7 @@
     }).join('');
 
     return `<header class="page-head"><h1 id="page-h">${esc(scope)} ${kindWord}: ${esc(seriesLabel(k))}</h1>
-        <p class="big-total" aria-live="polite">${(() => { const pf = S.f ? printedFund(S.f, S.k, k) : null; return pf ? src(money(total), k, pf.doc, pf.page) : money(total); })()}</p>${statusHTML()}${rollupNote(list)}</header>
+        <p class="big-total" aria-live="polite">${(() => { const pf = S.f ? printedFund(S.f, S.k, k) : null; return pf ? src(money(total), k, pf.doc, pf.page) : money(total); })()}</p>${drawNote(k)}${statusHTML()}${rollupNote(list)}</header>
       ${filtersHTML()}
       <ul class="cards" aria-label="Departments">${cards || '<li class="empty center">No lines for this selection.</li>'}</ul>
       <p class="hint">Select any department to see its detailed breakdown. Amounts open the source page in the budget book.</p>
@@ -561,8 +600,8 @@
   }
 
   /* line-item table (sortable, searchable) */
-  function lineTable(selRows, cmpRows, showBureau) {
-    const k = key(S.y, S.m);
+  /* One entry per budget line, whichever year(s) it appears in. The header and the table both count these. */
+  function mergeLines(selRows, cmpRows) {
     const map = new Map(), seen = { sel: new Map(), cmp: new Map() };
     const put = (r, slot) => {
       const base = `${r.code}::${r.fund}`, n = seen[slot].get(base) || 0;
@@ -574,9 +613,19 @@
       e[slot] = r;
     };
     cmpRows.forEach((r) => put(r, 'cmp')); selRows.forEach((r) => put(r, 'sel'));
-    let list = [...map.values()];
+    return [...map.values()];
+  }
+  // "97 line items (1 only in 2026 Projected)": every line in the table, and how many exist only in the comparison year.
+  function lineCountText(selRows, cmpRows, all = mergeLines(selRows, cmpRows)) {
+    const only = S.c ? all.filter((e) => !e.sel).length : 0;
+    return `${all.length.toLocaleString()} line item${all.length === 1 ? '' : 's'}${only ? ` (${only.toLocaleString()} only in ${seriesLabel(S.c)})` : ''}`;
+  }
+  function lineTable(selRows, cmpRows, showBureau) {
+    const k = key(S.y, S.m);
+    const all = mergeLines(selRows, cmpRows);
+    let list = all;
     const q = T.q.trim().toLowerCase();
-    if (q) list = list.filter((e) => `${e.code} ${e.name} ${D.bureaus[e.bureau]} ${D.funds[e.fund]} ${D.categories[e.cat]}`.toLowerCase().includes(q));
+    if (q) list = list.filter((e) => `${e.code} ${e.name} ${bureauName(e.bureau)} ${D.funds[e.fund]} ${D.categories[e.cat]}`.toLowerCase().includes(q));
     const val = (e, s) => (e[s] ? e[s].v : 0);
     const sorters = { code: (e) => e.code, name: (e) => e.name.toLowerCase(), cat: (e) => D.categories[e.cat], sel: (e) => val(e, 'sel'), cmp: (e) => val(e, 'cmp'), chg: (e) => val(e, 'sel') - val(e, 'cmp') };
     const f = sorters[T.sort] || sorters.sel;
@@ -584,7 +633,7 @@
     const th = (id, label, cls = '') => `<th scope="col" class="${cls}" aria-sort="${T.sort === id ? (T.dir > 0 ? 'ascending' : 'descending') : 'none'}"><button type="button" data-sort="${id}">${label}</button></th>`;
     const body = list.slice(0, T.shown).map((e) => {
       const d = val(e, 'sel') - val(e, 'cmp');
-      const where = showBureau ? `<span class="sub">${esc(D.bureaus[e.bureau])}</span>` : '';
+      const where = showBureau ? `<span class="sub">${esc(bureauName(e.bureau))}</span>` : '';
       return `<tr><td class="code hide-sm">${esc(e.code)}</td><td>${esc(e.name)}${where}</td><td class="hide-sm">${esc(D.categories[e.cat])}</td>
         ${S.c ? `<td class="num">${e.cmp ? src(money(e.cmp.v), S.c, e.cmp.d, e.cmp.p) : '—'}</td>` : ''}<td class="num">${e.sel ? src(money(e.sel.v), k, e.sel.d, e.sel.p) : '—'}</td>
         ${S.c ? `<td class="num hide-sm"><span class="${d > 0 ? 'up' : d < 0 ? 'down' : 'flat'}">${d === 0 ? '—' : money(d)}</span></td>` : ''}</tr>`;
@@ -593,7 +642,7 @@
     const left = list.length - T.shown;
     return `<div class="table-tools"><label class="sr-only" for="li-search">Search line items</label>
         <input type="search" id="li-search" placeholder="Search line items, account numbers…" value="${esc(T.q)}" autocomplete="off">
-        <span class="count" aria-live="polite">${list.length.toLocaleString()} line item${list.length === 1 ? '' : 's'}</span></div>
+        <span class="count" aria-live="polite">${q ? `${list.length.toLocaleString()} matching of ${all.length.toLocaleString()} line items` : lineCountText(selRows, cmpRows, all)}</span></div>
       <div class="table-scroll"><table class="table"><thead><tr>${th('code', 'Account', 'hide-sm')}${th('name', 'Line item')}${th('cat', 'Category', 'hide-sm')}${S.c ? th('cmp', esc(seriesLabel(S.c)), 'num') : ''}${th('sel', esc(seriesLabel(k)), 'num')}${S.c ? th('chg', 'Change', 'num hide-sm') : ''}</tr></thead>
         <tbody>${body || '<tr><td colspan="6" class="empty">No matching line items.</td></tr>'}</tbody>
         <tfoot><tr><td class="hide-sm"></td><td>Total${q ? ' (matching)' : ''}</td><td class="hide-sm"></td>${S.c ? `<td class="num">${money(tc)}</td>` : ''}<td class="num">${money(ts)}</td>${S.c ? `<td class="num hide-sm">${money(ts - tc)}</td>` : ''}</tr></tfoot></table></div>
@@ -668,7 +717,7 @@
     const nBureaus = [...units.keys()].filter((u) => O.units[u].kind === 'bureau').length;
     const count = !dept.bureaus ? 'No bureaus' : nBureaus ? `${nBureaus} bureau${nBureaus === 1 ? '' : 's'}` : '';
     const subtitle = selRows.length
-      ? [count, [...funds].map((f) => esc(D.funds[f])).join(', '), `${selRows.length.toLocaleString()} line items`].filter(Boolean).join(' · ')
+      ? [count, [...funds].map((f) => esc(D.funds[f])).join(', '), lineCountText(selRows, cmpRows)].filter(Boolean).join(' · ')
       : `No ${S.k === 'revenue' ? 'revenue' : 'expense'} lines for this department in ${esc(seriesLabel(k))}.`;
     // Bureau breakdown: only for departments that have bureaus on the org chart. Several budget groups can
     // make up one bureau; budget groups that are not a bureau form one "department-wide" slice, listed last.
@@ -708,10 +757,10 @@
     const scope = { unit: ui };
     const funds = [...new Set([...selRows, ...cmpRows].map((r) => r.fund))].map((f) => esc(D.funds[f]));
     document.title = `${name} ${seriesLabel(k)} · ${CFG.site_title}`;
-    const sub = [esc(O.departments[di].name), unit.division ? `${esc(unit.division)} Division` : '', ...funds, `${selRows.length.toLocaleString()} line items`].filter(Boolean).join(' · ');
+    const sub = [esc(O.departments[di].name), unit.division ? `${esc(unit.division)} Division` : '', ...funds, lineCountText(selRows, cmpRows)].filter(Boolean).join(' · ');
     let about;
     if (unit.kind === 'department-wide') {
-      const groupsShown = [...new Set([...selRows, ...cmpRows].map((r) => D.bureaus[r.bureau]))].sort();
+      const groupsShown = [...new Set([...selRows, ...cmpRows].map((r) => bureauName(r.bureau)))].sort();
       about = aboutHTML('What is this?', [], `<p>These budget lines are not a bureau on the city's 2027 org chart. They are budget groups the ${esc(O.departments[di].name)} department manages${groupsShown.length ? `, printed in the budget book as: ${esc(groupsShown.join('; '))}` : ''}.</p>`);
     } else {
       const q = /^Bureau\b/.test(unit.name) ? 'What does this bureau do?' : /^Office\b/.test(unit.name) ? 'What does this office do?' : `What does ${unit.name} do?`;

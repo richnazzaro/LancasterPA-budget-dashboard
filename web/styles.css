@@ -329,3 +329,14 @@ details.values summary:hover { color: var(--fg); }
   .org-about-body { padding: 2px 14px 14px; font-size: 15px; }
 }
 @media (prefers-reduced-motion: reduce) { .org-about > summary::before { transition: none; } }
+
+/* Inline definitions (Figure, Compare with, Fund): a quiet disclosure under the control. */
+.define { margin-top: 6px; font-size: 13px; line-height: 18px; color: var(--muted); }
+.define summary { cursor: pointer; display: inline-block; padding: 2px 0; }
+.define summary:hover { color: var(--fg); }
+.define ul { margin: 6px 0 0; padding-left: 18px; }
+.define p { margin: 6px 0 0; max-width: 70ch; }
+.define .aside { list-style: none; margin-left: -18px; font-style: italic; }
+.define strong { color: var(--fg); font-weight: 600; }
+.draw-note { margin: 12px auto 0; max-width: 70ch; color: var(--muted); font-size: 15px; }
+.tie-note { max-width: 70ch; margin-left: auto; margin-right: auto; }
