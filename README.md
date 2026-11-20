@@ -13,7 +13,7 @@ This repository provides public visibility into the City of Lancaster, PA budget
 - `scripts/`: Python scripts for PDF extraction and data normalization.
 - `data/processed/`: Extracted tables (see below).
 - `data/known_issues.csv`: Validation failures caused by errors in the source PDFs, reviewed by a person.
-- `web/`: Static site files for the GitHub Pages frontend (not built yet).
+- `web/`: Static dashboard for GitHub Pages (plain HTML/CSS/JS, Chart.js from a CDN, no build step).
 
 ## Setup
 ```bash
@@ -85,3 +85,13 @@ A page whose header matches no configured layout stops the run.
 **Cross-book check:** `scripts/crosscheck.py` compares book B's "B PROPOSED" with book B+1's "B ORIGINAL BUDGET", account by account. It writes `crosscheck_*.csv`, which separates adoption changes from possible misreads. Add `--loose` for figures that should only be close, such as B-1 PROJECTED vs the next book's B-1 ACTUAL.
 
 `scripts/budget_common.py` holds the parts both extractors share.
+
+## Dashboard
+```bash
+python3 scripts/build_dataset.py   # data/processed/budget_long_*.csv -> web/data/*.json
+python3 scripts/check_dataset.py   # every shown total vs the CSVs and the printed fund totals
+python3 -m http.server 8765 --directory web   # then open http://localhost:8765
+```
+`build_dataset.py` picks one figure per account, year and measure: **proposed** and **revised** (the original and revised proposals) only for the newest book's year; for every other year, **adopted**, **amended** and **projected** (revised when present) from the next year's book and **actual** from the book two years later. Year-to-date columns and older books' own-year proposals are never shown. New `budget_long_*.csv` files are picked up automatically. Disagreements between overlapping books go to `web/data/conflicts.json`.
+
+The site shows no page numbers as text; each amount is itself a link to `pdfs/<book>.pdf#page=N` (from `source_doc`/`source_page` in `web/data/budget.json`), and `web/pdfs` is a symlink to `Budget PDFs - City/`. Bureau names differ between books, so bureau pages match lines across years by org code (the first part of the account code); a name crosswalk is still to come. Routes are hash-based (`#/department/public-safety`), so GitHub Pages needs no server rules. The Pages workflow (`.github/workflows/pages.yml`) rebuilds the data and publishes `web/` with the PDFs copied in.
