@@ -148,7 +148,7 @@ select { appearance: none; width: 100%; height: 40px; background: var(--card) ur
 .share { font-size: 14px; font-weight: 400; color: var(--muted); }
 .chev { flex: none; color: var(--muted); margin-top: 6px; }
 .bars { display: flex; flex-direction: column; gap: 12px; }
-.bar-label { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; line-height: 16px; font-weight: 500; margin-bottom: 4px; }
+.bar-label { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; line-height: 18px; font-weight: 500; margin-bottom: 4px; }
 .bar-label.cmp { color: var(--cmp-ink); }
 .bar-label.sel { color: var(--sel-ink); }
 .track { position: relative; height: 24px; background: var(--track); border-radius: 9999px; overflow: hidden; }
@@ -182,7 +182,7 @@ select { appearance: none; width: 100%; height: 40px; background: var(--card) ur
 .legend-list li { display: flex; align-items: flex-start; gap: 12px; }
 .legend-list .sw { width: 16px; height: 16px; border-radius: 4px; flex: none; margin-top: 2px; }
 .legend-list .nm { display: block; font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.legend-list .vl { display: block; font-size: 12px; color: var(--muted); }
+.legend-list .vl { display: block; font-size: 13px; color: var(--muted); }
 .legend-list a { display: block; min-width: 0; text-decoration: none; }
 .legend-list a:hover .nm { text-decoration: underline; }
 .legend-list .body { min-width: 0; }
@@ -209,8 +209,8 @@ select { appearance: none; width: 100%; height: 40px; background: var(--card) ur
 .table .num { text-align: right; white-space: nowrap; }
 .table tbody tr:hover { background: var(--hover); }
 .table tfoot td { font-weight: 600; border-bottom: 0; }
-.table .sub { display: block; font-size: 12px; color: var(--muted); }
-.table .code { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.table .sub { display: block; font-size: 13px; color: var(--muted); }
+.table .code { color: var(--muted); font-size: 13px; white-space: nowrap; }
 /* Changes: arrows and signs carry the direction; color stays neutral, since more or less spending is not good or bad by itself. */
 .up, .down { color: var(--fg); font-weight: 600; }
 .up::before { content: "\25B2\00A0"; content: "\25B2\00A0" / ""; font-size: .75em; color: var(--muted); }
@@ -248,7 +248,7 @@ select { appearance: none; width: 100%; height: 40px; background: var(--card) ur
   .big-total { font-size: 30px; line-height: 36px; }
   .card { padding: 16px; }
   .card :is(h2, h3) { font-size: 16px; line-height: 24px; flex-direction: column; align-items: flex-start; }
-  .share { font-size: 12px; }
+  .share { font-size: 13px; }
   .panel { padding: 16px; }
   .panel-title { font-size: 16px; line-height: 24px; margin-bottom: 16px; }
   .dept-name { font-size: 22px; line-height: 28px; }
@@ -273,7 +273,7 @@ select { appearance: none; width: 100%; height: 40px; background: var(--card) ur
   .field .tabs { width: 100%; }
   .field-wide { flex-basis: 100%; }
   .wordmark { font-size: 17px; }
-  .tagline { font-size: 12px; }
+  .tagline { font-size: 13px; }
 }
 @media (prefers-reduced-motion: reduce) { .fill, .card { transition: none; } }
 @media (forced-colors: active) { .fill { background: CanvasText !important; } .fill.cmp { background: GrayText !important; } }
@@ -332,8 +332,8 @@ details.values summary:hover { color: var(--fg); }
 @media (prefers-reduced-motion: reduce) { .org-about > summary::before { transition: none; } }
 
 /* Inline definitions (Figure, Compare with, Fund): a quiet disclosure under the control. */
-.define { margin-top: 6px; font-size: 13px; line-height: 18px; color: var(--muted); }
-.define summary { cursor: pointer; display: inline-block; padding: 2px 0; }
+.define { margin-top: 0; font-size: 14px; line-height: 18px; color: var(--muted); }
+.define summary { cursor: pointer; display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px 0 0; }
 .define summary:hover { color: var(--fg); }
 .define ul { margin: 6px 0 0; padding-left: 18px; }
 .define p { margin: 6px 0 0; max-width: 70ch; }
@@ -426,7 +426,7 @@ details.values summary:hover { color: var(--fg); }
 .wc-lines, .wc-pos { margin-bottom: 16px; }
 .wc-lines caption, .wc-pos caption { caption-side: top; text-align: left; font-weight: 700; padding: 8px 0; }
 .wc-sm { display: none; }
-.wc-refs { margin-left: 3px; font-size: 11px; }
+.wc-refs { margin-left: 3px; font-size: 13px; }
 .wc-ref { color: var(--link); text-decoration: none; padding: 0 2px; }
 .wc-ref + .wc-ref::before { content: ","; color: var(--muted); }
 .wc-notes { margin: 8px 0 0; padding-left: 22px; color: var(--muted); font-size: 13px; line-height: 19px; }
@@ -458,7 +458,7 @@ details.values summary:hover { color: var(--fg); }
   .wc-bv { grid-area: v; }
   .wc-track { grid-area: t; height: 10px; }
   .wc-shifts { grid-template-columns: minmax(0, 1fr); }
-  .wc-sm { display: block; font-size: 12px; color: var(--muted); }
+  .wc-sm { display: block; font-size: 13px; color: var(--muted); }
   .header-actions { gap: 6px; }
   .header-actions .btn:not(.theme-toggle) { padding-left: 10px; padding-right: 10px; }
 }
@@ -551,7 +551,7 @@ details.values summary:hover { color: var(--fg); }
 #jump-list[hidden] { display: none; }
 #jump-list li { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr); gap: 2px 8px; padding: 8px 10px; border-radius: 6px; cursor: pointer; min-height: 44px; align-items: center; }
 #jump-list li[aria-selected="true"] { background: var(--hover); outline: 1px solid var(--sel); }
-#jump-list .jt { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; grid-row: span 2; }
+#jump-list .jt { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; grid-row: span 2; }
 #jump-list .jn { font-size: 14px; line-height: 18px; font-weight: 600; overflow-wrap: anywhere; }
 #jump-list .js { font-size: 13px; line-height: 16px; color: var(--muted); overflow-wrap: anywhere; }
 #jump-list .jump-none { display: block; color: var(--muted); cursor: default; }
@@ -560,4 +560,15 @@ details.values summary:hover { color: var(--fg); }
   .header-row { flex-wrap: wrap; }
   .jump-search { order: 3; flex-basis: 100%; max-width: none; margin-left: 0; }
   .brand { flex: 1 1 0; }
+}
+
+@media (max-width: 767px) {
+  /* Phones, home: the verdict (What changed) first, then the controls, then Totals by Year. */
+  .home-flow { display: flex; flex-direction: column; }
+  .home-flow .overview { display: contents; }
+  .home-flow .wc-home { order: -2; }
+  .home-flow .controls { order: -1; }
+  .home-flow .overview > .panel { margin: 0 0 24px; }
+  .crumbs a { min-height: 44px; display: inline-flex; align-items: center; padding: 0; }
+  .back-link a, .wc-switch { min-height: 44px; display: inline-flex; align-items: center; }
 }

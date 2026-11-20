@@ -213,7 +213,7 @@
   function controlsWrap(inner, summary) {
     const open = controlsOpen();
     return `<div class="controls"><div class="controls-bar"><p class="controls-sum" id="controls-sum">${summary}</p>
-        <button type="button" class="btn btn-outline controls-btn" data-toggle-controls aria-expanded="${open}" aria-controls="controls-panel">${open ? 'Done' : 'Change'}</button></div>
+        <button type="button" class="btn btn-outline controls-btn" data-toggle-controls aria-expanded="${open}" aria-controls="controls-panel">${open ? 'Close' : 'Change view'}</button></div>
       <div class="controls-panel" id="controls-panel"${open ? '' : ' hidden'}>${inner}</div></div>`;
   }
   const kindWordPlain = () => (S.k === 'revenue' ? 'Income' : 'Spending');
@@ -516,8 +516,8 @@
 
     return `<header class="page-head"><h1 id="page-h">${esc(scope)} ${kindWord}: ${esc(seriesLabel(k))}</h1>
         <p class="big-total" aria-live="polite">${(() => { const pf = S.f ? printedFund(S.f, S.k, k) : null; return pf ? src(money(total), k, pf.doc, pf.page) : money(total); })()}</p>${drawNote(k)}${statusHTML()}${rollupNote(list)}</header>
-      ${filtersHTML()}
-      ${(() => { const wc = homeChangesHTML(); return `<div class="overview${wc ? '' : ' overview-single'}">${trendHTML({}, 'Totals by Year')}${wc}</div>`; })()}
+      <div class="home-flow">${filtersHTML()}
+      ${(() => { const wc = homeChangesHTML(); return `<div class="overview${wc ? '' : ' overview-single'}">${trendHTML({}, 'Totals by Year')}${wc}</div>`; })()}</div>
       <p class="hint hint-top">Select any department to see its detailed breakdown. Amounts open the source page in the budget book.</p>
       <ul class="cards" aria-label="Departments">${cards || '<li class="empty center">No lines for this selection.</li>'}</ul>
       <section class="panel" aria-labelledby="re-title"><h2 class="panel-title" id="re-title">Income vs. Spending by Fund: ${esc(seriesLabel(k))}</h2>
@@ -1276,7 +1276,7 @@
       if (tog) {
         const open = tog.getAttribute('aria-expanded') !== 'true';
         setControls(open);
-        tog.setAttribute('aria-expanded', String(open)); tog.textContent = open ? 'Done' : 'Change';
+        tog.setAttribute('aria-expanded', String(open)); tog.textContent = open ? 'Close' : 'Change view';
         const panel = $('controls-panel'); if (panel) panel.hidden = !open;
         return;
       }
@@ -1438,7 +1438,7 @@
       return;
     }
     loadTokens();
-    if (window.Chart) { Chart.defaults.font.family = getComputedStyle(document.documentElement).getPropertyValue('--font').trim(); Chart.defaults.color = MUTED; }
+    if (window.Chart) { Chart.defaults.font.family = getComputedStyle(document.documentElement).getPropertyValue('--font').trim(); Chart.defaults.font.size = 13; Chart.defaults.color = MUTED; }
     // Charts are drawn on canvas, so wait for the web font before the first draw (but never more than 1.5s).
     await Promise.race([document.fonts?.ready, new Promise((r) => setTimeout(r, 1500))]);
     // Light/dark follows the device; redraw the charts in the new colors when it changes.
