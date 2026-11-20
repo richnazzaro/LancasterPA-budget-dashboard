@@ -29,7 +29,7 @@
     OTHER_COLOR = v('--cat-other', OTHER_COLOR); SEL = v('--sel', SEL); CMP = v('--cmp', CMP);
     INK = v('--fg', INK); MUTED = v('--muted', MUTED); GRID = v('--border', GRID); SURFACE = v('--card', SURFACE); BG = v('--bg', BG);
   }
-  const PAGE_SIZE = 50;
+  const PAGE_SIZE = 20; // line-item rows shown at a time (keeps department pages short)
   const PIE_SLICES = 7;
 
   let D = null, O = null; // O = D.org (departments, units, org code -> unit)
@@ -42,9 +42,11 @@
 
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
-  const money = (n) => (n < 0 ? '-$' : '$') + Math.abs(Math.round(n)).toLocaleString('en-US');
+  const MINUS = '\u2212'; // one minus sign everywhere (not the hyphen)
+  const money = (n) => (Math.round(n) < 0 ? `${MINUS}$` : '$') + Math.abs(Math.round(n)).toLocaleString('en-US');
+  const fmtPct = (p, signed = false) => `${p < 0 ? MINUS : signed && p > 0 ? '+' : ''}${Math.abs(p).toFixed(1)}%`;
   const short = (n) => {
-    const a = Math.abs(n), sg = n < 0 ? '-' : '';
+    const a = Math.abs(n), sg = n < 0 ? MINUS : '';
     return a >= 1e9 ? `${sg}$${(a / 1e9).toFixed(1)}B` : a >= 1e6 ? `${sg}$${(a / 1e6).toFixed(0)}M` : a >= 1e3 ? `${sg}$${(a / 1e3).toFixed(0)}K` : `${sg}$${a}`;
   };
   const pctOf = (a, b) => (b ? (a / Math.abs(b)) * 100 : null);
@@ -298,7 +300,7 @@
     }
     return pts;
   }
-  function trendHTML(scope, title) {
+  function trendHTML(scope, title, { bare = false } = {}) {
     trendScope = scope;
     const pts = trendData(scope);
     if (!pts.some((p) => p.v != null)) return '';
@@ -310,11 +312,13 @@
       has('revised') && `<li><i class="dot ring" style="border-color:${PALETTE[1]}"></i>Revised</li>`,
     ].filter(Boolean).join('');
     const rowsHtml = pts.map((p) => `<tr><th scope="row">${p.y}</th><td>${LABEL[p.m]}</td><td class="num">${p.v == null ? '—' : money(p.v)}</td></tr>`).join('');
-    return `<section class="panel" aria-labelledby="tr-t"><h2 class="panel-title" id="tr-t">${esc(title)}</h2>
-      <p class="panel-note">${kindWordPlain()}${S.f ? ' · ' + esc(S.f) : ''}. Each year shows one kind of figure: actual, projected or proposed.</p>
+    const head = bare ? '' : `<h2 class="panel-title" id="tr-t">${esc(title)}</h2>`;
+    const inner = `${head}
+      <p class="panel-note${bare ? ' panel-note-left' : ''}">${kindWordPlain()}${S.f ? ' · ' + esc(S.f) : ''}. Each year shows one kind of figure: actual, projected or proposed.</p>
       <ul class="trend-legend" aria-hidden="true">${legend}</ul>
       <div class="chart-box short"><canvas id="trend-chart" role="img" aria-label="Totals by year, ${pts[0].y} to ${pts[pts.length - 1].y}. Solid line: actual. Dashed line: projected. Small dot: proposed. Ring: revised. The table below has the values."></canvas></div>
-      <details class="values"><summary>Show values</summary><div class="table-scroll"><table class="table"><thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Total</th></tr></thead><tbody>${rowsHtml}</tbody></table></div></details></section>`;
+      <details class="values"><summary>Show values</summary><div class="table-scroll"><table class="table"><thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Total</th></tr></thead><tbody>${rowsHtml}</tbody></table></div></details>`;
+    return bare ? inner : `<section class="panel" aria-labelledby="tr-t">${inner}</section>`;
   }
   function drawTrend() {
     const cv = $('trend-chart');
@@ -551,7 +555,7 @@
   }
 
   /* ---------- department / bureau pages ---------- */
-  function pieSection(title, groups, { clickable, note, k } = {}) {
+  function pieSection(title, groups, { clickable, note, k, secId = '' } = {}) {
     const total = groups.reduce((t, g) => t + Math.max(0, g.total), 0);
     if (!groups.length || total <= 0) return '';
     const items = groups.map((g) => {
@@ -559,7 +563,7 @@
       return `<li><i class="sw" style="background:${g.color}"></i><div class="body">${clickable && g.href ? `<a href="${esc(g.href)}">${body}</a>` : body}</div></li>`;
     }).join('');
     const id = `pie-${slug(title)}`;
-    return `<section class="panel" aria-labelledby="${id}-t"><h2 class="panel-title" id="${id}-t">${esc(title)}</h2>${note ? `<p class="panel-note">${esc(note)}</p>` : ''}
+    return `<section class="panel"${secId ? ` id="${secId}" tabindex="-1"` : ''} aria-labelledby="${id}-t"><h2 class="panel-title" id="${id}-t">${esc(title)}</h2>${note ? `<p class="panel-note">${esc(note)}</p>` : ''}
       <div class="pie-wrap"><div class="pie-box"><canvas id="${id}" role="img" aria-label="${esc(title)}: ${esc(groups.slice(0, 6).map((g) => `${g.label} ${money(g.total)}`).join(', '))}"></canvas></div>
       <ul class="legend-list">${items}</ul></div></section>`;
   }
@@ -586,46 +590,52 @@
       .sort((a, b) => b.total - a.total || b.cmpTotal - a.cmpTotal);
   }
 
-  function entityView({ title, subtitle, selRows, cmpRows, parentHash, parentLabel, bureauList = '', deptPicker, scope, about = '' }) {
+  let cmpTab = 'vs'; // Compare panel: "vs" (this year against the comparison) or "time" (totals by year)
+  const crumbsHTML = (items) => `<nav class="crumbs" aria-label="Breadcrumb"><ol>${items.map((c, i) => (c.href
+    ? `<li><a href="${esc(c.href)}">${esc(c.label)}</a></li>`
+    : `<li aria-current="page">${esc(c.label)}</li>`)).join('')}</ol></nav>`;
+  /* In-page links (hash routing, so the data-scroll pattern, not href="#id"). */
+  const jumpNav = (items) => `<nav class="jump" aria-label="On this page"><ul>${items.map(([id, label]) => `<li><a href="${esc(location.hash || '#/')}" data-scroll="${id}">${esc(label)}</a></li>`).join('')}</ul></nav>`;
+
+  function entityView({ title, subtitle, selRows, cmpRows, crumbs, bureauList = '', changes = '', deptPicker, scope, about = '' }) {
     const k = key(S.y, S.m), kindWord = S.k === 'revenue' ? 'Revenue' : 'Budget';
     const total = sum(selRows), cmpTotal = sum(cmpRows);
     const fp = firstPage(selRows), cfp = firstPage(cmpRows);
     const totalLink = src(money(total), k, fp.d, fp.p), cmpLink = S.c ? src(money(cmpTotal), S.c, cfp.d, cfp.p) : '';
     const cats = categoryGroups(selRows, cmpRows);
     const withColor = (g, i) => ({ ...g, color: g.color || (i < PIE_SLICES ? PALETTE[i] : OTHER_COLOR) });
+    const chg = (a, b) => { const d = a - b, p = pctOf(d, b); return `<span class="${d > 0 ? 'up' : d < 0 ? 'down' : 'flat'}">${money(d)}${p == null ? '' : `<span class="pct"> (${fmtPct(p)})</span>`}</span>`; };
 
-    let html = `<div class="dept-top"><a class="btn btn-primary" href="${esc(parentHash)}">← ${esc(parentLabel)}</a></div>`;
+    let html = crumbsHTML(crumbs);
     if (deptPicker) html += `<div class="field dept-picker" style="margin-inline:auto"><label class="field-label" for="dept-pick">Department</label>${deptPicker}</div>`;
     html += `<header><h1 class="dept-name" id="page-h" tabindex="-1">${esc(title)}</h1>
       <p class="dept-total">Total ${kindWord}: ${totalLink}</p><p class="dept-sub">${subtitle}</p><p class="center">${statusHTML()}</p>${deptPicker ? rollupNote(selRows) : ''}</header>${about}`;
-    html += `<div class="dept-filters">${filtersHTML({ fund: !!deptPicker, scope })}</div>`;
-    html += bureauList;
 
-    html += pieSection(`${title} ${seriesLabel(k)} ${kindWord} Breakdown`, cats, { k });
-
+    // One Compare panel holds what used to be five: the two totals, the change, the category bars and the totals by year.
+    let compare = '';
     if (cats.length) {
-      html += `<section class="panel" aria-labelledby="yoy-t"><h2 class="panel-title" id="yoy-t">${esc(title)} Total ${S.k === 'revenue' ? 'Revenue' : 'Budgeted Cost'}: ${S.c ? 'Comparison' : 'by Category'}</h2>
-        <div class="chart-scroll"><div class="chart-box"><canvas id="yoy-chart" role="img" aria-label="${esc(title)} by category, ${esc(S.c ? seriesLabel(S.c) + ' compared with ' : '')}${esc(seriesLabel(k))}"></canvas></div></div></section>`;
+      const vsLabel = S.c ? 'This year vs. comparison' : 'By category';
+      const tabBtn = (id, label) => `<button type="button" role="tab" id="cmp-tab-${id}" aria-selected="${cmpTab === id}" aria-controls="cmp-pane-${id}" tabindex="${cmpTab === id ? 0 : -1}" data-pane-tab="${id}">${label}</button>`;
+      const stats = `<dl class="cmp-stats">${S.c ? `<div><dt>${esc(seriesLabel(S.c))}</dt><dd>${cmpLink}</dd></div>` : ''}<div><dt>${esc(seriesLabel(k))}</dt><dd>${totalLink}</dd></div>${S.c ? `<div><dt>Change</dt><dd>${chg(total, cmpTotal)}</dd></div>` : ''}</dl>`;
+      const table = `<details class="values"><summary>Show as a table</summary><div class="table-scroll"><table class="table tight">
+        <thead><tr><th scope="col">Category</th>${S.c ? `<th scope="col" class="num">${esc(seriesLabel(S.c))}</th>` : ''}<th scope="col" class="num">${esc(seriesLabel(k))}</th>${S.c ? '<th scope="col" class="num">Change</th>' : ''}</tr></thead>
+        <tbody>${cats.map((g) => `<tr><td>${esc(g.label)}</td>${S.c ? `<td class="num">${src(money(g.cmpTotal), S.c, g.cd, g.cp)}</td>` : ''}<td class="num">${src(money(g.total), k, g.d, g.p)}</td>${S.c ? `<td class="num">${chg(g.total, g.cmpTotal)}</td>` : ''}</tr>`).join('')}</tbody></table></div></details>`;
+      compare = `<section class="panel compare" id="sec-compare" tabindex="-1" aria-labelledby="cmp-t"><h2 class="panel-title" id="cmp-t">Compare</h2>
+        <div class="cmp-tabs" role="tablist" aria-label="Compare view">${tabBtn('vs', vsLabel)}${tabBtn('time', 'Over time')}</div>
+        <div class="cmp-pane" id="cmp-pane-vs" role="tabpanel" aria-labelledby="cmp-tab-vs"${cmpTab === 'vs' ? '' : ' hidden'}>${stats}
+          <div class="chart-scroll"><div class="chart-box"><canvas id="yoy-chart" role="img" aria-label="${esc(title)} by category, ${esc(S.c ? seriesLabel(S.c) + ' compared with ' : '')}${esc(seriesLabel(k))}"></canvas></div></div>${table}</div>
+        <div class="cmp-pane" id="cmp-pane-time" role="tabpanel" aria-labelledby="cmp-tab-time"${cmpTab === 'time' ? '' : ' hidden'}>${trendHTML(scope, '', { bare: true })}</div></section>`;
     }
-    html += trendHTML(scope, `${title}: Totals by Year`);
-
-    html += `<div class="totals">${S.c ? `<section class="panel" aria-label="${esc(seriesLabel(S.c))} total"><h2 class="total-label">${esc(seriesLabel(S.c))} Total</h2><p class="total-value">${cmpLink}</p></section>` : ''}
-      <section class="panel" aria-label="${esc(seriesLabel(k))} total"><h2 class="total-label">${esc(seriesLabel(k))} Total</h2><p class="total-value">${totalLink}</p></section></div>`;
-
-    const chg = (a, b) => { const d = a - b, p = pctOf(d, b); return `<span class="${d > 0 ? 'up' : d < 0 ? 'down' : 'flat'}">${money(d)}${p == null ? '' : `<span class="pct"> (${p.toFixed(1)}%)</span>`}</span>`; };
-    html += `<section class="panel" aria-labelledby="cat-t"><h2 class="total-label" id="cat-t">Budget Categories</h2><div class="table-scroll"><table class="table tight">
-      <thead><tr><th scope="col">Category</th>${S.c ? `<th scope="col" class="num">${esc(seriesLabel(S.c))}</th>` : ''}<th scope="col" class="num">${esc(seriesLabel(k))}</th>${S.c ? '<th scope="col" class="num">Change</th>' : ''}</tr></thead>
-      <tbody>${cats.map((g) => `<tr><td>${esc(g.label)}</td>${S.c ? `<td class="num">${src(money(g.cmpTotal), S.c, g.cd, g.cp)}</td>` : ''}<td class="num">${src(money(g.total), k, g.d, g.p)}</td>${S.c ? `<td class="num">${chg(g.total, g.cmpTotal)}</td>` : ''}</tr>`).join('')}</tbody></table></div></section>`;
-
-    if (S.c) {
-      html += `<section class="panel" aria-labelledby="ov-t"><h2 class="total-label" id="ov-t">Overall Year-Over-Year Change</h2>
-        <p class="overall"><span class="lbl">Total ${kindWord} Change:</span><span class="val">${chg(total, cmpTotal)}</span></p>
-        <div class="chart-box short"><canvas id="ov-chart" role="img" aria-label="${esc(seriesLabel(S.c))} ${money(cmpTotal)} compared with ${esc(seriesLabel(k))} ${money(total)}"></canvas></div></section>`;
-    }
-    html += `<section class="panel" aria-labelledby="li-t"><h2 class="total-label" id="li-t">Line Items</h2><div id="li-holder"></div></section>`;
+    const hasChanges = changes.includes('id="sec-changes"'), hasBureaus = bureauList.includes('id="sec-bureaus"');
+    const nav = [cats.length && ['sec-compare', 'Compare'], hasChanges && ['sec-changes', 'What changed'], hasBureaus && ['sec-bureaus', 'Bureaus'], cats.length && ['sec-categories', 'Categories'], ['sec-lines', 'Line items']].filter(Boolean);
+    html += jumpNav(nav);
+    html += `<div class="entity-flow"><div class="dept-filters">${filtersHTML({ fund: !!deptPicker, scope })}</div>${compare}${changes}${bureauList}`;
+    html += pieSection(`${title} ${seriesLabel(k)} ${kindWord} Breakdown`, cats, { k, secId: 'sec-categories' });
+    html += `<section class="panel" id="sec-lines" tabindex="-1" aria-labelledby="li-t"><h2 class="total-label" id="li-t">Line Items</h2><div id="li-holder"></div></section></div>`;
     return { html, cats };
   }
 
+  const alpha = (hex, a) => { const m = /^#([0-9a-f]{6})$/i.exec(hex); if (!m) return hex; const n = parseInt(m[1], 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
   function entityCharts(selRows, cmpRows, cats) {
     const k = key(S.y, S.m), th = chartTheme();
     drawPie(`${$('page-h').textContent} ${seriesLabel(k)} ${S.k === 'revenue' ? 'Revenue' : 'Budget'} Breakdown`, cats);
@@ -633,19 +643,13 @@
     const yoy = $('yoy-chart');
     if (yoy && window.Chart) {
       const ds = [];
-      if (S.c) ds.push({ label: seriesLabel(S.c), data: cats.map((g) => g.cmpTotal), backgroundColor: CMP, borderRadius: 2 });
+      // The comparison bar is lighter than the selected one, so the amber never outweighs the blue.
+      if (S.c) ds.push({ label: seriesLabel(S.c), data: cats.map((g) => g.cmpTotal), backgroundColor: alpha(CMP, 0.55), borderColor: CMP, borderWidth: 1, borderRadius: 2 });
       ds.push({ label: seriesLabel(k), data: cats.map((g) => g.total), backgroundColor: SEL, borderRadius: 2 });
       charts.push(new Chart(yoy, { type: 'bar', data: { labels: cats.map((g) => g.label), datasets: ds },
         options: { responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
-          plugins: { legend: { position: 'bottom', align: 'end', labels: { color: INK, boxWidth: 12, boxHeight: 12 } }, tooltip: { ...th.tip, callbacks: { label: (c) => `${c.dataset.label}: ${money(c.raw)}` } } },
-          scales: { x: { ticks: { color: INK, font: { size: 11 } }, grid: { color: th.grid } }, y: { ticks: { color: th.tick, font: { size: 11 }, callback: (n) => short(n) }, grid: { color: th.grid } } } } }));
-    }
-    const ov = $('ov-chart');
-    if (ov && window.Chart) {
-      charts.push(new Chart(ov, { type: 'bar', data: { labels: [seriesLabel(S.c), seriesLabel(k)], datasets: [{ data: [sum(cmpRows), sum(selRows)], backgroundColor: [CMP, SEL], borderRadius: 2 }] },
-        options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
-          plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { label: (c) => money(c.raw) } } },
-          scales: { x: { ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid }, beginAtZero: true }, y: { ticks: { color: INK }, grid: { display: false } } } } }));
+          plugins: { legend: { position: 'bottom', align: 'end', labels: { color: INK, boxWidth: 12, boxHeight: 12, font: { size: 13 } } }, tooltip: { ...th.tip, callbacks: { label: (c) => `${c.dataset.label}: ${money(c.raw)}` } } },
+          scales: { x: { ticks: { color: INK, font: { size: 13 } }, grid: { color: th.grid } }, y: { ticks: { color: th.tick, font: { size: 13 }, callback: (n) => short(n) }, grid: { color: th.grid } } } } }));
     }
   }
 
@@ -716,7 +720,7 @@
     paint(false);
   }
 
-  const notFound = (what) => ({ html: `<div class="dept-top"><a class="btn btn-primary" href="${esc(homeHash())}">← All departments</a></div><header class="page-head"><h1 id="page-h" tabindex="-1">${esc(what)} not found</h1><p class="muted">That link doesn't match anything in the current data.</p></header>` });
+  const notFound = (what) => ({ html: `<p class="back-link"><a href="${esc(homeHash())}">‹ All departments</a></p><header class="page-head"><h1 id="page-h" tabindex="-1">${esc(what)} not found</h1><p class="muted">That link doesn't match anything in the current data.</p></header>` });
 
   /* ---------- org chart: departments, bureaus and "what does it do" text ---------- */
   const findDept = (sl) => O.departments.findIndex((d) => d.slug === sl || d.aliases.includes(sl));
@@ -781,14 +785,13 @@
       if (items.length > 1) {
         const note = 'Bureaus as on the city\'s 2027 org chart. Select one to see its line items.'
           + (hasWide ? ` “${unitLabel(ids.find((u) => O.units[u].kind === 'department-wide'))}” collects budget groups that are not a bureau.` : '');
-        bureauList = `<section class="bureau-list" aria-labelledby="bl-t"><h2 class="list-title" id="bl-t">${S.k === 'revenue' ? 'Income by Bureau' : 'Spending by Bureau'}</h2><p class="hint hint-top">${esc(note)} Amounts open the source page in the budget book.</p>
+        bureauList = `<section class="bureau-list" id="sec-bureaus" tabindex="-1" aria-labelledby="bl-t"><h2 class="list-title" id="bl-t">${S.k === 'revenue' ? 'Income by Bureau' : 'Spending by Bureau'}</h2><p class="hint hint-top">${esc(note)} Amounts open the source page in the budget book.</p>
           <ul class="cards" aria-labelledby="bl-t">${cardList(items, { total: sum(selRows), k, shareOf: `${name} ${S.k === 'revenue' ? 'revenue' : 'spending'}`, level: 3 })}</ul></section>`;
       }
     }
     document.title = `${name} ${seriesLabel(k)} · ${CFG.site_title}`;
     const about = aboutHTML('What does this department do?', dept.desc);
-    bureauList += deptChangesHTML(di);
-    const v = entityView({ title: name, subtitle, selRows, cmpRows, parentHash: homeHash(), parentLabel: 'All departments', bureauList, deptPicker: picker, scope: { dept: di }, about });
+    const v = entityView({ title: name, subtitle, selRows, cmpRows, crumbs: [{ label: 'Home', href: homeHash() }, { label: name }], bureauList, changes: deptChangesHTML(di), deptPicker: picker, scope: { dept: di }, about });
     return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats); mountLines(selRows, cmpRows, true); } };
   }
 
@@ -819,7 +822,7 @@
       const q = /^Bureau\b/.test(unit.name) ? 'What does this bureau do?' : /^Office\b/.test(unit.name) ? 'What does this office do?' : `What does ${unit.name} do?`;
       about = aboutHTML(q, unit.desc);
     }
-    const v = entityView({ title: name, subtitle: sub, selRows, cmpRows, parentHash: deptHash(di), parentLabel: O.departments[di].name, scope, about });
+    const v = entityView({ title: name, subtitle: sub, selRows, cmpRows, crumbs: [{ label: 'Home', href: homeHash() }, { label: O.departments[di].name, href: deptHash(di) }, { label: name }], changes: deptChangesHTML(di, ui), scope, about });
     return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats); mountLines(selRows, cmpRows, true); } };
   }
 
@@ -834,7 +837,7 @@
   const vOf = (x) => (x ? x.v : 0);
   /* Short money for sentences and tiles: $87.8M, $1.25M (a second decimal when one would be more than 2.5% off), $148K. */
   const mny = (n) => {
-    const a = Math.abs(n), sg = n < 0 ? '-' : '';
+    const a = Math.abs(n), sg = n < 0 ? MINUS : '';
     if (a >= 1e6) { const one = +(a / 1e6).toFixed(1); return `${sg}$${Math.abs(one * 1e6 - a) / a > 0.025 ? (a / 1e6).toFixed(2) : one.toFixed(1)}M`; }
     if (a >= 1e3) return `${sg}$${Math.round(a / 1e3)}K`;
     return `${sg}$${Math.round(a)}`;
@@ -871,10 +874,11 @@
   const lineD = (ln) => (ln[4] || 0) - (ln[1] || 0);
 
   /* Shifts between funds that touch this scope (fund, and optionally one department). */
-  function shiftsFor(c, fund, dept = null) {
+  function shiftsFor(c, fund, dept = null, unit = null) {
     if (!CH || !crossYear(c)) return [];
     const inDept = (u) => u != null && O.units[u].dept === dept;
-    return CH.shifts.filter((s) => (!fund || s.from_fund === fund || s.to_fund === fund) && (dept == null || inDept(s.from.unit) || inDept(s.to?.unit)));
+    return CH.shifts.filter((s) => (!fund || s.from_fund === fund || s.to_fund === fund) && (dept == null || inDept(s.from.unit) || inDept(s.to?.unit))
+      && (unit == null || s.from.unit === unit || s.to?.unit === unit));
   }
   function movedPositions(P, cls, fund) {
     let into = 0, out = 0;
@@ -961,14 +965,14 @@
       ${to}${billed}${posTxt ? `<p><strong>Positions:</strong> ${posTxt} moved with the work.</p>` : ''}${mism}
       <details class="wc-ev"><summary>The city's notes</summary><ul>${notes}</ul></details></li>`;
   }
-  function shiftsHTML(c, dept = null) {
-    const list = shiftsFor(c, S.f, dept);
+  function shiftsHTML(c, dept = null, unit = null, fund = S.f) {
+    const list = shiftsFor(c, fund, dept, unit);
     if (!list.length) return '';
-    const into = S.f ? list.filter((s) => s.to_fund === S.f) : [], out = S.f ? list.filter((s) => s.from_fund === S.f) : [];
+    const into = fund ? list.filter((s) => s.to_fund === fund) : [], out = fund ? list.filter((s) => s.from_fund === fund) : [];
     const block = (title, l, id) => (l.length ? `<section class="panel wc-moved" aria-labelledby="${id}"><h2 class="total-label" id="${id}">${title}</h2>
-      ${S.f === DEFAULT_FUND || !S.f ? defineMoved() : ''}<ul class="wc-shifts">${l.map((s) => shiftCard(s, c)).join('')}</ul></section>` : '');
-    if (!S.f) return block('Moved between funds', list, 'wc-mv');
-    return block(`Moved into the ${esc(S.f)}`, into, 'wc-in') + block(`Moved out of the ${esc(S.f)}`, out, 'wc-out');
+      ${fund === DEFAULT_FUND || !fund ? defineMoved() : ''}<ul class="wc-shifts">${l.map((s) => shiftCard(s, c)).join('')}</ul></section>` : '');
+    if (!fund) return block('Moved between funds', list, 'wc-mv');
+    return block(`Moved into the ${esc(fund)}`, into, 'wc-in') + block(`Moved out of the ${esc(fund)}`, out, 'wc-out');
   }
   const defineMoved = () => `<details class="define"><summary>Why this matters</summary><p>The General Fund is paid for mostly by taxes. The Water, Sewer, Stormwater and Solid Waste funds are paid for by their own fees. Work moved into the General Fund is paid for from taxes from now on; work moved out of it is paid for by fees.</p></details>`;
 
@@ -998,11 +1002,11 @@
     return `<div class="table-scroll"><table class="table tight wc-lines">${caption ? `<caption>${caption}</caption>` : ''}<thead><tr><th scope="col">Line item</th><th scope="col" class="num hide-sm">${esc(seriesLabel(c.from))}</th><th scope="col" class="num">${esc(seriesLabel(c.to))}</th><th scope="col" class="num hide-sm">Change</th></tr></thead><tbody>${body}</tbody></table></div>`;
   }
 
-  function positionsHTML(c, { dept = null, compact = false } = {}) {
+  function positionsHTML(c, { dept = null, unit = null, compact = false, fund = S.f } = {}) {
     const P = c.positions;
     if (!P) return '';
-    const fi = S.f ? D.funds.indexOf(S.f) : null;
-    const rows = P.rows.filter((r) => (fi == null || r[0] === fi) && (dept == null || O.units[r[1]].dept === dept));
+    const fi = fund ? D.funds.indexOf(fund) : null;
+    const rows = P.rows.filter((r) => (fi == null || r[0] === fi) && (dept == null || O.units[r[1]].dept === dept) && (unit == null || r[1] === unit));
     if (!rows.length) return '';
     const used = new Map();
     const ref = (i) => { if (!used.has(i)) used.set(i, used.size + 1); return used.get(i); };
@@ -1031,7 +1035,7 @@
       const a = P.artifacts[i];
       return `<li id="wc-note-${n}" value="${n}">${esc(a.text)}${a.p ? ` ${srcDoc('Source page', a.d, a.p)}` : ''}</li>`;
     }).join('');
-    const titles = compact ? [] : P.artifacts.filter((a) => a.kind === 'titles' && (fi == null || a.fund === S.f) && (dept == null || O.units[a.unit].dept === dept));
+    const titles = compact ? [] : P.artifacts.filter((a) => a.kind === 'titles' && (fi == null || a.fund === fund) && (dept == null || O.units[a.unit].dept === dept) && (unit == null || a.unit === unit));
     const titleNote = titles.length ? `<details class="values"><summary>Renamed titles in ${titles.length} bureau${titles.length === 1 ? '' : 's'}</summary><ul class="wc-notes">${titles.map((a) => `<li><strong>${esc(O.units[a.unit].name)}:</strong> ${esc(a.text)}</li>`).join('')}</ul></details>` : '';
     const explain = `<p class="wc-note">“As printed” compares the two schedules line for line. “Counted change” leaves out what is not a real change: positions that moved between funds with their work, positions marked full-time in one book and part-time in the other, and bureaus a book has no schedule page for. Each is listed in the notes.</p>`;
     return `${compact ? '' : explain}${tables}${notes ? `<ol class="wc-notes">${notes}</ol>` : ''}${titleNote}`;
@@ -1160,29 +1164,31 @@
       <p class="wc-home-more"><a class="btn btn-primary" href="${esc(changesHash())}">See everything that changed →</a></p></section>`;
   }
 
-  /* Compact "What changed" on a department page: headline, bureaus, positions, largest lines, shifts. */
-  function deptChangesHTML(di) {
+  /* Compact "What changed" on a department or bureau page: headline, bureaus, positions, largest lines, shifts.
+     A bureau page (ui given) covers all of the bureau's funds, like the rest of that page. */
+  function deptChangesHTML(di, ui = null) {
     const link = (txt) => `<a class="btn btn-outline wc-more" href="${esc(changesHash({ y: D.newest_year }))}">${txt}</a>`;
-    if (!CH || S.y !== D.newest_year) return `<p class="center wc-deptlink">${link(`What changed in ${D.newest_year} →`)}</p>`;
+    if (!CH || S.y !== D.newest_year) return `<p class="center wc-deptlink sec-changes-link">${link(`What changed in ${D.newest_year} →`)}</p>`;
     const c = changeCmp();
     if (!c) return '';
-    const sc = c.scopes[scopeName()], b = sc?.[S.k];
-    const dr = b?.by_dept.find((r) => r[0] === di);
-    if (!dr) return `<p class="center wc-deptlink">${link('What changed across the city →')}</p>`;
-    const name = O.departments[di].name, word = S.k === 'revenue' ? 'takes in' : 'spends';
+    const unitPage = ui != null, fund = unitPage ? '' : S.f;
+    const sc = c.scopes[unitPage ? 'all' : scopeName()], b = sc?.[S.k];
+    const dr = unitPage ? b?.by_unit.find((r) => r[0] === ui) : b?.by_dept.find((r) => r[0] === di);
+    if (!dr) return `<p class="center wc-deptlink sec-changes-link">${link('What changed across the city →')}</p>`;
+    const name = unitPage ? unitLabel(ui) : O.departments[di].name, word = S.k === 'revenue' ? 'takes in' : 'spends';
     const d = vOf(dr[2]) - vOf(dr[1]), p = vOf(dr[1]) ? Math.abs(d / vOf(dr[1])) * 100 : null;
-    const lede = `In the ${esc(seriesLabel(c.to))} budget, ${esc(name)} ${word} ${lnk(dr[2], mny(vOf(dr[2])))}${S.f ? ` from the ${esc(S.f)}` : ''}, ${d === 0 ? 'the same as' : `${mny(Math.abs(d))}${p == null ? '' : ` (${p.toFixed(1)}%)`} ${d > 0 ? 'more' : 'less'} than`} ${esc(seriesLabel(c.from))}.`;
-    const units = b.by_unit.filter((r) => O.units[r[0]].dept === di).map(([u, f, t]) => ({ label: unitLabel(u), f, t, href: O.departments[di].bureaus ? unitHash(u) : null }));
-    const fi = S.f ? D.funds.indexOf(S.f) : null;
-    const mine = c.lines.map((ln, i) => i).filter((i) => { const ln = c.lines[i], a = acctOf(ln); return O.units[unitOfLine(ln)].dept === di && (fi == null || a[2] === fi) && (D.categories[a[5]] === 'Revenue') === (S.k === 'revenue'); })
+    const lede = `In the ${esc(seriesLabel(c.to))} budget, ${esc(name)} ${word} ${lnk(dr[2], mny(vOf(dr[2])))}${fund ? ` from the ${esc(fund)}` : ''}, ${d === 0 ? 'the same as' : `${mny(Math.abs(d))}${p == null ? '' : ` (${p.toFixed(1)}%)`} ${d > 0 ? 'more' : 'less'} than`} ${esc(seriesLabel(c.from))}.`;
+    const units = unitPage ? [] : b.by_unit.filter((r) => O.units[r[0]].dept === di).map(([u, f, t]) => ({ label: unitLabel(u), f, t, href: O.departments[di].bureaus ? unitHash(u) : null }));
+    const fi = fund ? D.funds.indexOf(fund) : null;
+    const mine = c.lines.map((ln, i) => i).filter((i) => { const ln = c.lines[i], a = acctOf(ln); return O.units[unitOfLine(ln)].dept === di && (!unitPage || unitOfLine(ln) === ui) && (fi == null || a[2] === fi) && (D.categories[a[5]] === 'Revenue') === (S.k === 'revenue'); })
       .sort((x, y) => Math.abs(lineD(c.lines[y])) - Math.abs(lineD(c.lines[x])));
-    const pos = S.k === 'expense' ? positionsHTML(c, { dept: di, compact: true }) : '';
-    return `<section class="panel wc-dept" aria-labelledby="wc-d"><h2 class="total-label" id="wc-d">What changed</h2>
+    const pos = S.k === 'expense' ? positionsHTML(c, { dept: di, unit: ui, compact: true, fund }) : '';
+    return `<section class="panel wc-dept" id="sec-changes" tabindex="-1" aria-labelledby="wc-d"><h2 class="total-label" id="wc-d">What changed</h2>
       <p class="wc-lede-sm">${lede}</p>${badgeHTML(c)}
-      ${units.length > 1 ? `<h3 class="wc-h3">By bureau</h3>${divBars(units, c, 'wc-du', { title: 'Bureau' })}` : ''}
-      ${pos ? `<h3 class="wc-h3">Positions</h3>${pos}` : ''}
-      ${mine.length ? `<h3 class="wc-h3">Largest line changes</h3>${lineTableHTML(c, mine.slice(0, 6))}` : ''}
-      ${S.k === 'expense' ? shiftsHTML(c, di) : ''}
+      ${units.length > 1 ? `<details class="values wc-lines-d"><summary>Change by bureau</summary>${divBars(units, c, 'wc-du', { title: 'Bureau' })}</details>` : ''}
+      ${pos ? `<details class="values wc-lines-d"><summary>Positions</summary>${pos}</details>` : ''}
+      ${mine.length ? `<details class="values wc-lines-d"><summary>Largest line changes (${Math.min(6, mine.length)})</summary>${lineTableHTML(c, mine.slice(0, 6))}</details>` : ''}
+      ${S.k === 'expense' ? shiftsHTML(c, di, ui, fund) : ''}
       <p class="center">${link('See everything that changed →')}</p></section>`;
   }
 
@@ -1212,6 +1218,14 @@
     }
   }
 
+  /* Compare panel: switch between "this year vs. comparison" and "over time" without re-rendering. */
+  function setPane(id) {
+    cmpTab = id;
+    document.querySelectorAll('[data-pane-tab]').forEach((b) => { const on = b.dataset.paneTab === id; b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; });
+    document.querySelectorAll('.cmp-pane').forEach((p) => { p.hidden = p.id !== `cmp-pane-${id}`; });
+    charts.forEach((c) => c.resize());
+  }
+
   function wire() {
     window.addEventListener('hashchange', () => onRoute(true));
     const view = $('view');
@@ -1226,9 +1240,14 @@
       const jump = e.target.closest('[data-scroll]');
       if (jump && $(jump.dataset.scroll)) {
         e.preventDefault();
-        $(jump.dataset.scroll).scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth' });
+        const tgt = $(jump.dataset.scroll);
+        if (tgt.tagName === 'DETAILS') tgt.open = true;
+        tgt.scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth' });
+        tgt.focus({ preventScroll: true });
         return;
       }
+      const pt = e.target.closest('[data-pane-tab]');
+      if (pt) { setPane(pt.dataset.paneTab); return; }
       const tog = e.target.closest('[data-toggle-controls]');
       if (tog) {
         const open = tog.getAttribute('aria-expanded') !== 'true';
@@ -1244,6 +1263,13 @@
     });
     view.addEventListener('toggle', (e) => { if (e.target.classList?.contains('org-about')) aboutOpen = e.target.open; }, true);
     view.addEventListener('keydown', (e) => {
+      const pb = e.target.closest('[data-pane-tab]');
+      if (pb && ['ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+        const o = [...pb.parentElement.querySelectorAll('[data-pane-tab]')].find((x) => x !== pb);
+        if (o) { setPane(o.dataset.paneTab); o.focus(); }
+        return;
+      }
       const b = e.target.closest('[data-tab]');
       if (!b || !['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
       const btns = [...b.parentElement.querySelectorAll('button')], i = btns.indexOf(b);

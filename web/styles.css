@@ -489,3 +489,56 @@ details.values summary:hover { color: var(--fg); }
   .controls-bar { display: none; }
   .controls-panel, .controls-panel[hidden] { display: block; margin-top: 0; }
 }
+
+/* ---------------------------------------------------------------------------------------------------------
+   Department and bureau pages: breadcrumbs, in-page links, one Compare panel.
+   --------------------------------------------------------------------------------------------------------- */
+.crumbs { margin: 0 0 12px; font-size: 14px; }
+.crumbs ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 2px 0; }
+.crumbs li { display: inline-flex; align-items: center; color: var(--muted); }
+.crumbs li + li::before { content: "\203A"; margin: 0 8px; color: var(--muted); }
+.crumbs a { color: var(--link); text-decoration: none; padding: 6px 0; }
+.crumbs a:hover { text-decoration: underline; }
+.crumbs [aria-current] { color: var(--fg); font-weight: 600; }
+.back-link { margin: 0 0 12px; }
+.back-link a { color: var(--link); text-decoration: none; display: inline-block; padding: 8px 0; }
+.back-link a:hover { text-decoration: underline; }
+
+.jump { margin: 0 0 28px; }
+.jump ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 6px; }
+.jump a { display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border: 1px solid var(--border); border-radius: 9999px; background: var(--card); color: var(--fg); font-size: 14px; font-weight: 500; text-decoration: none; }
+.jump a:hover { border-color: var(--sel); color: var(--sel-ink); }
+[id^="sec-"] { scroll-margin-top: 16px; }
+[id^="sec-"]:focus { outline: none; }
+
+.entity-flow { display: flex; flex-direction: column; }
+.entity-flow > .panel, .entity-flow > .bureau-list { margin-bottom: 32px; }
+.entity-flow > .dept-filters { margin-bottom: 24px; }
+
+.compare .cmp-tabs { display: flex; justify-content: center; gap: 4px; margin: 0 0 20px; background: var(--muted-bg); border-radius: 6px; padding: 4px; width: fit-content; margin-inline: auto; max-width: 100%; }
+.compare .cmp-tabs button { height: 36px; padding: 0 16px; border: 0; border-radius: 4px; background: transparent; color: var(--muted); font: 500 14px/20px var(--font); cursor: pointer; }
+.compare .cmp-tabs button[aria-selected="true"] { background: var(--card); color: var(--fg); box-shadow: 0 1px 2px rgba(0, 0, 0, .12); }
+.compare .cmp-pane[hidden] { display: none; }
+.cmp-stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 40px; margin: 0 0 16px; }
+.cmp-stats div { text-align: center; }
+.cmp-stats dt { font-size: 14px; color: var(--muted); }
+.cmp-stats dd { margin: 0; font-size: 26px; line-height: 34px; font-weight: 700; overflow-wrap: anywhere; }
+.cmp-stats .pct { font-size: 15px; font-weight: 500; color: var(--muted); }
+.panel-note-left { margin-top: 0; }
+.sec-changes-link { margin: -16px 0 32px; }
+
+@media (max-width: 767px) {
+  /* Phones: the verdict (What changed) comes first, then the controls, then the rest. */
+  .entity-flow > .sec-changes, .entity-flow > #sec-changes, .entity-flow > .sec-changes-link { order: -2; margin-top: 0; }
+  .entity-flow > .dept-filters { order: -1; }
+  .jump ul { justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+  .jump a { white-space: nowrap; }
+  .cmp-stats dd { font-size: 20px; line-height: 28px; }
+  .compare .cmp-tabs { width: 100%; }
+  .compare .cmp-tabs button { flex: 1 1 0; padding: 0 8px; min-height: 44px; height: auto; }
+}
+@media (min-width: 1024px) {
+  .bureau-list .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+}
+.wc-lines-d { margin: 12px 0; }
+.wc-lines-d > summary { font-weight: 600; color: var(--fg); }
