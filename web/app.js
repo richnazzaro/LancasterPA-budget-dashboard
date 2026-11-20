@@ -1,4 +1,5 @@
-/* Lancaster Budget Explorer: plain JS, no build step. Data: data/budget.json (scripts/build_dataset.py).
+/* Budget Explorer: plain JS, no build step. Entity name, title and data paths come from config.json;
+ * brand and chart colors come from the CSS variables in styles.css. Data: <paths.data>budget.json (scripts/build_dataset.py).
  * Routes (hash-based, so GitHub Pages needs no server rules):
  *   #/                                        all departments
  *   #/department/<dept>                       one department
@@ -8,15 +9,22 @@
 (() => {
   'use strict';
 
-  const LABEL = { proposed: 'Proposed', revised: 'Revised Proposed', adopted: 'Adopted', amended: 'Amended', projected: 'Projected', actual: 'Actual' };
-  const ORDER = ['adopted', 'amended', 'projected', 'actual', 'proposed', 'revised'];
+  const LABEL = { proposed: 'Proposed', revised: 'Revised', projected: 'Projected', actual: 'Actual' };
+  const ORDER = ['actual', 'projected', 'proposed', 'revised'];
   const STATUS = {
-    proposed: 'Proposed, not adopted', revised: 'Revised proposal, not adopted', adopted: 'Adopted budget',
-    amended: 'Amended budget', projected: 'Projected year-end estimate', actual: 'Actual spending',
+    proposed: 'Proposed, not adopted', revised: 'Revised proposal, not adopted',
+    projected: 'Projected year-end estimate', actual: 'Actual spending',
   };
   const CAT_ORDER = ['Salaries & Wages', 'Benefits', 'Operating', 'Equipment & Capital', 'Debt, Transfers & Allocations', 'Revenue', 'Uncoded'];
-  const PALETTE = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#9085e9', '#0ca30c', '#e66767'];
-  const OTHER_COLOR = '#777';
+  // Colors are read from CSS variables at start-up (see loadTokens), so branding lives in styles.css.
+  let PALETTE = [], OTHER_COLOR = '#777', SEL = '#41ffca', CMP = '#ffca41', INK = '#fff', MUTED = '#b3b3b3', GRID = '#262626', SURFACE = '#0d0d0d', BG = '#000';
+  let CFG = null, DEFAULT_FUND = '';
+  function loadTokens() {
+    const cs = getComputedStyle(document.documentElement), v = (n, d) => cs.getPropertyValue(n).trim() || d;
+    PALETTE = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => v(`--cat-${i}`, '#888'));
+    OTHER_COLOR = v('--cat-other', OTHER_COLOR); SEL = v('--sel', SEL); CMP = v('--cmp', CMP);
+    INK = v('--fg', INK); MUTED = v('--muted', MUTED); GRID = v('--border', GRID); SURFACE = v('--card', SURFACE); BG = v('--bg', BG);
+  }
   const PAGE_SIZE = 50;
   const PIE_SLICES = 7;
 
@@ -43,7 +51,7 @@
   const sum = (list) => list.reduce((t, r) => t + r.v, 0);
   /* Source links: the amount itself links to its page in the budget book (no page text is shown). */
   const bookYearOf = (k) => { const s = series(k); return s.year + D.rule[s.measure].book_offset; };
-  const pdfHref = (d, p) => `pdfs/${encodeURIComponent(D.docs[d])}#page=${p}`;
+  const pdfHref = (d, p) => `${CFG.paths.pdfs}${encodeURIComponent(D.docs[d])}#page=${p}`;
   const src = (text, k, d, p) => (d == null || !k ? text
     : `<a class="src" href="${pdfHref(d, p)}" target="_blank" rel="noopener" title="View in budget book" aria-label="${esc(text)}: open source page in the ${bookYearOf(k)} budget book">${text}</a>`);
   const firstPage = (list) => { let d = null, p = Infinity; for (const r of list) { if (d == null) d = r.d; if (r.d === d && r.p < p) p = r.p; } return { d, p }; };
@@ -97,11 +105,18 @@
   const catRank = (i) => { const n = CAT_ORDER.indexOf(D.categories[i]); return n < 0 ? 99 : n; };
   const catColor = (i) => PALETTE[catRank(i) % PALETTE.length];
 
+  /* Extra Fund-selector entries that are not budget lines. Placeholder for the "Reserve Fund" (General Fund
+     balance projection: year-end balance and year-over-year change; Actual (unaudited) for past years,
+     Projected for the prior budget year, Proposed and Revised for the new year). When data/processed/
+     fund_balance_*.csv is built into the JSON, return ['Reserve Fund'] here when it exists and render it
+     in the route views; nothing is shown until then. */
+  const extraFundViews = () => [];
+
   const years = () => [...new Set(Object.values(D.series).map((s) => s.year))].sort((a, b) => b - a);
   const measuresFor = (y) => ORDER.filter((m) => series(key(y, m)));
-  const defaultMeasure = (y) => { const ms = measuresFor(y); return ms.includes('revised') ? 'revised' : ms.includes('proposed') ? 'proposed' : ms.includes('adopted') ? 'adopted' : ms[0]; };
+  const defaultMeasure = (y) => { const ms = measuresFor(y); return ms.includes('revised') ? 'revised' : ms.includes('proposed') ? 'proposed' : ms[0]; };
   function defaultCompare(y, m) {
-    return [key(y - 1, m), key(y - 1, 'adopted'), key(y - 1, 'actual')].find((k) => series(k)) || '';
+    return [key(y - 1, m), ...ORDER.map((x) => key(y - 1, x))].find((k) => series(k)) || '';
   }
 
   /* ---------- routing ---------- */
@@ -124,7 +139,7 @@
     const c = (q.get('c') || '').replace('-', '|');
     S.c = q.has('c') ? (series(c) && c !== key(S.y, S.m) ? c : '') : defaultCompare(S.y, S.m);
     S.k = q.get('k') === 'revenue' ? 'revenue' : 'expense';
-    S.f = D.funds.includes(q.get('f')) ? q.get('f') : '';
+    S.f = q.get('f') === 'all' ? '' : D.funds.includes(q.get('f')) ? q.get('f') : DEFAULT_FUND; // opens on the default fund unless f=all
   }
   function query(over = {}) {
     const s = { ...S, ...over };
@@ -132,7 +147,7 @@
     q.set('y', s.y); q.set('m', s.m);
     if (s.c !== defaultCompare(s.y, s.m)) q.set('c', s.c ? s.c.replace('|', '-') : 'none');
     if (s.k !== 'expense') q.set('k', s.k);
-    if (s.f) q.set('f', s.f);
+    if (!s.f) q.set('f', 'all'); else if (s.f !== DEFAULT_FUND) q.set('f', s.f);
     return q.toString();
   }
   const deptHash = (dept, over) => `#/department/${slug(D.departments[dept])}?${query(over)}`;
@@ -157,7 +172,8 @@
       .sort((a, b) => parseKey(b).y - parseKey(a).y || ORDER.indexOf(parseKey(a).m) - ORDER.indexOf(parseKey(b).m));
     const cmp = `<option value="none" ${!S.c ? 'selected' : ''}>No comparison</option>` + opts.map((x) => `<option value="${x}" ${x === S.c ? 'selected' : ''}>${esc(seriesLabel(x))}</option>`).join('');
     const present = new Set(rows(k).map((r) => r.fund));
-    const funds = `<option value="">All funds</option>` + D.funds.map((f, i) => (present.has(i) || f === S.f ? `<option value="${esc(f)}" ${f === S.f ? 'selected' : ''}>${esc(f)}</option>` : '')).join('');
+    const funds = `<option value="">All funds</option>` + D.funds.map((f, i) => (present.has(i) || f === S.f ? `<option value="${esc(f)}" ${f === S.f ? 'selected' : ''}>${esc(f)}</option>` : '')).join('')
+      + extraFundViews().map((f) => `<option value="${esc(f)}" ${f === S.f ? 'selected' : ''}>${esc(f)}</option>`).join('');
     const tabs = (name, items, cur) => `<div class="tabs" role="radiogroup" aria-label="${name}">${items.map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === cur}" data-tab="${name}" data-v="${v}">${esc(l)}</button>`).join('')}</div>`;
     return `<div class="filters">
         <div class="field"><label class="field-label" for="f-y">Fiscal year</label><select id="f-y" data-sel="y">${yrs}</select></div>
@@ -165,7 +181,7 @@
         ${fund ? `<div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select></div>` : ''}
       </div>
       <div class="filters">
-        <div class="field field-wide"><span class="field-label" id="lbl-m">Figure</span>${tabs('m', measuresFor(S.y).map((m) => [m, LABEL[m]]), S.m)}</div>
+        ${measuresFor(S.y).length > 1 ? `<div class="field field-wide"><span class="field-label" id="lbl-m">Figure</span>${tabs('m', measuresFor(S.y).map((m) => [m, LABEL[m]]), S.m)}</div>` : ''}
         <div class="field field-wide"><span class="field-label" id="lbl-k">Show</span>${tabs('k', [['expense', 'Expenses'], ['revenue', 'Revenue']], S.k)}</div>
       </div>`;
   }
@@ -190,38 +206,61 @@
 
   function destroyCharts() { charts.forEach((c) => c.destroy()); charts = []; }
   const chartTheme = () => ({
-    tip: { backgroundColor: '#000', borderColor: '#262626', borderWidth: 1, titleColor: '#fff', bodyColor: '#fff', padding: 10 },
-    tick: '#b3b3b3', grid: '#262626',
+    tip: { backgroundColor: BG, borderColor: GRID, borderWidth: 1, titleColor: INK, bodyColor: INK, padding: 10 },
+    tick: MUTED, grid: GRID,
   });
   const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ---------- multi-year trend and printed-total notes ---------- */
   let trendScope = null;
-  const TREND = [['actual', '#ffca41'], ['adopted', '#41ffca'], ['proposed', PALETTE[0]], ['revised', PALETTE[1]]];
   function trendData(scope) {
-    const yrs = years().slice().sort((a, b) => a - b);
-    const tot = (y, m) => { const kk = key(y, m); if (!series(kk)) return null; const l = scoped(kk, scope); return l.length ? sum(l) : null; };
-    return { yrs, sets: TREND.map(([m, c]) => ({ m, c, data: yrs.map((y) => tot(y, m)) })).filter((d) => d.data.some((v) => v != null)) };
+    const pts = [];
+    for (const y of years().slice().sort((a, b) => a - b)) {
+      for (const m of ORDER) {
+        const kk = key(y, m);
+        if (!series(kk)) continue;
+        const l = scoped(kk, scope);
+        pts.push({ y, m, v: l.length ? sum(l) : null });
+      }
+    }
+    return pts;
   }
   function trendHTML(scope, title) {
     trendScope = scope;
-    const { yrs, sets } = trendData(scope);
-    if (!sets.length) return '';
-    const rowsHtml = yrs.map((y, i) => `<tr><th scope="row">${y}</th>${sets.map((d) => `<td class="num">${d.data[i] == null ? '—' : money(d.data[i])}</td>`).join('')}</tr>`).join('');
+    const pts = trendData(scope);
+    if (!pts.some((p) => p.v != null)) return '';
+    const has = (m) => pts.some((p) => p.m === m && p.v != null);
+    const legend = [
+      has('actual') && `<li><i class="ln"></i>Actual</li>`,
+      has('projected') && `<li><i class="ln dashed"></i>Projected</li>`,
+      has('proposed') && `<li><i class="dot" style="background:${PALETTE[0]}"></i>Proposed</li>`,
+      has('revised') && `<li><i class="dot" style="background:${PALETTE[1]}"></i>Revised</li>`,
+    ].filter(Boolean).join('');
+    const rowsHtml = pts.map((p) => `<tr><th scope="row">${p.y}</th><td>${LABEL[p.m]}</td><td class="num">${p.v == null ? '—' : money(p.v)}</td></tr>`).join('');
     return `<section class="panel" aria-labelledby="tr-t"><h2 class="panel-title" id="tr-t">${esc(title)}</h2>
-      <p class="panel-note">${S.k === 'revenue' ? 'Revenue' : 'Expenses'}${S.f ? ' · ' + esc(S.f) : ''}. Each line comes from a different budget column, so years can differ in what they include.</p>
-      <div class="chart-box short"><canvas id="trend-chart" role="img" aria-label="Totals by year, ${yrs[0]} to ${yrs[yrs.length - 1]}, for ${sets.map((d) => LABEL[d.m].toLowerCase()).join(', ')} figures. The table below has the values."></canvas></div>
-      <details class="values"><summary>Show values</summary><div class="table-scroll"><table class="table"><thead><tr><th scope="col">Year</th>${sets.map((d) => `<th scope="col" class="num">${LABEL[d.m]}</th>`).join('')}</tr></thead><tbody>${rowsHtml}</tbody></table></div></details></section>`;
+      <p class="panel-note">${S.k === 'revenue' ? 'Revenue' : 'Expenses'}${S.f ? ' · ' + esc(S.f) : ''}. Each year shows one kind of figure: actual, projected or proposed.</p>
+      <ul class="trend-legend" aria-hidden="true">${legend}</ul>
+      <div class="chart-box short"><canvas id="trend-chart" role="img" aria-label="Totals by year, ${pts[0].y} to ${pts[pts.length - 1].y}. Solid line: actual. Dashed line: projected. Dots: proposed and revised. The table below has the values."></canvas></div>
+      <details class="values"><summary>Show values</summary><div class="table-scroll"><table class="table"><thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Total</th></tr></thead><tbody>${rowsHtml}</tbody></table></div></details></section>`;
   }
   function drawTrend() {
     const cv = $('trend-chart');
     if (!cv || !window.Chart || !trendScope) return;
-    const { yrs, sets } = trendData(trendScope), th = chartTheme();
-    charts.push(new Chart(cv, { type: 'line',
-      data: { labels: yrs, datasets: sets.map((d) => ({ label: LABEL[d.m], data: d.data, borderColor: d.c, backgroundColor: d.c, pointRadius: 4, pointHoverRadius: 6, borderWidth: d.m === 'proposed' || d.m === 'revised' ? 0 : 2, spanGaps: true, tension: 0 })) },
-      options: { responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
-        plugins: { legend: { position: 'bottom', align: 'end', labels: { color: '#fff', boxWidth: 12, boxHeight: 12 } }, tooltip: { ...th.tip, callbacks: { label: (c) => `${c.dataset.label}: ${money(c.raw)}` } } },
-        scales: { x: { offset: true, ticks: { color: '#fff' }, grid: { color: th.grid } }, y: { beginAtZero: true, ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid } } } } }));
+    const pts = trendData(trendScope), th = chartTheme();
+    const yrs = [...new Set(pts.map((p) => p.y))];
+    const main = yrs.map((y) => pts.find((p) => p.y === y && (p.m === 'actual' || p.m === 'projected')) || null);
+    const dot = (m, c) => ({ label: LABEL[m], data: yrs.map((y) => pts.find((p) => p.y === y && p.m === m)?.v ?? null), borderColor: c, backgroundColor: c, showLine: false, pointRadius: 5, pointHoverRadius: 7 });
+    const datasets = [{
+      label: 'Actual / Projected', data: main.map((p) => p?.v ?? null), borderColor: SEL, borderWidth: 2, tension: 0, spanGaps: true,
+      pointRadius: 4, pointHoverRadius: 6, pointBorderColor: SEL, pointBackgroundColor: (c) => (main[c.dataIndex]?.m === 'projected' ? SURFACE : SEL),
+      segment: { borderDash: (c) => (main[c.p1DataIndex]?.m === 'projected' ? [6, 4] : undefined) },
+    }];
+    if (pts.some((p) => p.m === 'proposed')) datasets.push(dot('proposed', PALETTE[0]));
+    if (pts.some((p) => p.m === 'revised')) datasets.push(dot('revised', PALETTE[1]));
+    charts.push(new Chart(cv, { type: 'line', data: { labels: yrs, datasets },
+      options: { responsive: true, maintainAspectRatio: false, layout: { padding: { right: 8 } }, animation: reduceMotion() ? false : { duration: 300 },
+        plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { label: (c) => (c.datasetIndex === 0 ? `${LABEL[main[c.dataIndex].m]}: ${money(c.raw)}` : `${c.dataset.label}: ${money(c.raw)}`) } } },
+        scales: { x: { offset: true, ticks: { color: INK }, grid: { color: th.grid } }, y: { beginAtZero: true, ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid } } } } }));
   }
   /* Where a book's own printed fund total differs from the sum of its line items, say so. */
   function rollupNote(list) {
@@ -247,8 +286,8 @@
     const list = scoped(k);
     const total = sum(list);
     const kindWord = S.k === 'revenue' ? 'Revenue' : 'Expenses';
-    const scope = S.f ? S.f : 'City of Lancaster';
-    document.title = `${scope} ${kindWord}: ${seriesLabel(k)} · Lancaster Budget Explorer`;
+    const scope = S.f ? S.f : CFG.entity.short;
+    document.title = `${scope} ${kindWord}: ${seriesLabel(k)} · ${CFG.site_title}`;
 
     const by = (l) => aggregate(l, (r) => r.dept, (r) => D.departments[r.dept]);
     const selMap = by(list), cmpMap = S.c ? by(scoped(S.c)) : new Map();
@@ -294,8 +333,8 @@
           { label: 'Expenses', data: data.map((d) => d.exp), backgroundColor: PALETTE[1], borderRadius: 2 }] },
         options: {
           indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
-          plugins: { legend: { position: 'bottom', labels: { color: '#fff', boxWidth: 12, boxHeight: 12 } }, tooltip: { ...th.tip, callbacks: { label: (c) => `${c.dataset.label}: ${money(c.raw)}` } } },
-          scales: { x: { ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid } }, y: { ticks: { color: '#fff' }, grid: { display: false } } },
+          plugins: { legend: { position: 'bottom', labels: { color: INK, boxWidth: 12, boxHeight: 12 } }, tooltip: { ...th.tip, callbacks: { label: (c) => `${c.dataset.label}: ${money(c.raw)}` } } },
+          scales: { x: { ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid } }, y: { ticks: { color: INK }, grid: { display: false } } },
         },
       }));
     }
@@ -330,7 +369,7 @@
     if (rest.length) data.push({ label: `All other (${rest.length})`, v: rest.reduce((t, g) => t + Math.max(0, g.total), 0), c: OTHER_COLOR });
     charts.push(new Chart(cv, {
       type: 'pie',
-      data: { labels: data.map((d) => d.label), datasets: [{ data: data.map((d) => d.v), backgroundColor: data.map((d) => d.c), borderColor: '#0d0d0d', borderWidth: 2 }] },
+      data: { labels: data.map((d) => d.label), datasets: [{ data: data.map((d) => d.v), backgroundColor: data.map((d) => d.c), borderColor: SURFACE, borderWidth: 2 }] },
       options: { responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
         plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { label: (c) => `${c.label}: ${money(c.raw)} (${((c.raw / total) * 100).toFixed(1)}%)` } } } },
     }));
@@ -391,19 +430,19 @@
     const yoy = $('yoy-chart');
     if (yoy && window.Chart) {
       const ds = [];
-      if (S.c) ds.push({ label: seriesLabel(S.c), data: cats.map((g) => g.cmpTotal), backgroundColor: '#ffca41', borderRadius: 2 });
-      ds.push({ label: seriesLabel(k), data: cats.map((g) => g.total), backgroundColor: '#41ffca', borderRadius: 2 });
+      if (S.c) ds.push({ label: seriesLabel(S.c), data: cats.map((g) => g.cmpTotal), backgroundColor: CMP, borderRadius: 2 });
+      ds.push({ label: seriesLabel(k), data: cats.map((g) => g.total), backgroundColor: SEL, borderRadius: 2 });
       charts.push(new Chart(yoy, { type: 'bar', data: { labels: cats.map((g) => g.label), datasets: ds },
         options: { responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
-          plugins: { legend: { position: 'bottom', align: 'end', labels: { color: '#fff', boxWidth: 12, boxHeight: 12 } }, tooltip: { ...th.tip, callbacks: { label: (c) => `${c.dataset.label}: ${money(c.raw)}` } } },
-          scales: { x: { ticks: { color: '#fff', font: { size: 11 } }, grid: { color: th.grid } }, y: { ticks: { color: th.tick, font: { size: 11 }, callback: (n) => short(n) }, grid: { color: th.grid } } } } }));
+          plugins: { legend: { position: 'bottom', align: 'end', labels: { color: INK, boxWidth: 12, boxHeight: 12 } }, tooltip: { ...th.tip, callbacks: { label: (c) => `${c.dataset.label}: ${money(c.raw)}` } } },
+          scales: { x: { ticks: { color: INK, font: { size: 11 } }, grid: { color: th.grid } }, y: { ticks: { color: th.tick, font: { size: 11 }, callback: (n) => short(n) }, grid: { color: th.grid } } } } }));
     }
     const ov = $('ov-chart');
     if (ov && window.Chart) {
-      charts.push(new Chart(ov, { type: 'bar', data: { labels: [seriesLabel(S.c), seriesLabel(k)], datasets: [{ data: [sum(cmpRows), sum(selRows)], backgroundColor: ['#ffca41', '#41ffca'], borderRadius: 2 }] },
+      charts.push(new Chart(ov, { type: 'bar', data: { labels: [seriesLabel(S.c), seriesLabel(k)], datasets: [{ data: [sum(cmpRows), sum(selRows)], backgroundColor: [CMP, SEL], borderRadius: 2 }] },
         options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
           plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { label: (c) => money(c.raw) } } },
-          scales: { x: { ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid }, beginAtZero: true }, y: { ticks: { color: '#fff' }, grid: { display: false } } } } }));
+          scales: { x: { ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid }, beginAtZero: true }, y: { ticks: { color: INK }, grid: { display: false } } } } }));
     }
   }
 
@@ -487,7 +526,7 @@
     groups.forEach((g) => { if (!multiFund) g.sub = ''; });
     const bTitle = `${S.k === 'revenue' ? 'Revenue Source' : 'Bureau'} Breakdown`;
     const bureauPie = pieSection(bTitle, groups, { clickable: true, note: 'Select a bureau to see its line items.' });
-    document.title = `${name} ${seriesLabel(k)} · Lancaster Budget Explorer`;
+    document.title = `${name} ${seriesLabel(k)} · ${CFG.site_title}`;
     const v = entityView({ title: name, subtitle, selRows, cmpRows, parentHash: homeHash(), parentLabel: 'All departments', bureauPie, deptPicker: picker, scope: { dept: di } });
     return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats, { title: bTitle, groups }); mountLines(selRows, cmpRows, true); } };
   }
@@ -510,7 +549,7 @@
     const name = D.bureaus[hit.bureau];
     const selRows = scoped(k, { dept: di, orgs }), cmpRows = S.c ? scoped(S.c, { dept: di, orgs }) : [];
     const scope = { dept: di, orgs };
-    document.title = `${name} ${seriesLabel(k)} · Lancaster Budget Explorer`;
+    document.title = `${name} ${seriesLabel(k)} · ${CFG.site_title}`;
     const sub = `${esc(D.departments[di])} · ${esc(D.funds[hit.fund])} · ${selRows.length.toLocaleString()} line items`;
     const v = entityView({ title: name, subtitle: sub, selRows, cmpRows, parentHash: deptHash(di), parentLabel: D.departments[di], scope });
     return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats, null); mountLines(selRows, cmpRows, false); } };
@@ -569,19 +608,21 @@
   }
   function renderAbout() {
     const used = D.books.filter((b) => b.used);
+    const yrsOf = (m) => Object.values(D.series).filter((x) => x.measure === m).map((x) => x.year).sort((a, b) => a - b);
+    const actualYears = yrsOf('actual'), projYears = yrsOf('projected');
     const figs = (b) => Object.values(D.series).filter((s) => s.year + D.rule[s.measure].book_offset === b.year && D.docs[Array.isArray(s.doc) ? s.doc[0] : s.doc] === b.doc)
       .sort((a, c) => a.year - c.year || ORDER.indexOf(a.measure) - ORDER.indexOf(c.measure)).map((s) => `${s.year} ${LABEL[s.measure].toLowerCase()}`);
     const books = used.map((b) => { const f = figs(b); return `<li>${esc(b.doc.replace(/\.pdf$/i, ''))} (${b.year} book): ${f.length ? 'supplies ' + f.join(', ') : 'no figures under the selection rule'}.</li>`; }).join('');
     const issues = D.known_issues.map((i) => `<li>${esc(i.source_doc.replace(/\.pdf$/i, ''))}: ${esc(scrubPages(i.note))}</li>`).join('');
     $('about-body').innerHTML = `
       <h3>Sources</h3>
-      <p>Every figure comes from the City of Lancaster's published budget books. Each book reports several years side by side; this site picks one figure per account, year and measure:</p>
+      <p>Every figure comes from ${esc(CFG.entity.possessive)} published budget books. Each book reports several years side by side; this site picks <strong>one kind of figure per year</strong>:</p>
       <ul>
-        <li><strong>Proposed</strong> and <strong>Revised Proposed</strong> appear only for the newest year (${D.newest_year}). Both columns come from the ${D.newest_year} book, so you can compare what changed between them. Neither is an adopted budget.</li>
-        <li>For every other year, <strong>adopted</strong>, <strong>amended</strong> and <strong>projected</strong> (the revised projection when present) come from the <em>next</em> year's book, and <strong>actual</strong> comes from the book two years later.</li>
-        <li>A book's own-year proposal is never shown for older years, and year-to-date columns are not shown.</li>
+        <li><strong>${actualYears[0]}–${actualYears[actualYears.length - 1]}: Actual</strong>, the audited spending reported in the budget book published two years later.</li>
+        ${projYears.length ? `<li><strong>${projYears.join(', ')}: Projected</strong>, the city's year-end estimate (the revised projection when present) from the next year's book. The actual for ${projYears.length > 1 ? 'these years is' : 'this year is'} not published yet.</li>` : ''}
+        <li><strong>${D.newest_year}: Proposed and Revised</strong>, both from the ${D.newest_year} book, so you can compare what changed between them. Neither is an adopted budget.</li>
       </ul>
-      <p>Select any underlined-on-hover amount to open the page it came from in the budget book. Department and bureau totals open the first page of their line items; fund totals open the page where the book prints them.</p>
+      <p>Adopted and amended budgets, year-to-date columns and an older book's own-year proposal are not shown.</p>
       <p>Books in use:</p><ul>${books}</ul>
       <p>Years appear as soon as the books that report them have been processed.</p>
       <h3>Validation</h3>
@@ -590,19 +631,26 @@
       <p>These come from errors in the city's documents, not the extraction. A person reviewed each one.</p>
       <details class="values"><summary>Show all ${D.known_issues.length} notes</summary><ul>${issues || '<li>None recorded.</li>'}</ul></details>
       <h3>Get the data</h3>
-      <p><a href="data/budget.json">budget.json</a> (every figure shown here), <a href="data/staffing.json">staffing.json</a> (budgeted positions), <a href="data/conflicts.json">conflicts.json</a>. The extraction scripts and tables are in the project repository.</p>`;
+      <p><a href="${CFG.paths.data}budget.json">budget.json</a> (every figure shown here), <a href="${CFG.paths.data}staffing.json">staffing.json</a> (budgeted positions), <a href="${CFG.paths.data}conflicts.json">conflicts.json</a>. The extraction scripts and tables are in the project repository.</p>`;
     $('generated').textContent = `Data built ${D.generated.slice(0, 10)}.`;
   }
 
   async function boot() {
     try {
-      const res = await fetch('data/budget.json', { cache: 'no-cache' });
+      CFG = await (await fetch('config.json', { cache: 'no-cache' })).json();
+      const res = await fetch(`${CFG.paths.data}budget.json`, { cache: 'no-cache' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       D = await res.json();
     } catch (err) {
-      $('view').innerHTML = `<header class="page-head"><h1>Could not load the budget data</h1><p class="muted">data/budget.json: ${esc(err.message)}. If you opened index.html from disk, serve the folder over HTTP instead.</p></header>`;
+      $('view').innerHTML = `<header class="page-head"><h1>Could not load the budget data</h1><p class="muted">budget data: ${esc(err.message)}. If you opened index.html from disk, serve the folder over HTTP instead.</p></header>`;
       return;
     }
+    loadTokens();
+    DEFAULT_FUND = D.funds.includes(CFG.default_fund) ? CFG.default_fund : '';
+    document.title = CFG.site_title;
+    $('wordmark').textContent = CFG.site_title;
+    document.querySelector('meta[name=description]')?.setAttribute('content', CFG.description);
+    $('footer-text').textContent = CFG.footer;
     wire();
     renderAbout();
     onRoute(false);
