@@ -63,6 +63,7 @@
   }
   const isRevenue = (r) => D.categories[r.cat] === 'Revenue';
   const bureauKey = (r) => `${r.fund}|${r.bureau}`;
+  const orgOf = (r) => r.code.split('-')[0];
   const bureauSlug = (fund, bureau) => `${slug(D.funds[fund])}--${slug(D.bureaus[bureau])}`;
 
   function scoped(k, over = {}) {
@@ -70,9 +71,9 @@
     const f = D.funds.indexOf(S.f);
     return rows(k).filter((r) =>
       (kind === 'revenue') === isRevenue(r) &&
-      (over.bureau != null || f < 0 || r.fund === f) && // a bureau lives in one fund, so the fund filter is moot
+      (over.orgs != null || f < 0 || r.fund === f) && // a bureau lives in one fund, so the fund filter is moot
       (over.dept == null || r.dept === over.dept) &&
-      (over.bureau == null || bureauKey(r) === over.bureau));
+      (over.orgs == null || over.orgs.has(orgOf(r))));
   }
   function aggregate(list, keyFn, labelFn) {
     const m = new Map();
@@ -186,6 +187,48 @@
   });
   const reduceMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  /* ---------- multi-year trend and printed-total notes ---------- */
+  let trendScope = null;
+  const TREND = [['actual', '#ffca41'], ['adopted', '#41ffca'], ['proposed', PALETTE[0]], ['revised', PALETTE[1]]];
+  function trendData(scope) {
+    const yrs = years().slice().sort((a, b) => a - b);
+    const tot = (y, m) => { const kk = key(y, m); if (!series(kk)) return null; const l = scoped(kk, scope); return l.length ? sum(l) : null; };
+    return { yrs, sets: TREND.map(([m, c]) => ({ m, c, data: yrs.map((y) => tot(y, m)) })).filter((d) => d.data.some((v) => v != null)) };
+  }
+  function trendHTML(scope, title) {
+    trendScope = scope;
+    const { yrs, sets } = trendData(scope);
+    if (!sets.length) return '';
+    const rowsHtml = yrs.map((y, i) => `<tr><th scope="row">${y}</th>${sets.map((d) => `<td class="num">${d.data[i] == null ? '—' : money(d.data[i])}</td>`).join('')}</tr>`).join('');
+    return `<section class="panel" aria-labelledby="tr-t"><h2 class="panel-title" id="tr-t">${esc(title)}</h2>
+      <p class="panel-note">${S.k === 'revenue' ? 'Revenue' : 'Expenses'}${S.f ? ' · ' + esc(S.f) : ''}. Each line comes from a different budget column, so years can differ in what they include.</p>
+      <div class="chart-box short"><canvas id="trend-chart" role="img" aria-label="Totals by year, ${yrs[0]} to ${yrs[yrs.length - 1]}, for ${sets.map((d) => LABEL[d.m].toLowerCase()).join(', ')} figures. The table below has the values."></canvas></div>
+      <details class="values"><summary>Show values</summary><div class="table-scroll"><table class="table"><thead><tr><th scope="col">Year</th>${sets.map((d) => `<th scope="col" class="num">${LABEL[d.m]}</th>`).join('')}</tr></thead><tbody>${rowsHtml}</tbody></table></div></details></section>`;
+  }
+  function drawTrend() {
+    const cv = $('trend-chart');
+    if (!cv || !window.Chart || !trendScope) return;
+    const { yrs, sets } = trendData(trendScope), th = chartTheme();
+    charts.push(new Chart(cv, { type: 'line',
+      data: { labels: yrs, datasets: sets.map((d) => ({ label: LABEL[d.m], data: d.data, borderColor: d.c, backgroundColor: d.c, pointRadius: 4, pointHoverRadius: 6, borderWidth: d.m === 'proposed' || d.m === 'revised' ? 0 : 2, spanGaps: true, tension: 0 })) },
+      options: { responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
+        plugins: { legend: { position: 'bottom', align: 'end', labels: { color: '#fff', boxWidth: 12, boxHeight: 12 } }, tooltip: { ...th.tip, callbacks: { label: (c) => `${c.dataset.label}: ${money(c.raw)}` } } },
+        scales: { x: { offset: true, ticks: { color: '#fff' }, grid: { color: th.grid } }, y: { beginAtZero: true, ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid } } } } }));
+  }
+  /* Where a book's own printed fund total differs from the sum of its line items, say so. */
+  function rollupNote(list) {
+    const k = key(S.y, S.m), out = [];
+    for (const fi of [...new Set(list.map((r) => r.fund))]) {
+      const fund = D.funds[fi], pr = printedFund(fund, S.k, k);
+      if (!pr) continue;
+      const printed = pr.values[k];
+      const shown = sum(rows(k).filter((r) => r.fund === fi && (S.k === 'revenue') === isRevenue(r))); // whole fund, not just this page's lines
+      if (Math.abs(shown - printed) <= 100) continue; // smaller gaps are the city's rounding
+      out.push(`${esc(fund)}: the ${bookYearOf(k)} budget book prints ${money(printed)}, but its line items add up to ${money(shown)} (${money(Math.abs(shown - printed))} ${shown < printed ? 'less' : 'more'}). See “Known problems in the source books” below.`);
+    }
+    return out.length ? `<div class="notice" role="note">${out.join('<br>')}</div>` : '';
+  }
+
   /* ---------- home ---------- */
   function homeView() {
     const k = key(S.y, S.m);
@@ -201,7 +244,7 @@
     const items = [...keys].map((d) => ({ dept: d, sel: selMap.get(d), cmp: cmpMap.get(d) }))
       .sort((a, b) => (b.sel?.total || 0) - (a.sel?.total || 0) || (b.cmp?.total || 0) - (a.cmp?.total || 0));
     const max = Math.max(1, ...items.flatMap((i) => [Math.abs(i.sel?.total || 0), Math.abs(i.cmp?.total || 0)]));
-    const bar = (agg, cls, label, bk) => `<div><div class="bar-label ${cls}"><span>${esc(label)}</span><span>${agg ? src(money(agg.total), bk, agg.d, agg.p) : '<span class="missing">Not in this book</span>'}</span></div>
+    const bar = (agg, cls, label, bk) => `<div><div class="bar-label ${cls}"><span>${esc(label)}</span><span>${agg ? src(money(agg.total), bk, agg.d, agg.p) : '<span class="missing">No figures</span>'}</span></div>
         <div class="track"><div class="fill ${cls}" style="width:${agg ? Math.max(0, (agg.total / max) * 100) : 0}%"></div></div></div>`;
     const cards = items.map((it) => {
       const sh = total > 0 && it.sel ? (it.sel.total / total) * 100 : null;
@@ -213,10 +256,11 @@
     }).join('');
 
     return `<header class="page-head"><h1 id="page-h">${esc(scope)} ${kindWord}: ${esc(seriesLabel(k))}</h1>
-        <p class="big-total" aria-live="polite">${(() => { const pf = S.f ? printedFund(S.f, S.k, k) : null; return pf ? src(money(total), k, pf.doc, pf.page) : money(total); })()}</p>${statusHTML()}</header>
+        <p class="big-total" aria-live="polite">${(() => { const pf = S.f ? printedFund(S.f, S.k, k) : null; return pf ? src(money(total), k, pf.doc, pf.page) : money(total); })()}</p>${statusHTML()}${rollupNote(list)}</header>
       ${filtersHTML()}
       <ul class="cards" aria-label="Departments">${cards || '<li class="empty center">No lines for this selection.</li>'}</ul>
       <p class="hint">Select any department to see its detailed breakdown. Amounts open the source page in the budget book.</p>
+      ${trendHTML({}, 'Totals by Year')}
       <section class="panel" aria-labelledby="re-title"><h2 class="panel-title" id="re-title">Revenue vs. Expenses by Fund: ${esc(seriesLabel(k))}</h2>
         <div class="chart-box"><canvas id="re-chart" role="img" aria-label="Revenue and expenses by fund"></canvas></div>
         <div class="table-scroll"><table class="table" id="re-table"></table></div></section>`;
@@ -287,7 +331,7 @@
       .sort((a, b) => b.total - a.total || b.cmpTotal - a.cmpTotal);
   }
 
-  function entityView({ title, subtitle, selRows, cmpRows, parentHash, parentLabel, bureauPie, deptPicker }) {
+  function entityView({ title, subtitle, selRows, cmpRows, parentHash, parentLabel, bureauPie, deptPicker, scope }) {
     const k = key(S.y, S.m), kindWord = S.k === 'revenue' ? 'Revenue' : 'Budget';
     const total = sum(selRows), cmpTotal = sum(cmpRows);
     const fp = firstPage(selRows), cfp = firstPage(cmpRows);
@@ -298,7 +342,7 @@
     let html = `<div class="dept-top"><a class="btn btn-primary" href="${esc(parentHash)}">← ${esc(parentLabel)}</a></div>`;
     if (deptPicker) html += `<div class="field dept-picker" style="margin-inline:auto"><label class="field-label" for="dept-pick">Department</label>${deptPicker}</div>`;
     html += `<header><h2 class="dept-name" id="page-h" tabindex="-1">${esc(title)}</h2>
-      <p class="dept-total">Total ${kindWord}: ${totalLink}</p><p class="dept-sub">${subtitle}</p><p class="center">${statusHTML()}</p></header>`;
+      <p class="dept-total">Total ${kindWord}: ${totalLink}</p><p class="dept-sub">${subtitle}</p><p class="center">${statusHTML()}</p>${deptPicker ? rollupNote(selRows) : ''}</header>`;
     html += `<div class="dept-filters">${filtersHTML({ fund: !!deptPicker })}</div>`;
 
     html += pieSection(`${title} ${seriesLabel(k)} ${kindWord} Breakdown`, cats, { k });
@@ -307,13 +351,14 @@
       html += `<section class="panel" aria-labelledby="yoy-t"><h2 class="panel-title" id="yoy-t">${esc(title)} Total ${S.k === 'revenue' ? 'Revenue' : 'Budgeted Cost'}: ${S.c ? 'Comparison' : 'by Category'}</h2>
         <div class="chart-scroll"><div class="chart-box"><canvas id="yoy-chart" role="img" aria-label="${esc(title)} by category, ${esc(S.c ? seriesLabel(S.c) + ' compared with ' : '')}${esc(seriesLabel(k))}"></canvas></div></div></section>`;
     }
+    html += trendHTML(scope, `${title}: Totals by Year`);
     if (bureauPie) html += bureauPie;
 
     html += `<div class="totals">${S.c ? `<section class="panel" aria-label="${esc(seriesLabel(S.c))} total"><h2 class="total-label">${esc(seriesLabel(S.c))} Total</h2><p class="total-value">${cmpLink}</p></section>` : ''}
       <section class="panel" aria-label="${esc(seriesLabel(k))} total"><h2 class="total-label">${esc(seriesLabel(k))} Total</h2><p class="total-value">${totalLink}</p></section></div>`;
 
-    const chg = (a, b) => { const d = a - b, p = pctOf(d, b); return `<span class="${d > 0 ? 'up' : d < 0 ? 'down' : 'flat'}">${money(d)}${p == null ? '' : ` (${p.toFixed(1)}%)`}</span>`; };
-    html += `<section class="panel" aria-labelledby="cat-t"><h2 class="total-label" id="cat-t">Budget Categories</h2><div class="table-scroll"><table class="table">
+    const chg = (a, b) => { const d = a - b, p = pctOf(d, b); return `<span class="${d > 0 ? 'up' : d < 0 ? 'down' : 'flat'}">${money(d)}${p == null ? '' : `<span class="pct"> (${p.toFixed(1)}%)</span>`}</span>`; };
+    html += `<section class="panel" aria-labelledby="cat-t"><h2 class="total-label" id="cat-t">Budget Categories</h2><div class="table-scroll"><table class="table tight">
       <thead><tr><th scope="col">Category</th>${S.c ? `<th scope="col" class="num">${esc(seriesLabel(S.c))}</th>` : ''}<th scope="col" class="num">${esc(seriesLabel(k))}</th>${S.c ? '<th scope="col" class="num">Change</th>' : ''}</tr></thead>
       <tbody>${cats.map((g) => `<tr><td>${esc(g.label)}</td>${S.c ? `<td class="num">${src(money(g.cmpTotal), S.c, g.cd, g.cp)}</td>` : ''}<td class="num">${src(money(g.total), k, g.d, g.p)}</td>${S.c ? `<td class="num">${chg(g.total, g.cmpTotal)}</td>` : ''}</tr>`).join('')}</tbody></table></div></section>`;
 
@@ -330,6 +375,7 @@
     const k = key(S.y, S.m), th = chartTheme();
     drawPie(`${$('page-h').textContent} ${seriesLabel(k)} ${S.k === 'revenue' ? 'Revenue' : 'Budget'} Breakdown`, cats);
     if (bureauGroups) drawPie(bureauGroups.title, bureauGroups.groups);
+    drawTrend();
     const yoy = $('yoy-chart');
     if (yoy && window.Chart) {
       const ds = [];
@@ -430,7 +476,7 @@
     const bTitle = `${S.k === 'revenue' ? 'Revenue Source' : 'Bureau'} Breakdown`;
     const bureauPie = pieSection(bTitle, groups, { clickable: true, note: 'Select a bureau to see its line items.' });
     document.title = `${name} ${seriesLabel(k)} · Lancaster Budget Explorer`;
-    const v = entityView({ title: name, subtitle, selRows, cmpRows, parentHash: homeHash(), parentLabel: 'All departments', bureauPie, deptPicker: picker });
+    const v = entityView({ title: name, subtitle, selRows, cmpRows, parentHash: homeHash(), parentLabel: 'All departments', bureauPie, deptPicker: picker, scope: { dept: di } });
     return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats, { title: bTitle, groups }); mountLines(selRows, cmpRows, true); } };
   }
 
@@ -438,15 +484,23 @@
     const di = D.departments.findIndex((d) => slug(d) === route.dept);
     if (di < 0) return notFound('Department');
     route.deptIdx = di;
-    const all = rows(key(S.y, S.m)).concat(S.c ? rows(S.c) : []);
-    const hit = all.find((r) => r.dept === di && bureauSlug(r.fund, r.bureau) === route.bureau);
+    // Bureau names change between books, so find it in any year, then match every year by org code.
+    const k = key(S.y, S.m);
+    let hit = null, hitKey = null;
+    for (const kk of [k, S.c, ...Object.keys(D.series)]) {
+      if (!kk) continue;
+      hit = rows(kk).find((r) => r.dept === di && bureauSlug(r.fund, r.bureau) === route.bureau);
+      if (hit) { hitKey = kk; break; }
+    }
     if (!hit) return notFound('Bureau');
     route.fund = hit.fund; route.bureauIdx = hit.bureau;
-    const k = key(S.y, S.m), bk = bureauKey(hit), name = D.bureaus[hit.bureau];
-    const selRows = scoped(k, { dept: di, bureau: bk }), cmpRows = S.c ? scoped(S.c, { dept: di, bureau: bk }) : [];
+    const orgs = new Set(rows(hitKey).filter((r) => r.dept === di && r.fund === hit.fund && r.bureau === hit.bureau).map(orgOf));
+    const name = D.bureaus[hit.bureau];
+    const selRows = scoped(k, { dept: di, orgs }), cmpRows = S.c ? scoped(S.c, { dept: di, orgs }) : [];
+    const scope = { dept: di, orgs };
     document.title = `${name} ${seriesLabel(k)} · Lancaster Budget Explorer`;
     const sub = `${esc(D.departments[di])} · ${esc(D.funds[hit.fund])} · ${selRows.length.toLocaleString()} line items`;
-    const v = entityView({ title: name, subtitle: sub, selRows, cmpRows, parentHash: deptHash(di), parentLabel: D.departments[di] });
+    const v = entityView({ title: name, subtitle: sub, selRows, cmpRows, parentHash: deptHash(di), parentLabel: D.departments[di], scope });
     return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats, null); mountLines(selRows, cmpRows, false); } };
   }
 
@@ -459,7 +513,7 @@
     T.sort = 'sel'; T.dir = -1; T.q = ''; T.shown = PAGE_SIZE;
     destroyCharts();
     let page;
-    if (route.name === 'home') page = { html: homeView(), after: revExpAfter };
+    if (route.name === 'home') page = { html: homeView(), after: () => { drawTrend(); revExpAfter(); } };
     else if (route.name === 'dept') page = deptPage();
     else page = bureauPage();
     $('view').innerHTML = page.html;
@@ -522,7 +576,7 @@
       <p>Line items were extracted from the PDFs by script (scanned books were OCR'd first). Every total the book prints (each section, department, fund and staffing schedule) was recomputed from the extracted lines; differences of up to $5 are allowed for the city's rounding to whole dollars. Figures are shown as printed, never adjusted. Where overlapping books disagree on the same figure, the rule above decides and the disagreement is logged (${D.conflict_count} so far). Lines of $0 are left out.</p>
       <h3>Known problems in the source books</h3>
       <p>These come from errors in the city's documents, not the extraction. A person reviewed each one.</p>
-      <ul>${issues || '<li>None recorded.</li>'}</ul>
+      <details class="values"><summary>Show all ${D.known_issues.length} notes</summary><ul>${issues || '<li>None recorded.</li>'}</ul></details>
       <h3>Get the data</h3>
       <p><a href="data/budget.json">budget.json</a> (every figure shown here), <a href="data/staffing.json">staffing.json</a> (budgeted positions), <a href="data/conflicts.json">conflicts.json</a>. The extraction scripts and tables are in the project repository.</p>`;
     $('generated').textContent = `Data built ${D.generated.slice(0, 10)}.`;
