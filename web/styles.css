@@ -155,7 +155,7 @@ select { appearance: none; width: 100%; height: 40px; background: var(--card) ur
 .fill.cmp { background: var(--gold); }
 .fill.sel { background: var(--mint); }
 .missing { color: var(--muted); font-weight: 400; }
-.hint { text-align: left; color: var(--muted); margin: 32px 0 48px; max-width: 70ch; }
+.hint { text-align: left; color: var(--muted); margin: 32px 0 48px; }
 .empty { color: var(--muted); }
 
 /* Panels */
@@ -163,14 +163,14 @@ select { appearance: none; width: 100%; height: 40px; background: var(--card) ur
    budget book opens a section; size and the rule, not a frame, set the hierarchy. */
 .panel { background: transparent; border: 0; border-top: 3px double var(--fg); border-radius: 0; padding: 20px 0 0; margin: 0 0 56px; }
 .panel-title, .panel-title-left, .total-label { text-transform: uppercase; letter-spacing: .16em; font-weight: 600; font-size: 14px; line-height: 20px; color: var(--fg); border: 0; padding: 0; margin: 0 0 18px; text-align: left; }
-.panel-note { max-width: 70ch; margin: -6px 0 20px; text-align: left; color: var(--muted); font-size: 15px; }
+.panel-note { margin: -6px 0 20px; text-align: left; color: var(--muted); font-size: 15px; }
 
 .dept-top { display: flex; justify-content: flex-start; margin-bottom: 8px; }
 .dept-picker { max-width: 448px; margin: 0 0 24px; }
 .dept-name { margin: 0 0 12px; text-align: left; font-family: var(--serif); font-size: 52px; line-height: 56px; font-weight: 700; padding: 0; overflow-wrap: anywhere; }
 .dept-name:focus { outline: none; }
 .dept-total { margin: 0 0 8px; text-align: left; font-family: var(--serif); font-size: 28px; line-height: 36px; overflow-wrap: anywhere; }
-.dept-sub { margin: 0 0 24px; max-width: 70ch; text-align: left; color: var(--muted); }
+.dept-sub { margin: 0 0 24px; text-align: left; color: var(--muted); }
 .dept-filters { margin-bottom: 32px; }
 
 /* Pie + legend */
@@ -233,7 +233,7 @@ select { appearance: none; width: 100%; height: 40px; background: var(--card) ur
 /* About */
 .about { margin-top: 72px; }
 .about h3, .about .about-h { margin: 24px 0 8px; font-size: 16px; font-weight: 600; }
-.about p, .about li { color: var(--muted); font-size: 14px; line-height: 22px; max-width: 70ch; }
+.about p, .about li { color: var(--muted); font-size: 14px; line-height: 22px; }
 .about ul { padding-left: 20px; margin: 8px 0; }
 .about strong { color: var(--fg); font-weight: 600; }
 
@@ -287,7 +287,7 @@ select { appearance: none; width: 100%; height: 40px; background: var(--card) ur
 a.src { color: inherit; text-decoration: none; border-bottom: 1px dotted transparent; }
 a.src:hover, a.src:focus-visible { border-bottom-color: currentColor; }
 
-.notice { max-width: 70ch; margin: 16px 0 0; padding: 10px 14px; border: 1px solid var(--fg); border-radius: 2px; color: var(--muted); font-size: 14px; line-height: 20px; text-align: left; }
+.notice { margin: 16px 0 0; padding: 10px 14px; border: 1px solid var(--fg); border-radius: 2px; color: var(--muted); font-size: 14px; line-height: 20px; text-align: left; }
 details.values { margin-top: 12px; }
 details.values summary { cursor: pointer; color: var(--muted); font-size: 14px; }
 details.values summary:hover { color: var(--fg); }
@@ -313,7 +313,7 @@ details.values summary:hover { color: var(--fg); }
    Collapsible description quoted from the city's 2027 organization descriptions.
    Uses only the shared color variables, so it follows the light and dark themes.
    ========================================================================== */
-.org-about { max-width: 760px; margin: 0 0 32px; background: transparent; border: 0; border-top: 1px solid var(--fg); border-bottom: 1px solid var(--border); border-radius: 0; }
+.org-about { margin: 0 0 32px; background: transparent; border: 0; border-top: 1px solid var(--fg); border-bottom: 1px solid var(--border); border-radius: 0; }
 .org-about > summary { cursor: pointer; list-style: none; display: flex; align-items: center; gap: 10px; padding: 14px 18px; font-weight: 600; font-size: 17px; color: var(--fg); border-radius: 0; }
 .org-about > summary::-webkit-details-marker { display: none; }
 .org-about > summary::before { content: ""; flex: none; width: 8px; height: 8px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(-45deg); transition: transform .15s; }
@@ -342,11 +342,11 @@ details.values summary:hover { color: var(--fg); }
 .define summary { cursor: pointer; display: inline-flex; align-items: center; min-height: 44px; padding: 0 4px 0 0; }
 .define summary:hover { color: var(--fg); }
 .define ul { margin: 6px 0 0; padding-left: 18px; }
-.define p { margin: 6px 0 0; max-width: 70ch; }
+.define p { margin: 6px 0 0; }
 .define .aside { list-style: none; margin-left: -18px; font-style: italic; }
 .define strong { color: var(--fg); font-weight: 600; }
 .draw-note { margin: 12px 0 0; color: var(--muted); font-size: 15px; }
-.tie-note { max-width: 70ch; margin-left: 0; margin-right: auto; }
+.tie-note { margin-left: 0; margin-right: auto; }
 
 /* Controls: one-line summary with a Change button; the full controls open below it. */
 .controls { max-width: 960px; margin: 0 0 24px; }
@@ -381,7 +381,7 @@ details.values summary:hover { color: var(--fg); }
    shown by side and arrow, since more or less spending is not good or bad by itself.
    ========================================================================== */
 .wc-head { margin-bottom: 32px; }
-.wc-lede { max-width: 62ch; margin: 0; font-size: 20px; line-height: 1.5; text-align: left; }
+.wc-lede { margin: 0; font-size: 20px; line-height: 1.5; text-align: left; }
 .wc-lede a.src, .wc-lede-sm a.src { border-bottom-color: var(--border-strong); }
 .wc-lede-sm { margin: 0 0 12px; font-size: 17px; line-height: 1.5; }
 .wc-badge { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 14px; margin: 16px 0 0; font-size: 14px; }
@@ -397,7 +397,7 @@ details.values summary:hover { color: var(--fg); }
 .wc-tile-v .pct { font-size: 16px; font-weight: 500; color: var(--muted); }
 .wc-tile-s { margin: 0; font-size: 14px; line-height: 20px; color: var(--muted); }
 .wc-tile-s a:not(.src) { color: var(--link); }
-.wc-note { margin: 0 0 12px; color: var(--muted); font-size: 14px; line-height: 20px; max-width: 75ch; }
+.wc-note { margin: 0 0 12px; color: var(--muted); font-size: 14px; line-height: 20px; }
 .wc-h3 { margin: 24px 0 8px; font-size: 16px; font-weight: 700; }
 .wc-facts { margin: 0 0 16px; padding-left: 20px; line-height: 1.6; }
 .wc-facts-line { margin: 0 0 8px; }
@@ -587,7 +587,7 @@ details.values summary:hover { color: var(--fg); }
 .hero-delta { margin: 0 0 8px; font-size: 20px; line-height: 28px; color: var(--muted); }
 .hero-delta .up, .hero-delta .down { font-size: 20px; }
 .known-link { white-space: nowrap; font-size: 14px; }
-.res-annot { margin: 12px 0 0; font-size: 14px; line-height: 20px; color: var(--muted); max-width: 68ch; }
+.res-annot { margin: 12px 0 0; font-size: 14px; line-height: 20px; color: var(--muted); }
 .res-flag { font-weight: 700; color: var(--fg); }
 .table .res-note-row td { font-size: 14px; line-height: 20px; padding: 12px 16px; color: var(--muted); background: var(--hover); }
 .nb { white-space: nowrap; }
@@ -604,8 +604,6 @@ a.src { white-space: nowrap; }
 /* Moved-between-funds cards sit inside a panel: separate them with rules, not nested boxes. */
 .wc-moved .wc-shift { border: 0; border-radius: 0; padding: 0; background: none; }
 .wc-moved .wc-shifts { gap: 24px 32px; }
-.wc-facts, .wc-facts-line, .wc-benefits, .wc-policy ul, .wc-traj { max-width: 70ch; }
-.wc-note { max-width: 70ch; }
 .wc-dept .wc-moved { border: 0; background: none; padding: 0; margin: 20px 0 0; }
 .wc-dept .wc-moved > .total-label { font-size: 16px; }
 
@@ -694,7 +692,6 @@ a.src { white-space: nowrap; }
 .ledger .num { font-variant-numeric: tabular-nums; }
 
 /* Reserve note: a readable measure inside the full-width cell */
-.res-note-text { max-width: 70ch; }
 
 /* Proposed marker is a diamond, Revised a ring: the two stay apart even where their values nearly coincide. */
 .trend-legend .dot.diamond { border-radius: 0; width: 9px; height: 9px; transform: rotate(45deg); }
@@ -734,19 +731,18 @@ a.src { white-space: nowrap; }
   .table tbody a:not(.src) { display: inline-block; padding: 13px 0; margin: -13px 0; }
 }
 
-/* About the data: on wide screens the notes run in two columns instead of one narrow strip. */
+/* About the data: on wide screens the short sections sit two to a row; the long ones span the page.
+   (A grid, not CSS columns: columns reflowed the whole page when the known-problems list opened.) */
 @media (min-width: 1280px) {
-  #about-body { columns: 2; column-gap: 72px; }
-  #about-body h3, #about-body .about-h { break-after: avoid; }
-  #about-body p, #about-body li { max-width: none; }
-  #about-body details, #about-body ul { break-inside: auto; }
+  #about-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 72px; align-items: start; }
+  #about-body .about-sec-wide { grid-column: 1 / -1; }
 }
 
 /* ---------------------------------------------------------------------------------------------------------
    Deck, folded status line, category table, About page, margin notes, phone outline
    ------------------------------------------------------------------------------------------------------ */
 /* The deck: what changed, set in ink under the title. The total below is evidence, not the headline. */
-.deck { margin: 0 0 18px; max-width: 28ch; font-family: var(--serif); font-size: 38px; line-height: 44px; font-weight: 600; color: var(--fg); }
+.deck { margin: 0 0 18px; font-family: var(--serif); font-size: 38px; line-height: 44px; font-weight: 600; color: var(--fg); }
 .deck .up, .deck .down { font-weight: 700; }
 .deck .up::before, .deck .down::before { font-size: .55em; color: var(--fg); vertical-align: .25em; }
 .deck .deck-link { font-family: var(--font); font-size: 16px; font-weight: 600; white-space: nowrap; }
@@ -780,7 +776,7 @@ a.src { white-space: nowrap; }
 /* Margin notes: on wide screens the page keeps a reading column and the right-hand margin carries the notes. */
 .margin { display: none; }
 @media (min-width: 1750px) {
-  main.page { display: grid; grid-template-columns: minmax(0, 1040px) 260px; column-gap: 56px; max-width: 1480px; align-items: start; }
+  main.page { display: grid; grid-template-columns: minmax(0, 1fr) 260px; column-gap: 56px; max-width: 1480px; align-items: start; }
   main.page > #view, main.page > #about { grid-column: 1; }
   .margin { display: block; grid-column: 2; grid-row: 1 / span 2; position: sticky; top: 40px; padding-top: 20px; border-top: 3px double var(--fg); font-size: 14px; line-height: 21px; color: var(--muted); }
   .margin-h { margin: 0 0 14px; font-size: 14px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--fg); }
