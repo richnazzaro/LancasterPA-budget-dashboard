@@ -2,7 +2,8 @@
 
 Usage:
     python scripts/ingest.py "Budget PDFs - City/2026-Adopted-Budget-2026.pdf"
-    python scripts/ingest.py --all                 # every PDF in Budget PDFs - City/
+    python scripts/ingest.py --all                 # every budget PDF in Budget PDFs - City/
+                                                   # (skips the org chart and org descriptions PDFs)
     python scripts/ingest.py --all --dir "/path/to/Budget PDFs - City"
 
 For each PDF:
@@ -44,6 +45,10 @@ from extract_layout import CONFIG_DIR, load_page_lines, load_text_page_lines
 from ocr_pages import cache_dir, ocr_document
 
 PDF_DIR = ROOT / "Budget PDFs - City"
+# PDFs in PDF_DIR that are not budget books. --all skips them; naming one explicitly is an error.
+# The org chart and org descriptions feed the dashboard's org structure instead
+# (scripts/extract_org_descriptions.py, data/org_*_2027.csv); they have no budget tables.
+NOT_BUDGET_BOOK = re.compile(r"org[ _-]*chart|org[ _-]*descriptions?", re.IGNORECASE)
 TEXT_PAGE_CHARS = 50       # a page "has text" when it yields this many characters
 TEXT_BOOK_SHARE = 0.8      # a book is text-layer when this share of pages has text
 
@@ -342,6 +347,12 @@ def main():
     ap.add_argument("-v", "--verbose", action="store_true", help="show each extractor's log")
     args = ap.parse_args()
     pdfs = sorted(args.dir.glob("*.pdf")) if args.all else args.pdf
+    others = [p for p in pdfs if NOT_BUDGET_BOOK.search(p.stem)]
+    if others and not args.all:
+        ap.error("not a budget book: " + ", ".join(p.name for p in others))
+    for p in others:
+        print(f"skipping {p.name}: not a budget book (org chart / descriptions)")
+    pdfs = [p for p in pdfs if p not in others]
     if not pdfs:
         ap.error("give a PDF or --all")
 

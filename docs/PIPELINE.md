@@ -16,7 +16,7 @@ One command handles any budget book, scanned or not:
 
 ```bash
 python scripts/ingest.py "Budget PDFs - City/2026-Adopted-Budget-2026.pdf"
-python scripts/ingest.py --all          # every PDF in Budget PDFs - City/
+python scripts/ingest.py --all          # every budget PDF in Budget PDFs - City/ (skips the org chart and descriptions)
 ```
 
 For each PDF, `ingest.py`:
@@ -84,7 +84,7 @@ A page whose header matches no configured layout stops the run.
 ## Building the site data
 ```bash
 python3 scripts/build_dataset.py   # data/processed/budget_long_*.csv + fund_balance_*.csv -> web/data/*.json
-python3 scripts/check_dataset.py   # every shown figure vs the CSVs and the printed fund totals; must report 0 mismatches
+python3 scripts/check_dataset.py   # every shown figure vs the CSVs and the printed fund totals, plus the org structure; must report 0 mismatches
 ```
 `build_dataset.py` picks **one kind of figure per year**:
 - the newest year gets **proposed** and **revised**;
@@ -92,6 +92,21 @@ python3 scripts/check_dataset.py   # every shown figure vs the CSVs and the prin
 - earlier years get **actual**, from the book two years later.
 
 Adopted, amended and year-to-date columns, and older books' own-year proposals, are never shown. New `budget_long_*.csv` files are picked up automatically. Where overlapping books disagree, the disagreement is logged to `web/data/conflicts.json`. The Reserve Fund block in `budget.json` is built from `fund_balance_*.csv` under the same rule.
+
+### Org structure (2027 org chart)
+`build_dataset.py` also adds an `org` block to `budget.json` (via `scripts/org_structure.py`, stdlib only). The site groups lines into departments and bureaus from it, not from the printed `department`/`bureau` columns. It is built from three committed CSVs:
+
+| File | One row per | Edited by |
+|---|---|---|
+| `data/org_units_2027.csv` | department (`unit` empty, `kind=department`) and unit. `kind`: `bureau` (on the chart; gets a page), `department-wide` (budget groups that are not a bureau), `whole-department` (the single unit of a department with no bureaus). Also `division`, `chart_page`, `descriptions` (ids from the descriptions CSV, `;`-separated, optionally `id[2-3]` for a paragraph range), `aliases` (old department URL slugs) and `notes` | hand |
+| `data/org_structure_2027.csv` | budget org code (first part of `account_code`): `department`, `unit`, the printed department and group names by year, and `notes` with the evidence for each mapping | hand |
+| `data/org_descriptions_2027.csv` | heading in `Org Descriptions 2027.pdf`: `id`, `level`, `parent`, `heading`, `source_page`, `text` (blank line = paragraph, `• ` = bullet, `### ` = printed subheading) | `python scripts/extract_org_descriptions.py` (pdfplumber; wording kept as printed, only wrapped lines and line-end hyphens joined) |
+
+The build stops if an org code in `budget.json` has no row in `org_structure_2027.csv`, a row names a unit that is not in `org_units_2027.csv`, or a description reference does not exist. When a new budget book adds an org code, add a row (older codes map to their best-matching 2027 unit, with a note). `check_dataset.py` then verifies that every shown line maps to a unit, that the mapping in `budget.json` equals the CSV, that for every year, figure and revenue/expense the bureau totals of each department add up to the department total and the departments add up to the series total, and that departments without bureaus have exactly one unit.
+
+`build_dataset.py` also writes `web/data/changes.json` (via `scripts/changes.py`, stdlib only) for the "What changed" page: the newest year's Revised and Proposed compared with the prior year's Projected and the latest Actual, and Revised with Proposed. It holds every changed line, totals by fund, category, department and bureau, shifts between funds detected from the city's line notes in `line_items_<newest book>.csv` (plus the matching zero-outs, new orgs, and direct-bill reimbursements), position counts per bureau from the `staffing_*.csv` files (raw and adjusted, with every artifact listed: missing schedules from `known_issues.csv`, full-/part-time relabels, org-code moves, misprinted org codes, renamed titles, positions moved with a shift), and the tax-policy notes in `data/policy_notes.csv`. `check_dataset.py` ties every total in it to the series, checks each changed line against its series line, re-adds each shift from the series, checks position counts against the staffing CSVs, and prints the shifts, artifacts and policy notes.
+
+`ingest.py --all` skips the org chart and descriptions PDFs (file names matching "Org Chart" / "Org Descriptions"); naming one of them explicitly is an error.
 
 Each figure keeps its `source_doc` and `source_page`, which the site turns into a link to `pdfs/<book>.pdf#page=N`. `web/pdfs` is a symlink to `Budget PDFs - City/`.
 
@@ -102,4 +117,5 @@ The publish workflow (`.github/workflows/pages.yml`) runs both scripts on every 
 2. Run `python scripts/ingest.py "Budget PDFs - City/<file>.pdf"`. If it infers a config (exit status 2), review `config/<file>.json`, delete its `_generated` key and run again.
 3. Clear every unreviewed failure (exit status 1). Either fix the parsing, or add a reviewed source error to `data/known_issues.csv`, with evidence. Never widen the tolerance.
 4. Run `build_dataset.py` and `check_dataset.py`. The new year becomes Proposed/Revised, and the earlier years move forward automatically.
+   If the build stops on an unmapped org code, add it to `data/org_structure_2027.csv` (see "Org structure" above). When the city publishes a new org chart or descriptions, add the PDFs, rerun `scripts/extract_org_descriptions.py` (pointing `--pdf`/`--out` at the new edition) and review the unit and code tables.
 5. Commit the PDF, the config, `data/processed/` and `web/data/`, then push to `main`.
