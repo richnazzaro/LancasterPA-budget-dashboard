@@ -36,6 +36,7 @@
   let charts = [];
   const S = { y: 0, m: '', c: '', k: 'expense', f: '' };
   let route = { name: 'home' };
+  let aboutOpen = false; // "What does this … do?" stays open when the page re-renders (theme, filters)
   const T = { sort: 'sel', dir: -1, q: '', shown: PAGE_SIZE };
 
   const $ = (id) => document.getElementById(id);
@@ -191,26 +192,69 @@
   const defineFigures = () => `<details class="define"><summary>What do these mean?</summary><ul>${DEFINE_FIGURES.map(([a, b]) => (b ? `<li><strong>${a}:</strong> ${b}</li>` : `<li class="aside">${a}</li>`)).join('')}</ul></details>`;
   const defineFund = () => `<details class="define"><summary>What is a fund?</summary><p>A fund is a separate account the city keeps for a purpose. The General Fund pays for most city services; others, such as water, sewer and trash, are paid for by their own fees and are not mixed with it. The Reserve Fund is the General Fund's savings balance.</p></details>`;
 
-  function filtersHTML({ fund = true } = {}) {
-    if (isReserve()) return reserveFiltersHTML();
+  /* The controls sit behind a one-line summary and a "Change" button, so content comes first. Open by default
+     on wide screens, closed on phones; the visitor's last choice is remembered (localStorage may be blocked). */
+  let ctlOpen = null;
+  const controlsOpen = () => {
+    if (ctlOpen == null) {
+      try { const v = localStorage.getItem('controlsOpen'); if (v === '1' || v === '0') ctlOpen = v === '1'; } catch (e) { /* no storage */ }
+      if (ctlOpen == null) ctlOpen = !matchMedia('(max-width: 767px)').matches;
+    }
+    return ctlOpen;
+  };
+  function setControls(open) {
+    ctlOpen = open;
+    try { localStorage.setItem('controlsOpen', open ? '1' : '0'); } catch (e) { /* the choice lasts for this visit */ }
+  }
+  function controlsWrap(inner, summary) {
+    const open = controlsOpen();
+    return `<div class="controls"><div class="controls-bar"><p class="controls-sum" id="controls-sum">${summary}</p>
+        <button type="button" class="btn btn-outline controls-btn" data-toggle-controls aria-expanded="${open}" aria-controls="controls-panel">${open ? 'Done' : 'Change'}</button></div>
+      <div class="controls-panel" id="controls-panel"${open ? '' : ' hidden'}>${inner}</div></div>`;
+  }
+  const kindWordPlain = () => (S.k === 'revenue' ? 'Income' : 'Spending');
+
+  /* Lines of a department or bureau in either shown figure, ignoring the Fund selector: what that page can offer. */
+  function scopeRows(scope) {
+    const ks = [key(S.y, S.m), S.c].filter(Boolean);
+    return ks.flatMap((kk) => rows(kk).filter((r) => (scope.dept == null || r.od === scope.dept) && (scope.unit == null || r.unit === scope.unit)));
+  }
+
+  function filtersHTML({ fund = true, scope = null } = {}) {
+    if (isReserve()) return controlsWrap(reserveFiltersHTML(), `Viewing ${esc(D.reserve.name)} · ${S.y}${S.m ? ' ' + esc(LABEL[S.m]) : ''}`);
     const k = key(S.y, S.m);
     const yrs = years().map((y) => `<option value="${y}" ${y === S.y ? 'selected' : ''}>${y}</option>`).join('');
     const opts = Object.keys(D.series).filter((x) => x !== k)
       .sort((a, b) => parseKey(b).y - parseKey(a).y || ORDER.indexOf(parseKey(a).m) - ORDER.indexOf(parseKey(b).m));
     const cmp = `<option value="none" ${!S.c ? 'selected' : ''}>No comparison</option>` + opts.map((x) => `<option value="${x}" ${x === S.c ? 'selected' : ''}>${esc(seriesLabel(x))}</option>`).join('');
-    const present = new Set(rows(k).map((r) => r.fund));
-    const funds = `<option value="">All funds</option>` + D.funds.map((f, i) => (present.has(i) || f === S.f ? `<option value="${esc(f)}" ${f === S.f ? 'selected' : ''}>${esc(f)}</option>` : '')).join('')
-      + extraFundViews().map((f) => `<option value="${esc(f)}" ${f === S.f ? 'selected' : ''}>${esc(f)}</option>`).join('');
+    // Home offers every fund plus "All funds" and the Reserve Fund. A department page offers only the funds it has lines in
+    // (and the current choice, so the control never disagrees with the page).
+    const sr = scope ? scopeRows(scope) : null;
+    const present = new Set((sr || rows(k)).map((r) => r.fund));
+    const keep = (f) => f === S.f;
+    const funds = (scope ? '' : `<option value="">All funds</option>`)
+      + (scope && !S.f ? `<option value="" selected>All funds</option>` : '')
+      + D.funds.map((f, i) => (present.has(i) || keep(f) ? `<option value="${esc(f)}" ${keep(f) ? 'selected' : ''}>${esc(f)}</option>` : '')).join('')
+      + (scope ? '' : extraFundViews().map((f) => `<option value="${esc(f)}" ${f === S.f ? 'selected' : ''}>${esc(f)}</option>`).join(''));
     const tabs = (name, items, cur) => `<div class="tabs" role="radiogroup" aria-label="${name}">${items.map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === cur}" data-tab="${name}" data-v="${v}">${esc(l)}</button>`).join('')}</div>`;
-    return `<div class="filters">
+    // Offer Spending / Income only where the page has both kinds of lines.
+    const kinds = sr ? ['expense', 'revenue'].filter((kd) => kd === S.k || sr.some((r) => (kd === 'revenue') === isRevenue(r))) : ['expense', 'revenue'];
+    const kindTabs = kinds.length > 1
+      ? `<div class="field field-wide"><span class="field-label" id="lbl-k">Show: Spending / Income</span>${tabs('k', [['expense', 'Spending'], ['revenue', 'Income']], S.k)}</div>` : '';
+    const showFund = fund && (!scope || [...present].length + (S.f && !present.has(D.funds.indexOf(S.f)) ? 1 : 0) > 1 || !S.f);
+    const inner = `<div class="filters">
         <div class="field"><label class="field-label" for="f-y">Fiscal year</label><select id="f-y" data-sel="y">${yrs}</select></div>
         <div class="field"><label class="field-label" for="f-c">Compare with</label><select id="f-c" data-sel="c">${cmp}</select>${defineFigures()}</div>
-        ${fund ? `<div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select>${defineFund()}</div>` : ''}
+        ${showFund ? `<div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select>${defineFund()}</div>` : ''}
       </div>
       <div class="filters">
         ${measuresFor(S.y).length > 1 ? `<div class="field field-wide"><span class="field-label" id="lbl-m">Figure</span>${tabs('m', measuresFor(S.y).map((m) => [m, LABEL[m]]), S.m)}${defineFigures()}</div>` : ''}
-        <div class="field field-wide"><span class="field-label" id="lbl-k">Show: Spending / Income</span>${tabs('k', [['expense', 'Spending'], ['revenue', 'Income']], S.k)}</div>
+        ${kindTabs}
       </div>`;
+    const parts = [`Viewing ${esc(seriesLabel(k))}`, S.c ? `compared with ${esc(seriesLabel(S.c))}` : 'no comparison'];
+    if (fund) parts.push(esc(S.f || 'All funds'));
+    parts.push(kindWordPlain());
+    return controlsWrap(inner, parts.join(' · '));
   }
 
   function onFilter(name, v) {
@@ -261,13 +305,13 @@
       has('actual') && `<li><i class="ln"></i>Actual</li>`,
       has('projected') && `<li><i class="ln dashed"></i>Projected</li>`,
       has('proposed') && `<li><i class="dot" style="background:${PALETTE[0]}"></i>Proposed</li>`,
-      has('revised') && `<li><i class="dot" style="background:${PALETTE[1]}"></i>Revised</li>`,
+      has('revised') && `<li><i class="dot ring" style="border-color:${PALETTE[1]}"></i>Revised</li>`,
     ].filter(Boolean).join('');
     const rowsHtml = pts.map((p) => `<tr><th scope="row">${p.y}</th><td>${LABEL[p.m]}</td><td class="num">${p.v == null ? '—' : money(p.v)}</td></tr>`).join('');
     return `<section class="panel" aria-labelledby="tr-t"><h2 class="panel-title" id="tr-t">${esc(title)}</h2>
       <p class="panel-note">${S.k === 'revenue' ? 'Revenue' : 'Expenses'}${S.f ? ' · ' + esc(S.f) : ''}. Each year shows one kind of figure: actual, projected or proposed.</p>
       <ul class="trend-legend" aria-hidden="true">${legend}</ul>
-      <div class="chart-box short"><canvas id="trend-chart" role="img" aria-label="Totals by year, ${pts[0].y} to ${pts[pts.length - 1].y}. Solid line: actual. Dashed line: projected. Dots: proposed and revised. The table below has the values."></canvas></div>
+      <div class="chart-box short"><canvas id="trend-chart" role="img" aria-label="Totals by year, ${pts[0].y} to ${pts[pts.length - 1].y}. Solid line: actual. Dashed line: projected. Small dot: proposed. Ring: revised. The table below has the values."></canvas></div>
       <details class="values"><summary>Show values</summary><div class="table-scroll"><table class="table"><thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Total</th></tr></thead><tbody>${rowsHtml}</tbody></table></div></details></section>`;
   }
   function drawTrend() {
@@ -283,7 +327,8 @@
       segment: { borderDash: (c) => (main[c.p1DataIndex]?.m === 'projected' ? [6, 4] : undefined) },
     }];
     if (pts.some((p) => p.m === 'proposed')) datasets.push(dot('proposed', PALETTE[0]));
-    if (pts.some((p) => p.m === 'revised')) datasets.push(dot('revised', PALETTE[1]));
+    // Proposed and Revised sit at nearly the same height in the same year: Proposed is a small filled dot, Revised a larger open ring around it.
+    if (pts.some((p) => p.m === 'revised')) datasets.push({ ...dot('revised', PALETTE[1]), backgroundColor: 'transparent', borderWidth: 3, pointRadius: 10, pointHoverRadius: 12, pointBorderWidth: 3 });
     charts.push(new Chart(cv, { type: 'line', data: { labels: yrs, datasets },
       options: { responsive: true, maintainAspectRatio: false, layout: { padding: { right: 8 } }, animation: reduceMotion() ? false : { duration: 300 },
         plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { label: (c) => (c.datasetIndex === 0 ? `${LABEL[main[c.dataIndex].m]}: ${money(c.raw)}` : `${c.dataset.label}: ${money(c.raw)}`) } } },
@@ -379,7 +424,7 @@
 
   function reserveView() {
     const e = resFind(S.y, S.m) || resFind(S.y, ORDER.find((m) => resFind(S.y, m)));
-    if (!e) return `<header class="page-head"><h1 id="page-h" tabindex="-1">${esc(D.reserve.name)}</h1><p class="muted">No reserve figures for ${S.y}.</p></header>${reserveFiltersHTML()}`;
+    if (!e) return `<header class="page-head"><h1 id="page-h" tabindex="-1">${esc(D.reserve.name)}</h1><p class="muted">No reserve figures for ${S.y}.</p></header>${filtersHTML()}`;
     const end = resEnd(e), ch = resChange(e), name = D.reserve.name;
     document.title = `${name} ${resLabel(e)} · ${CFG.site_title}`;
     const notices = [];
@@ -407,7 +452,7 @@
         <p class="compare-line">Year-end balance${ch ? ` · change from ${ch.from}: ${chgHTML(ch)}` : ''}</p>
         <span class="status${e.measure === 'proposed' || e.measure === 'revised' ? ' not-adopted' : ''}">${e.year}: ${esc(RES_STATUS[e.measure])}</span>
         ${notices.map((n) => `<div class="notice" role="note">${n}</div>`).join('')}</header>
-      ${reserveFiltersHTML()}
+      ${filtersHTML()}
       <p class="hint" style="margin-top:0">The General Fund's reserve: the cash balance carried from year to year.</p>${reserveTie(e)}
       <section class="panel" aria-labelledby="rb-t"><h2 class="panel-title" id="rb-t">Year-End Balance, ${entries[0].year}–${entries[entries.length - 1].year}</h2>
         <ul class="trend-legend" aria-hidden="true">${colorsLegend}</ul>
@@ -432,6 +477,20 @@
         scales: { x: { ticks: { color: INK, maxRotation: 45 }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid } } } } }));
   }
 
+  /* Department / bureau cards: name, share of the whole, and selected-vs-comparison bars. The whole card links. */
+  function cardList(items, { total, k, shareOf, level }) {
+    const max = Math.max(1, ...items.flatMap((i) => [Math.abs(i.sel?.total || 0), Math.abs(i.cmp?.total || 0)]));
+    const bar = (agg, cls, label, bk) => `<div><div class="bar-label ${cls}"><span>${esc(label)}</span><span>${agg ? src(money(agg.total), bk, agg.d, agg.p) : '<span class="missing">No figures</span>'}</span></div>
+        <div class="track"><div class="fill ${cls}" style="width:${agg ? Math.max(0, (agg.total / max) * 100) : 0}%"></div></div></div>`;
+    return items.map((it) => {
+      const sh = total > 0 && it.sel ? (it.sel.total / total) * 100 : null;
+      const share = sh == null ? '' : `<span class="share">(${sh > 0 && sh < 0.1 ? '<0.1' : sh.toFixed(1)}% of ${esc(shareOf)})</span>`;
+      return `<li class="card" data-go="${esc(it.href)}"><div class="card-top"><h${level}><a href="${esc(it.href)}">${esc(it.name)}</a>${share}</h${level}>
+        <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div>
+        <div class="bars">${S.c ? bar(it.cmp, 'cmp', seriesLabel(S.c), S.c) : ''}${bar(it.sel, 'sel', seriesLabel(k), k)}</div></li>`;
+    }).join('');
+  }
+
   /* ---------- home ---------- */
   function homeView() {
     if (isReserve()) return reserveView();
@@ -445,25 +504,15 @@
     const by = (l) => aggregate(l, (r) => r.od, (r) => O.departments[r.od].name);
     const selMap = by(list), cmpMap = S.c ? by(scoped(S.c)) : new Map();
     const keys = new Set([...selMap.keys(), ...cmpMap.keys()]);
-    const items = [...keys].map((d) => ({ dept: d, sel: selMap.get(d), cmp: cmpMap.get(d) }))
+    const items = [...keys].map((d) => ({ id: d, name: O.departments[d].name, href: deptHash(d), sel: selMap.get(d), cmp: cmpMap.get(d) }))
       .sort((a, b) => (b.sel?.total || 0) - (a.sel?.total || 0) || (b.cmp?.total || 0) - (a.cmp?.total || 0));
-    const max = Math.max(1, ...items.flatMap((i) => [Math.abs(i.sel?.total || 0), Math.abs(i.cmp?.total || 0)]));
-    const bar = (agg, cls, label, bk) => `<div><div class="bar-label ${cls}"><span>${esc(label)}</span><span>${agg ? src(money(agg.total), bk, agg.d, agg.p) : '<span class="missing">No figures</span>'}</span></div>
-        <div class="track"><div class="fill ${cls}" style="width:${agg ? Math.max(0, (agg.total / max) * 100) : 0}%"></div></div></div>`;
-    const cards = items.map((it) => {
-      const sh = total > 0 && it.sel ? (it.sel.total / total) * 100 : null;
-      const share = sh == null ? '' : `<span class="share">(${sh > 0 && sh < 0.1 ? '<0.1' : sh.toFixed(1)}% of Total ${esc(seriesLabel(k))} ${kindWord === 'Revenue' ? 'Revenue' : 'Budget'})</span>`;
-      const h = deptHash(it.dept);
-      return `<li class="card" data-go="${esc(h)}"><div class="card-top"><h3><a href="${esc(h)}">${esc(O.departments[it.dept].name)}</a>${share}</h3>
-        <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div>
-        <div class="bars">${S.c ? bar(it.cmp, 'cmp', seriesLabel(S.c), S.c) : ''}${bar(it.sel, 'sel', seriesLabel(k), k)}</div></li>`;
-    }).join('');
+    const cards = cardList(items, { total, k, shareOf: `Total ${seriesLabel(k)} ${kindWord === 'Revenue' ? 'Revenue' : 'Budget'}`, level: 2 });
 
     return `<header class="page-head"><h1 id="page-h">${esc(scope)} ${kindWord}: ${esc(seriesLabel(k))}</h1>
         <p class="big-total" aria-live="polite">${(() => { const pf = S.f ? printedFund(S.f, S.k, k) : null; return pf ? src(money(total), k, pf.doc, pf.page) : money(total); })()}</p>${drawNote(k)}${statusHTML()}${rollupNote(list)}</header>
       ${filtersHTML()}
+      <p class="hint hint-top">Select any department to see its detailed breakdown. Amounts open the source page in the budget book.</p>
       <ul class="cards" aria-label="Departments">${cards || '<li class="empty center">No lines for this selection.</li>'}</ul>
-      <p class="hint">Select any department to see its detailed breakdown. Amounts open the source page in the budget book.</p>
       ${trendHTML({}, 'Totals by Year')}
       <section class="panel" aria-labelledby="re-title"><h2 class="panel-title" id="re-title">Revenue vs. Expenses by Fund: ${esc(seriesLabel(k))}</h2>
         <div class="chart-box"><canvas id="re-chart" role="img" aria-label="Revenue and expenses by fund"></canvas></div>
@@ -535,7 +584,7 @@
       .sort((a, b) => b.total - a.total || b.cmpTotal - a.cmpTotal);
   }
 
-  function entityView({ title, subtitle, selRows, cmpRows, parentHash, parentLabel, bureauPie, deptPicker, scope, about = '' }) {
+  function entityView({ title, subtitle, selRows, cmpRows, parentHash, parentLabel, bureauList = '', deptPicker, scope, about = '' }) {
     const k = key(S.y, S.m), kindWord = S.k === 'revenue' ? 'Revenue' : 'Budget';
     const total = sum(selRows), cmpTotal = sum(cmpRows);
     const fp = firstPage(selRows), cfp = firstPage(cmpRows);
@@ -545,9 +594,10 @@
 
     let html = `<div class="dept-top"><a class="btn btn-primary" href="${esc(parentHash)}">← ${esc(parentLabel)}</a></div>`;
     if (deptPicker) html += `<div class="field dept-picker" style="margin-inline:auto"><label class="field-label" for="dept-pick">Department</label>${deptPicker}</div>`;
-    html += `<header><h2 class="dept-name" id="page-h" tabindex="-1">${esc(title)}</h2>
+    html += `<header><h1 class="dept-name" id="page-h" tabindex="-1">${esc(title)}</h1>
       <p class="dept-total">Total ${kindWord}: ${totalLink}</p><p class="dept-sub">${subtitle}</p><p class="center">${statusHTML()}</p>${deptPicker ? rollupNote(selRows) : ''}</header>${about}`;
-    html += `<div class="dept-filters">${filtersHTML({ fund: !!deptPicker })}</div>`;
+    html += `<div class="dept-filters">${filtersHTML({ fund: !!deptPicker, scope })}</div>`;
+    html += bureauList;
 
     html += pieSection(`${title} ${seriesLabel(k)} ${kindWord} Breakdown`, cats, { k });
 
@@ -556,7 +606,6 @@
         <div class="chart-scroll"><div class="chart-box"><canvas id="yoy-chart" role="img" aria-label="${esc(title)} by category, ${esc(S.c ? seriesLabel(S.c) + ' compared with ' : '')}${esc(seriesLabel(k))}"></canvas></div></div></section>`;
     }
     html += trendHTML(scope, `${title}: Totals by Year`);
-    if (bureauPie) html += bureauPie;
 
     html += `<div class="totals">${S.c ? `<section class="panel" aria-label="${esc(seriesLabel(S.c))} total"><h2 class="total-label">${esc(seriesLabel(S.c))} Total</h2><p class="total-value">${cmpLink}</p></section>` : ''}
       <section class="panel" aria-label="${esc(seriesLabel(k))} total"><h2 class="total-label">${esc(seriesLabel(k))} Total</h2><p class="total-value">${totalLink}</p></section></div>`;
@@ -575,10 +624,9 @@
     return { html, cats };
   }
 
-  function entityCharts(selRows, cmpRows, cats, bureauGroups) {
+  function entityCharts(selRows, cmpRows, cats) {
     const k = key(S.y, S.m), th = chartTheme();
     drawPie(`${$('page-h').textContent} ${seriesLabel(k)} ${S.k === 'revenue' ? 'Revenue' : 'Budget'} Breakdown`, cats);
-    if (bureauGroups) drawPie(bureauGroups.title, bureauGroups.groups);
     drawTrend();
     const yoy = $('yoy-chart');
     if (yoy && window.Chart) {
@@ -635,7 +683,7 @@
       const d = val(e, 'sel') - val(e, 'cmp');
       const where = showBureau ? `<span class="sub">${esc(bureauName(e.bureau))}</span>` : '';
       return `<tr><td class="code hide-sm">${esc(e.code)}</td><td>${esc(e.name)}${where}</td><td class="hide-sm">${esc(D.categories[e.cat])}</td>
-        ${S.c ? `<td class="num">${e.cmp ? src(money(e.cmp.v), S.c, e.cmp.d, e.cmp.p) : '—'}</td>` : ''}<td class="num">${e.sel ? src(money(e.sel.v), k, e.sel.d, e.sel.p) : '—'}</td>
+        ${S.c ? `<td class="num">${e.cmp ? src(money(e.cmp.v), S.c, e.cmp.d, e.cmp.p) : '—'}</td>` : ''}<td class="num">${e.sel ? src(money(e.sel.v), k, e.sel.d, e.sel.p) : '—'}${S.c && d !== 0 ? `<span class="chg-sm ${d > 0 ? 'up' : 'down'}" aria-label="Change from ${esc(seriesLabel(S.c))}: ${money(d)}">${money(d)}</span>` : ''}</td>
         ${S.c ? `<td class="num hide-sm"><span class="${d > 0 ? 'up' : d < 0 ? 'down' : 'flat'}">${d === 0 ? '—' : money(d)}</span></td>` : ''}</tr>`;
     }).join('');
     const ts = list.reduce((t, e) => t + val(e, 'sel'), 0), tc = list.reduce((t, e) => t + val(e, 'cmp'), 0);
@@ -691,7 +739,7 @@
     if (!entries.length && !extra) return '';
     const body = entries.map((e) => `<div class="org-entry">${e.h ? `<h3>${esc(e.h)}</h3>` : ''}${descBody(e.t)}
         <a class="org-src" href="${esc(descHref(e.p))}" target="_blank" rel="noopener" aria-label="${esc(e.h || question.replace(/\?$/, ''))}: open in the city's 2027 organization descriptions (PDF)" title="Open in the city's 2027 organization descriptions">Source document ↗</a></div>`).join('');
-    return `<details class="org-about"><summary>${esc(question)}</summary><div class="org-about-body">${extra}${body}</div></details>`;
+    return `<details class="org-about"${aboutOpen ? ' open' : ''}><summary>${esc(question)}</summary><div class="org-about-body">${extra}${body}</div></details>`;
   }
   /* Old bureau links named a fund and a printed budget group ("general-fund--accounting-expense").
      Find that group in any year and return the org unit its lines belong to. */
@@ -719,24 +767,26 @@
     const subtitle = selRows.length
       ? [count, [...funds].map((f) => esc(D.funds[f])).join(', '), lineCountText(selRows, cmpRows)].filter(Boolean).join(' · ')
       : `No ${S.k === 'revenue' ? 'revenue' : 'expense'} lines for this department in ${esc(seriesLabel(k))}.`;
-    // Bureau breakdown: only for departments that have bureaus on the org chart. Several budget groups can
-    // make up one bureau; budget groups that are not a bureau form one "department-wide" slice, listed last.
-    let groups = [], bureauPie = '', bTitle = '';
+    // Bureau list: only for departments that have bureaus on the org chart. Several budget groups can make up one
+    // bureau; budget groups that are not a bureau form one "department-wide" card, listed last.
+    let bureauList = '';
     if (dept.bureaus) {
-      groups = [...units.values()].sort((a, b) => (O.units[a.key].kind === 'department-wide') - (O.units[b.key].kind === 'department-wide') || b.total - a.total)
-        .map((g, i) => ({ label: g.label, total: g.total, color: i < PIE_SLICES ? PALETTE[i] : OTHER_COLOR, href: unitHash(g.key),
-          sub: O.units[g.key].division ? `${O.units[g.key].division} Division` : '' }));
-      bTitle = S.k === 'revenue' ? 'Revenue by Bureau' : 'Bureau Breakdown';
-      const hasWide = [...units.keys()].some((u) => O.units[u].kind === 'department-wide');
-      const note = 'Bureaus as on the city\'s 2027 org chart. Select one to see its line items.'
-        + (hasWide ? ` “${unitLabel(unitsOf(di).find((u) => u.kind === 'department-wide').i)}” collects budget groups that are not a bureau.` : '');
-      if (groups.length > 1) bureauPie = pieSection(bTitle, groups, { clickable: true, note });
-      else groups = [];
+      const cmpUnits = S.c ? aggregate(cmpRows, (r) => r.unit, (r) => unitLabel(r.unit)) : new Map();
+      const ids = [...new Set([...units.keys(), ...cmpUnits.keys()])];
+      const items = ids.map((u) => ({ id: u, name: unitLabel(u), href: unitHash(u), sel: units.get(u), cmp: cmpUnits.get(u) }))
+        .sort((a, b) => (O.units[a.id].kind === 'department-wide') - (O.units[b.id].kind === 'department-wide') || (b.sel?.total || 0) - (a.sel?.total || 0) || (b.cmp?.total || 0) - (a.cmp?.total || 0));
+      const hasWide = ids.some((u) => O.units[u].kind === 'department-wide');
+      if (items.length > 1) {
+        const note = 'Bureaus as on the city\'s 2027 org chart. Select one to see its line items.'
+          + (hasWide ? ` “${unitLabel(ids.find((u) => O.units[u].kind === 'department-wide'))}” collects budget groups that are not a bureau.` : '');
+        bureauList = `<section class="bureau-list" aria-labelledby="bl-t"><h2 class="list-title" id="bl-t">${S.k === 'revenue' ? 'Income by Bureau' : 'Spending by Bureau'}</h2><p class="hint hint-top">${esc(note)} Amounts open the source page in the budget book.</p>
+          <ul class="cards" aria-labelledby="bl-t">${cardList(items, { total: sum(selRows), k, shareOf: `${name} ${S.k === 'revenue' ? 'revenue' : 'spending'}`, level: 3 })}</ul></section>`;
+      }
     }
     document.title = `${name} ${seriesLabel(k)} · ${CFG.site_title}`;
     const about = aboutHTML('What does this department do?', dept.desc);
-    const v = entityView({ title: name, subtitle, selRows, cmpRows, parentHash: homeHash(), parentLabel: 'All departments', bureauPie, deptPicker: picker, scope: { dept: di }, about });
-    return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats, groups.length ? { title: bTitle, groups } : null); mountLines(selRows, cmpRows, true); } };
+    const v = entityView({ title: name, subtitle, selRows, cmpRows, parentHash: homeHash(), parentLabel: 'All departments', bureauList, deptPicker: picker, scope: { dept: di }, about });
+    return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats); mountLines(selRows, cmpRows, true); } };
   }
 
   function bureauPage() {
@@ -767,7 +817,7 @@
       about = aboutHTML(q, unit.desc);
     }
     const v = entityView({ title: name, subtitle: sub, selRows, cmpRows, parentHash: deptHash(di), parentLabel: O.departments[di].name, scope, about });
-    return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats, null); mountLines(selRows, cmpRows, true); } };
+    return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats); mountLines(selRows, cmpRows, true); } };
   }
 
   /* ---------- render / events ---------- */
@@ -775,6 +825,7 @@
     if (!D) return;
     const { r, q } = parseHash();
     route = r;
+    if (scroll) aboutOpen = false;
     if (q.get('c') === 'none') { applyQuery(q); S.c = ''; } else applyQuery(q);
     if (route.name !== 'home' && isReserve()) S.f = DEFAULT_FUND; // the reserve has no departments or bureaus
     T.sort = 'sel'; T.dir = -1; T.q = ''; T.shown = PAGE_SIZE;
@@ -802,11 +853,20 @@
       else if (sel.dataset.sel) onFilter(sel.dataset.sel, sel.value);
     });
     view.addEventListener('click', (e) => {
+      const tog = e.target.closest('[data-toggle-controls]');
+      if (tog) {
+        const open = tog.getAttribute('aria-expanded') !== 'true';
+        setControls(open);
+        tog.setAttribute('aria-expanded', String(open)); tog.textContent = open ? 'Done' : 'Change';
+        const panel = $('controls-panel'); if (panel) panel.hidden = !open;
+        return;
+      }
       const tab = e.target.closest('[data-tab]');
       if (tab) { onFilter(tab.dataset.tab, tab.dataset.v); return; }
       const card = e.target.closest('[data-go]');
       if (card && !e.target.closest('a')) navigate(card.dataset.go);
     });
+    view.addEventListener('toggle', (e) => { if (e.target.classList?.contains('org-about')) aboutOpen = e.target.open; }, true);
     view.addEventListener('keydown', (e) => {
       const b = e.target.closest('[data-tab]');
       if (!b || !['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
