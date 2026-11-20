@@ -17,8 +17,10 @@
                        distinguishable under red-green and blue-yellow color blindness (also differs in lightness).
    --accent            header stripe only (brick red).   --rule  thin rule under section headings (amber).
    --bg / --card       warm sand-tinted page and white (dark: ink-navy) panels.   --footer-bg  county-navy.
-   --cat-1..8          pies and legends. --cat-1 (amber) and --cat-2 (maroon / pale sand) also mark Proposed and
-                       Revised on trends and Revenue / Expenses on the fund chart, so both stay far from --sel. */
+   --btn-bg / --btn-fg primary button ("All departments"); passes 4.5:1 in both themes.
+   --cat-1..8          pies and legends. They deliberately avoid the blue and amber of --sel / --cmp, which mean
+                       only "selected" and "comparison". --cat-1 (maroon / pale sand) and --cat-2 (gray) also mark
+                       Proposed and Revised on trends and Revenue / Expenses on the fund chart. */
 :root {
   color-scheme: light;
   --bg: #f6f3ee;          /* page */
@@ -35,7 +37,7 @@
   --muted: #575d69;
   --sel: #1b7ba8;         /* selected figure */
   --sel-ink: #14607f;
-  --on-sel: #fff;         /* text on a --sel-ink button */
+  --btn-bg: #14607f; --btn-fg: #fff;   /* primary button (white on blue: 7.0:1) */
   --cmp: #e08a1e;         /* comparison figure */
   --cmp-ink: #8a4a05;
   --rule: #e08a1e;
@@ -45,8 +47,8 @@
   --link: #14607f;
   --mint: var(--sel);
   --gold: var(--cmp);
-  --cat-1: #d9731f; --cat-2: #7a2a1d; --cat-3: #1b7ba8; --cat-4: #8cc3d9; --cat-5: #a8355a; --cat-6: #68733d; --cat-7: #7a5c9e; --cat-8: #cbb892;
-  --cat-other: #b3b0a8;
+  --cat-1: #7a2a1d; --cat-2: #8a8f99; --cat-3: #5e7f2a; --cat-4: #c9b78a; --cat-5: #a8355a; --cat-6: #2e7d6e; --cat-7: #6b3a86; --cat-8: #3b3f4a;
+  --cat-other: #d0cdc6;
   --red: #a8321c;
   --blue: #1b7ba8;        /* focus ring */
   --font: "Source Sans 3", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
@@ -58,11 +60,11 @@
   --border: #2b313d; --border-50: #2b313d; --border-strong: #434b5a;
   --track: #252b36; --muted-bg: #252b36; --hover: rgba(91, 182, 224, .09);
   --fg: #f2efe9; --muted: #a9aebb;
-  --sel: #5bb6e0; --sel-ink: #5bb6e0; --on-sel: #0f1218; --cmp: #f0a53f; --cmp-ink: #f0a53f; --rule: #f0a53f;
+  --sel: #5bb6e0; --sel-ink: #5bb6e0; --btn-bg: #5bb6e0; --btn-fg: #0f1218; --cmp: #f0a53f; --cmp-ink: #f0a53f; --rule: #f0a53f;
   --accent: #d9573f; --link: #5bb6e0;
   --footer-bg: #181c24; --footer-fg: #d6d8dc;
-  --cat-1: #f0a53f; --cat-2: #e8e2d0; --cat-3: #5bb6e0; --cat-4: #a6d5ea; --cat-5: #d98ab5; --cat-6: #a7b565; --cat-7: #b79bdc; --cat-8: #d9c9a3;
-  --cat-other: #6b707c; --red: #d9573f; --blue: #5bb6e0;
+  --cat-1: #e8e2d0; --cat-2: #8a8f9c; --cat-3: #b5cc6a; --cat-4: #e0806c; --cat-5: #e08fb5; --cat-6: #5fc3a8; --cat-7: #b08ad8; --cat-8: #d4d9dd;
+  --cat-other: #565b66; --red: #d9573f; --blue: #5bb6e0;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -71,11 +73,11 @@
     --border: #2b313d; --border-50: #2b313d; --border-strong: #434b5a;
     --track: #252b36; --muted-bg: #252b36; --hover: rgba(91, 182, 224, .09);
     --fg: #f2efe9; --muted: #a9aebb;
-    --sel: #5bb6e0; --sel-ink: #5bb6e0; --on-sel: #0f1218; --cmp: #f0a53f; --cmp-ink: #f0a53f; --rule: #f0a53f;
+    --sel: #5bb6e0; --sel-ink: #5bb6e0; --btn-bg: #5bb6e0; --btn-fg: #0f1218; --cmp: #f0a53f; --cmp-ink: #f0a53f; --rule: #f0a53f;
     --accent: #d9573f; --link: #5bb6e0;
     --footer-bg: #181c24; --footer-fg: #d6d8dc;
-    --cat-1: #f0a53f; --cat-2: #e8e2d0; --cat-3: #5bb6e0; --cat-4: #a6d5ea; --cat-5: #d98ab5; --cat-6: #a7b565; --cat-7: #b79bdc; --cat-8: #d9c9a3;
-    --cat-other: #6b707c; --red: #d9573f; --blue: #5bb6e0;
+    --cat-1: #e8e2d0; --cat-2: #8a8f9c; --cat-3: #b5cc6a; --cat-4: #e0806c; --cat-5: #e08fb5; --cat-6: #5fc3a8; --cat-7: #b08ad8; --cat-8: #d4d9dd;
+    --cat-other: #565b66; --red: #d9573f; --blue: #5bb6e0;
   }
 }
 
@@ -112,7 +114,7 @@ main:focus { outline: none; }
   :root:not([data-theme="light"]) .theme-toggle .ico-light { display: none; }
   :root:not([data-theme="light"]) .theme-toggle .ico-dark { display: inline; }
 }
-.btn-primary { background: var(--sel-ink); color: var(--on-sel); border: 0; }
+.btn-primary { background: var(--btn-bg); color: var(--btn-fg); border: 0; }
 .btn-primary:hover { filter: brightness(1.1); }
 
 .page { padding-top: 48px; padding-bottom: 48px; }
