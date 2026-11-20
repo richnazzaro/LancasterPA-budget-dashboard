@@ -1,0 +1,9 @@
+level,label,source_page,members,printed,computed,max_abs_diff,passed,line_sum,line_sum_excl_reserve,matches,acknowledged
+fund_balance_chain,single: surplus/deficit 2025 = revenues + expenditures,37,2,4956084,4956085.0,1.0,True,,,,
+fund_balance_chain,single: fund balance 2025-12-31 = beginning + surplus + adjustments,37,2,17081504,17081504.0,0.0,True,,,,
+fund_balance_chain,single: revenues + expenditures 2026 = '(Addition/Reduction to Fund Balance)' + adjustments,37,2,-1790532,-1790532.0,0.0,True,,,,
+fund_balance_chain,single: fund balance 2026-12-31 = beginning + surplus + adjustments,37,2,15290972,15290972.0,0.0,True,,,,
+fund_balance_gf_total,single: Projected Revenues: 2025 vs projected_2025,37,1,79879262,79879262.0,0.0,True,79879263.0,79879263.0,printed General Fund total,
+fund_balance_gf_total,single: Projected Expenditures: 2025 vs projected_2025,37,1,74923177,74923177.0,0.0,True,74923181.0,,printed General Fund total,
+fund_balance_gf_total,single: Proposed Revenues: 2026 vs proposed_2026,37,1,77686531,79186531.0,1.0,True,79186532.0,77686532.0,sum of lines excl. 499000 Fund Balance Reserve,
+fund_balance_gf_total,single: Proposed Expenditures: 2026 vs proposed_2026,37,1,79477063,79177062.0,6.0,True,79477069.0,,"none (closest: sum of General Fund lines, off by -6)",

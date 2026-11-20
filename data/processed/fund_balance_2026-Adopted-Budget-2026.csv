@@ -1,0 +1,10 @@
+source_doc,source_page,scenario,fiscal_year,as_of_date,line_type,label,amount,basis,note
+2026-Adopted-Budget-2026.pdf,37,single,2024,2024-12-31,beginning_balance,Fund Balance 12/31/2024 (Unaudited fund balance),12125420,unaudited,
+2026-Adopted-Budget-2026.pdf,37,single,2025,,revenues,Projected Revenues: 2025,79879262,projected,
+2026-Adopted-Budget-2026.pdf,37,single,2025,,expenditures,Projected Expenditures: 2025,-74923177,projected,
+2026-Adopted-Budget-2026.pdf,37,single,2025,,surplus_deficit,Projected Current Operating Surplus/(Deficit) 2025 (Addition to Fund Balance),4956084,projected,
+2026-Adopted-Budget-2026.pdf,37,single,2025,2025-12-31,ending_balance,Projected Fund Balance 12/31/2025,17081504,projected,
+2026-Adopted-Budget-2026.pdf,37,single,2026,,revenues,Proposed Revenues: 2026,77686531,proposed,
+2026-Adopted-Budget-2026.pdf,37,single,2026,,expenditures,Proposed Expenditures: 2026,-79477063,proposed,
+2026-Adopted-Budget-2026.pdf,37,single,2026,,surplus_deficit,Proposed Current Operating Surplus/(Deficit) 2026 (Reduction to Fund Balance),-1790532,proposed,surplus line printed blank; amount is printed on the '(Reduction to Fund Balance)' line
+2026-Adopted-Budget-2026.pdf,37,single,2026,2026-12-31,ending_balance,Projected Fund Balance 12/31/2026,15290972,proposed,

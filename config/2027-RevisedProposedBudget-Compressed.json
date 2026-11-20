@@ -3,5 +3,12 @@
   "source_doc": "2027-RevisedProposedBudget-Compressed.pdf",
   "extractor": "extract_budget",
   "source": "text",
-  "budget_year": 2027
+  "budget_year": 2027,
+  "fund_balance": {
+    "_comment": "p30 prints two columns, both headed '2027 Budget': left = proposed, right = revised proposed.",
+    "scenarios": [
+      "proposed",
+      "revised"
+    ]
+  }
 }

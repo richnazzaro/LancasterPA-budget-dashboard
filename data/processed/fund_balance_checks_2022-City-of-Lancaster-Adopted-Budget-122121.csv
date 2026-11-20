@@ -1,0 +1,9 @@
+level,label,source_page,members,printed,computed,max_abs_diff,passed,line_sum,line_sum_excl_reserve,matches,acknowledged
+fund_balance_chain,single: surplus/deficit 2021 = revenues + expenditures,37,2,1727556,1727556.0,0.0,True,,,,
+fund_balance_chain,single: fund balance 2021-12-31 = beginning + surplus + adjustments,37,2,16728051,16728051.0,0.0,True,,,,
+fund_balance_chain,single: surplus/deficit 2022 = revenues + expenditures,37,2,-2195775,-2195775.0,0.0,True,,,,
+fund_balance_chain,single: fund balance 2022-12-31 = beginning + surplus + adjustments,37,2,14532276,14532276.0,0.0,True,,,,
+fund_balance_gf_total,single: Projected Revenues: 2021 vs projected_2021,37,1,63707894,63707894.0,0.0,True,63707894.0,63707894.0,printed General Fund total,
+fund_balance_gf_total,single: Projected Expenditures: 2021 vs projected_2021,37,1,61980338,61646958.0,602.0,True,61980940.0,,"none (closest: sum of General Fund lines, off by -602)",
+fund_balance_gf_total,single: Proposed Revenues: 2022 vs proposed_2022,37,1,64849209,67044984.0,0.0,True,67044984.0,64849209.0,sum of lines excl. 499000 Fund Balance Reserve,
+fund_balance_gf_total,single: Proposed Expenditures: 2022 vs proposed_2022,37,1,67044984,67044984.0,0.0,True,67044984.0,,printed General Fund total,
