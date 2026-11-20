@@ -1,103 +1,160 @@
-# Lancaster Municipal Budget Visibility Project
+# Lancaster Budget Explorer
 
-This repository provides public visibility into the City of Lancaster, PA budget.
+A public, independent view of the **City of Lancaster, PA** budget, built from the city's published budget books.
 
-## Features
-- **PDF Parsing**: Automated extraction of budget figures from the city's budget PDFs using pdfplumber (OCRmyPDF for scanned years), with every printed total re-checked.
-- **Data Visualization**: Interactive charts showing large line items by bureau and category.
-- **Drill-down capabilities**: Filterable tables for specific accounts, funds, and personnel costs.
-- **Year-over-Year Analysis**: Crosswalk-based comparison of budget changes over time.
+**Live site:** https://richnazzaro.github.io/LancasterPA-budget-dashboard/
 
-## Project Structure
-- `Budget PDFs - City/`: Source budget documents.
-- `scripts/`: Python scripts for PDF extraction and data normalization.
-- `data/processed/`: Extracted tables (see below).
-- `data/known_issues.csv`: Validation failures caused by errors in the source PDFs, reviewed by a person.
-- `web/`: Static dashboard for GitHub Pages (plain HTML/CSS/JS, Chart.js from a CDN, no build step).
+This README covers how the site presents the data, where the data lives, how to use the site, and how to change what it shows and says. For how the PDFs are turned into data, see [docs/PIPELINE.md](docs/PIPELINE.md).
 
-## Setup
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
+---
 
-## Running the extraction
-One command handles any budget book, scanned or not:
+## 1. How the data is presented
 
-```bash
-python scripts/ingest.py "Budget PDFs - City/2026-Adopted-Budget-2026.pdf"
-python scripts/ingest.py --all          # every PDF in Budget PDFs - City/
-```
+### One kind of figure per year
+Each budget book prints several years side by side. The site shows **one kind of figure per year**, so years are never mixed up:
 
-For each PDF, `ingest.py`:
-1. **Detects** whether the PDF has a usable text layer (share of pages with text) or needs OCR. OCR runs automatically and is cached.
-2. **Loads `config/<pdf name>.json`.** If there isn't one, it **infers** one from the column header rows ("2025 ORIGINAL BUDGET", "RECEIVED YTD 11/14/2025", "2026 PROPOSED", ...) and the staffing header, and writes it. An inferred config must be reviewed: check every column's year and type, the staffing field order, and the fund maps. Delete its `_generated` key and run again.
-3. **Extracts and validates** the book, then **cross-checks** it against its neighbours: book B-1's PROPOSED vs this book's ORIGINAL BUDGET, and this book's PROPOSED vs book B+1's.
-4. **Prints a short report:** text or OCR, line items, checks passed / acknowledged / unreviewed, and the cross-check match rate.
-
-Exit status: 0 when everything passes or is a reviewed source issue, 1 when a book has unreviewed failures, and 2 when a config was just inferred or a PDF couldn't be processed.
-
-The per-book scripts still work on their own: `scripts/extract_budget.py` (2027 book) and `scripts/extract_layout.py` (all others).
-
-This writes four files to `data/processed/`, suffixed with the PDF's name:
-
-| File | Contents |
-|---|---|
-| `budget_long_*.csv` | The dashboard table: one row per account line per column (`fiscal_year, doc_type, fund, department, bureau, account_code, account_name, category, amount, source_doc, source_page`). |
-| `line_items_*.csv` | One row per account line with all eight amount columns side by side, plus the city's explanatory note for that line. |
-| `staffing_*.csv` | One row per budgeted position: title, bargaining unit, FT/PT, count, and salary. |
-| `validation_*.csv` | Every printed TOTAL row compared with the sum of the parsed lines. |
-
-A single budget book carries several years. The 2027 book has 2025 actual, 2026 adopted, 2026 amended, 2026 year-to-date, 2026 projected, and 2027 proposed figures. These are told apart by `fiscal_year` and `doc_type`.
-
-### General Fund reserve ("Fund Balance Projection" page)
-`scripts/fund_balance.py` (run automatically by `ingest.py`) extracts the page that carries the General Fund balance from the last closed year-end through the projected and proposed years.
-- **`fund_balance_<doc>.csv`:** one row per printed amount, with `scenario` (2027 prints `proposed` and `revised` side by side; other books are `single`), `fiscal_year`, `as_of_date`, `line_type`, `label`, a signed `amount` and `basis`, all as printed. When a book prints the surplus amount on the "(Reduction to Fund Balance)" line instead, `note` says so.
-- **`fund_balance_checks_<doc>.csv`:** the chain checks (revenues + expenditures = surplus; beginning + surplus + adjustments = ending) and a report-only comparison with the book's General Fund totals.
-- **`fund_balance_crossbook.csv`:** book Y's projected 12/31/(Y-1) balance vs book Y+1's (unaudited) balance for the same date.
-
-### Validation
-Each section, department, and fund total and each staffing subtotal printed in the PDF is recomputed from the parsed rows. Differences of up to $5 are allowed for the city's cent rounding. The script exits with an error if any check fails, unless that failure is listed in `data/known_issues.csv` with a note explaining the source-document error.
-
-### Other budget books (2022–2026): config-driven extractor
-`scripts/extract_budget.py` is hard-wired to the 2027 book's 8 columns. Every other book goes through `scripts/extract_layout.py`, which takes its page layout from `config/<pdf name>.json`:
-
-```bash
-python scripts/extract_layout.py "/path/to/Budget PDFs - City/2024-Adopted-Budget.pdf"
-```
-
-| Book | Source | Notes |
+| Year | Figure shown | Where it comes from |
 |---|---|---|
-| 2022, 2023, 2024, 2025 | PDF text layer | 2024 splits some departments into a 5-column page plus a separate "2024" page, and some continuation pages have no column header (`layouts`, `inherit_header` in its config) |
-| 2026 | OCR (image-only PDF) | needs `brew install tesseract` |
+| Historic years (2020–2025) | **Actual** | The book published two years later |
+| Prior budget year (2026) | **Projected** (year-end estimate) | The newest book. The revised projection is used when one is printed. |
+| New budget year (2027) | **Proposed** and **Revised** | The newest book. You can switch between the two. Neither is an adopted budget. |
 
-The config holds everything that varies by year:
-- **Line-item columns:** a header regex, fiscal year and doc_type for each column, labelled as printed (e.g. `proposed` even in an "Adopted" book).
-- **Staffing:** the order of fields in a staffing row.
-- **Codes:** the fund and department code maps.
-- **Text layer:** a glyph map for unmapped characters.
+**Adopted** and **Amended** budgets, year-to-date columns, and an older book's own-year proposal are **not shown**. They stay in the raw extractions in `data/processed/`. When a new book arrives, the year labels move forward automatically: the new year becomes Proposed/Revised, the year before becomes Projected, and older years become Actual.
 
-A page whose header matches no configured layout stops the run.
+### Every amount links to its source page
+Clicking a dollar amount opens the budget-book PDF **at the page it came from**. This works for totals, categories and line items. Page numbers are not printed on screen, because the link is the amount itself.
 
-**OCR** (`"source": "ocr"`): `scripts/ocr_pages.py` renders each page at 300 DPI, turns it upright using Tesseract's orientation detection, erases table rules, and caches word boxes in `data/ocr_cache/` (git-ignored, keyed by the PDF's hash).
+### What the site shows
+- **Home (all departments):**
+  - the total for the selected fund, year and figure;
+  - one card per department, with bars comparing the selected figure (mint) with the comparison figure (gold);
+  - a "Totals by Year" line chart;
+  - a "Revenue vs. Expenses by Fund" chart.
+- **Department page** (`#/department/public-safety`), modeled on the LA Controller's budget site:
+  - total and status;
+  - a category pie;
+  - a by-category comparison chart;
+  - totals by year;
+  - a bureau breakdown;
+  - a category table with changes;
+  - the overall year-over-year change;
+  - a searchable, sortable line-item table.
+- **Bureau page** (`#/department/<dept>/bureau/<fund--bureau>`): the same layout for a single bureau. Bureau names change between books, so years are matched by org code. A crosswalk of names is still to come.
+- **Reserve Fund** (in the Fund selector): the General Fund balance, from each book's "Fund Balance Projection" page. It shows the year-end balance and how it changes each year, using the same one-figure-per-year rule. Where the city's page disagrees with itself, the Revised column is used and the difference is explained on the page.
+- **About the data** (button in the header):
+  - which book supplies each year;
+  - how the figures were validated;
+  - every known error in the city's source books, each reviewed by a person;
+  - download links.
 
-**Checks** are the same as for 2027: every printed section TOTAL in every column, roll-ups, staffing subtotals, and duplicate pages.
-- An amount that can't be read cleanly fails the run until a person fixes it in `data/ocr_corrections.csv`, with evidence. Flagged cells are listed in `ocr_cells_<doc>.csv`.
-- **Missing minus signs:** the city prints some negative actuals without a sign, but the printed TOTAL counts them as negative. `scripts/sign_corrections.py <doc> --append` flips a value only when the total proves it: the lines exceed the total by exactly 2× that one line (or 2× one unique pair). Each flip is logged in `data/sign_corrections.csv` with the printed total, line sum and gap. The printed value stays in the line_items `as_printed` column.
-- **Staffing values proven wrong by a subtotal** (e.g. a clipped leading digit) are corrected through `data/staffing_corrections.csv`, again with the printed value, the subtotal evidence and any alternative that was ruled out. The staffing output keeps the original in `as_printed`.
-- `scripts/review_failures.py <doc>` drafts `known_issues.csv` rows for the failures that remain. It spells out the arithmetic, for example "the gap is exactly twice line X": the city prints some negative amounts without a sign. A person reads the drafts before appending them.
+Funds: General, Stormwater Management, Sewer, Water, Solid Waste & Recycling, Liquid Fuels, Long's Park, plus the Reserve Fund view. The site opens on the **General Fund**.
 
-**Cross-book check:** `scripts/crosscheck.py` compares book B's "B PROPOSED" with book B+1's "B ORIGINAL BUDGET", account by account. It writes `crosscheck_*.csv`, which separates adoption changes from possible misreads. Add `--loose` for figures that should only be close, such as B-1 PROJECTED vs the next book's B-1 ACTUAL.
+## 2. Where the data can be found
 
-`scripts/budget_common.py` holds the parts both extractors share.
+| What | Where | Notes |
+|---|---|---|
+| Source budget books (PDF) | [`Budget PDFs - City/`](Budget%20PDFs%20-%20City/), also published at `<site>/pdfs/` | 2022–2027 books |
+| Data the site reads | [`web/data/budget.json`](web/data/budget.json) | Every figure shown, with its source book and page |
+| Budgeted positions | [`web/data/staffing.json`](web/data/staffing.json) | Not on screen yet (personnel view planned) |
+| Books that disagree | [`web/data/conflicts.json`](web/data/conflicts.json) | Where overlapping books print different values for the same figure |
+| Tidy per-book tables (CSV) | [`data/processed/`](data/processed/) | `budget_long_*.csv` is the main table: one row per account, year and figure type, with `source_page`. Also: `line_items_*`, `staffing_*`, `fund_balance_*`, `validation_*`, `crosscheck_*` |
+| Reviewed source errors | [`data/known_issues.csv`](data/known_issues.csv) | Shown on the site under "Known problems in the source books" |
+| Audited corrections | `data/sign_corrections.csv`, `data/ocr_corrections.csv`, `data/staffing_corrections.csv` | Each correction lists its evidence and the value as printed |
 
-## Dashboard
+The JSON files can also be downloaded from the live site: `<site>/data/budget.json`, `staffing.json` and `conflicts.json`.
+
+## 3. How to use the site
+
+**Controls** (at the top of the home and department pages):
+- **Fiscal year:** the year to show.
+- **Compare with:** any other year and figure (for example, 2026 Projected), or "No comparison".
+- **Fund:** a single fund, "All funds", or the Reserve Fund.
+- **Figure:** Proposed / Revised. This only appears for years that have more than one figure.
+- **Show:** Expenses / Revenue.
+
+**On the pages:**
+- Click a **department card** to open its page. Use the **Department** dropdown on that page to switch departments, and the bureau breakdown to drill into a bureau.
+- **Line items:**
+  - type in the search box to filter by name, account number, bureau, fund or category;
+  - click a column header to sort;
+  - use "Show more" to load more rows.
+- Under the "Totals by Year" chart, **Show values** opens a table of the numbers behind it. Pie charts list their values beside the chart.
+- **Shareable links:** every view's settings are kept in the address, so a link reopens exactly that view. For example, `#/department/public-safety?y=2027&m=proposed&c=2026-projected`.
+
+| Parameter | Meaning | Values |
+|---|---|---|
+| `y` | year | e.g. `2027` |
+| `m` | figure | `actual`, `projected`, `proposed`, `revised` |
+| `c` | compare with | `2026-projected`, or `none` |
+| `k` | show revenue | `revenue` (expenses is the default) |
+| `f` | fund | a fund name, `Reserve Fund`, or `all` (General Fund is the default) |
+
+---
+
+## 4. Editing the site's display and text
+
+The site is plain HTML, CSS and JavaScript in [`web/`](web/). There is no build step. Edit a file, push to `main`, and the site redeploys in about a minute.
+
+### Preview your changes locally
 ```bash
-python3 scripts/build_dataset.py   # data/processed/budget_long_*.csv -> web/data/*.json
-python3 scripts/check_dataset.py   # every shown total vs the CSVs and the printed fund totals
-python3 -m http.server 8765 --directory web   # then open http://localhost:8765
+python3 -m http.server 8765 --directory web    # then open http://localhost:8765
 ```
-`build_dataset.py` shows **one kind of figure per year**: the newest year gets **proposed** and **revised** (the original and revised proposals); an earlier year gets **actual** (from the book two years later); the year before the newest, which has no actual yet, gets **projected** (revised projection when present, from the next book). Adopted, amended and year-to-date columns and older books' own-year proposals are never shown. New `budget_long_*.csv` files are picked up automatically. Disagreements between overlapping books go to `web/data/conflicts.json`.
+Opening `index.html` straight from disk won't work, because the browser blocks it from loading the data files.
 
-The site shows no page numbers as text; each amount is itself a link to `pdfs/<book>.pdf#page=N` (from `source_doc`/`source_page` in `web/data/budget.json`), and `web/pdfs` is a symlink to `Budget PDFs - City/`. Bureau names differ between books, so bureau pages match lines across years by org code (the first part of the account code); a name crosswalk is still to come. The **Reserve Fund** entry in the Fund selector is the General Fund balance (`fund_balance_*.csv`), shown with the same one-kind-per-year rule: actual year-end balance up to two years before the newest book, projected for the year before, proposed and revised for the newest year; `check_dataset.py` checks every line shown against the CSVs. Entity name, site title, default fund and data paths live in `web/config.json`; brand and chart colors live in the `:root` block of `web/styles.css`, so another entity (e.g. the county) is a new config plus a new data folder. Routes are hash-based (`#/department/public-safety`), so GitHub Pages needs no server rules. The Pages workflow (`.github/workflows/pages.yml`) rebuilds the data and publishes `web/` with the PDFs copied in.
+### Where each thing lives
+
+| To change… | Edit | What to look for |
+|---|---|---|
+| Site name, city name, page description, footer text, default fund | [`web/config.json`](web/config.json) | `site_title`, `entity.name` / `short` / `possessive`, `description`, `footer`, `default_fund` |
+| Colors (background, panels, text, the mint "selected" and gold "comparison" colors, chart palette) | [`web/styles.css`](web/styles.css) | The `:root { … }` block at the top. Charts read their colors from it too, so there's nothing to change in JS. |
+| Fonts, sizes, spacing, layout | [`web/styles.css`](web/styles.css) | `--font` in `:root`; sections are labelled (`/* Header */`, `/* Filters */`, …) |
+| Favicon, the fallback page title, the "About the data" button label | [`web/index.html`](web/index.html) | `<link rel="icon">`, `<title>`, `#about-btn` |
+| Figure names ("Proposed", "Revised", "Projected", "Actual") | [`web/app.js`](web/app.js) | `const LABEL` near the top |
+| Status badges ("Revised proposal, not adopted", …) | `web/app.js` | `const STATUS` near the top |
+| Category order in charts and tables | `web/app.js` | `const CAT_ORDER` |
+| Rows per page in the line-item table; number of pie slices | `web/app.js` | `PAGE_SIZE`, `PIE_SLICES` |
+| Home page headings, hint text and charts | `web/app.js` | `function homeView()` |
+| Department and bureau page sections and headings | `web/app.js` | `function entityView()` |
+| Filter labels ("Fiscal year", "Compare with", …) | `web/app.js` | `function filtersHTML()` |
+| "Totals by Year" chart text | `web/app.js` | `function trendHTML()` |
+| Reserve Fund page text | `web/app.js` | `function reserveView()` and `const resLabel` |
+| "About the data" text (sources, validation, downloads) | `web/app.js` | `function renderAbout()` |
+| Notes listed under "Known problems in the source books" | [`data/known_issues.csv`](data/known_issues.csv) | The `note` column. Then rebuild the data (below). |
+
+Notes:
+- `config.json` overrides the title, wordmark, description and footer that are hard-coded in `index.html`. Change them in `config.json`.
+- In `app.js`, page text sits inside template strings (`` `…` ``). Change the words, but keep `${…}` placeholders and the HTML tags intact.
+
+### Changing which figures appear
+Which figure is used for each year is decided when the data is built, not in the page code. That logic lives in [`scripts/build_dataset.py`](scripts/build_dataset.py). After changing it, or anything in `data/`, rebuild and check:
+```bash
+python3 scripts/build_dataset.py   # data/processed/*.csv -> web/data/*.json
+python3 scripts/check_dataset.py   # every shown figure vs the CSVs and printed totals; must report 0 mismatches
+```
+The publish workflow runs both scripts on every push, and stops the deploy if the check fails.
+
+### Adding another government (e.g. Lancaster County)
+The city name, title and data paths are all in `config.json`, and colors are in the `:root` block. A second entity needs:
+- its own `config.json` values;
+- a data folder (`paths.data`);
+- a PDF folder (`paths.pdfs`).
+
+### Publishing and custom domain
+- `.github/workflows/pages.yml` publishes `web/`, plus copies of the PDFs, to GitHub Pages on every push to `main`. It can also be run by hand from the Actions tab.
+- To use your own domain:
+  1. Add a DNS CNAME to `richnazzaro.github.io` (or the four GitHub Pages A records for a bare domain).
+  2. Set the domain under repo **Settings → Pages → Custom domain**.
+  3. Tick **Enforce HTTPS**.
+
+---
+
+## Repository layout
+```
+Budget PDFs - City/   source budget books (2022–2027)
+config/               per-book layout settings for the extractor
+data/                 reviewed issues and audited corrections
+data/processed/       extracted CSVs (committed; the site is built from them)
+scripts/              extraction, validation and site-data build (see docs/PIPELINE.md)
+web/                  the static site (index.html, app.js, styles.css, config.json, data/)
+docs/PIPELINE.md      how PDFs become data: OCR, validation, corrections, adding a new book
+```
