@@ -3,7 +3,7 @@
 Usage:
     python scripts/crosscheck.py \\
         data/processed/line_items_2026-Adopted-Budget-2026.csv proposed_2026 \\
-        data/processed/line_items_2027-RevisedProposedBudget-Compressed.csv adopted_2026
+        data/processed/line_items_2027-Mayors-Revised-Proposed-Budget-Rev-11-19-26.csv adopted_2026
 
 A later book reprints an earlier year's figures (the 2027 book's "2026
 ORIGINAL BUDGET" is the adopted 2026 budget), so this is an independent check

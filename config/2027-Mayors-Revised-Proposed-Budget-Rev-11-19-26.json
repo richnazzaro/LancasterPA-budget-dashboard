@@ -1,11 +1,11 @@
 {
   "_comment": "The 2027 book has its own extractor (scripts/extract_budget.py, 8 columns and 2 staffing columns hard-wired). This file only tells ingest.py to use it and which budget year the book is.",
-  "source_doc": "2027-RevisedProposedBudget-Compressed.pdf",
+  "source_doc": "2027-Mayors-Revised-Proposed-Budget-Rev-11-19-26.pdf",
   "extractor": "extract_budget",
   "source": "text",
   "budget_year": 2027,
   "fund_balance": {
-    "_comment": "p30 prints two columns, both headed '2027 Budget': left = proposed, right = revised proposed.",
+    "_comment": "p35 prints two columns, both headed '2027 Budget': left = proposed, right = revised proposed.",
     "scenarios": [
       "proposed",
       "revised"

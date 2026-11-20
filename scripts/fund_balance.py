@@ -1,7 +1,7 @@
 """Extract and check the General Fund "Fund Balance Projection" page.
 
 Usage:
-    python scripts/fund_balance.py "Budget PDFs - City/2027-RevisedProposedBudget-Compressed.pdf"
+    python scripts/fund_balance.py "Budget PDFs - City/2027-Mayors-Revised-Proposed-Budget-Rev-11-19-26.pdf"
     (ingest.py runs this for every book)
 
 The page walks the General Fund reserve ("Reserve Fund" on the dashboard)

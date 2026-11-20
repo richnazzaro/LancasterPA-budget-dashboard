@@ -1,7 +1,7 @@
 """Extract City of Lancaster (PA) budget PDFs into clean, validated tables.
 
 Usage:
-    python scripts/extract_budget.py "Budget PDFs - City/2027-RevisedProposedBudget-Compressed.pdf"
+    python scripts/extract_budget.py "Budget PDFs - City/2027-Mayors-Revised-Proposed-Budget-Rev-11-19-26.pdf"
 
 Writes to data/processed/:
     line_items_<doc>.csv   one row per account line, all 8 amount columns (wide)
@@ -46,7 +46,10 @@ AMOUNT_KEYS = [f"{doc}_{fy}" for fy, doc in AMOUNT_COLUMNS]
 # Explanatory notes under each line item are set in this font. They overlap
 # the table rows vertically and corrupt them if read together, so we split
 # them out and attach them to the line above as a description.
-NOTE_FONT_SUFFIX = "CIDFont+F2"
+# The 11/16 book embeds it as "CIDFont+F2"; the 11/19 book (re-saved through
+# macOS) renames the same font "Calibri" (and the table font "Calibri-Bold",
+# which "+Calibri" does not match). Character counts per page tie one to one.
+NOTE_FONT_SUFFIXES = ("CIDFont+F2", "+Calibri")
 
 NUM = r"\(?-?[\d,]+\)?"
 EIGHT_NUMS = rf"((?:{NUM} ){{7}}{NUM})"
@@ -127,7 +130,7 @@ def rows_from_chars(chars, y_tolerance=3, cell_gap=1.5):
 
 def page_lines(page):
     """Return (table_lines, note_lines): lists of (top, text) for one page."""
-    is_note = lambda c: c.get("fontname", "").endswith(NOTE_FONT_SUFFIX)
+    is_note = lambda c: c.get("fontname", "").endswith(NOTE_FONT_SUFFIXES)
     table = [c for c in page.chars if not is_note(c)]
     notes = [c for c in page.chars if is_note(c)]
     return rows_from_chars(table), rows_from_chars(notes)
