@@ -4,6 +4,7 @@
  *   #/                                        all departments
  *   #/department/<dept>                       one department
  *   #/department/<dept>/bureau/<unit>         one bureau (org-chart unit)
+ *   #/changes                                 what changed in the newest year (changes.json, scripts/changes.py)
  * Departments and bureaus follow the city's 2027 org chart (budget.json `org` block, built by
  * scripts/org_structure.py): every line's org code maps to one unit, and each unit to one department.
  * Older bureau links (#/department/<dept>/bureau/<fund--printed group>) redirect to the unit.
@@ -135,7 +136,8 @@
     const parts = path.split('/').filter(Boolean).map(decodeURIComponent);
     const q = new URLSearchParams(qs);
     let r = { name: 'home' };
-    if (parts[0] === 'department' && parts[1]) {
+    if (parts[0] === 'changes') r = { name: 'changes' };
+    else if (parts[0] === 'department' && parts[1]) {
       r = parts[2] === 'bureau' && parts[3] ? { name: 'bureau', dept: parts[1], bureau: parts[3] } : { name: 'dept', dept: parts[1] };
     }
     return { r, q };
@@ -166,7 +168,7 @@
   function navigate(hash, replace = false) {
     if (replace) { history.replaceState(null, '', hash); onRoute(false); } else { location.hash = hash; }
   }
-  const currentHash = () => (route.name === 'home' ? homeHash : route.name === 'dept' ? (o) => deptHash(route.deptIdx, o) : (o) => unitHash(route.unitIdx, o));
+  const currentHash = () => (route.name === 'home' ? homeHash : route.name === 'changes' ? (o) => changesHash(o) : route.name === 'dept' ? (o) => deptHash(route.deptIdx, o) : (o) => unitHash(route.unitIdx, o));
 
   /* ---------- shared UI pieces ---------- */
   function statusHTML() {
@@ -190,7 +192,7 @@
   const DEFINE_FIGURES = [['Proposed', 'the administration\'s first budget proposal.'], ['Revised', 'the revised proposal.'], ['Neither is adopted.', ''],
     ['Projected', 'the city\'s year-end estimate.'], ['Actual', 'what was spent, reported in the budget book two years later.']];
   const defineFigures = () => `<details class="define"><summary>What do these mean?</summary><ul>${DEFINE_FIGURES.map(([a, b]) => (b ? `<li><strong>${a}:</strong> ${b}</li>` : `<li class="aside">${a}</li>`)).join('')}</ul></details>`;
-  const defineFund = () => `<details class="define"><summary>What is a fund?</summary><p>A fund is a separate account the city keeps for a purpose. The General Fund pays for most city services; others, such as water, sewer and trash, are paid for by their own fees and are not mixed with it. The Reserve Fund is the General Fund's savings balance.</p></details>`;
+  const defineFund = () => `<details class="define"><summary>What is a fund?</summary><p>A fund is a separate account the city keeps for a purpose. The General Fund pays for most city services and is paid for mostly by taxes; others, such as water, sewer, stormwater and trash, are paid for by their own fees and are not mixed with it. The Reserve Fund is the General Fund's savings balance.</p></details>`;
 
   /* The controls sit behind a one-line summary and a "Change" button, so content comes first. Open by default
      on wide screens, closed on phones; the visitor's last choice is remembered (localStorage may be blocked). */
@@ -785,6 +787,7 @@
     }
     document.title = `${name} ${seriesLabel(k)} · ${CFG.site_title}`;
     const about = aboutHTML('What does this department do?', dept.desc);
+    bureauList += deptChangesHTML(di);
     const v = entityView({ title: name, subtitle, selRows, cmpRows, parentHash: homeHash(), parentLabel: 'All departments', bureauList, deptPicker: picker, scope: { dept: di }, about });
     return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats); mountLines(selRows, cmpRows, true); } };
   }
@@ -820,6 +823,357 @@
     return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats); mountLines(selRows, cmpRows, true); } };
   }
 
+  /* ---------- What changed (#/changes) ----------
+     Reads <paths.data>changes.json (scripts/changes.py): per comparison (newest Revised or Proposed against the
+     prior year's Projected, the latest Actual, or the Proposal), totals by fund, category, department and bureau,
+     every changed line, shifts between funds found in the city's line notes, and position counts per bureau with
+     the artifacts that make printed schedules differ. Every amount links to its page in the budget book. */
+  let CH = null;
+  const changesHash = (over) => `#/changes?${query(over)}`;
+  const WC_TOP = 10;
+  const vOf = (x) => (x ? x.v : 0);
+  /* Short money for sentences and tiles: $87.8M, $1.25M (a second decimal when one would be more than 2.5% off), $148K. */
+  const mny = (n) => {
+    const a = Math.abs(n), sg = n < 0 ? '-' : '';
+    if (a >= 1e6) { const one = +(a / 1e6).toFixed(1); return `${sg}$${Math.abs(one * 1e6 - a) / a > 0.025 ? (a / 1e6).toFixed(2) : one.toFixed(1)}M`; }
+    if (a >= 1e3) return `${sg}$${Math.round(a / 1e3)}K`;
+    return `${sg}$${Math.round(a)}`;
+  };
+  const sgn = (n, f) => (n > 0 ? '+' : n < 0 ? '−' : '') + f(Math.abs(n));
+  const fmtN = (n) => (Math.round(n * 100) / 100).toLocaleString('en-US', { maximumFractionDigits: 2 });
+  const lnk = (x, text) => (x && x.d != null ? srcDoc(text ?? money(x.v), x.d, x.p) : (text ?? money(vOf(x))));
+  const deltaHTML = (d, base, f = money) => { const p = base ? (d / Math.abs(base)) * 100 : null; return `<span class="${d > 0 ? 'up' : d < 0 ? 'down' : 'flat'}">${d === 0 ? 'No change' : sgn(d, f)}${p == null || d === 0 ? '' : `<span class="pct"> (${sgn(p, (x) => x.toFixed(1))}%)</span>`}</span>`; };
+  const nDelta = (d) => `<span class="${d > 0 ? 'up' : d < 0 ? 'down' : 'flat'}">${Math.abs(d) < 0.005 ? '0' : sgn(d, fmtN)}</span>`;
+
+  /* Which comparison: <newest figure>~<compare with>. Falls back to the first one listed for that figure. */
+  function changeCmp() {
+    if (!CH) return null;
+    const to = key(D.newest_year, S.m);
+    let id = `${to}~${S.c}`;
+    if (!CH.comparisons[id]) id = Object.keys(CH.comparisons).find((x) => x.startsWith(`${to}~`)) || CH.default;
+    return CH.comparisons[id] ? { id, ...CH.comparisons[id] } : null;
+  }
+  const revisionCmp = () => (CH ? CH.comparisons[`${D.newest_year}|revised~${D.newest_year}|proposed`] || null : null);
+  const kindOf = (k) => parseKey(k).m;
+  const crossYear = (c) => parseKey(c.from).y !== parseKey(c.to).y;
+  function fromPhrase(c, spend = true) {
+    const { y, m } = parseKey(c.from);
+    if (m === 'projected') return `the city expects to ${spend ? 'spend' : 'take in'} in ${y}`;
+    if (m === 'actual') return `the city ${spend ? 'spent' : 'took in'} in ${y}`;
+    return `the ${seriesLabel(c.from)} budget`;
+  }
+  const scopeName = () => S.f || 'all';
+  const fundWords = () => (S.f ? `from the ${esc(S.f)}` : 'across all funds');
+  const acctOf = (ln) => D.accounts[ln[0]];
+  const unitOfLine = (ln) => O.codes[acctOf(ln)[0].split('-')[0]];
+  const lineF = (ln) => (ln[1] == null ? null : { v: ln[1], d: ln[2], p: ln[3] });
+  const lineT = (ln) => (ln[4] == null ? null : { v: ln[4], d: ln[5], p: ln[6] });
+  const lineD = (ln) => (ln[4] || 0) - (ln[1] || 0);
+
+  /* Shifts between funds that touch this scope (fund, and optionally one department). */
+  function shiftsFor(c, fund, dept = null) {
+    if (!CH || !crossYear(c)) return [];
+    const inDept = (u) => u != null && O.units[u].dept === dept;
+    return CH.shifts.filter((s) => (!fund || s.from_fund === fund || s.to_fund === fund) && (dept == null || inDept(s.from.unit) || inDept(s.to?.unit)));
+  }
+  function movedPositions(P, cls, fund) {
+    let into = 0, out = 0;
+    for (const a of (P?.artifacts || [])) {
+      if (a.kind !== 'moved') continue;
+      const n = a.n[cls] || 0;
+      if (!fund || a.fund === fund) into += n;
+      if (fund && a.from_fund === fund) out += n;
+    }
+    return { into, out };
+  }
+  const posClass = (P) => (P.classes.includes('FT') ? 'FT' : 'ALL');
+  const clsWord = (cls, plural = true) => (cls === 'FT' ? `full-time position${plural ? 's' : ''}` : cls === 'PT' ? `part-time position${plural ? 's' : ''}` : `position${plural ? 's' : ''}`);
+
+  function headlineSentence(c, sc) {
+    const ex = sc.expense; if (!ex) return '';
+    const t = ex.total.t, f = ex.total.f, d = vOf(t) - vOf(f), p = vOf(f) ? Math.abs(d / vOf(f)) * 100 : null;
+    let s = `The ${esc(seriesLabel(c.to))} budget spends ${lnk(t, mny(vOf(t)))} ${fundWords()}, `
+      + (d === 0 ? `the same as ${fromPhrase(c)}.` : `${mny(Math.abs(d))}${p == null ? '' : ` (${p.toFixed(1)}%)`} ${d > 0 ? 'more' : 'less'} than ${fromPhrase(c)}.`);
+    if (S.f) {
+      const ins = shiftsFor(c, S.f).filter((x) => x.to_fund === S.f && x.to?.values);
+      const amt = ins.reduce((a, x) => a + vOf(x.to.values[c.to]), 0);
+      if (amt > 0) {
+        const from = [...new Set(ins.map((x) => x.from_fund))];
+        const what = ins.map((x) => esc(x.to.label || x.from.label));
+        s += ` ${d > 0 && amt <= d ? `${mny(amt)} of that is` : `That includes ${mny(amt)} of`} ${what.length > 1 ? what.slice(0, -1).join(', ') + ' and ' + what[what.length - 1] : what[0]} work moved from the ${from.length === 1 ? esc(from[0]) : 'other funds'}.`;
+      }
+    }
+    const dr = sc.revenue?.draw;
+    if (dr && vOf(dr.t) > 0) s += ` ${S.f ? 'It\'s' : 'The General Fund is'} balanced by drawing ${lnk(dr.t, mny(vOf(dr.t)))} from the reserve.`;
+    return s;
+  }
+
+  function badgeHTML(c) {
+    if (c.same_kind) return '';
+    const fm = kindOf(c.from);
+    const what = fm === 'projected' ? 'a year-end estimate' : fm === 'actual' ? 'actual spending' : LABEL[fm].toLowerCase();
+    const alt = Object.keys(CH.comparisons).filter((x) => x.startsWith(`${c.to}~`) && x !== c.id && crossYear(CH.comparisons[x]));
+    const altK = alt.find((x) => kindOf(x.split('~')[1]) === (fm === 'projected' ? 'actual' : 'projected'));
+    const sw = altK ? ` <a class="wc-switch" href="${esc(changesHash({ c: altK.split('~')[1] }))}">Compare with ${esc(seriesLabel(altK.split('~')[1]))} instead</a>` : '';
+    return `<p class="wc-badge"><span class="wc-badge-tag">Comparing a proposal with ${what}</span>${sw}</p>`;
+  }
+
+  function tilesHTML(c, sc) {
+    const tiles = [];
+    const ex = sc.expense;
+    if (ex) tiles.push(['Spending change', deltaHTML(vOf(ex.total.t) - vOf(ex.total.f), vOf(ex.total.f), mny),
+      `${esc(seriesLabel(c.from))} ${lnk(ex.total.f)} → ${esc(seriesLabel(c.to))} ${lnk(ex.total.t)}`]);
+    const dr = sc.revenue?.draw;
+    if (dr) tiles.push(['Drawn from the reserve', `<span>${lnk(dr.t, mny(vOf(dr.t)))}</span>`, `${esc(seriesLabel(c.from))}: ${lnk(dr.f, dr.f ? mny(vOf(dr.f)) : '$0')}`]);
+    else if (sc.revenue) tiles.push(['Income change', deltaHTML(vOf(sc.revenue.total.t) - vOf(sc.revenue.total.f), vOf(sc.revenue.total.f), mny), `${esc(seriesLabel(c.from))} ${lnk(sc.revenue.total.f)} → ${lnk(sc.revenue.total.t)}`]);
+    const P = c.positions;
+    if (P) {
+      const cls = posClass(P), tk = S.f ? String(D.funds.indexOf(S.f)) : 'all', T = P.totals[tk]?.[cls];
+      if (T) {
+        const mv = movedPositions(P, cls, S.f);
+        const corrected = (T.at - T.af) + mv.into - mv.out;
+        const parts = [];
+        if (mv.into) parts.push(`${fmtN(mv.into)} moved in from other funds`);
+        if (mv.out) parts.push(`${fmtN(mv.out)} moved out`);
+        parts.push(`${sgn(T.at - T.af, fmtN)} ${mv.into || mv.out ? 'other change' : 'after corrections'}`);
+        tiles.push([cls === 'FT' ? 'Full-time positions' : 'Positions', nDelta(corrected), `${parts.join(' · ')}. <a href="#wc-pos">How this is counted</a>`]);
+      }
+    }
+    const rc = revisionCmp();
+    const rx = rc?.scopes[scopeName()]?.expense;
+    if (rx) tiles.push(['Revision vs. proposal', deltaHTML(vOf(rx.total.t) - vOf(rx.total.f), vOf(rx.total.f), mny), `Proposed ${lnk(rx.total.f)} → Revised ${lnk(rx.total.t)}`]);
+    return `<ul class="wc-tiles">${tiles.map(([h, big, sub]) => `<li class="wc-tile"><h2 class="wc-tile-h">${h}</h2><p class="wc-tile-v">${big}</p><p class="wc-tile-s">${sub}</p></li>`).join('')}</ul>`;
+  }
+
+  function shiftCard(s, c) {
+    const fv = s.from.values[c.from], tv = s.to?.values?.[c.to], pos = s.positions?.[c.id];
+    const unitName = (u) => (u == null ? '' : esc(O.units[u].name));
+    const posTxt = pos ? Object.entries(pos).map(([cls, n]) => `${fmtN(n)} ${clsWord(cls, n !== 1)}`).join(' and ') : '';
+    const notes = s.evidence.map((e) => `<li><q>${esc(e.t)}</q> ${srcDoc('City\'s note', e.d, e.p)}${e.n > 1 ? `<span class="muted"> (on ${e.n} lines)</span>` : ''}</li>`).join('');
+    let to = '';
+    if (s.to?.values) to = `<p><strong>Now:</strong> ${lnk(tv)} in ${esc(seriesLabel(c.to))}, ${esc(s.to_fund)}, ${unitName(s.to.unit)}${s.to.orgs.length ? ` (org ${s.to.orgs.join(', ')})` : ''}.</p>`;
+    else if (s.to) to = `<p><strong>Now:</strong> done by the ${unitName(s.to.unit)} in the ${esc(s.to_fund)}; its cost there is not on separate lines.</p>`;
+    const billed = s.billed ? `<p>The ${esc(s.from_fund)} now pays it back: ${lnk(s.billed.values[c.to])} in ${esc(seriesLabel(c.to))}${s.billed.reimb ? `, received by the ${esc(s.to_fund)} as “${esc(s.billed.reimb.name)}” (${lnk(s.billed.reimb.values[c.to])})` : ''}.</p>` : '';
+    const left = s.from.values[c.to] && vOf(s.from.values[c.to]) ? ` ${lnk(s.from.values[c.to])} stays there in ${esc(seriesLabel(c.to))}.` : '';
+    const mism = s.note_org_mismatch ? `<p class="muted">The city's note names org ${esc(s.note_orgs.join(', '))}; the matching new lines are in org ${esc(s.to.orgs.join(', '))}.</p>` : '';
+    return `<li class="wc-shift"><h3>${esc(s.from.label)}: ${esc(s.from_fund)} → ${esc(s.to_fund)}</h3>
+      <p><strong>Before:</strong> ${lnk(fv)} in ${esc(seriesLabel(c.from))}, ${esc(s.from_fund)}, ${unitName(s.from.unit)} (org ${esc(s.from.orgs.join(', '))}).${left}</p>
+      ${to}${billed}${posTxt ? `<p><strong>Positions:</strong> ${posTxt} moved with the work.</p>` : ''}${mism}
+      <details class="wc-ev"><summary>The city's notes</summary><ul>${notes}</ul></details></li>`;
+  }
+  function shiftsHTML(c, dept = null) {
+    const list = shiftsFor(c, S.f, dept);
+    if (!list.length) return '';
+    const into = S.f ? list.filter((s) => s.to_fund === S.f) : [], out = S.f ? list.filter((s) => s.from_fund === S.f) : [];
+    const block = (title, l, id) => (l.length ? `<section class="panel wc-moved" aria-labelledby="${id}"><h2 class="total-label" id="${id}">${title}</h2>
+      ${S.f === DEFAULT_FUND || !S.f ? defineMoved() : ''}<ul class="wc-shifts">${l.map((s) => shiftCard(s, c)).join('')}</ul></section>` : '');
+    if (!S.f) return block('Moved between funds', list, 'wc-mv');
+    return block(`Moved into the ${esc(S.f)}`, into, 'wc-in') + block(`Moved out of the ${esc(S.f)}`, out, 'wc-out');
+  }
+  const defineMoved = () => `<details class="define"><summary>Why this matters</summary><p>The General Fund is paid for mostly by taxes. The Water, Sewer, Stormwater and Solid Waste funds are paid for by their own fees. Work moved into the General Fund is paid for from taxes from now on; work moved out of it is paid for by fees.</p></details>`;
+
+  /* Diverging bars: one row per group, the bar grows right for an increase and left for a decrease. */
+  function divBars(rows, c, id, { title, note = '' }) {
+    const items = rows.map((r) => ({ ...r, d: vOf(r.t) - vOf(r.f) })).filter((r) => r.d !== 0).sort((a, b) => b.d - a.d);
+    if (!items.length) return '';
+    const max = Math.max(...items.map((r) => Math.abs(r.d)));
+    const bars = items.map((r) => {
+      const w = (Math.abs(r.d) / max) * 100;
+      const label = r.href ? `<a href="${esc(r.href)}">${esc(r.label)}</a>` : esc(r.label);
+      return `<li><span class="wc-bl">${label}</span><span class="wc-track" aria-hidden="true"><span class="wc-half wc-neg">${r.d < 0 ? `<i style="width:${w}%"></i>` : ''}</span><span class="wc-half wc-pos">${r.d > 0 ? `<i style="width:${w}%"></i>` : ''}</span></span><span class="wc-bv">${deltaHTML(r.d, null, mny)}</span></li>`;
+    }).join('');
+    const unchanged = rows.length - items.length;
+    const table = `<details class="values"><summary>Show as a table</summary><div class="table-scroll"><table class="table tight"><thead><tr><th scope="col">${esc(title)}</th><th scope="col" class="num">${esc(seriesLabel(c.from))}</th><th scope="col" class="num">${esc(seriesLabel(c.to))}</th><th scope="col" class="num">Change</th></tr></thead>
+      <tbody>${rows.map((r) => ({ ...r, d: vOf(r.t) - vOf(r.f) })).sort((a, b) => b.d - a.d).map((r) => `<tr><td>${esc(r.label)}</td><td class="num">${r.f ? lnk(r.f) : '—'}</td><td class="num">${r.t ? lnk(r.t) : '—'}</td><td class="num">${deltaHTML(r.d, vOf(r.f))}</td></tr>`).join('')}</tbody></table></div></details>`;
+    return `<div class="wc-div" id="${id}">${note ? `<p class="wc-note">${note}</p>` : ''}<ul class="wc-bars">${bars}</ul>${unchanged ? `<p class="wc-note">${unchanged} unchanged.</p>` : ''}${table}</div>`;
+  }
+
+  function lineTableHTML(c, idx, { caption, showFund = !S.f, empty = '' } = {}) {
+    if (!idx.length) return empty;
+    const body = idx.map((i) => {
+      const ln = c.lines[i], a = acctOf(ln), u = unitOfLine(ln), d = lineD(ln);
+      const sub = [a[0], unitLabel(u, D.categories[a[5]] === 'Revenue' ? 'revenue' : 'expense'), showFund ? D.funds[a[2]] : ''].filter(Boolean).map(esc).join(' · ');
+      return `<tr><td>${esc(a[1])}<span class="sub">${sub}</span></td><td class="num hide-sm">${ln[1] == null ? '—' : lnk(lineF(ln))}</td><td class="num">${ln[4] == null ? '—' : lnk(lineT(ln))}<span class="wc-sm">${sgn(d, money)}</span></td><td class="num hide-sm">${deltaHTML(d, ln[1])}</td></tr>`;
+    }).join('');
+    return `<div class="table-scroll"><table class="table tight wc-lines">${caption ? `<caption>${caption}</caption>` : ''}<thead><tr><th scope="col">Line item</th><th scope="col" class="num hide-sm">${esc(seriesLabel(c.from))}</th><th scope="col" class="num">${esc(seriesLabel(c.to))}</th><th scope="col" class="num hide-sm">Change</th></tr></thead><tbody>${body}</tbody></table></div>`;
+  }
+
+  function positionsHTML(c, { dept = null, compact = false } = {}) {
+    const P = c.positions;
+    if (!P) return '';
+    const fi = S.f ? D.funds.indexOf(S.f) : null;
+    const rows = P.rows.filter((r) => (fi == null || r[0] === fi) && (dept == null || O.units[r[1]].dept === dept));
+    if (!rows.length) return '';
+    const used = new Map();
+    const ref = (i) => { if (!used.has(i)) used.set(i, used.size + 1); return used.get(i); };
+    const tables = P.classes.map((cls) => {
+      const rs = rows.filter((r) => r[2] === cls && (r[3] || r[4] || r[5] || r[6]));
+      if (!rs.length) return '';
+      // Only bureaus whose count changed (as printed or counted); the total still covers every bureau.
+      const show = rs.filter((r) => r[3] !== r[4] || r[5] !== r[6]);
+      if (!show.length) return compact ? '' : `<p class="wc-note">${cls === 'PT' ? 'Part-time p' : 'P'}ositions: no bureau changed (${fmtN(rs.reduce((t, r) => t + r[4], 0))} in all).</p>`;
+      const same = rs.length - show.length;
+      const body = show.map((r) => {
+        const notes = r[9].filter((i) => P.artifacts[i].kind !== 'titles').map((i) => `<a class="wc-ref" href="#wc-note-${ref(i)}" aria-label="Note ${ref(i)}">${ref(i)}</a>`).join('');
+        const fl = r[7] != null ? srcDoc(fmtN(r[3]), P.from_doc, r[7]) : fmtN(r[3]);
+        const tl = r[8] != null ? srcDoc(fmtN(r[4]), P.to_doc, r[8]) : fmtN(r[4]);
+        const nm = unitLabel(r[1]) + (fi == null ? ` · ${D.funds[r[0]]}` : '');
+        const href = O.departments[O.units[r[1]].dept].bureaus && O.units[r[1]].kind === 'bureau' ? unitHash(r[1]) : deptHash(O.units[r[1]].dept);
+        return `<tr><td><a href="${esc(href)}">${esc(nm)}</a>${notes ? `<sup class="wc-refs">${notes}</sup>` : ''}<span class="sub">${esc(O.departments[O.units[r[1]].dept].name)}</span><span class="wc-sm">${fl} → ${tl}</span></td><td class="num hide-sm">${fl}</td><td class="num hide-sm">${tl}</td><td class="num">${nDelta(r[4] - r[3])}</td><td class="num">${nDelta(r[6] - r[5])}</td></tr>`;
+      }).join('');
+      const T = rs.reduce((t, r) => ({ f: t.f + r[3], t: t.t + r[4], af: t.af + r[5], at: t.at + r[6] }), { f: 0, t: 0, af: 0, at: 0 });
+      const head = cls === 'ALL' ? 'Positions' : cls === 'FT' ? 'Full-time positions' : 'Part-time positions';
+      return `<div class="table-scroll"><table class="table tight wc-pos"><caption>${head}</caption><thead><tr><th scope="col">Bureau</th><th scope="col" class="num hide-sm">${esc(P.from_label.replace(/ position schedule$/, '').replace(/ budget book's$/, ' book'))}</th><th scope="col" class="num hide-sm">${esc(P.to_label.replace(/ position schedule$/, ''))}</th><th scope="col" class="num">As printed</th><th scope="col" class="num">Counted change</th></tr></thead>
+        <tbody>${body}</tbody>${compact ? '' : `<tfoot><tr><td>Total${same ? `<span class="sub">including ${same} bureau${same === 1 ? '' : 's'} with no change</span>` : ''}<span class="wc-sm">${fmtN(T.f)} → ${fmtN(T.t)}</span></td><td class="num hide-sm">${fmtN(T.f)}</td><td class="num hide-sm">${fmtN(T.t)}</td><td class="num">${nDelta(T.t - T.f)}</td><td class="num">${nDelta(T.at - T.af)}</td></tr></tfoot>`}</table></div>`;
+    }).join('');
+    if (!tables) return '';
+    const notes = [...used.entries()].sort((a, b) => a[1] - b[1]).map(([i, n]) => {
+      const a = P.artifacts[i];
+      return `<li id="wc-note-${n}" value="${n}">${esc(a.text)}${a.p ? ` ${srcDoc('Source page', a.d, a.p)}` : ''}</li>`;
+    }).join('');
+    const titles = compact ? [] : P.artifacts.filter((a) => a.kind === 'titles' && (fi == null || a.fund === S.f) && (dept == null || O.units[a.unit].dept === dept));
+    const titleNote = titles.length ? `<details class="values"><summary>Renamed titles in ${titles.length} bureau${titles.length === 1 ? '' : 's'}</summary><ul class="wc-notes">${titles.map((a) => `<li><strong>${esc(O.units[a.unit].name)}:</strong> ${esc(a.text)}</li>`).join('')}</ul></details>` : '';
+    const explain = `<p class="wc-note">“As printed” compares the two schedules line for line. “Counted change” leaves out what is not a real change: positions that moved between funds with their work, positions marked full-time in one book and part-time in the other, and bureaus a book has no schedule page for. Each is listed in the notes.</p>`;
+    return `${compact ? '' : explain}${tables}${notes ? `<ol class="wc-notes">${notes}</ol>` : ''}${titleNote}`;
+  }
+
+  function benefitsLine(c, sc) {
+    const b = sc.expense?.by_cat?.find((r) => D.categories[r[0]] === 'Benefits');
+    if (!b) return '';
+    return `<p class="wc-benefits"><strong>Benefits</strong> (health insurance, pensions and other costs on top of pay): ${lnk(b[1])} in ${esc(seriesLabel(c.from))} → ${lnk(b[2])} in ${esc(seriesLabel(c.to))}, ${deltaHTML(vOf(b[2]) - vOf(b[1]), vOf(b[1]))}.</p>`;
+  }
+
+  function revisionHTML(c) {
+    const rc = revisionCmp();
+    if (!rc) return '';
+    const rcc = { ...rc, id: `${D.newest_year}|revised~${D.newest_year}|proposed` };
+    const sc = rc.scopes[scopeName()];
+    const parts = [];
+    if (sc?.expense) parts.push(`<li>Spending: ${lnk(sc.expense.total.f)} → ${lnk(sc.expense.total.t)}, ${deltaHTML(vOf(sc.expense.total.t) - vOf(sc.expense.total.f), vOf(sc.expense.total.f))}</li>`);
+    if (sc?.revenue) parts.push(`<li>Income: ${lnk(sc.revenue.total.f)} → ${lnk(sc.revenue.total.t)}, ${deltaHTML(vOf(sc.revenue.total.t) - vOf(sc.revenue.total.f), vOf(sc.revenue.total.f))}</li>`);
+    if (sc?.revenue?.draw) parts.push(`<li>Drawn from the reserve: ${lnk(sc.revenue.draw.f)} → ${lnk(sc.revenue.draw.t)}</li>`);
+    const P = rc.positions, tk = S.f ? String(D.funds.indexOf(S.f)) : 'all';
+    if (P?.totals[tk]) parts.push(`<li>Positions: ${P.classes.map((cls) => { const d = P.totals[tk][cls].t - P.totals[tk][cls].f; return `${nDelta(d)} ${clsWord(cls, Math.abs(d) !== 1)}`; }).join(', ')}</li>`);
+    const fi = S.f ? D.funds.indexOf(S.f) : null;
+    const idx = rc.lines.map((ln, i) => i).filter((i) => fi == null || acctOf(rc.lines[i])[2] === fi).sort((a, b) => Math.abs(lineD(rc.lines[b])) - Math.abs(lineD(rc.lines[a])));
+    const n = idx.length;
+    return `<section class="panel" aria-labelledby="wc-rev"><h2 class="total-label" id="wc-rev">What the revision changed</h2>
+      <p class="wc-note">From the ${esc(seriesLabel(rc.from))} budget to the ${esc(seriesLabel(rc.to))} budget${S.f ? `, ${esc(S.f)}` : ''}. ${n} line${n === 1 ? '' : 's'} changed.</p>
+      <ul class="wc-facts">${parts.join('')}</ul>
+      ${policyHTML(c)}
+      ${lineTableHTML(rcc, idx.slice(0, WC_TOP), { caption: `Largest changes, ${esc(seriesLabel(rc.from))} → ${esc(seriesLabel(rc.to))}` })}
+      ${n > WC_TOP ? `<details class="values"><summary>All ${n} changed lines</summary>${lineTableHTML(rcc, idx)}</details>` : ''}</section>`;
+  }
+
+  /* Tax-policy facts that are not in the budget tables (data/policy_notes.csv), next to the budget line they affect. */
+  function policyHTML(c) {
+    const notes = (CH.policy || []).filter((p) => p.year === D.newest_year);
+    if (!notes.length || (S.f && S.f !== DEFAULT_FUND)) return '';
+    const items = [...new Set(notes.map((p) => p.item))];
+    const fromK = crossYear(c) && kindOf(c.from) === 'projected' ? c.from : key(D.newest_year - 1, 'projected');
+    const fig = (k, code) => { const l = rows(k).filter((r) => r.code === code); return l.length ? { v: sum(l), d: l[0].d, p: l[0].p, k } : null; };
+    const blocks = items.map((it) => {
+      const ns = notes.filter((p) => p.item === it);
+      const code = ns.find((p) => p.account)?.account;
+      let traj = '';
+      if (code) {
+        const pts = [fig(fromK, code), fig(key(D.newest_year, 'proposed'), code), fig(key(D.newest_year, 'revised'), code)].filter(Boolean);
+        const base = pts[0];
+        traj = `<p class="wc-traj">${esc(rows(base?.k || fromK).find((r) => r.code === code)?.name || code)}: ${pts.map((x, i) => `${esc(seriesLabel(x.k))} ${src(money(x.v), x.k, x.d, x.p)}${i && base ? ` <span class="muted">(${(((x.v - base.v) / base.v) * 100 > 0 ? '+' : '')}${(((x.v - base.v) / base.v) * 100).toFixed(1)}% vs. ${esc(seriesLabel(base.k))})</span>` : ''}`).join(' → ')}</p>`;
+      }
+      const li = ns.map((p) => `<li><span class="wc-fig">${esc(LABEL[p.figure] || p.figure)}:</span> ${esc(p.text)} <span class="wc-srcnote">${p.d != null ? srcDoc('Budget book', p.d, p.p) : /^user-provided/i.test(p.source) ? 'From the city\'s proposal; not printed in the budget book.' : `Source: ${esc(p.source)}`}</span></li>`).join('');
+      return `<div class="wc-policy"><h3>${esc(it)}</h3>${traj}<ul>${li}</ul></div>`;
+    }).join('');
+    return `<div class="wc-policies"><p class="wc-note">Tax rates are not printed in the budget tables. These notes say what the proposal and the revision did to them, next to the revenue line each one affects.</p>${blocks}</div>`;
+  }
+
+  function changesFiltersHTML(c) {
+    const to = key(D.newest_year, S.m);
+    const opts = Object.keys(CH.comparisons).filter((x) => x.startsWith(`${to}~`)).map((x) => x.split('~')[1]);
+    const ms = measuresFor(D.newest_year);
+    const present = new Set(Object.keys(c.scopes).filter((x) => x !== 'all'));
+    const funds = `<option value="all" ${!S.f ? 'selected' : ''}>All funds</option>` + D.funds.filter((f) => present.has(f) || f === S.f).map((f) => `<option value="${esc(f)}" ${f === S.f ? 'selected' : ''}>${esc(f)}</option>`).join('');
+    const tabs = (name, items, cur) => `<div class="tabs" role="radiogroup" aria-label="${name}">${items.map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === cur}" data-tab="${name}" data-v="${v}">${esc(l)}</button>`).join('')}</div>`;
+    const inner = `<div class="filters">
+        ${ms.length > 1 ? `<div class="field field-wide"><span class="field-label">Figure (${D.newest_year})</span>${tabs('m', ms.map((m) => [m, LABEL[m]]), S.m)}${defineFigures()}</div>` : ''}
+      </div><div class="filters">
+        <div class="field"><label class="field-label" for="f-c">Compare with</label><select id="f-c" data-sel="c">${opts.map((x) => `<option value="${x}" ${x === c.from ? 'selected' : ''}>${esc(seriesLabel(x))}</option>`).join('')}</select></div>
+        <div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select>${defineFund()}</div>
+      </div>`;
+    return controlsWrap(inner, `${esc(seriesLabel(c.to))} · compared with ${esc(seriesLabel(c.from))} · ${esc(S.f || 'All funds')}`);
+  }
+
+  function changesPage() {
+    if (!CH) return { html: `<header class="page-head"><h1 id="page-h" tabindex="-1">What changed</h1><p class="muted">The comparison data (changes.json) could not be loaded.</p></header>` };
+    const c = changeCmp();
+    if (!c) return notFound('Comparison');
+    if (c.from !== S.c) S.c = c.from;
+    const sc = c.scopes[scopeName()];
+    document.title = `What changed: ${seriesLabel(c.to)}${S.f ? ' · ' + S.f : ''} · ${CFG.site_title}`;
+    const head = `<header class="page-head wc-head"><h1 id="page-h" tabindex="-1">What changed in ${D.newest_year}</h1>
+      ${sc ? `<p class="wc-lede">${headlineSentence(c, sc)}</p>` : ''}${badgeHTML(c)}</header>`;
+    if (!sc) return { html: `${head}${changesFiltersHTML(c)}<p class="hint">No lines in the ${esc(S.f)} in either figure.</p>` };
+    const k = 'expense', ex = sc.expense, rv = sc.revenue;
+    const deptRows = (b, kind) => b.by_dept.map(([d, f, t]) => ({ label: O.departments[d].name, f, t, href: deptHash(d, { k: kind }) }));
+    let html = head + changesFiltersHTML(c) + tilesHTML(c, sc) + shiftsHTML(c);
+    if (ex) {
+      html += `<section class="panel" aria-labelledby="wc-cat"><h2 class="total-label" id="wc-cat">Spending by category</h2>
+        ${divBars(ex.by_cat.map(([i, f, t]) => ({ label: D.categories[i], f, t })), c, 'wc-cat-b', { title: 'Category' })}</section>
+        <section class="panel" aria-labelledby="wc-dep"><h2 class="total-label" id="wc-dep">Spending by department</h2>
+        ${divBars(deptRows(ex, k), c, 'wc-dep-b', { title: 'Department', note: 'Select a department to see its bureaus and lines.' })}</section>`;
+    }
+    const pos = positionsHTML(c);
+    if (pos || ex) html += `<section class="panel" aria-labelledby="wc-pos"><h2 class="total-label" id="wc-pos">Positions</h2>${pos || '<p class="wc-note">No position schedule for this comparison.</p>'}${benefitsLine(c, sc)}</section>`;
+    if (ex) {
+      html += `<section class="panel" aria-labelledby="wc-top"><h2 class="total-label" id="wc-top">Largest line-item changes</h2>
+        <p class="wc-note">Lines in both budgets. New and removed lines are listed below.</p>
+        ${lineTableHTML(c, ex.up, { caption: 'Increases', empty: '<p class="wc-note">No increases.</p>' })}${lineTableHTML(c, ex.down, { caption: 'Decreases', empty: '<p class="wc-note">No decreases.</p>' })}</section>`;
+      const nw = ex.new, rm = ex.removed;
+      html += `<section class="panel" aria-labelledby="wc-new"><h2 class="total-label" id="wc-new">New and removed lines</h2>
+        <p class="wc-facts-line"><strong>${nw.n}</strong> new line${nw.n === 1 ? '' : 's'} (${mny(nw.v)}) · <strong>${rm.n}</strong> removed (${mny(rm.v)})</p>
+        ${nw.n ? `<details class="values"><summary>New lines</summary>${lineTableHTML(c, nw.i)}</details>` : ''}
+        ${rm.n ? `<details class="values"><summary>Removed lines</summary>${lineTableHTML(c, rm.i)}</details>` : ''}</section>`;
+    }
+    if (rv) {
+      const dr = rv.draw;
+      html += `<section class="panel" aria-labelledby="wc-inc"><h2 class="total-label" id="wc-inc">How it's paid for</h2>
+        <ul class="wc-facts"><li>Income: ${lnk(rv.total.f)} → ${lnk(rv.total.t)}, ${deltaHTML(vOf(rv.total.t) - vOf(rv.total.f), vOf(rv.total.f))}</li>
+        ${dr ? `<li>Drawn from the reserve: ${lnk(dr.f, dr.f ? money(vOf(dr.f)) : '$0')} in ${esc(seriesLabel(c.from))} → ${lnk(dr.t, dr.t ? money(vOf(dr.t)) : '$0')} in ${esc(seriesLabel(c.to))}. <a href="${esc(homeHash({ f: D.reserve?.name || '' }))}">See the Reserve Fund</a></li>` : ''}</ul>
+        ${divBars(rv.by_group.map(([g, f, t]) => ({ label: plainName(D.bureaus[g]), f, t })), c, 'wc-inc-b', { title: 'Income source' })}
+        ${lineTableHTML(c, rv.up, { caption: 'Largest increases' })}${lineTableHTML(c, rv.down, { caption: 'Largest decreases' })}
+        ${rv.new.n || rv.removed.n ? `<p class="wc-facts-line">${rv.new.n} new income line${rv.new.n === 1 ? '' : 's'} (${mny(rv.new.v)}) · ${rv.removed.n} removed (${mny(rv.removed.v)})</p>
+        ${rv.new.n ? `<details class="values"><summary>New income lines</summary>${lineTableHTML(c, rv.new.i)}</details>` : ''}${rv.removed.n ? `<details class="values"><summary>Removed income lines</summary>${lineTableHTML(c, rv.removed.i)}</details>` : ''}` : ''}</section>`;
+    }
+    if (crossYear(c)) html += revisionHTML(c);
+    return { html };
+  }
+
+  /* Compact "What changed" on a department page: headline, bureaus, positions, largest lines, shifts. */
+  function deptChangesHTML(di) {
+    const link = (txt) => `<a class="btn btn-outline wc-more" href="${esc(changesHash({ y: D.newest_year }))}">${txt}</a>`;
+    if (!CH || S.y !== D.newest_year) return `<p class="center wc-deptlink">${link(`What changed in ${D.newest_year} →`)}</p>`;
+    const c = changeCmp();
+    if (!c) return '';
+    const sc = c.scopes[scopeName()], b = sc?.[S.k];
+    const dr = b?.by_dept.find((r) => r[0] === di);
+    if (!dr) return `<p class="center wc-deptlink">${link('What changed across the city →')}</p>`;
+    const name = O.departments[di].name, word = S.k === 'revenue' ? 'takes in' : 'spends';
+    const d = vOf(dr[2]) - vOf(dr[1]), p = vOf(dr[1]) ? Math.abs(d / vOf(dr[1])) * 100 : null;
+    const lede = `In the ${esc(seriesLabel(c.to))} budget, ${esc(name)} ${word} ${lnk(dr[2], mny(vOf(dr[2])))}${S.f ? ` from the ${esc(S.f)}` : ''}, ${d === 0 ? 'the same as' : `${mny(Math.abs(d))}${p == null ? '' : ` (${p.toFixed(1)}%)`} ${d > 0 ? 'more' : 'less'} than`} ${esc(seriesLabel(c.from))}.`;
+    const units = b.by_unit.filter((r) => O.units[r[0]].dept === di).map(([u, f, t]) => ({ label: unitLabel(u), f, t, href: O.departments[di].bureaus ? unitHash(u) : null }));
+    const fi = S.f ? D.funds.indexOf(S.f) : null;
+    const mine = c.lines.map((ln, i) => i).filter((i) => { const ln = c.lines[i], a = acctOf(ln); return O.units[unitOfLine(ln)].dept === di && (fi == null || a[2] === fi) && (D.categories[a[5]] === 'Revenue') === (S.k === 'revenue'); })
+      .sort((x, y) => Math.abs(lineD(c.lines[y])) - Math.abs(lineD(c.lines[x])));
+    const pos = S.k === 'expense' ? positionsHTML(c, { dept: di, compact: true }) : '';
+    return `<section class="panel wc-dept" aria-labelledby="wc-d"><h2 class="total-label" id="wc-d">What changed</h2>
+      <p class="wc-lede-sm">${lede}</p>${badgeHTML(c)}
+      ${units.length > 1 ? `<h3 class="wc-h3">By bureau</h3>${divBars(units, c, 'wc-du', { title: 'Bureau' })}` : ''}
+      ${pos ? `<h3 class="wc-h3">Positions</h3>${pos}` : ''}
+      ${mine.length ? `<h3 class="wc-h3">Largest line changes</h3>${lineTableHTML(c, mine.slice(0, 6))}` : ''}
+      ${S.k === 'expense' ? shiftsHTML(c, di) : ''}
+      <p class="center">${link('See everything that changed →')}</p></section>`;
+  }
+
   /* ---------- render / events ---------- */
   function onRoute(scroll = true) {
     if (!D) return;
@@ -828,15 +1182,24 @@
     if (scroll) aboutOpen = false;
     if (q.get('c') === 'none') { applyQuery(q); S.c = ''; } else applyQuery(q);
     if (route.name !== 'home' && isReserve()) S.f = DEFAULT_FUND; // the reserve has no departments or bureaus
+    if (route.name === 'changes' && S.y !== D.newest_year) { S.y = D.newest_year; S.m = defaultMeasure(S.y); S.c = defaultCompare(S.y, S.m); }
     T.sort = 'sel'; T.dir = -1; T.q = ''; T.shown = PAGE_SIZE;
     destroyCharts();
     let page;
     if (route.name === 'home') page = { html: homeView(), after: () => { if (isReserve()) drawReserve(); else { drawTrend(); revExpAfter(); } } };
+    else if (route.name === 'changes') page = changesPage();
     else if (route.name === 'dept') page = deptPage();
     else page = bureauPage();
     if (page.redirect) { navigate(page.redirect, true); return; }
     $('view').innerHTML = page.html;
     page.after?.();
+    // Header link to "What changed": keeps the fund; marks the page while it is open.
+    const wcb = $('changes-btn');
+    if (wcb) {
+      const m = S.y === D.newest_year ? S.m : defaultMeasure(D.newest_year);
+      wcb.href = changesHash({ y: D.newest_year, m, c: route.name === 'changes' ? S.c : defaultCompare(D.newest_year, m) });
+      if (route.name === 'changes') wcb.setAttribute('aria-current', 'page'); else wcb.removeAttribute('aria-current');
+    }
     if (scroll) {
       window.scrollTo({ top: 0 });
       $('page-h')?.focus({ preventScroll: true });
@@ -912,7 +1275,7 @@
       <p>These come from errors in the city's documents, not the extraction. A person reviewed each one.</p>
       <details class="values"><summary>Show all ${D.known_issues.length} notes</summary><ul>${issues || '<li>None recorded.</li>'}</ul></details>
       <h3>Get the data</h3>
-      <p><a href="${CFG.paths.data}budget.json">budget.json</a> (every figure shown here), <a href="${CFG.paths.data}staffing.json">staffing.json</a> (budgeted positions), <a href="${CFG.paths.data}conflicts.json">conflicts.json</a>. The extraction scripts and tables are in the project repository.</p>`;
+      <p><a href="${CFG.paths.data}budget.json">budget.json</a> (every figure shown here), <a href="${CFG.paths.data}staffing.json">staffing.json</a> (budgeted positions), <a href="${CFG.paths.data}conflicts.json">conflicts.json</a>, <a href="${CFG.paths.data}changes.json">changes.json</a> (what changed in ${D.newest_year}, with the fund shifts and position counts). The extraction scripts and tables are in the project repository.</p>`;
     $('generated').textContent = `Data built ${D.generated.slice(0, 10)}.`;
   }
 
@@ -941,10 +1304,13 @@
   async function boot() {
     try {
       CFG = await (await fetch('config.json', { cache: 'no-cache' })).json();
+      // changes.json feeds "What changed"; the rest of the site works without it.
+      const chP = fetch(`${CFG.paths.data}changes.json`, { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
       const res = await fetch(`${CFG.paths.data}budget.json`, { cache: 'no-cache' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       D = await res.json();
       O = D.org;
+      CH = await chP;
     } catch (err) {
       $('view').innerHTML = `<header class="page-head"><h1>Could not load the budget data</h1><p class="muted">budget data: ${esc(err.message)}. If you opened index.html from disk, serve the folder over HTTP instead.</p></header>`;
       return;

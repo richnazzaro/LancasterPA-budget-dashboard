@@ -44,6 +44,17 @@ Clicking a dollar amount opens the budget-book PDF **at the page it came from**.
   - a searchable, sortable line-item table.
 - **Bureau page** (`#/department/<dept>/bureau/<bureau>`, e.g. `#/department/administrative-services/bureau/bureau-of-treasury`): the same layout for one org-chart bureau, across all its funds and years, with **"What does this bureau do?"** from the descriptions PDF. Public Works bureaus also name their division. The department-wide group has a page too (`.../bureau/department-wide`) that lists the budget groups in it. Older bureau links (`.../bureau/<fund>--<printed group>`) redirect to the bureau that group now belongs to, or to the department page.
 - **Reserve Fund** (in the Fund selector): the General Fund balance, from each book's "Fund Balance Projection" page. It shows the year-end balance and how it changes each year, using the same one-figure-per-year rule. Where the city's page disagrees with itself, the Revised column is used and the difference is explained on the page. A one-line note ties its "Revenues" to the General Fund revenue (revenues plus the reserve draw). For 2026 Projected and 2027 Revised the draw equals the page's drawdown; for 2027 Proposed the city's own page does not add up (a $475,000 gap, logged in the known issues), and `check_dataset.py` reports it rather than forcing it.
+- **What changed** (button in the header, and a link on every department page; `#/changes`): what is different in the newest budget. It follows the Fund selector (General Fund by default) and the Proposed / Revised choice, and compares with the prior year's **Projected** figure by default. A badge says when a proposal is being compared with a year-end estimate or with actual spending, with a one-click switch to the latest **Actual**. The page shows:
+  - a one-sentence summary generated from the data (for example: "The 2027 Revised budget spends $87.8M from the General Fund, $5.0M (6.1%) more than the city expects to spend in 2026. $1.25M of that is Street Cleaning and Trees work moved from the Stormwater Management Fund. It's balanced by drawing $4.8M from the reserve.");
+  - four headline numbers: the spending change, the reserve draw, the change in full-time positions, and how the revision changed the proposal;
+  - **Moved into / out of the General Fund**: work that moved between funds, found from the city's own line notes ("Budget has been moved to the General Fund …"), with the dollars and positions on each side and the notes quoted. Because the General Fund is paid for mostly by taxes and the other funds by fees, every move into or out of it is called out. In 2027 these are Street Cleaning and Trees (Stormwater → General Fund), Water grounds maintenance (Water → General Fund, billed back to the Water Fund), and nuisance abatement (General Fund → Solid Waste);
+  - changes by category and by department (bars, or a table);
+  - **Positions**: position counts per org-chart bureau, "as printed" and "counted". The counted change leaves out what is not a real change, and each item is listed with a note: positions that moved between funds with their work; council seats marked full-time in one book and part-time in the next; bureaus a book has no staffing page for (from `known_issues.csv`); a bureau printed under a new org code; and titles renamed between books. Benefits are shown in dollars. Salary growth is not shown here;
+  - the largest line-item increases and decreases, and new and removed lines;
+  - **How it's paid for**: income changes by source, including the reserve draw;
+  - **What the revision changed** (Proposed → Revised), with the tax-policy notes from `data/policy_notes.csv` beside the revenue line each one affects. Tax rates are not in the budget tables, so these notes are entered by hand, each with its source.
+  - Each department page has a short "What changed" section (summary, bureaus, positions, largest lines, moves between funds) linking to the full page.
+  - The figures come from `web/data/changes.json`, built by `scripts/changes.py` (called by `build_dataset.py`). `check_dataset.py` ties every total in it to the series data and lists each fund shift and position adjustment.
 - **About the data** (button in the header):
   - which book supplies each year;
   - how the figures were validated;
@@ -58,15 +69,17 @@ Funds: General, Stormwater Management, Sewer, Water, Solid Waste & Recycling, Li
 |---|---|---|
 | Source budget books (PDF) | [`Budget PDFs - City/`](Budget%20PDFs%20-%20City/), also published at `<site>/pdfs/` | 2022–2027 books |
 | Data the site reads | [`web/data/budget.json`](web/data/budget.json) | Every figure shown, with its source book and page |
-| Budgeted positions | [`web/data/staffing.json`](web/data/staffing.json) | Not on screen yet (personnel view planned) |
+| Budgeted positions | [`web/data/staffing.json`](web/data/staffing.json) | Per book. Position changes per bureau are on the "What changed" page |
 | Books that disagree | [`web/data/conflicts.json`](web/data/conflicts.json) | Where overlapping books print different values for the same figure |
+| What changed | [`web/data/changes.json`](web/data/changes.json) | Newest year compared with the prior year's Projected, the latest Actual, and the Proposal: totals by fund, category, department and bureau, changed lines, shifts between funds, position counts per bureau (raw and adjusted, with artifacts) |
+| Tax-policy notes | [`data/policy_notes.csv`](data/policy_notes.csv) | Hand-entered facts not in the budget tables (tax rates), each with a source |
 | Tidy per-book tables (CSV) | [`data/processed/`](data/processed/) | `budget_long_*.csv` is the main table: one row per account, year and figure type, with `source_page`. Also: `line_items_*`, `staffing_*`, `fund_balance_*`, `validation_*`, `crosscheck_*` |
 | Org chart and descriptions (PDF) | `Budget PDFs - City/2027 Org Chart.pdf`, `Org Descriptions 2027.pdf` | Not budget books; the pipeline skips them |
 | Org structure | [`data/org_units_2027.csv`](data/org_units_2027.csv), [`data/org_structure_2027.csv`](data/org_structure_2027.csv), [`data/org_descriptions_2027.csv`](data/org_descriptions_2027.csv) | Departments and bureaus; org code → bureau, with notes; description text with its PDF page. Built into the `org` block of `budget.json` |
 | Reviewed source errors | [`data/known_issues.csv`](data/known_issues.csv) | Shown on the site under "Known problems in the source books" |
 | Audited corrections | `data/sign_corrections.csv`, `data/ocr_corrections.csv`, `data/staffing_corrections.csv` | Each correction lists its evidence and the value as printed |
 
-The JSON files can also be downloaded from the live site: `<site>/data/budget.json`, `staffing.json` and `conflicts.json`.
+The JSON files can also be downloaded from the live site: `<site>/data/budget.json`, `staffing.json`, `conflicts.json` and `changes.json`.
 
 ## 3. How to use the site
 
