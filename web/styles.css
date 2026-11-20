@@ -572,3 +572,11 @@ details.values summary:hover { color: var(--fg); }
   .crumbs a { min-height: 44px; display: inline-flex; align-items: center; padding: 0; }
   .back-link a, .wc-switch { min-height: 44px; display: inline-flex; align-items: center; }
 }
+
+.hero-delta { margin: 0 0 8px; font-size: 20px; line-height: 28px; color: var(--muted); }
+.hero-delta .up, .hero-delta .down { font-size: 20px; }
+.known-link { white-space: nowrap; font-size: 14px; }
+.res-annot { margin: 12px 0 0; font-size: 14px; line-height: 20px; color: var(--muted); max-width: 80ch; }
+.res-flag { font-weight: 700; color: var(--fg); }
+.res-note-row td { font-size: 14px; color: var(--muted); background: var(--hover); }
+.nb { white-space: nowrap; }

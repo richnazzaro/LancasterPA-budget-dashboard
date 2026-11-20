@@ -178,11 +178,21 @@
     return `<span class="status${draft ? ' not-adopted' : ''}">${S.y}: ${STATUS[S.m]}</span>`;
   }
 
+  const knownLink = () => `<a class="known-link" href="${esc(location.hash || '#/')}" data-scroll="about-issues">Known issues for this view</a>`;
+
+  /* The one Fund list, used by every view: "All funds" (on a department page only while it is the choice), the funds that
+     have lines in what is shown (plus the current choice), and the Reserve Fund view where the page allows it. */
+  function fundOptions(present, scope) {
+    const opt = (v, label, on) => `<option value="${esc(v)}"${on ? ' selected' : ''}>${esc(label)}</option>`;
+    return (!scope || !S.f ? opt('', 'All funds', !S.f) : '')
+      + D.funds.map((f, i) => (present.has(i) || f === S.f ? opt(f, f, f === S.f) : '')).join('')
+      + (scope ? '' : extraFundViews().map((f) => opt(f, f, f === S.f)).join(''));
+  }
+
   function reserveFiltersHTML() {
     const ys = [...new Set(D.reserve.entries.map((e) => e.year))].sort((a, b) => b - a);
     const ms = ORDER.filter((m) => resFind(S.y, m));
-    const funds = `<option value="">All funds</option>` + D.funds.map((f) => `<option value="${esc(f)}">${esc(f)}</option>`).join('')
-      + extraFundViews().map((f) => `<option value="${esc(f)}" ${f === S.f ? 'selected' : ''}>${esc(f)}</option>`).join('');
+    const ym = measuresFor(S.y)[0], funds = fundOptions(new Set(ym ? rows(key(S.y, ym)).map((r) => r.fund) : D.funds.map((f, i) => i)), null);
     return `<div class="filters">
         <div class="field"><label class="field-label" for="f-y">Fiscal year</label><select id="f-y" data-sel="y">${ys.map((y) => `<option value="${y}" ${y === S.y ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
         <div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select>${defineFund()}</div>
@@ -235,11 +245,7 @@
     // (and the current choice, so the control never disagrees with the page).
     const sr = scope ? scopeRows(scope) : null;
     const present = new Set((sr || rows(k)).map((r) => r.fund));
-    const keep = (f) => f === S.f;
-    const funds = (scope ? '' : `<option value="">All funds</option>`)
-      + (scope && !S.f ? `<option value="" selected>All funds</option>` : '')
-      + D.funds.map((f, i) => (present.has(i) || keep(f) ? `<option value="${esc(f)}" ${keep(f) ? 'selected' : ''}>${esc(f)}</option>` : '')).join('')
-      + (scope ? '' : extraFundViews().map((f) => `<option value="${esc(f)}" ${f === S.f ? 'selected' : ''}>${esc(f)}</option>`).join(''));
+    const funds = fundOptions(present, scope);
     const tabs = (name, items, cur) => `<div class="tabs" role="radiogroup" aria-label="${name}">${items.map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === cur}" data-tab="${name}" data-v="${v}">${esc(l)}</button>`).join('')}</div>`;
     // Offer Spending / Income only where the page has both kinds of lines.
     const kinds = sr ? ['expense', 'revenue'].filter((kd) => kd === S.k || sr.some((r) => (kd === 'revenue') === isRevenue(r))) : ['expense', 'revenue'];
@@ -353,9 +359,9 @@
       const why = miss && shown < printed
         ? `The city's ${bookYearOf(k)} budget book leaves out the line items for ${esc(miss.join(' and '))}, so the figure shown is lower than the city's printed total. See “Known problems in the source books” below for the rest.`
         : 'See “Known problems in the source books” below.';
-      out.push(`${esc(fund)}: the ${bookYearOf(k)} budget book prints ${money(printed)}, but its line items add up to ${money(shown)} (${money(Math.abs(shown - printed))} ${shown < printed ? 'less' : 'more'}). ${why}`);
+      out.push(`${esc(fund)}: the ${bookYearOf(k)} budget book prints ${money(printed)}, but its line items add up to ${money(shown)} <span class="nb">(${money(Math.abs(shown - printed))} ${shown < printed ? 'less' : 'more'}).</span> ${why}`);
     }
-    return out.length ? `<div class="notice" role="note">${out.join('<br>')}</div>` : '';
+    return out.length ? `<div class="notice" role="note">${out.join('<br>')} ${knownLink()}</div>` : '';
   }
 
   /* ---------- Reserve draw: the General Fund's revenue includes money taken from the reserve ----------
@@ -375,7 +381,7 @@
     if (gf < 0 || S.f !== D.funds[gf]) return ''; // the draw sits in the General Fund; shown on that view
     const dr = reserveDraw(k, gf);
     if (!dr) return '';
-    return `<p class="draw-note">Balanced by drawing ${src(millions(dr.v), k, dr.d, dr.p)} from the reserve (Fund Balance Reserve). <a href="${esc(homeHash({ f: D.reserve.name }))}">See the Reserve Fund</a></p>`;
+    return `<p class="draw-note">Balanced by drawing ${src(millions(dr.v), k, dr.d, dr.p)} from the reserve (the budget's “Fund Balance Reserve” line). <a href="${esc(homeHash({ f: D.reserve.name }))}">See the Reserve Fund</a></p>`;
   }
   /* One line tying the Reserve page's "Revenues" to the General Fund's revenue elsewhere on the site. */
   function reserveTie(e) {
@@ -408,7 +414,13 @@
     const d = resEnd(e).v - base;
     return { d, p: pctOf(d, base), from };
   }
-  const chgHTML = (c) => (c ? `<span class="${c.d > 0 ? 'up' : c.d < 0 ? 'down' : 'flat'}">${c.d > 0 ? '+' : ''}${money(c.d)}${c.p == null ? '' : `<span class="pct"> (${c.p > 0 ? '+' : ''}${c.p.toFixed(1)}%)</span>`}</span>` : '—');
+  const chgHTML = (c) => (c ? `<span class="${c.d > 0 ? 'up' : c.d < 0 ? 'down' : 'flat'}">${c.d > 0 ? '+' : ''}${money(c.d)}${c.p == null ? '' : `<span class="pct"> (${fmtPct(c.p, true)})</span>`}</span>` : '—');
+  const capWord = (w) => w.charAt(0).toUpperCase() + w.slice(1);
+  /* The 2027 book prints two 12/31/2025 balances. This says which one the site uses and why 2025 jumps. */
+  function resAltNote(x) {
+    const end = resEnd(x), ch = resChange(x), a = x.alt[0];
+    return `The ${resBookYear(x)} book prints two different 12/31/${x.year} balances: ${srcDoc(money(a.v), x.doc, end.p)} in its ${capWord(a.sc)} column and ${srcDoc(money(end.v), x.doc, end.p)} in its ${capWord(x.sc)} column. This site uses ${capWord(x.sc)}${ch && ch.p != null ? `, which is why ${x.year} shows ${fmtPct(ch.p, true)} from ${x.year - 1}` : ''}. ${knownLink()}`;
+  }
   function resLineLabel(l, e) {
     if (l.t === 'beginning') return `Beginning balance (12/31/${l.fy})${e.measure === 'proposed' && e.year === D.newest_year ? ', proposed column' : ''}`;
     if (l.t === 'ending') return `Ending balance (12/31/${e.measure === 'actual' ? e.year : l.fy})`;
@@ -448,8 +460,10 @@
     ].filter(Boolean).join('');
     const yrRows = entries.map((x) => {
       const xc = resChange(x), xe = resEnd(x);
-      return `<tr${x === e ? ' aria-current="true"' : ''}><th scope="row"><a href="${esc(homeHash({ y: x.year, m: x.measure }))}">${x.year}</a></th><td>${esc(x.measure === 'actual' && x.basis === 'unaudited' ? 'Actual (unaudited)' : LABEL[x.measure])}</td><td class="num">${srcDoc(money(xe.v), x.doc, xe.p)}</td><td class="num">${chgHTML(xc)}</td></tr>`;
+      const noteRow = x.alt ? `<tr class="res-note-row"><td colspan="4"><span class="res-flag">Two balances printed.</span> ${resAltNote(x)}</td></tr>` : '';
+      return `<tr${x === e ? ' aria-current="true"' : ''}><th scope="row"><a href="${esc(homeHash({ y: x.year, m: x.measure }))}">${x.year}</a></th><td>${esc(x.measure === 'actual' && x.basis === 'unaudited' ? 'Actual (unaudited)' : LABEL[x.measure])}</td><td class="num">${srcDoc(money(xe.v), x.doc, xe.p)}</td><td class="num">${chgHTML(xc)}</td></tr>${noteRow}`;
     }).join('');
+    const annot = entries.filter((x) => x.alt).map((x) => `<p class="res-annot"><span class="res-flag">${resChange(x)?.p != null ? fmtPct(resChange(x).p, true) : ''}*</span> ${resAltNote(x)}</p>`).join('');
     const detail = e.lines.length > 1
       ? `<div class="table-scroll"><table class="table"><thead><tr><th scope="col">Line</th><th scope="col" class="num">Amount</th></tr></thead><tbody>${e.lines.map((l) => `<tr><td>${esc(resLineLabel(l, e))}</td><td class="num">${srcDoc(money(l.v), e.doc, l.p)}</td></tr>`).join('')}</tbody></table></div>`
       : `<p class="panel-note" style="margin:0 0 12px">For actual years the city's budget book prints only the closing balance.</p><div class="table-scroll"><table class="table"><tbody><tr><td>${esc(resLineLabel(end, e))}</td><td class="num">${srcDoc(money(end.v), e.doc, end.p)}</td></tr></tbody></table></div>`;
@@ -459,10 +473,10 @@
         <span class="status${e.measure === 'proposed' || e.measure === 'revised' ? ' not-adopted' : ''}">${e.year}: ${esc(RES_STATUS[e.measure])}</span>
         ${notices.map((n) => `<div class="notice" role="note">${n}</div>`).join('')}</header>
       ${filtersHTML()}
-      <p class="hint" style="margin-top:0">The General Fund's reserve: the cash balance carried from year to year.</p>${reserveTie(e)}
+      <p class="hint" style="margin-top:0">The General Fund's reserve: the cash balance carried from year to year. ${knownLink()}</p>${reserveTie(e)}
       <section class="panel" aria-labelledby="rb-t"><h2 class="panel-title" id="rb-t">Year-End Balance, ${entries[0].year}–${entries[entries.length - 1].year}</h2>
         <ul class="trend-legend" aria-hidden="true">${colorsLegend}</ul>
-        <div class="chart-box"><canvas id="res-chart" role="img" aria-label="Year-end General Fund balance by year: ${esc(entries.map((x) => `${x.year} ${LABEL[x.measure]} ${money(resEnd(x).v)}`).join(', '))}. The table below has the values."></canvas></div></section>
+        <div class="chart-box"><canvas id="res-chart" role="img" aria-label="Year-end General Fund balance by year: ${esc(entries.map((x) => `${x.year} ${LABEL[x.measure]} ${money(resEnd(x).v)}`).join(', '))}. The table below has the values."></canvas></div>${annot}</section>
       <section class="panel" aria-labelledby="rd-t"><h2 class="total-label" id="rd-t">${esc(resLabel(e))}: How the Balance Changes</h2>${detail}</section>
       <section class="panel" aria-labelledby="ry-t"><h2 class="total-label" id="ry-t">Year-End Balance by Year</h2><div class="table-scroll"><table class="table tight">
         <thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Year-end balance</th><th scope="col" class="num">Change</th></tr></thead><tbody>${yrRows}</tbody></table></div></section>`;
@@ -473,11 +487,21 @@
     const th = chartTheme(), entries = resSorted(), cur = resFind(S.y, S.m);
     const dup = (y) => entries.filter((x) => x.year === y).length > 1;
     const labels = entries.map((x) => (dup(x.year) ? `${x.year} ${LABEL[x.measure]}` : String(x.year)));
-    charts.push(new Chart(cv, { type: 'bar',
+    // Marks the year whose book prints two balances: the change (e.g. "+111.2%*") sits above the bar; the note is under the chart.
+    const flag = { id: 'resFlag', afterDatasetsDraw(chart) {
+      const m = chart.getDatasetMeta(0), c = chart.ctx;
+      entries.forEach((x, i) => {
+        if (!x.alt || !m.data[i]) return;
+        const ch = resChange(x);
+        c.save(); c.font = `700 13px ${Chart.defaults.font.family}`; c.fillStyle = INK; c.textAlign = 'center'; c.textBaseline = 'bottom';
+        c.fillText(`${ch && ch.p != null ? fmtPct(ch.p, true) : ''}*`, m.data[i].x, m.data[i].y - 6); c.restore();
+      });
+    } };
+    charts.push(new Chart(cv, { type: 'bar', plugins: [flag],
       data: { labels, datasets: [{ data: entries.map((x) => resEnd(x).v),
         backgroundColor: entries.map((x) => (x.measure === 'actual' ? SEL : hatch(resColor(x)))),
         borderColor: entries.map((x) => (x === cur ? INK : resColor(x))), borderWidth: entries.map((x) => (x === cur ? 3 : x.measure === 'actual' ? 0 : 1.5)), borderRadius: 2 }] },
-      options: { responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
+      options: { responsive: true, maintainAspectRatio: false, layout: { padding: { top: 24 } }, animation: reduceMotion() ? false : { duration: 300 },
         onClick: (_ev, els) => { if (els.length) { const x = entries[els[0].index]; navigate(homeHash({ y: x.year, m: x.measure }), true); } },
         plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { title: (c) => resLabel(entries[c[0].dataIndex]), label: (c) => money(c.raw) } } },
         scales: { x: { ticks: { color: INK, maxRotation: 45 }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid } } } } }));
@@ -498,6 +522,15 @@
   }
 
   /* ---------- home ---------- */
+  /* "▲ $5.0M (6.1%) vs 2026 Projected": says whether the total is up or down against the comparison. */
+  function heroDelta(k, total) {
+    if (!S.c || !series(S.c)) return '';
+    const cmpTotal = sum(scoped(S.c)), d = total - cmpTotal, p = pctOf(d, cmpTotal);
+    if (!cmpTotal && !total) return '';
+    const cls = d > 0 ? 'up' : d < 0 ? 'down' : 'flat';
+    const txt = Math.round(d) === 0 ? 'No change' : `${mny(Math.abs(d))}${p == null ? '' : ` (${fmtPct(Math.abs(p))})`}<span class="sr-only"> ${d > 0 ? 'higher' : 'lower'}</span>`;
+    return `<p class="hero-delta"><span class="${Math.round(d) === 0 ? 'flat' : cls}">${txt}</span> vs ${esc(seriesLabel(S.c))}</p>`;
+  }
   function homeView() {
     if (isReserve()) return reserveView();
     const k = key(S.y, S.m);
@@ -515,7 +548,7 @@
     const cards = cardList(items, { total, k, shareOf: `Total ${seriesLabel(k)} ${kindWord}`, level: 2 });
 
     return `<header class="page-head"><h1 id="page-h">${esc(scope)} ${kindWord}: ${esc(seriesLabel(k))}</h1>
-        <p class="big-total" aria-live="polite">${(() => { const pf = S.f ? printedFund(S.f, S.k, k) : null; return pf ? src(money(total), k, pf.doc, pf.page) : money(total); })()}</p>${drawNote(k)}${statusHTML()}${rollupNote(list)}</header>
+        <p class="big-total" aria-live="polite">${(() => { const pf = S.f ? printedFund(S.f, S.k, k) : null; return pf ? src(money(total), k, pf.doc, pf.page) : money(total); })()}</p>${heroDelta(k, total)}${drawNote(k)}${statusHTML()}${rollupNote(list)}</header>
       <div class="home-flow">${filtersHTML()}
       ${(() => { const wc = homeChangesHTML(); return `<div class="overview${wc ? '' : ' overview-single'}">${trendHTML({}, 'Totals by Year')}${wc}</div>`; })()}</div>
       <p class="hint hint-top">Select any department to see its detailed breakdown. Amounts open the source page in the budget book.</p>
@@ -951,7 +984,7 @@
     if (ex) tiles.push(['Spending change', deltaHTML(vOf(ex.total.t) - vOf(ex.total.f), vOf(ex.total.f), mny),
       `${esc(seriesLabel(c.from))} ${lnk(ex.total.f)} → ${esc(seriesLabel(c.to))} ${lnk(ex.total.t)}`]);
     const dr = sc.revenue?.draw;
-    if (dr) tiles.push(['Drawn from the reserve', `<span>${lnk(dr.t, mny(vOf(dr.t)))}</span>`, `${esc(seriesLabel(c.from))}: ${lnk(dr.f, dr.f ? mny(vOf(dr.f)) : '$0')}`]);
+    if (dr) tiles.push(['Drawn from the reserve', `<span>${lnk(dr.t, mny(vOf(dr.t)))}</span>`, `${esc(seriesLabel(c.from))}: ${lnk(dr.f, dr.f ? mny(vOf(dr.f)) : '$0')}. Money taken from savings; the budget's “Fund Balance Reserve” line.`]);
     else if (sc.revenue) tiles.push(['Income change', deltaHTML(vOf(sc.revenue.total.t) - vOf(sc.revenue.total.f), vOf(sc.revenue.total.f), mny), `${esc(seriesLabel(c.from))} ${lnk(sc.revenue.total.f)} → ${lnk(sc.revenue.total.t)}`]);
     const P = c.positions;
     if (P) {
@@ -1020,7 +1053,8 @@
     const body = idx.map((i) => {
       const ln = c.lines[i], a = acctOf(ln), u = unitOfLine(ln), d = lineD(ln);
       const sub = [a[0], unitLabel(u, D.categories[a[5]] === 'Revenue' ? 'revenue' : 'expense'), showFund ? D.funds[a[2]] : ''].filter(Boolean).map(esc).join(' · ');
-      return `<tr><td>${esc(a[1])}<span class="sub">${sub}</span></td><td class="num hide-sm">${ln[1] == null ? '—' : lnk(lineF(ln))}</td><td class="num">${ln[4] == null ? '—' : lnk(lineT(ln))}<span class="wc-sm">${sgn(d, money)}</span></td><td class="num hide-sm">${deltaHTML(d, ln[1])}</td></tr>`;
+      const drawNoteTxt = /^Fund Balance Reserve/i.test(a[1]) && /-499000$/.test(a[0]) ? '<span class="sub">Money drawn from the reserve</span>' : '';
+      return `<tr><td>${esc(a[1])}<span class="sub">${sub}</span>${drawNoteTxt}</td><td class="num hide-sm">${ln[1] == null ? '—' : lnk(lineF(ln))}</td><td class="num">${ln[4] == null ? '—' : lnk(lineT(ln))}<span class="wc-sm">${sgn(d, money)}</span></td><td class="num hide-sm">${deltaHTML(d, ln[1])}</td></tr>`;
     }).join('');
     return `<div class="table-scroll"><table class="table tight wc-lines">${caption ? `<caption>${caption}</caption>` : ''}<thead><tr><th scope="col">Line item</th><th scope="col" class="num hide-sm">${esc(seriesLabel(c.from))}</th><th scope="col" class="num">${esc(seriesLabel(c.to))}</th><th scope="col" class="num hide-sm">Change</th></tr></thead><tbody>${body}</tbody></table></div>`;
   }
@@ -1036,7 +1070,7 @@
     const tables = P.classes.map((cls) => {
       const rs = rows.filter((r) => r[2] === cls && (r[3] || r[4] || r[5] || r[6]));
       if (!rs.length) return '';
-      // Only bureaus whose count changed (as printed or counted); the total still covers every bureau.
+      // Only bureaus whose count changed (schedule change or real change); the total still covers every bureau.
       const show = rs.filter((r) => r[3] !== r[4] || r[5] !== r[6]);
       if (!show.length) return compact ? '' : `<p class="wc-note">${cls === 'PT' ? 'Part-time p' : 'P'}ositions: no bureau changed (${fmtN(rs.reduce((t, r) => t + r[4], 0))} in all).</p>`;
       const same = rs.length - show.length;
@@ -1050,7 +1084,7 @@
       }).join('');
       const T = rs.reduce((t, r) => ({ f: t.f + r[3], t: t.t + r[4], af: t.af + r[5], at: t.at + r[6] }), { f: 0, t: 0, af: 0, at: 0 });
       const head = cls === 'ALL' ? 'Positions' : cls === 'FT' ? 'Full-time positions' : 'Part-time positions';
-      return `<div class="table-scroll"><table class="table tight wc-pos"><caption>${head}</caption><thead><tr><th scope="col">Bureau</th><th scope="col" class="num hide-sm">${esc(P.from_label.replace(/ position schedule$/, '').replace(/ budget book's$/, ' book'))}</th><th scope="col" class="num hide-sm">${esc(P.to_label.replace(/ position schedule$/, ''))}</th><th scope="col" class="num">As printed</th><th scope="col" class="num">Counted change</th></tr></thead>
+      return `<div class="table-scroll"><table class="table tight wc-pos"><caption>${head}</caption><thead><tr><th scope="col">Bureau</th><th scope="col" class="num hide-sm">${esc(P.from_label.replace(/ position schedule$/, '').replace(/ budget book's$/, ' book'))}</th><th scope="col" class="num hide-sm">${esc(P.to_label.replace(/ position schedule$/, ''))}</th><th scope="col" class="num">Schedule change</th><th scope="col" class="num">Real change</th></tr></thead>
         <tbody>${body}</tbody>${compact ? '' : `<tfoot><tr><td>Total${same ? `<span class="sub">including ${same} bureau${same === 1 ? '' : 's'} with no change</span>` : ''}<span class="wc-sm">${fmtN(T.f)} → ${fmtN(T.t)}</span></td><td class="num hide-sm">${fmtN(T.f)}</td><td class="num hide-sm">${fmtN(T.t)}</td><td class="num">${nDelta(T.t - T.f)}</td><td class="num">${nDelta(T.at - T.af)}</td></tr></tfoot>`}</table></div>`;
     }).join('');
     if (!tables) return '';
@@ -1060,7 +1094,7 @@
     }).join('');
     const titles = compact ? [] : P.artifacts.filter((a) => a.kind === 'titles' && (fi == null || a.fund === fund) && (dept == null || O.units[a.unit].dept === dept) && (unit == null || a.unit === unit));
     const titleNote = titles.length ? `<details class="values"><summary>Renamed titles in ${titles.length} bureau${titles.length === 1 ? '' : 's'}</summary><ul class="wc-notes">${titles.map((a) => `<li><strong>${esc(O.units[a.unit].name)}:</strong> ${esc(a.text)}</li>`).join('')}</ul></details>` : '';
-    const explain = `<p class="wc-note">“As printed” compares the two schedules line for line. “Counted change” leaves out what is not a real change: positions that moved between funds with their work, positions marked full-time in one book and part-time in the other, and bureaus a book has no schedule page for. Each is listed in the notes.</p>`;
+    const explain = `<p class="wc-note">“Schedule change” is the difference between the two books' position schedules, line for line. “Real change” leaves out what is not a real change: positions that moved between funds with their work, positions marked full-time in one book and part-time in the other, and bureaus a book has no schedule page for. Each is listed in the notes.</p>`;
     return `${compact ? '' : explain}${tables}${notes ? `<ol class="wc-notes">${notes}</ol>` : ''}${titleNote}`;
   }
 
@@ -1078,7 +1112,7 @@
     const parts = [];
     if (sc?.expense) parts.push(`<li>Spending: ${lnk(sc.expense.total.f)} → ${lnk(sc.expense.total.t)}, ${deltaHTML(vOf(sc.expense.total.t) - vOf(sc.expense.total.f), vOf(sc.expense.total.f))}</li>`);
     if (sc?.revenue) parts.push(`<li>Income: ${lnk(sc.revenue.total.f)} → ${lnk(sc.revenue.total.t)}, ${deltaHTML(vOf(sc.revenue.total.t) - vOf(sc.revenue.total.f), vOf(sc.revenue.total.f))}</li>`);
-    if (sc?.revenue?.draw) parts.push(`<li>Drawn from the reserve: ${lnk(sc.revenue.draw.f)} → ${lnk(sc.revenue.draw.t)}</li>`);
+    if (sc?.revenue?.draw) parts.push(`<li>Drawn from the reserve (the “Fund Balance Reserve” line): ${lnk(sc.revenue.draw.f)} → ${lnk(sc.revenue.draw.t)}</li>`);
     const P = rc.positions, tk = S.f ? String(D.funds.indexOf(S.f)) : 'all';
     if (P?.totals[tk]) parts.push(`<li>Positions: ${P.classes.map((cls) => { const d = P.totals[tk][cls].t - P.totals[tk][cls].f; return `${nDelta(d)} ${clsWord(cls, Math.abs(d) !== 1)}`; }).join(', ')}</li>`);
     const fi = S.f ? D.funds.indexOf(S.f) : null;
@@ -1106,7 +1140,7 @@
       if (code) {
         const pts = [fig(fromK, code), fig(key(D.newest_year, 'proposed'), code), fig(key(D.newest_year, 'revised'), code)].filter(Boolean);
         const base = pts[0];
-        traj = `<p class="wc-traj">${esc(rows(base?.k || fromK).find((r) => r.code === code)?.name || code)}: ${pts.map((x, i) => `${esc(seriesLabel(x.k))} ${src(money(x.v), x.k, x.d, x.p)}${i && base ? ` <span class="muted">(${(((x.v - base.v) / base.v) * 100 > 0 ? '+' : '')}${(((x.v - base.v) / base.v) * 100).toFixed(1)}% vs. ${esc(seriesLabel(base.k))})</span>` : ''}`).join(' → ')}</p>`;
+        traj = `<p class="wc-traj">${esc(rows(base?.k || fromK).find((r) => r.code === code)?.name || code)}: ${pts.map((x, i) => `${esc(seriesLabel(x.k))} ${src(money(x.v), x.k, x.d, x.p)}${i && base ? ` <span class="muted">(${fmtPct(((x.v - base.v) / base.v) * 100, true)} vs. ${esc(seriesLabel(base.k))})</span>` : ''}`).join(' → ')}</p>`;
       }
       const li = ns.map((p) => `<li><span class="wc-fig">${esc(LABEL[p.figure] || p.figure)}:</span> ${esc(p.text)} <span class="wc-srcnote">${p.d != null ? srcDoc('Budget book', p.d, p.p) : /^user-provided/i.test(p.source) ? 'From the city\'s proposal; not printed in the budget book.' : `Source: ${esc(p.source)}`}</span></li>`).join('');
       return `<div class="wc-policy"><h3>${esc(it)}</h3>${traj}<ul>${li}</ul></div>`;
@@ -1165,7 +1199,7 @@
       const dr = rv.draw;
       html += `<section class="panel" aria-labelledby="wc-inc"><h2 class="total-label" id="wc-inc">How it's paid for</h2>
         <ul class="wc-facts"><li>Income: ${lnk(rv.total.f)} → ${lnk(rv.total.t)}, ${deltaHTML(vOf(rv.total.t) - vOf(rv.total.f), vOf(rv.total.f))}</li>
-        ${dr ? `<li>Drawn from the reserve: ${lnk(dr.f, dr.f ? money(vOf(dr.f)) : '$0')} in ${esc(seriesLabel(c.from))} → ${lnk(dr.t, dr.t ? money(vOf(dr.t)) : '$0')} in ${esc(seriesLabel(c.to))}. <a href="${esc(homeHash({ f: D.reserve?.name || '' }))}">See the Reserve Fund</a></li>` : ''}</ul>
+        ${dr ? `<li>Drawn from the reserve (the “Fund Balance Reserve” line): ${lnk(dr.f, dr.f ? money(vOf(dr.f)) : '$0')} in ${esc(seriesLabel(c.from))} → ${lnk(dr.t, dr.t ? money(vOf(dr.t)) : '$0')} in ${esc(seriesLabel(c.to))}. <a href="${esc(homeHash({ f: D.reserve?.name || '' }))}">See the Reserve Fund</a></li>` : ''}</ul>
         ${divBars(rv.by_group.map(([g, f, t]) => ({ label: plainName(D.bureaus[g]), f, t })), c, 'wc-inc-b', { title: 'Income source' })}
         ${lineTableHTML(c, rv.up, { caption: 'Largest increases' })}${lineTableHTML(c, rv.down, { caption: 'Largest decreases' })}
         ${rv.new.n || rv.removed.n ? `<p class="wc-facts-line">${rv.new.n} new income line${rv.new.n === 1 ? '' : 's'} (${mny(rv.new.v)}) · ${rv.removed.n} removed (${mny(rv.removed.v)})</p>
@@ -1395,7 +1429,7 @@
       <p>Line items were extracted from the PDFs by script (scanned books were OCR'd first). Every total the book prints (each section, department, fund and staffing schedule) was recomputed from the extracted lines; differences of up to $5 are allowed for the city's rounding to whole dollars. Figures are shown as printed, never adjusted. Where overlapping books disagree on the same figure, the rule above decides and the disagreement is logged (${D.conflict_count} so far). Lines of $0 are left out.</p>
       <h3>Known problems in the source books</h3>
       <p>These come from errors in the city's documents, not the extraction. A person reviewed each one.</p>
-      <details class="values"><summary>Show all ${D.known_issues.length} notes</summary><ul>${issues || '<li>None recorded.</li>'}</ul></details>
+      <details class="values" id="about-issues" tabindex="-1"><summary>Show all ${D.known_issues.length} notes</summary><ul>${issues || '<li>None recorded.</li>'}</ul></details>
       <h3>Get the data</h3>
       <p><a href="${CFG.paths.data}budget.json">budget.json</a> (every figure shown here), <a href="${CFG.paths.data}staffing.json">staffing.json</a> (budgeted positions), <a href="${CFG.paths.data}conflicts.json">conflicts.json</a>, <a href="${CFG.paths.data}changes.json">changes.json</a> (what changed in ${D.newest_year}, with the fund shifts and position counts). The extraction scripts and tables are in the project repository.</p>`;
     $('generated').textContent = `Data built ${D.generated.slice(0, 10)}.`;
