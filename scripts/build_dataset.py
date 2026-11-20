@@ -227,6 +227,9 @@ def build(processed: Path, out: Path) -> dict:
         "series": out_series,
         "printed": printed,
         "known_issues": known_issues,
+        # Bureaus a book omits entirely, read from the reviewed known-issue notes
+        # ("... has no line-item pages for <bureau> (org N)"), keyed by source book.
+        "missing_bureaus": missing_bureaus(known_issues),
         "conflict_count": len(conflicts),
     }
     out.mkdir(parents=True, exist_ok=True)
@@ -234,6 +237,16 @@ def build(processed: Path, out: Path) -> dict:
     write_json(out / "conflicts.json", conflicts)
     write_json(out / "staffing.json", staffing(processed, designated, newest))
     return budget
+
+
+def missing_bureaus(known_issues: list) -> dict:
+    out: dict = {}
+    for i in known_issues:
+        for name in re.findall(r"no line-item pages for (.+?) \(org \d+\)", i.get("note", "")):
+            out.setdefault(i["source_doc"], [])
+            if name not in out[i["source_doc"]]:
+                out[i["source_doc"]].append(name)
+    return out
 
 
 def printed_totals(processed: Path, designated: dict, newest: int, docs, bureaus) -> list:

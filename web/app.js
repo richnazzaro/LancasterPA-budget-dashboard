@@ -47,7 +47,15 @@
   const src = (text, k, d, p) => (d == null || !k ? text
     : `<a class="src" href="${pdfHref(d, p)}" target="_blank" rel="noopener" title="View in budget book" aria-label="${esc(text)}: open source page in the ${bookYearOf(k)} budget book">${text}</a>`);
   const firstPage = (list) => { let d = null, p = Infinity; for (const r of list) { if (d == null) d = r.d; if (r.d === d && r.p < p) p = r.p; } return { d, p }; };
-  const printedFund = (fund, kind, k) => D.printed.find((x) => x.level === 'rollup' && x.fund === fund && x.kind === kind && k in x.values);
+  /* A book can print the same fund roll-up twice (e.g. before and after a late section). Use the
+     occurrence closest to the sum of the line items, so a superseded subtotal is not mistaken for the total. */
+  const printedFund = (fund, kind, k) => {
+    const c = D.printed.filter((x) => x.level === 'rollup' && x.fund === fund && x.kind === kind && k in x.values);
+    if (c.length < 2) return c[0];
+    const fi = D.funds.indexOf(fund);
+    const shown = sum(rows(k).filter((r) => r.fund === fi && (kind === 'revenue') === isRevenue(r)));
+    return c.reduce((b, x) => (Math.abs(x.values[k] - shown) < Math.abs(b.values[k] - shown) ? x : b));
+  };
 
   /* ---------- data access ---------- */
   function rows(k) {
@@ -224,7 +232,11 @@
       const printed = pr.values[k];
       const shown = sum(rows(k).filter((r) => r.fund === fi && (S.k === 'revenue') === isRevenue(r))); // whole fund, not just this page's lines
       if (Math.abs(shown - printed) <= 100) continue; // smaller gaps are the city's rounding
-      out.push(`${esc(fund)}: the ${bookYearOf(k)} budget book prints ${money(printed)}, but its line items add up to ${money(shown)} (${money(Math.abs(shown - printed))} ${shown < printed ? 'less' : 'more'}). See “Known problems in the source books” below.`);
+      const miss = D.missing_bureaus[D.docs[pr.doc]];
+      const why = miss && shown < printed
+        ? `The city's ${bookYearOf(k)} budget book leaves out the line items for ${esc(miss.join(' and '))}, so the figure shown is lower than the city's printed total. See “Known problems in the source books” below for the rest.`
+        : 'See “Known problems in the source books” below.';
+      out.push(`${esc(fund)}: the ${bookYearOf(k)} budget book prints ${money(printed)}, but its line items add up to ${money(shown)} (${money(Math.abs(shown - printed))} ${shown < printed ? 'less' : 'more'}). ${why}`);
     }
     return out.length ? `<div class="notice" role="note">${out.join('<br>')}</div>` : '';
   }

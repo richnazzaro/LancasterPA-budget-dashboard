@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import csv
 import json
+import re
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -66,16 +67,40 @@ def main() -> int:
     failures += len(stray) + len(missing)
 
     print("\nPrinted fund roll-ups vs shown sums:")
+    # A book can print the same roll-up more than once (e.g. before and after a late section).
+    # Compare against the occurrence closest to the shown sum and report which one was used.
+    known = []
+    kpath = ROOT / "data" / "known_issues.csv"
+    if kpath.exists():
+        with kpath.open(newline="", encoding="utf-8") as f:
+            known = list(csv.DictReader(f))
+    norm = lambda t: re.sub(r"[^a-z]", "", t.lower())
+    groups = defaultdict(list)
     for p in budget["printed"]:
-        if "fund" not in p:
+        if "fund" in p:
+            for key, printed in p["values"].items():
+                groups[(key, p["fund"], p["kind"])].append((p, printed))
+    undocumented = 0
+    for (key, fund, kind), cands in sorted(groups.items()):
+        totals = [v for (k, f, kd, _, _), v in shown.items() if k == key and f == fund and kd == kind]
+        if not totals:
             continue
-        for key, printed in p["values"].items():
-            totals = [v for (k, f, kd, _, _), v in shown.items() if k == key and f == p["fund"] and kd == p["kind"]]
-            if not totals:
-                continue
-            diff = sum(totals) - printed
-            flag = "ok  " if abs(diff) <= TOLERANCE else "DIFF"
-            print(f"{flag} {key:16s} {p['label']:42s} p.{p['page']:<4d} printed {printed:>14,.0f}  shown {sum(totals):>14,.0f}  diff {diff:+,.0f}")
+        s_sum = sum(totals)
+        p, printed = min(cands, key=lambda c: abs(s_sum - c[1]))
+        diff = s_sum - printed
+        flag = "ok  " if abs(diff) <= TOLERANCE else "DIFF"
+        extra = f"  (also printed on p.{', '.join(str(c[0]['page']) for c in cands if c[0] is not p)})" if len(cands) > 1 else ""
+        doc = budget["docs"][p["doc"]]
+        tail = ""
+        if abs(diff) > TOLERANCE:
+            hit = [i for i in known if i["source_doc"] == doc and (norm(i["label"]) in norm(p["label"]) or norm(p["label"]) in norm(i["label"]))]
+            if hit:
+                tail = "  -> logged in known_issues.csv"
+            else:
+                tail = "  -> NOT in known_issues.csv"
+                undocumented += 1
+        print(f"{flag} {key:16s} {p['label']:42s} p.{p['page']:<4d} printed {printed:>14,.0f}  shown {s_sum:>14,.0f}  diff {diff:+,.0f}{extra}{tail}")
+    print(f"\n{undocumented} printed-total differences are not in known_issues.csv")
 
     print(f"\n{failures} series mismatches")
     return 1 if failures else 0
