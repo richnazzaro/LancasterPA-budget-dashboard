@@ -1510,7 +1510,7 @@
     const actualYears = yrsOf('actual'), projYears = yrsOf('projected');
     const figs = (b) => Object.values(D.series).filter((s) => s.year + D.rule[s.measure].book_offset === b.year && D.docs[Array.isArray(s.doc) ? s.doc[0] : s.doc] === b.doc)
       .sort((a, c) => a.year - c.year || ORDER.indexOf(a.measure) - ORDER.indexOf(c.measure)).map((s) => `${s.year} ${LABEL[s.measure].toLowerCase()}`);
-    const books = used.map((b) => { const f = figs(b); return `<li>${esc(b.doc.replace(/\.pdf$/i, ''))} (${b.year} book): ${f.length ? 'supplies ' + f.join(', ') : 'no figures under the selection rule'}.</li>`; }).join('');
+    const books = used.map((b) => { const f = figs(b); const href = `${CFG.paths.pdfs}${encodeURIComponent(b.doc)}`; return `<li><a href="${href}" target="_blank" rel="noopener">${esc(b.doc.replace(/\.pdf$/i, ''))}</a> (${b.year} book; <a href="${href}" download>download PDF</a>): ${f.length ? 'supplies ' + f.join(', ') : 'no figures under the selection rule'}.</li>`; }).join('');
     const issues = D.known_issues.map((i) => `<li>${esc(i.source_doc.replace(/\.pdf$/i, ''))}: ${esc(scrubPages(i.note))}</li>`).join('');
     $('about-body').innerHTML = `
       <h3>Sources</h3>

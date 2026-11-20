@@ -656,7 +656,7 @@ a.src { white-space: nowrap; }
   .site-nav a[aria-current="page"] { border-left-color: var(--sel); color: var(--sel-ink); }
   .jump-search { max-width: none; margin: 0; flex: none; }
   .header-actions { margin-top: auto; flex-wrap: wrap; }
-  main.page { grid-column: 2; grid-row: 1; max-width: 1060px; width: 100%; margin: 0; padding: 48px 64px 64px; }
+  main.page { grid-column: 2; grid-row: 1; max-width: 1360px; width: 100%; margin: 0; padding: 48px 64px 64px; }
   .site-footer { grid-column: 2; grid-row: 2; margin-top: 0; }
 }
 
@@ -730,4 +730,12 @@ a.src { white-space: nowrap; }
 @media (max-width: 767px) {
   /* Names inside tables link with a 44px target (the padding is cancelled by the negative margin, so rows keep their height). */
   .table tbody a:not(.src) { display: inline-block; padding: 13px 0; margin: -13px 0; }
+}
+
+/* About the data: on wide screens the notes run in two columns instead of one narrow strip. */
+@media (min-width: 1280px) {
+  #about-body { columns: 2; column-gap: 72px; }
+  #about-body h3 { break-after: avoid; }
+  #about-body p, #about-body li { max-width: none; }
+  #about-body details, #about-body ul { break-inside: auto; }
 }
