@@ -86,7 +86,7 @@ The JSON files can also be downloaded from the live site: `<site>/data/budget.js
 
 **Header:** Overview, What changed, Reserve Fund and About the data, plus **Jump to…** search and the light/dark switch. On wide screens a contents rail shows where you are and an "On this page" list; phones get an "On this page" outline instead.
 
-**Controls** (at the top of the home, department and bureau pages): on every screen size they fold into a one-line summary ("Viewing 2027 Revised · compared with 2026 Projected · General Fund · Spending") with a **Change** button that opens them (**Done** closes them); the site remembers that choice in your browser. On department pages, only the funds that department has lines in are offered, and Spending / Income only appears where the department has both. Short "What do these mean?" and "What is a fund?" notes sit beside the controls.
+**Controls** (at the top of the home, department and bureau pages): on every screen size they fold into a one-line summary ("Viewing 2027 Revised · compared with 2026 Projected · General Fund · Spending") with a **Change view** button that opens them (**Close** closes them); the site remembers that choice in your browser. On department pages, only the funds that department has lines in are offered, and Spending / Income only appears where the department has both. Short "What do these mean?" and "What is a fund?" notes sit beside the controls.
 - **Fiscal year:** the year to show.
 - **Compare with:** any other year and figure (for example, 2026 Projected), or "No comparison".
 - **Fund:** a single fund, "All funds", or the Reserve Fund.
