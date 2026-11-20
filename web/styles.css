@@ -156,7 +156,7 @@ select { appearance: none; width: 100%; height: 40px; background: var(--card) ur
 .fill.cmp { background: var(--gold); }
 .fill.sel { background: var(--mint); }
 .missing { color: var(--muted); font-weight: 400; }
-.hint { text-align: center; color: var(--muted); margin: 32px auto 48px; max-width: 70ch; }
+.hint { text-align: center; color: var(--muted); margin: 32px auto 48px; }
 .empty { color: var(--muted); }
 
 /* Panels */
@@ -339,7 +339,7 @@ details.values summary:hover { color: var(--fg); }
 .define p { margin: 6px 0 0; max-width: 70ch; }
 .define .aside { list-style: none; margin-left: -18px; font-style: italic; }
 .define strong { color: var(--fg); font-weight: 600; }
-.draw-note { margin: 12px auto 0; max-width: 70ch; color: var(--muted); font-size: 15px; }
+.draw-note { margin: 12px auto 0; color: var(--muted); font-size: 15px; }
 .tie-note { max-width: 70ch; margin-left: auto; margin-right: auto; }
 
 /* Controls: one-line summary with a Change button; the full controls open below it. */
@@ -351,7 +351,7 @@ details.values summary:hover { color: var(--fg); }
 .controls-panel[hidden] { display: none; }
 .dept-filters { margin-bottom: 24px; }
 
-.hint-top { margin: 0 0 20px; }
+.hint-top { margin: 0 auto 20px; }
 
 .list-title { margin: 0 0 8px; text-transform: uppercase; letter-spacing: .02em; font-weight: 700; font-size: 18px; line-height: 28px; padding-bottom: 10px; border-bottom: 2px solid var(--rule); }
 .bureau-list { margin: 0 0 40px; }
@@ -443,7 +443,6 @@ details.values summary:hover { color: var(--fg); }
 .wc-srcnote a.src { text-decoration: underline dotted; }
 .wc-more { margin-top: 8px; }
 .wc-deptlink { margin: -16px 0 32px; }
-#changes-btn[aria-current="page"] { border-color: var(--border-strong); background: var(--muted-bg); }
 
 @media (max-width: 1023px) {
   .wc-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -469,4 +468,24 @@ details.values summary:hover { color: var(--fg); }
 }
 @media (max-width: 339px) {
   .wc-tiles { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---------------------------------------------------------------------------------------------------------
+   Home overview: Totals by Year and the "What changed" summary side by side at the top of the page.
+   Controls: collapsible behind a summary line on phones only; always open on wider screens.
+   --------------------------------------------------------------------------------------------------------- */
+.overview { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: stretch; margin: 0 0 32px; }
+.overview > .panel { margin: 0; }
+.overview .chart-box.short { height: 320px; }
+.overview-single { grid-template-columns: minmax(0, 1fr); }
+.wc-home { display: flex; flex-direction: column; }
+.wc-home .wc-badge { justify-content: flex-start; margin: 0 0 16px; }
+.wc-home .wc-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0 0 16px; }
+.wc-home .wc-tile { padding: 14px 16px; }
+.wc-home .wc-tile-v { font-size: 24px; line-height: 30px; }
+.wc-home-more { margin: auto 0 0; }
+@media (max-width: 1023px) { .overview { grid-template-columns: minmax(0, 1fr); } }
+@media (min-width: 768px) {
+  .controls-bar { display: none; }
+  .controls-panel, .controls-panel[hidden] { display: block; margin-top: 0; }
 }

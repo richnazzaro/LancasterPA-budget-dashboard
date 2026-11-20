@@ -513,9 +513,9 @@
     return `<header class="page-head"><h1 id="page-h">${esc(scope)} ${kindWord}: ${esc(seriesLabel(k))}</h1>
         <p class="big-total" aria-live="polite">${(() => { const pf = S.f ? printedFund(S.f, S.k, k) : null; return pf ? src(money(total), k, pf.doc, pf.page) : money(total); })()}</p>${drawNote(k)}${statusHTML()}${rollupNote(list)}</header>
       ${filtersHTML()}
+      ${(() => { const wc = homeChangesHTML(); return `<div class="overview${wc ? '' : ' overview-single'}">${trendHTML({}, 'Totals by Year')}${wc}</div>`; })()}
       <p class="hint hint-top">Select any department to see its detailed breakdown. Amounts open the source page in the budget book.</p>
       <ul class="cards" aria-label="Departments">${cards || '<li class="empty center">No lines for this selection.</li>'}</ul>
-      ${trendHTML({}, 'Totals by Year')}
       <section class="panel" aria-labelledby="re-title"><h2 class="panel-title" id="re-title">Income vs. Spending by Fund: ${esc(seriesLabel(k))}</h2>
         <div class="chart-box"><canvas id="re-chart" role="img" aria-label="Income and spending by fund"></canvas></div>
         <div class="table-scroll"><table class="table" id="re-table"></table></div></section>`;
@@ -936,7 +936,7 @@
         if (mv.into) parts.push(`${fmtN(mv.into)} moved in from other funds`);
         if (mv.out) parts.push(`${fmtN(mv.out)} moved out`);
         parts.push(`${sgn(T.at - T.af, fmtN)} ${mv.into || mv.out ? 'other change' : 'after corrections'}`);
-        tiles.push([cls === 'FT' ? 'Full-time positions' : 'Positions', nDelta(corrected), `${parts.join(' · ')}. <a href="#wc-pos">How this is counted</a>`]);
+        tiles.push([cls === 'FT' ? 'Full-time positions' : 'Positions', nDelta(corrected), `${parts.join(' · ')}. <a href="${esc(changesHash())}" data-scroll="wc-pos">How this is counted</a>`]);
       }
     }
     const rc = revisionCmp();
@@ -1148,6 +1148,18 @@
     return { html };
   }
 
+  /* "What changed" summary at the top of the home page, beside Totals by Year: the headline sentence and the
+     key numbers for the newest year, linking to the full page. Spending view of the newest year only. */
+  function homeChangesHTML() {
+    if (!CH || S.y !== D.newest_year || S.k !== 'expense') return '';
+    const c = changeCmp();
+    const sc = c?.scopes[scopeName()];
+    if (!sc?.expense) return '';
+    return `<section class="panel wc-home" aria-labelledby="wch-t"><h2 class="panel-title" id="wch-t">What changed in ${D.newest_year}</h2>
+      <p class="wc-lede-sm">${headlineSentence(c, sc)}</p>${badgeHTML(c)}${tilesHTML(c, sc)}
+      <p class="wc-home-more"><a class="btn btn-primary" href="${esc(changesHash())}">See everything that changed →</a></p></section>`;
+  }
+
   /* Compact "What changed" on a department page: headline, bureaus, positions, largest lines, shifts. */
   function deptChangesHTML(di) {
     const link = (txt) => `<a class="btn btn-outline wc-more" href="${esc(changesHash({ y: D.newest_year }))}">${txt}</a>`;
@@ -1194,12 +1206,6 @@
     $('view').innerHTML = page.html;
     page.after?.();
     // Header link to "What changed": keeps the fund; marks the page while it is open.
-    const wcb = $('changes-btn');
-    if (wcb) {
-      const m = S.y === D.newest_year ? S.m : defaultMeasure(D.newest_year);
-      wcb.href = changesHash({ y: D.newest_year, m, c: route.name === 'changes' ? S.c : defaultCompare(D.newest_year, m) });
-      if (route.name === 'changes') wcb.setAttribute('aria-current', 'page'); else wcb.removeAttribute('aria-current');
-    }
     if (scroll) {
       window.scrollTo({ top: 0 });
       $('page-h')?.focus({ preventScroll: true });
@@ -1216,6 +1222,13 @@
       else if (sel.dataset.sel) onFilter(sel.dataset.sel, sel.value);
     });
     view.addEventListener('click', (e) => {
+      // In-page jump (e.g. "How this is counted"): scroll if the target is on this page, else follow the link.
+      const jump = e.target.closest('[data-scroll]');
+      if (jump && $(jump.dataset.scroll)) {
+        e.preventDefault();
+        $(jump.dataset.scroll).scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth' });
+        return;
+      }
       const tog = e.target.closest('[data-toggle-controls]');
       if (tog) {
         const open = tog.getAttribute('aria-expanded') !== 'true';
