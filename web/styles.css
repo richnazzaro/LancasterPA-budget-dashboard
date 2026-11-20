@@ -203,7 +203,8 @@ select { appearance: none; width: 100%; height: 40px; background: var(--card) ur
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .table { width: 100%; border-collapse: collapse; font-size: 14px; line-height: 20px; }
 .table th, .table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
-.table th { font-weight: 600; white-space: nowrap; border-bottom: 2px solid var(--fg); }
+.table th { font-weight: 600; white-space: nowrap; }
+.table thead th { border-bottom: 2px solid var(--fg); }
 .table th button { all: unset; cursor: pointer; }
 .table th button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .table th[aria-sort="ascending"] button::after { content: " ↑"; color: var(--muted); }
@@ -231,7 +232,7 @@ select { appearance: none; width: 100%; height: 40px; background: var(--card) ur
 
 /* About */
 .about { margin-top: 72px; }
-.about h3 { margin: 24px 0 8px; font-size: 16px; font-weight: 600; }
+.about h3, .about .about-h { margin: 24px 0 8px; font-size: 16px; font-weight: 600; }
 .about p, .about li { color: var(--muted); font-size: 14px; line-height: 22px; max-width: 70ch; }
 .about ul { padding-left: 20px; margin: 8px 0; }
 .about strong { color: var(--fg); font-weight: 600; }
@@ -711,7 +712,8 @@ a.src { white-space: nowrap; }
 .rail-sub li { list-style: none; border: 0; padding: 0; }
 .rail-sub a { display: flex; min-height: 36px; align-items: center; font-weight: 500; font-size: 14px; color: var(--fg); text-decoration: none; padding: 2px 0 2px 8px; border-left: 3px solid transparent; margin-left: -3px; border-bottom: 0; }
 .rail-sub a:hover { text-decoration: underline; }
-.rail-sub a[aria-current] { border-left-color: var(--sel); font-weight: 700; }
+.rail-sub a[aria-current="page"] { border-left-color: var(--sel); font-weight: 700; }
+.rail-sub a[aria-current="location"] { font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
 .rail-h { display: block; margin: 8px 0 2px 8px; font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
 .rail-sections ul { list-style: none; margin: 0; padding: 0; }
 @media (max-width: 1099px) { .rail-sub { display: none; } }
@@ -735,7 +737,57 @@ a.src { white-space: nowrap; }
 /* About the data: on wide screens the notes run in two columns instead of one narrow strip. */
 @media (min-width: 1280px) {
   #about-body { columns: 2; column-gap: 72px; }
-  #about-body h3 { break-after: avoid; }
+  #about-body h3, #about-body .about-h { break-after: avoid; }
   #about-body p, #about-body li { max-width: none; }
   #about-body details, #about-body ul { break-inside: auto; }
 }
+
+/* ---------------------------------------------------------------------------------------------------------
+   Deck, folded status line, category table, About page, margin notes, phone outline
+   ------------------------------------------------------------------------------------------------------ */
+/* The deck: what changed, set in ink under the title. The total below is evidence, not the headline. */
+.deck { margin: 0 0 18px; max-width: 28ch; font-family: var(--serif); font-size: 38px; line-height: 44px; font-weight: 600; color: var(--fg); }
+.deck .up, .deck .down { font-weight: 700; }
+.deck .up::before, .deck .down::before { font-size: .55em; color: var(--fg); vertical-align: .25em; }
+.deck .deck-link { font-family: var(--font); font-size: 16px; font-weight: 600; white-space: nowrap; }
+.big-total { font-size: 44px; line-height: 48px; margin: 0 0 14px; }
+.big-total .big-label { display: block; font-family: var(--font); font-size: 13px; line-height: 20px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.controls-sum .status { margin: 0 12px 0 0; vertical-align: middle; }
+@media (max-width: 767px) { .deck { font-size: 28px; line-height: 34px; max-width: none; } .big-total { font-size: 36px; line-height: 40px; } }
+
+.dept-total .figure { font-family: var(--serif); font-weight: 700; color: var(--sel-ink); }
+@media (min-width: 1100px) { .dept-picker { display: none; } }
+
+/* Category table with inline share bars */
+.cat-table .share-cell { white-space: nowrap; width: 38%; }
+.share-bar { display: inline-block; width: 60%; max-width: 220px; height: 10px; margin-right: 10px; background: var(--track); vertical-align: middle; }
+.share-bar i { display: block; height: 100%; background: var(--sel); }
+.share-n { display: inline-block; min-width: 3.6em; }
+@media (max-width: 767px) { .share-bar { display: none; } .cat-table .share-cell { width: auto; } }
+
+/* About is its own page: the heading comes from the page head, and a book title is a link */
+.about-page #about-title { display: none; }
+.about-page .about { margin-top: 0; border-top: 0; padding-top: 0; }
+.about-page #site-footer { margin-top: 0; }
+
+/* Phone outline under the page heading */
+.phone-toc { margin: -16px 0 28px; border-top: 1px solid var(--fg); border-bottom: 1px solid var(--border); }
+.phone-toc summary { cursor: pointer; display: flex; align-items: center; min-height: 44px; font-weight: 600; font-size: 15px; }
+.phone-toc ul { list-style: none; margin: 0; padding: 0 0 8px; }
+.phone-toc a { display: flex; align-items: center; min-height: 44px; color: var(--fg); text-decoration: none; font-weight: 500; }
+@media (min-width: 1100px) { .phone-toc { display: none; } }
+
+/* Margin notes: on wide screens the page keeps a reading column and the right-hand margin carries the notes. */
+.margin { display: none; }
+@media (min-width: 1750px) {
+  main.page { display: grid; grid-template-columns: minmax(0, 1040px) 260px; column-gap: 56px; max-width: 1480px; align-items: start; }
+  main.page > #view, main.page > #about { grid-column: 1; }
+  .margin { display: block; grid-column: 2; grid-row: 1 / span 2; position: sticky; top: 40px; padding-top: 20px; border-top: 3px double var(--fg); font-size: 14px; line-height: 21px; color: var(--muted); }
+  .margin-h { margin: 0 0 14px; font-size: 14px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--fg); }
+  .margin dl { margin: 0 0 14px; } .margin dt { font-weight: 700; color: var(--fg); margin-top: 10px; } .margin dd { margin: 0; }
+  .margin p { margin: 0 0 10px; }
+  .about-page .margin { display: none; }
+}
+
+.trend-axis { margin: 6px 0 0; font-size: 13px; line-height: 18px; color: var(--muted); }
+.trend-axis:empty { display: none; }

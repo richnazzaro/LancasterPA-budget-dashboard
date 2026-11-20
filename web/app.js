@@ -139,6 +139,7 @@
     const q = new URLSearchParams(qs);
     let r = { name: 'home' };
     if (parts[0] === 'changes') r = { name: 'changes' };
+    else if (parts[0] === 'about') r = { name: 'about' };
     else if (parts[0] === 'department' && parts[1]) {
       r = parts[2] === 'bureau' && parts[3] ? { name: 'bureau', dept: parts[1], bureau: parts[3] } : { name: 'dept', dept: parts[1] };
     } else if (parts.length && location.hash.startsWith('#/')) r = { name: 'missing' }; // any other path is not a page
@@ -178,7 +179,7 @@
     return `<span class="status${draft ? ' not-adopted' : ''}">${S.y}: ${STATUS[S.m]}</span>`;
   }
 
-  const knownLink = () => `<a class="known-link" href="${esc(location.hash || '#/')}" data-scroll="about-issues">Known issues for this view</a>`;
+  const knownLink = () => `<a class="known-link" href="#/about?s=about-issues">Known issues for this view</a>`;
 
   /* The one Fund list, used by every view: "All funds" (on a department page only while it is the choice), the funds that
      have lines in what is shown (plus the current choice), and the Reserve Fund view where the page allows it. */
@@ -235,7 +236,7 @@
     return ks.flatMap((kk) => rows(kk).filter((r) => (scope.dept == null || r.od === scope.dept) && (scope.unit == null || r.unit === scope.unit)));
   }
 
-  function filtersHTML({ fund = true, scope = null, closedFirst = false } = {}) {
+  function filtersHTML({ fund = true, scope = null, closedFirst = false, lead = '' } = {}) {
     if (isReserve()) return controlsWrap(reserveFiltersHTML(), `Viewing ${esc(D.reserve.name)} · ${S.y}${S.m ? ' ' + esc(LABEL[S.m]) : ''}`);
     const k = key(S.y, S.m);
     const yrs = years().map((y) => `<option value="${y}" ${y === S.y ? 'selected' : ''}>${y}</option>`).join('');
@@ -265,7 +266,7 @@
     const parts = [`Viewing ${esc(seriesLabel(k))}`, S.c ? `compared with ${esc(seriesLabel(S.c))}` : 'no comparison'];
     if (fund) parts.push(esc(S.f || 'All funds'));
     parts.push(kindWordPlain());
-    return controlsWrap(inner, parts.join(' · '), closedFirst);
+    return controlsWrap(inner, `${lead}${lead ? ' ' : ''}${parts.join(' · ')}`, closedFirst);
   }
 
   function onFilter(name, v) {
@@ -316,7 +317,7 @@
       has('actual') && `<li><i class="ln"></i>Actual</li>`,
       has('projected') && `<li><i class="ln dashed"></i>Projected</li>`,
       has('proposed') && `<li><i class="dot diamond" style="background:${PALETTE[0]}"></i>Proposed</li>`,
-      has('revised') && `<li><i class="dot ring" style="border-color:${PALETTE[1]}"></i>Revised</li>`,
+      has('revised') && `<li><i class="dot" style="background:${SEL}"></i>Revised</li>`,
     ].filter(Boolean).join('');
     // Proposed and Revised sit a few pixels apart on a $0-based axis, so state the revision in words.
     const ly = pts.length ? Math.max(...pts.map((p) => p.y)) : null;
@@ -327,7 +328,8 @@
     const inner = `${head}
       <p class="panel-note${bare ? ' panel-note-left' : ''}">${kindWordPlain()}${S.f ? ' · ' + esc(S.f) : ''}. Each year shows one kind of figure: actual, projected or proposed.</p>
       <ul class="trend-legend" aria-hidden="true">${legend}</ul>${revision}
-      <div class="chart-box short"><canvas id="trend-chart" role="img" aria-label="Totals by year, ${pts[0].y} to ${pts[pts.length - 1].y}. Solid line: actual. Dashed line: projected. Diamond: proposed. Ring: revised. The table below has the values."></canvas></div>
+      <div class="chart-box short"><canvas id="trend-chart" role="img" aria-label="Totals by year, ${pts[0].y} to ${pts[pts.length - 1].y}. Solid line: actual. Dashed line: projected. Hollow diamond: proposed. Solid dot: revised. The table below has the values."></canvas></div>
+      <p class="trend-axis" id="trend-axis"></p>
       <details class="values"><summary>Show values</summary><div class="table-scroll"><table class="table"><thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Total</th></tr></thead><tbody>${rowsHtml}</tbody></table></div></details>`;
     return bare ? inner : `<section class="panel" aria-labelledby="tr-t">${inner}</section>`;
   }
@@ -343,13 +345,24 @@
       pointRadius: 4, pointHoverRadius: 6, pointBorderColor: SEL, pointBackgroundColor: (c) => (main[c.dataIndex]?.m === 'projected' ? SURFACE : SEL),
       segment: { borderDash: (c) => (main[c.p1DataIndex]?.m === 'projected' ? [6, 4] : undefined) },
     }];
-    if (pts.some((p) => p.m === 'proposed')) datasets.push({ ...dot('proposed', PALETTE[0]), pointStyle: 'rectRot', pointRadius: 6, pointHoverRadius: 8 });
-    // Proposed and Revised sit at nearly the same height in the same year: Proposed is a small filled dot, Revised a larger open ring around it.
-    if (pts.some((p) => p.m === 'revised')) datasets.push({ ...dot('revised', PALETTE[1]), backgroundColor: 'transparent', borderWidth: 3, pointRadius: 10, pointHoverRadius: 12, pointBorderWidth: 3 });
+    // Proposed is a hollow ink diamond. Revised is the figure the page is about, so it is a solid green dot, joined to the
+    // last Actual/Projected point by a dashed line: the reader can see where the revision lands.
+    if (pts.some((p) => p.m === 'proposed')) datasets.push({ ...dot('proposed', PALETTE[0]), pointStyle: 'rectRot', pointRadius: 7, pointHoverRadius: 9, backgroundColor: SURFACE, borderWidth: 2.5 });
+    const rvPt = pts.filter((p) => p.m === 'revised' && p.v != null).pop();
+    if (rvPt) {
+      const ri = yrs.indexOf(rvPt.y), pi = main.map((p, i) => (p ? i : -1)).filter((i) => i >= 0 && i < ri).pop();
+      datasets.push({ label: 'Revised', data: yrs.map((y, i) => (i === ri ? rvPt.v : i === pi ? main[pi].v : null)), borderColor: SEL, backgroundColor: SEL, borderWidth: 2, borderDash: [6, 4], showLine: true, spanGaps: false,
+        pointRadius: (c) => (c.dataIndex === ri ? 8 : 0), pointHoverRadius: (c) => (c.dataIndex === ri ? 10 : 0), pointHitRadius: (c) => (c.dataIndex === ri ? 10 : 0), pointBorderColor: SURFACE, pointBorderWidth: 2 });
+    }
+    // The line chart does not start at zero (a line shows movement, not size), so the axis says where it starts.
+    const vals = pts.map((p) => p.v).filter((v) => v != null && v > 0);
+    let yMin = 0;
+    if (vals.length) { const lo = Math.min(...vals) * 0.7, pow = 10 ** Math.floor(Math.log10(lo)); yMin = Math.floor(lo / pow) * pow; }
+    const ax = $('trend-axis'); if (ax) ax.textContent = yMin > 0 ? `The vertical axis starts at ${short(yMin)}, not zero.` : '';
     charts.push(new Chart(cv, { type: 'line', data: { labels: yrs, datasets },
       options: { responsive: true, maintainAspectRatio: false, layout: { padding: { right: 8 } }, animation: reduceMotion() ? false : { duration: 300 },
         plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { label: (c) => (c.datasetIndex === 0 ? `${LABEL[main[c.dataIndex].m]}: ${money(c.raw)}` : `${c.dataset.label}: ${money(c.raw)}`) } } },
-        scales: { x: { offset: true, ticks: { color: INK }, grid: { color: th.grid } }, y: { beginAtZero: true, ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid } } } } }));
+        scales: { x: { offset: true, ticks: { color: INK }, grid: { color: th.grid } }, y: { beginAtZero: yMin === 0, min: yMin || undefined, ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid } } } } }));
   }
   /* Where a book's own printed fund total differs from the sum of its line items, say so. */
   function rollupNote(list) {
@@ -473,8 +486,8 @@
       ? `<div class="table-scroll"><table class="table"><thead><tr><th scope="col">Line</th><th scope="col" class="num">Amount</th></tr></thead><tbody>${e.lines.map((l) => `<tr><td>${esc(resLineLabel(l, e))}</td><td class="num">${srcDoc(money(l.v), e.doc, l.p)}</td></tr>`).join('')}</tbody></table></div>`
       : `<p class="panel-note" style="margin:0 0 12px">For actual years the city's budget book prints only the closing balance.</p><div class="table-scroll"><table class="table"><tbody><tr><td>${esc(resLineLabel(end, e))}</td><td class="num">${srcDoc(money(end.v), e.doc, end.p)}</td></tr></tbody></table></div>`;
     return `<header class="page-head"><h1 id="page-h" tabindex="-1">${esc(name)}: ${esc(resLabel(e))}</h1>
-        <p class="big-total" aria-live="polite">${srcDoc(money(end.v), e.doc, end.p)}</p>
-        <p class="compare-line">Year-end balance${ch ? ` · change from ${ch.from}: ${chgHTML(ch)}` : ''}</p>
+        ${ch && ch.p != null ? `<p class="deck"><span class="${ch.d < 0 ? 'down' : ch.d > 0 ? 'up' : 'flat'}">${ch.d < 0 ? 'Down' : ch.d > 0 ? 'Up' : 'No change'} ${mny(Math.abs(ch.d))} (${fmtPct(Math.abs(ch.p))})</span> from ${esc(ch.from)}.</p>` : ''}
+        <p class="big-total" aria-live="polite"><span class="big-label">Year-end balance</span> ${srcDoc(money(end.v), e.doc, end.p)}</p>
         <span class="status${e.measure === 'proposed' || e.measure === 'revised' ? ' not-adopted' : ''}">${e.year}: ${esc(RES_STATUS[e.measure])}</span>
         ${notices.map((n) => `<div class="notice" role="note">${n}</div>`).join('')}</header>
       ${filtersHTML()}
@@ -566,9 +579,19 @@
       .sort((a, b) => (b.sel?.total || 0) - (a.sel?.total || 0) || (b.cmp?.total || 0) - (a.cmp?.total || 0));
     const ledger = items.length ? ledgerHTML(items, { total, k }) : '<p class="empty">No lines for this selection.</p>';
 
+    const totalHTML = (() => { const pf = S.f ? printedFund(S.f, S.k, k) : null; return pf ? src(money(total), k, pf.doc, pf.page) : money(total); })();
+    // The deck says what a resident came to learn: up or down, by how much, and what covers it.
+    const deck = (() => {
+      if (!S.c || !series(S.c)) return '';
+      const cmpTotal = sum(scoped(S.c)), d = total - cmpTotal, p = pctOf(d, cmpTotal);
+      if (!cmpTotal || Math.round(d) === 0) return '';
+      const gf = D.funds.indexOf(DEFAULT_FUND), dr = D.reserve && gf >= 0 && S.f === D.funds[gf] ? reserveDraw(k, gf) : null;
+      return `<p class="deck"><span class="${d > 0 ? 'up' : 'down'}">${d > 0 ? 'Up' : 'Down'} ${mny(Math.abs(d))} (${fmtPct(Math.abs(p))})<span class="sr-only"> ${d > 0 ? 'higher' : 'lower'}</span></span> from ${esc(seriesLabel(S.c))}${dr ? `, with ${src(millions(dr.v), k, dr.d, dr.p)} drawn from savings. <a class="deck-link" href="${esc(homeHash({ f: D.reserve.name }))}">See the Reserve Fund</a>` : '.'}</p>`;
+    })();
     return `<header class="page-head"><h1 id="page-h">${esc(scope)} ${kindWord}: ${esc(seriesLabel(k))}</h1>
-        <p class="big-total" aria-live="polite">${(() => { const pf = S.f ? printedFund(S.f, S.k, k) : null; return pf ? src(money(total), k, pf.doc, pf.page) : money(total); })()}</p>${heroDelta(k, total)}${drawNote(k)}${statusHTML()}${rollupNote(list)}</header>
-      <div class="home-flow">${filtersHTML({ closedFirst: true })}
+        ${deck || `${heroDelta(k, total)}${drawNote(k)}`}
+        <p class="big-total" aria-live="polite"><span class="big-label">${esc(scope)} ${kindWord}</span> ${totalHTML}</p>${rollupNote(list)}</header>
+      <div class="home-flow">${filtersHTML({ closedFirst: true, lead: statusHTML() })}
       ${(() => { const wc = homeChangesHTML(); return `<div class="overview${wc ? '' : ' overview-single'}">${trendHTML({}, 'Totals by Year')}${wc}</div>`; })()}</div>
       <section class="panel" id="sec-departments" tabindex="-1" aria-labelledby="dep-t"><h2 class="panel-title" id="dep-t">Departments</h2>
         <p class="panel-note">Select a department to see its detailed breakdown. Amounts open the source page in the budget book.</p>
@@ -620,6 +643,15 @@
       <div class="pie-wrap"><div class="pie-box"><canvas id="${id}" role="img" aria-label="${esc(title)}: ${esc(groups.slice(0, 6).map((g) => `${g.label} ${money(g.total)}`).join(', '))}"></canvas></div>
       <ul class="legend-list${groups.length > 6 ? ' scroll" tabindex="0" aria-label="' + esc(title) + ' legend, scrollable' : ''}">${items}</ul></div></section>`;
   }
+  /* Categories as a ruled table with an inline bar for each share, the same grammar as the department ledger. */
+  function categorySection(title, groups, { k, secId = '' } = {}) {
+    const total = groups.reduce((t, g) => t + Math.max(0, g.total), 0);
+    if (!groups.length || total <= 0) return '';
+    const id = `cat-${slug(title)}`;
+    const rows = groups.map((g) => { const sh = (Math.max(0, g.total) / total) * 100; return `<tr><th scope="row">${esc(g.label)}${g.sub ? `<span class="sub">${esc(g.sub)}</span>` : ''}</th><td class="num">${src(money(g.total), k, g.d, g.p)}</td><td class="num share-cell"><span class="share-bar" aria-hidden="true"><i style="width:${sh.toFixed(1)}%"></i></span><span class="share-n">${sh.toFixed(1)}%</span></td></tr>`; }).join('');
+    return `<section class="panel"${secId ? ` id="${secId}" tabindex="-1"` : ''} aria-labelledby="${id}-t"><h2 class="panel-title" id="${id}-t">${esc(title)}</h2>
+      <div class="table-scroll"><table class="table ledger cat-table" aria-label="${esc(title)}"><thead><tr><th scope="col">Category</th><th scope="col" class="num">${esc(seriesLabel(k))}</th><th scope="col" class="num">Share</th></tr></thead><tbody>${rows}</tbody></table></div></section>`;
+  }
   function drawPie(title, groups) {
     const cv = $(`pie-${slug(title)}`);
     if (!cv || !window.Chart) return;
@@ -662,7 +694,7 @@
     let html = crumbsHTML(crumbs);
     if (deptPicker) html += `<div class="field dept-picker"><label class="field-label" for="dept-pick">Department</label>${deptPicker}</div>`;
     html += `<header><h1 class="dept-name" id="page-h" tabindex="-1">${esc(title)}</h1>
-      <p class="dept-total">Total ${kindWord}: ${totalLink}</p><p class="dept-sub">${subtitle}</p><p>${statusHTML()}</p>${deptPicker ? rollupNote(selRows) : ''}</header>${about}`;
+      <p class="dept-total">Total ${kindWord}: <strong class="figure">${totalLink}</strong></p><p class="dept-sub">${subtitle}</p><p>${statusHTML()}</p>${deptPicker ? rollupNote(selRows) : ''}</header>${about}`;
 
     // One Compare panel holds what used to be five: the two totals, the change, the category bars and the totals by year.
     let compare = '';
@@ -680,10 +712,10 @@
         <div class="cmp-pane" id="cmp-pane-time" role="tabpanel" aria-labelledby="cmp-tab-time"${cmpTab === 'time' ? '' : ' hidden'}>${trendHTML(scope, '', { bare: true })}</div></section>`;
     }
     const hasChanges = changes.includes('id="sec-changes"'), hasBureaus = bureauList.includes('id="sec-bureaus"');
-    const nav = [cats.length && ['sec-compare', 'Compare'], hasChanges && ['sec-changes', 'What changed'], hasBureaus && ['sec-bureaus', 'Bureaus'], cats.length && ['sec-categories', 'Categories'], ['sec-lines', 'Line items']].filter(Boolean);
+    const nav = [hasChanges && ['sec-changes', 'What changed'], cats.length && ['sec-compare', 'Compare'], hasBureaus && ['sec-bureaus', 'Bureaus'], cats.length && ['sec-categories', 'Categories'], ['sec-lines', 'Line items']].filter(Boolean);
     html += jumpNav(nav);
-    html += `<div class="entity-flow"><div class="dept-filters">${filtersHTML({ fund: !!deptPicker, scope, closedFirst: true })}</div>${compare}${changes}${bureauList}`;
-    html += pieSection(`${title} ${seriesLabel(k)} ${kindWord} Breakdown`, cats, { k, secId: 'sec-categories' });
+    html += `<div class="entity-flow"><div class="dept-filters">${filtersHTML({ fund: !!deptPicker, scope, closedFirst: true })}</div>${changes}${compare}${bureauList}`;
+    html += categorySection(`${title} ${seriesLabel(k)} ${kindWord} Breakdown`, cats.map(withColor), { k, secId: 'sec-categories' });
     html += `<section class="panel" id="sec-lines" tabindex="-1" aria-labelledby="li-t"><h2 class="total-label" id="li-t">Line Items</h2><div id="li-holder"></div></section></div>`;
     return { html, cats };
   }
@@ -1276,14 +1308,23 @@
       <p>${link('See everything that changed →')}</p></section>`;
   }
 
+  /* ---------- margin notes (wide screens): what the words mean, and where the problems are ---------- */
+  function renderMargin() {
+    const m = $('margin'); if (!m) return;
+    m.innerHTML = `<h2 class="margin-h">Reading notes</h2>
+      <dl>${DEFINE_FIGURES.filter(([, b]) => b).map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl>
+      <p>Every amount links to its page in the city's budget book.</p>
+      <p>${knownLink()}</p>`;
+  }
+
   /* ---------- contents rail: where you are, and the sections of this page ---------- */
-  let railSpy = null;
-  function renderRail(onUnit) {
-    document.querySelectorAll('#site-nav .rail-sub').forEach((n) => n.remove());
-    if (railSpy) { railSpy.disconnect(); railSpy = null; }
-    const host = document.querySelector('#site-nav li');
+  let railScroll = null;
+  function renderRail(here, onUnit) {
+    document.querySelectorAll('#site-nav .rail-sub, #view .phone-toc').forEach((n) => n.remove());
+    if (railScroll) { window.removeEventListener('scroll', railScroll); railScroll = null; }
+    // The outline hangs under the page you are on, never under another page.
+    const host = document.querySelector(`#site-nav a[data-nav="${here}"]`)?.closest('li');
     if (!host) return;
-    // Sections of this page: each open section's heading, linked by the same data-scroll pattern the page uses.
     const secs = [...document.querySelectorAll('#view section.panel')].map((sec) => {
       const h = sec.querySelector(':scope > h2, :scope > .compare > h2, :scope > h2.panel-title');
       const t = h?.textContent.trim().replace(/:.*$/, '').replace(/^.* (Budget|Spending|Revenue|Income) Breakdown$/i, '$1 breakdown');
@@ -1293,8 +1334,8 @@
     }).filter(Boolean);
     const trail = [];
     if (onUnit) {
-      const crumbs = [...document.querySelectorAll('.crumbs a')].filter((a) => !/^home$/i.test(a.textContent.trim()));
-      crumbs.forEach((a) => trail.push(`<li><a href="${esc(a.getAttribute('href'))}">${esc(a.textContent.trim())}</a></li>`));
+      [...document.querySelectorAll('.crumbs a')].filter((a) => !/^home$/i.test(a.textContent.trim()))
+        .forEach((a) => trail.push(`<li><a href="${esc(a.getAttribute('href'))}">${esc(a.textContent.trim())}</a></li>`));
       const cur = document.getElementById('page-h')?.textContent.trim();
       if (cur) trail.push(`<li><a href="${esc(location.hash || '#/')}" aria-current="page">${esc(cur)}</a></li>`);
     }
@@ -1303,13 +1344,22 @@
     const ul = document.createElement('ul'); ul.className = 'rail-sub';
     ul.innerHTML = `${trail.join('')}${list ? `<li class="rail-sections"><span class="rail-h">On this page</span><ul>${list}</ul></li>` : ''}`;
     host.appendChild(ul);
-    if (window.IntersectionObserver && secs.length) {
-      railSpy = new IntersectionObserver((es) => {
-        const vis = es.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
-        if (!vis) return;
-        ul.querySelectorAll('[data-scroll]').forEach((a) => { if (a.dataset.scroll === vis.target.id) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current'); });
-      }, { rootMargin: '0px 0px -65% 0px' });
-      secs.forEach((x) => railSpy.observe(x.el));
+    // Phones have no rail: the same outline sits under the page heading, closed.
+    if (list) {
+      const pageHead = document.querySelector('#view .page-head, #view header');
+      const d = document.createElement('details'); d.className = 'phone-toc';
+      d.innerHTML = `<summary>On this page</summary><ul>${secs.map((x) => `<li><a href="${esc(location.hash || '#/')}" data-scroll="${x.id}">${esc(x.label)}</a></li>`).join('')}</ul>`;
+      pageHead?.insertAdjacentElement('afterend', d);
+    }
+    if (secs.length) {
+      // Current section: the last one whose top has passed about a third of the way down the window.
+      railScroll = () => {
+        let cur = null;
+        for (const x of secs) if (x.el.getBoundingClientRect().top <= window.innerHeight * 0.35) cur = x;
+        ul.querySelectorAll('[data-scroll]').forEach((a) => { if (cur && a.dataset.scroll === cur.id) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current'); });
+      };
+      window.addEventListener('scroll', railScroll, { passive: true });
+      railScroll();
     }
   }
 
@@ -1328,16 +1378,20 @@
     if (route.name === 'home') page = { html: homeView(), after: () => { if (isReserve()) drawReserve(); else { drawTrend(); revExpAfter(); } } };
     else if (route.name === 'changes') page = changesPage();
     else if (route.name === 'dept') page = deptPage();
+    else if (route.name === 'about') page = { html: '<header class="page-head"><h1 id="page-h" tabindex="-1">About the data</h1></header>', after: () => { const t = q.get('s') && $(q.get('s')); if (t) { if (t.tagName === 'DETAILS') t.open = true; t.scrollIntoView(); } } };
     else if (route.name === 'missing') page = notFound('Page');
     else page = bureauPage();
     if (page.redirect) { navigate(page.redirect, true); return; }
     $('view').innerHTML = page.html;
+    $('about').hidden = route.name !== 'about';
+    document.body.classList.toggle('about-page', route.name === 'about');
     page.after?.();
     // Mark where the reader is in the contents.
-    const here = route.name === 'changes' ? 'changes' : route.name === 'home' ? (isReserve() ? 'reserve' : 'home') : 'home';
+    const here = route.name === 'changes' ? 'changes' : route.name === 'about' ? 'about' : route.name === 'home' ? (isReserve() ? 'reserve' : 'home') : 'home';
     const onUnit = route.name === 'dept' || route.name === 'bureau';
     document.querySelectorAll('#site-nav a').forEach((a) => { if (a.dataset.nav === here && !onUnit) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
-    renderRail(onUnit);
+    renderRail(here, onUnit);
+    renderMargin();
     // Header link to "What changed": keeps the fund; marks the page while it is open.
     if (scroll) {
       window.scrollTo({ top: 0 });
@@ -1374,7 +1428,7 @@
     view.addEventListener('click', (e) => {
       // In-page jump (e.g. "How this is counted"): scroll if the target is on this page, else follow the link.
       const jump = e.target.closest('[data-scroll]');
-      if (jump && $(jump.dataset.scroll)) {
+      if (jump && $(jump.dataset.scroll) && !$(jump.dataset.scroll).closest('#about')) {
         e.preventDefault();
         const tgt = $(jump.dataset.scroll);
         if (tgt.tagName === 'DETAILS') tgt.open = true;
@@ -1437,7 +1491,6 @@
       e.preventDefault(); onFilter(n.dataset.tab, n.dataset.v);
       requestAnimationFrame(() => $('view').querySelector(`[data-tab="${n.dataset.tab}"][data-v="${n.dataset.v}"]`)?.focus());
     });
-    $('about-btn').addEventListener('click', () => $('about').scrollIntoView({ behavior: reduceMotion() ? 'auto' : 'smooth' }));
   }
 
   /* ---------- "Jump to…" search: departments, bureaus and line items ----------
@@ -1510,10 +1563,12 @@
     const actualYears = yrsOf('actual'), projYears = yrsOf('projected');
     const figs = (b) => Object.values(D.series).filter((s) => s.year + D.rule[s.measure].book_offset === b.year && D.docs[Array.isArray(s.doc) ? s.doc[0] : s.doc] === b.doc)
       .sort((a, c) => a.year - c.year || ORDER.indexOf(a.measure) - ORDER.indexOf(c.measure)).map((s) => `${s.year} ${LABEL[s.measure].toLowerCase()}`);
-    const books = used.map((b) => { const f = figs(b); const href = `${CFG.paths.pdfs}${encodeURIComponent(b.doc)}`; return `<li><a href="${href}" target="_blank" rel="noopener">${esc(b.doc.replace(/\.pdf$/i, ''))}</a> (${b.year} book; <a href="${href}" download>download PDF</a>): ${f.length ? 'supplies ' + f.join(', ') : 'no figures under the selection rule'}.</li>`; }).join('');
-    const issues = D.known_issues.map((i) => `<li>${esc(i.source_doc.replace(/\.pdf$/i, ''))}: ${esc(scrubPages(i.note))}</li>`).join('');
+    const bookName = (b) => `${b.year} ${/revised|proposed/i.test(b.doc) ? 'Revised Proposed Budget' : 'Adopted Budget'}`;
+    const nameOf = Object.fromEntries(D.books.map((b) => [b.doc, bookName(b)]));
+    const books = used.map((b) => { const f = figs(b); const href = `${CFG.paths.pdfs}${encodeURIComponent(b.doc)}`; return `<li><a href="${href}" target="_blank" rel="noopener">${esc(bookName(b))}</a> (<a href="${href}" download>download PDF</a>): ${f.length ? 'supplies ' + f.join(', ') : 'no figures under the selection rule'}.</li>`; }).join('');
+    const issues = D.known_issues.map((i) => `<li>${esc(nameOf[i.source_doc] || i.source_doc.replace(/\.pdf$/i, ''))}: ${esc(scrubPages(i.note))}</li>`).join('');
     $('about-body').innerHTML = `
-      <h3>Sources</h3>
+      <h2 class="about-h">Sources</h2>
       <p>Every figure comes from ${esc(CFG.entity.possessive)} published budget books. Each book reports several years side by side; this site picks <strong>one kind of figure per year</strong>:</p>
       <ul>
         <li><strong>${actualYears[0]}–${actualYears[actualYears.length - 1]}: Actual</strong>, the audited spending reported in the budget book published two years later.</li>
@@ -1521,18 +1576,18 @@
         <li><strong>${D.newest_year}: Proposed and Revised</strong>, both from the ${D.newest_year} book, so you can compare what changed between them. Neither is an adopted budget.</li>
       </ul>
       <p>Adopted and amended budgets, year-to-date columns and an older book's own-year proposal are not shown.</p>
-      ${D.reserve ? `<h3>Reserve Fund</h3>
+      ${D.reserve ? `<h2 class="about-h">Reserve Fund</h2>
       <p>The <strong>Reserve Fund</strong> entry in the Fund selector is the General Fund's balance, from the budget book's Fund Balance Projection page. Each book prints the actual balance at the end of the year two years earlier; that is the <strong>actual</strong> year-end balance for that year (unaudited for recent years). The newest book also prints a projected balance for the prior year and proposed and revised balances for the newest year. The same one-kind-per-year rule applies. Where a book prints two columns that disagree, the revised column is used and the difference is stated on the page.</p>` : ''}
       <p>Books in use:</p><ul>${books}</ul>
       <p>Years appear as soon as the books that report them have been processed.</p>
-      <h3>Departments and bureaus</h3>
+      <h2 class="about-h">Departments and bureaus</h2>
       <p>Departments and bureaus follow the city's <a href="${CFG.paths.pdfs}${encodeURIComponent(O.chart_doc)}" target="_blank" rel="noopener">2027 organizational chart</a>. Each budget line belongs to a bureau by its account number, so older years are grouped the same way even where the budget book printed them under another department or name (for example, Human Resources is shown under Executive in every year). Budget groups that are not a bureau, such as city-wide insurance, benefits and debt service or fee revenue, are shown as a separate “department-wide” group. Descriptions of what each department and bureau does are quoted from the city's <a href="${CFG.paths.pdfs}${encodeURIComponent(O.desc_doc)}" target="_blank" rel="noopener">2027 organization descriptions</a>.</p>
-      <h3>Validation</h3>
+      <h2 class="about-h">Validation</h2>
       <p>Line items were extracted from the PDFs by script (scanned books were OCR'd first). Every total the book prints (each section, department, fund and staffing schedule) was recomputed from the extracted lines; differences of up to $5 are allowed for the city's rounding to whole dollars. Figures are shown as printed, never adjusted. Where overlapping books disagree on the same figure, the rule above decides and the disagreement is logged (${D.conflict_count} so far). Lines of $0 are left out.</p>
-      <h3>Known problems in the source books</h3>
+      <h2 class="about-h">Known problems in the source books</h2>
       <p>These come from errors in the city's documents, not the extraction. A person reviewed each one.</p>
       <details class="values" id="about-issues" tabindex="-1"><summary>Show all ${D.known_issues.length} notes</summary><ul>${issues || '<li>None recorded.</li>'}</ul></details>
-      <h3>Get the data</h3>
+      <h2 class="about-h">Get the data</h2>
       <p><a href="${CFG.paths.data}budget.json">budget.json</a> (every figure shown here), <a href="${CFG.paths.data}staffing.json">staffing.json</a> (budgeted positions), <a href="${CFG.paths.data}conflicts.json">conflicts.json</a>, <a href="${CFG.paths.data}changes.json">changes.json</a> (what changed in ${D.newest_year}, with the fund shifts and position counts). The extraction scripts and tables are in the project repository.</p>`;
     $('generated').textContent = `Data built ${D.generated.slice(0, 10)}.`;
   }
@@ -1592,7 +1647,7 @@
     wire();
     initJump();
     renderAbout();
-    $('about').hidden = false; $('site-footer').hidden = false; // shown only once there is something to show
+    $('site-footer').hidden = false; // shown only once there is something to show; About appears on its own page
     onRoute(false);
   }
   boot();
