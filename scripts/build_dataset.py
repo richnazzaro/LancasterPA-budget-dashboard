@@ -26,6 +26,10 @@ Outputs (web/data/):
                   and description text with source pages (scripts/org_structure.py)
   staffing.json   positions per book (for a later personnel view)
   conflicts.json  disagreements between overlapping books
+  changes.json    "What changed" in the newest year (scripts/changes.py): line-level comparisons,
+                  totals by fund, category, department and bureau, shifts between funds found in the
+                  city's line notes, position counts per bureau (raw and adjusted), tax-policy notes
+                  (data/policy_notes.csv)
 
 Standard library only, so GitHub Actions can run it with no installs.
 Usage: python3 scripts/build_dataset.py [--processed DIR] [--out DIR]
@@ -41,6 +45,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
+from changes import build_changes
 from org_structure import build_org
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -266,6 +271,8 @@ def build(processed: Path, out: Path) -> dict:
     write_json(out / "budget.json", budget)
     write_json(out / "conflicts.json", conflicts)
     write_json(out / "staffing.json", staffing(processed, designated, newest))
+    # "What changed" for the newest year (scripts/changes.py): comparisons, fund shifts, positions, policy notes.
+    write_json(out / "changes.json", build_changes(budget, processed, designated, newest, FUND_ALIASES))
     return budget
 
 
@@ -450,7 +457,7 @@ def main() -> None:
         print(f"  {key:16s} {len(s['a']):4d} lines  total {sum(s['v']):>14,}  "
               f"column {s['column'] if isinstance(s['column'], str) else 'mixed'}")
     print(f"Conflicts: {budget['conflict_count']} (web/data/conflicts.json)")
-    for name in ("budget.json", "staffing.json", "conflicts.json"):
+    for name in ("budget.json", "staffing.json", "conflicts.json", "changes.json"):
         print(f"  {name}: {(args.out / name).stat().st_size:,} bytes")
 
 
