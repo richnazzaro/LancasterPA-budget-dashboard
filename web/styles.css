@@ -1,52 +1,83 @@
-/* Light by default, with a dark theme that follows the visitor's device setting. The palette borrows the
-   City of Lancaster website's colors (teal, orange, slate, light gray) and its typeface (Source Sans 3), but
-   not its logo or wordmark: this is an independent site. ALL brand and chart colors live in these blocks;
-   JS reads them from here. Fill colors (--sel, --cmp) are for bars and charts; the matching *-ink colors are
-   darker versions with enough contrast for text. */
+/* PALETTE: independent, but at home in Lancaster. Light by default; dark follows the device unless the visitor
+   picks a theme with the header toggle (data-theme="light|dark" on <html>). ALL brand and chart colors live in
+   these blocks; JS reads them from here (loadTokens in app.js). Fill colors (--sel, --cmp) are for bars and
+   charts; the matching *-ink colors are darker/lighter versions with >= 4.5:1 contrast for text.
+
+   Sources, measured from computed styles:
+     City of Lancaster (cityoflancasterpa.gov), Source Sans 3: red #DD1A32, teal #0C7E9F, orange #F99F34,
+       slate #4F525B, light gray #E6E7E8.
+     Lancaster County (co.lancaster.pa.us), Lato: brick #942911, navy #283044, olive #68733D, sand #F4DAB1,
+       ink #222223, light gray #E4E4E4.
+   Not copied from either: the teal and orange are pulled toward a blue / amber that both sites' colors sit
+   between, the stripe is a brick red between the city's red and the county's brick, the page and footer take
+   the county's warm sand and navy, so one palette serves city and (later) county data.
+
+   --sel / --sel-ink   selected figure: Lancaster blue (city teal deepened toward county navy).
+   --cmp / --cmp-ink   comparison figure: amber (city orange toward county brick). Blue vs amber stays
+                       distinguishable under red-green and blue-yellow color blindness (also differs in lightness).
+   --accent            header stripe only (brick red).   --rule  thin rule under section headings (amber).
+   --bg / --card       warm sand-tinted page and white (dark: ink-navy) panels.   --footer-bg  county-navy.
+   --btn-bg / --btn-fg primary button ("All departments"); passes 4.5:1 in both themes.
+   --cat-1..8          pies and legends. They deliberately avoid the blue and amber of --sel / --cmp, which mean
+                       only "selected" and "comparison". --cat-1 (maroon / pale sand) and --cat-2 (gray) also mark
+                       Proposed and Revised on trends and Revenue / Expenses on the fund chart. */
 :root {
   color-scheme: light;
-  --bg: #f4f4f5;          /* page */
+  --bg: #f6f3ee;          /* page */
   --card: #fff;           /* panels and cards */
   --card-50: #fff;
   --header-bg: #fff;
-  --border: #e6e7e8;
-  --border-50: #e6e7e8;
-  --border-strong: #c9cbcf;
-  --track: #eceef0;       /* empty part of a bar */
-  --muted-bg: #eceef0;    /* tab strip, button hover */
-  --hover: rgba(12, 126, 159, .06);
-  --fg: #1d1f23;
-  --muted: #5c5f66;
-  --sel: #0c7e9f;         /* selected figure (city teal) */
-  --sel-ink: #0a6a86;
-  --cmp: #f99f34;         /* comparison figure (city orange) */
-  --cmp-ink: #9a5200;
-  --rule: #f99f34;        /* thin rule under section headings */
-  --accent: #dd1a32;      /* city red: header accent stripe only */
-  --footer-bg: #4f525b;   /* city slate */
+  --border: #e4e0d8;
+  --border-50: #e4e0d8;
+  --border-strong: #c7c1b5;
+  --track: #ece8e0;       /* empty part of a bar */
+  --muted-bg: #ece8e0;    /* tab strip, button hover */
+  --hover: rgba(27, 123, 168, .07);
+  --fg: #1f2430;
+  --muted: #575d69;
+  --sel: #1b7ba8;         /* selected figure */
+  --sel-ink: #14607f;
+  --btn-bg: #14607f; --btn-fg: #fff;   /* primary button (white on blue: 7.0:1) */
+  --cmp: #e08a1e;         /* comparison figure */
+  --cmp-ink: #8a4a05;
+  --rule: #e08a1e;
+  --accent: #a8321c;
+  --footer-bg: #2d3548;
   --footer-fg: #fff;
-  --link: #0a6a86;
+  --link: #14607f;
   --mint: var(--sel);
   --gold: var(--cmp);
-  /* categorical colors for pies and category legends, in fixed order. --cat-1 and --cat-2 also mark the
-     Proposed and Revised points on the trend charts and Revenue / Expenses on the fund chart. */
-  --cat-1: #e07b00; --cat-2: #4f525b; --cat-3: #0c7e9f; --cat-4: #7fb8c9; --cat-5: #a33c52; --cat-6: #8c7a3c; --cat-7: #6b5b95; --cat-8: #b9b0a2;
-  --cat-other: #b3b5ba;
-  --red: #dd1a32;
-  --blue: #0c7e9f;
+  --cat-1: #7a2a1d; --cat-2: #8a8f99; --cat-3: #5e7f2a; --cat-4: #c9b78a; --cat-5: #a8355a; --cat-6: #2e7d6e; --cat-7: #6b3a86; --cat-8: #3b3f4a;
+  --cat-other: #d0cdc6;
+  --red: #a8321c;
+  --blue: #1b7ba8;        /* focus ring */
   --font: "Source Sans 3", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
+/* Dark tokens, written twice: once for an explicit choice, once for "follow the device" (no explicit light). */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0f1218; --card: #181c24; --card-50: #181c24; --header-bg: #0f1218;
+  --border: #2b313d; --border-50: #2b313d; --border-strong: #434b5a;
+  --track: #252b36; --muted-bg: #252b36; --hover: rgba(91, 182, 224, .09);
+  --fg: #f2efe9; --muted: #a9aebb;
+  --sel: #5bb6e0; --sel-ink: #5bb6e0; --btn-bg: #5bb6e0; --btn-fg: #0f1218; --cmp: #f0a53f; --cmp-ink: #f0a53f; --rule: #f0a53f;
+  --accent: #d9573f; --link: #5bb6e0;
+  --footer-bg: #181c24; --footer-fg: #d6d8dc;
+  --cat-1: #e8e2d0; --cat-2: #8a8f9c; --cat-3: #b5cc6a; --cat-4: #e0806c; --cat-5: #e08fb5; --cat-6: #5fc3a8; --cat-7: #b08ad8; --cat-8: #d4d9dd;
+  --cat-other: #565b66; --red: #d9573f; --blue: #5bb6e0;
+}
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: #000; --card: #121315; --card-50: #121315; --header-bg: #000;
-    --border: #2a2c30; --border-50: #2a2c30; --border-strong: #3d4046;
-    --track: #24262a; --muted-bg: #24262a; --hover: rgba(63, 182, 214, .08);
-    --fg: #fff; --muted: #a8abb3;
-    --sel: #3fb6d6; --sel-ink: #3fb6d6; --cmp: #f99f34; --cmp-ink: #f99f34; --link: #3fb6d6;
-    --footer-bg: #121315; --footer-fg: #d6d8dc;
-    --cat-1: #f99f34; --cat-2: #a8abb3; --cat-3: #3fb6d6; --cat-4: #92d6e3; --cat-5: #e0607a; --cat-6: #c9b26b; --cat-7: #9d8cd0; --cat-8: #d8cfc0;
-    --cat-other: #6b6e75; --blue: #3fb6d6;
+    --bg: #0f1218; --card: #181c24; --card-50: #181c24; --header-bg: #0f1218;
+    --border: #2b313d; --border-50: #2b313d; --border-strong: #434b5a;
+    --track: #252b36; --muted-bg: #252b36; --hover: rgba(91, 182, 224, .09);
+    --fg: #f2efe9; --muted: #a9aebb;
+    --sel: #5bb6e0; --sel-ink: #5bb6e0; --btn-bg: #5bb6e0; --btn-fg: #0f1218; --cmp: #f0a53f; --cmp-ink: #f0a53f; --rule: #f0a53f;
+    --accent: #d9573f; --link: #5bb6e0;
+    --footer-bg: #181c24; --footer-fg: #d6d8dc;
+    --cat-1: #e8e2d0; --cat-2: #8a8f9c; --cat-3: #b5cc6a; --cat-4: #e0806c; --cat-5: #e08fb5; --cat-6: #5fc3a8; --cat-7: #b08ad8; --cat-8: #d4d9dd;
+    --cat-other: #565b66; --red: #d9573f; --blue: #5bb6e0;
   }
 }
 
@@ -73,7 +104,17 @@ main:focus { outline: none; }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; border-radius: 6px; font: 500 14px/20px var(--font); padding: 8px 16px; cursor: pointer; text-decoration: none; }
 .btn-outline { background: var(--card); color: var(--fg); border: 1px solid var(--border); }
 .btn-outline:hover { background: var(--muted-bg); }
-.btn-primary { background: var(--sel-ink); color: #fff; border: 0; }
+.header-actions { display: flex; align-items: center; gap: 8px; flex: none; }
+.theme-toggle { width: 38px; padding: 8px 0; font-size: 18px; line-height: 20px; }
+.theme-toggle:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.theme-toggle .ico-dark { display: none; }
+:root[data-theme="dark"] .theme-toggle .ico-light { display: none; }
+:root[data-theme="dark"] .theme-toggle .ico-dark { display: inline; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-toggle .ico-light { display: none; }
+  :root:not([data-theme="light"]) .theme-toggle .ico-dark { display: inline; }
+}
+.btn-primary { background: var(--btn-bg); color: var(--btn-fg); border: 0; }
 .btn-primary:hover { filter: brightness(1.1); }
 
 .page { padding-top: 48px; padding-bottom: 48px; }
