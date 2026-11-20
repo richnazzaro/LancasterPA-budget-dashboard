@@ -1,0 +1,10 @@
+source_doc,source_page,scenario,fiscal_year,as_of_date,line_type,label,amount,basis,note
+2024-Adopted-Budget.pdf,37,single,2022,2022-12-31,beginning_balance,Fund Balance 12/31/2022,11320379.0,,
+2024-Adopted-Budget.pdf,37,single,2023,,revenues,Projected Revenues: 2023,69994362.0,projected,
+2024-Adopted-Budget.pdf,37,single,2023,,expenditures,Projected Expenditures: 2023,-69660702.0,projected,
+2024-Adopted-Budget.pdf,37,single,2023,,surplus_deficit,Projected Current Operating Surplus/(Deficit) 2023 (Addition to Fund Balance),333659.24,projected,
+2024-Adopted-Budget.pdf,37,single,2023,2023-12-31,ending_balance,Projected Fund Balance 12/31/2023,11654038.0,projected,
+2024-Adopted-Budget.pdf,37,single,2024,,revenues,Proposed Revenues: 2024,71177043.0,proposed,
+2024-Adopted-Budget.pdf,37,single,2024,,expenditures,Proposed Expenditures: 2024,-73473058.0,proposed,
+2024-Adopted-Budget.pdf,37,single,2024,,surplus_deficit,Proposed Current Operating Surplus/(Deficit) 2024 (Reduction to Fund Balance),-2296015.0,proposed,surplus line printed blank; amount is printed on the '(Reduction to Fund Balance)' line
+2024-Adopted-Budget.pdf,37,single,2024,2024-12-31,ending_balance,Projected Fund Balance 12/31/2024,9358023.0,proposed,

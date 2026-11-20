@@ -39,6 +39,7 @@ from budget_common import OUT_DIR, ROOT
 import crosscheck
 import extract_budget
 import extract_layout
+import fund_balance
 from extract_layout import CONFIG_DIR, load_page_lines, load_text_page_lines
 from ocr_pages import cache_dir, ocr_document
 
@@ -321,6 +322,14 @@ def ingest(pdf_path):
     except Exception as e:                         # header mismatch etc.
         rep["error"] = f"{type(e).__name__}: {e}"
         return rep
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        try:
+            rep["fund_balance"] = fund_balance.run(pdf_path)
+        except Exception as e:                     # never hide the main results
+            rep["fund_balance"] = {"ok": False, "found": None,
+                                   "error": f"{type(e).__name__}: {e}"}
+    rep["fb_log"] = buf.getvalue()
     rep.update(stats=stats, log=log)
     return rep
 
@@ -337,6 +346,7 @@ def main():
         ap.error("give a PDF or --all")
 
     reports = [ingest(p) for p in pdfs]
+    fund_balance.crossbook()
     cfgs = _layout_configs()
     status = 0
     print()
@@ -370,6 +380,18 @@ def main():
             if not args.verbose:
                 fails = [l for l in r["log"].splitlines() if l.startswith("  p")][-8:]
                 print("    " + "\n    ".join(fails))
+        fb = r.get("fund_balance", {})
+        if fb.get("error"):
+            print(f"  fund balance page: FAILED ({fb['error']})")
+            status = max(status, 1)
+        elif fb.get("found"):
+            print(f"  fund balance page p{fb['page']}: {fb['rows']} amounts; chain checks "
+                  f"{fb['passed']} passed, {fb['acknowledged']} acknowledged, "
+                  f"{fb['failed']} UNREVIEWED")
+            if fb["failed"]:
+                status = 1 if status != 2 else 2
+        else:
+            print("  fund balance page: none found")
         if stem in cfgs:
             for y, a, b, st in neighbour_checks(stem, cfgs):
                 print(f"  cross-check {y}: {a} PROPOSED vs {b} ORIGINAL: "

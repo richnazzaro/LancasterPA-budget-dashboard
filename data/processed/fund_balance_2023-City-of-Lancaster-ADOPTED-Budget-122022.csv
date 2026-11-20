@@ -1,0 +1,10 @@
+source_doc,source_page,scenario,fiscal_year,as_of_date,line_type,label,amount,basis,note
+2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,40,single,2021,2021-12-31,beginning_balance,Fund Balance 12/31/2021,16368278,,
+2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,40,single,2022,,revenues,Projected Revenues: 2022,65987589,projected,
+2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,40,single,2022,,expenditures,Projected Expenditures: 2022,-65985400,projected,
+2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,40,single,2022,,surplus_deficit,Projected Current Operating Surplus/(Deficit) 2022 (Addition to Fund Balance),2189,projected,
+2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,40,single,2022,2022-12-31,ending_balance,Projected Fund Balance 12/31/2022,16370467,projected,
+2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,40,single,2023,,revenues,Proposed Revenues: 2023,69869102,proposed,
+2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,40,single,2023,,expenditures,Proposed Expenditures: 2023,-71865428,proposed,
+2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,40,single,2023,,surplus_deficit,Proposed Current Operating Surplus/(Deficit) 2023 (Reduction to Fund Balance),-1996326,proposed,
+2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf,40,single,2023,2023-12-31,ending_balance,Projected Fund Balance 12/31/2023,14374141,proposed,

@@ -1,0 +1,10 @@
+source_doc,source_page,scenario,fiscal_year,as_of_date,line_type,label,amount,basis,note
+City-of-Lancaster-Adopted-2025-Budget.pdf,35,single,2023,2023-12-31,beginning_balance,Fund Balance 12/31/2023 (Unaudited fund balance),13560000.0,unaudited,
+City-of-Lancaster-Adopted-2025-Budget.pdf,35,single,2024,,revenues,Projected Revenues: 2024,71865762.0,projected,
+City-of-Lancaster-Adopted-2025-Budget.pdf,35,single,2024,,expenditures,Projected Expenditures: 2024,-70549030.0,projected,
+City-of-Lancaster-Adopted-2025-Budget.pdf,35,single,2024,,surplus_deficit,Projected Current Operating Surplus/(Deficit) 2024 (Addition to Fund Balance),1316732.18,projected,
+City-of-Lancaster-Adopted-2025-Budget.pdf,35,single,2024,2024-12-31,ending_balance,Projected Fund Balance 12/31/2024,14876732.0,projected,
+City-of-Lancaster-Adopted-2025-Budget.pdf,35,single,2025,,revenues,Proposed Revenues: 2025,79243549.0,proposed,
+City-of-Lancaster-Adopted-2025-Budget.pdf,35,single,2025,,expenditures,Proposed Expenditures: 2025,-76813592.0,proposed,
+City-of-Lancaster-Adopted-2025-Budget.pdf,35,single,2025,,surplus_deficit,Proposed Current Operating Surplus/(Deficit) 2025 (Reduction to Fund Balance),2429957.0,proposed,surplus line printed blank; amount is printed on the '(Reduction to Fund Balance)' line
+City-of-Lancaster-Adopted-2025-Budget.pdf,35,single,2025,2025-12-31,ending_balance,Projected Fund Balance 12/31/2025,17306689.0,proposed,
