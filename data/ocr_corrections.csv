@@ -1,0 +1,5 @@
+source_doc,source_page,row_label,column,ocr_text,corrected_value,evidence
+2026-Adopted-Budget-2026.pdf,48,1000004-415100,actual_ytd_2025,"T7,A17","77,417","Read from the page image (Anti-Auto Theft grant, RECEIVED YTD). With it, Other Income YTD (p49) sums to its printed total within $1."
+2026-Adopted-Budget-2026.pdf,159,56000000-407100,proposed_2026,"77,164","77,764","OCR read 7 as 1. Page image shows 77,764, same as the 2025 columns on the row; with it SWM Revenue 2026 sums to the printed 5,025,069. 2027 book also has adopted_2026 = 77,764."
+2026-Adopted-Budget-2026.pdf,45,1810001-404600,account_name,WE - Admin Indirect Costs,WF - Admin Indirect Costs,"OCR read F as E. Page image shows ""WF - Admin Indirect Costs"" (2027 book: same name)."
+2026-Adopted-Budget-2026.pdf,46,1810001-420200,account_name,SWMEF Admin Indirect Costs,SWMF Admin Indirect Costs,OCR read F as EF. Page image shows SWMF (2027 book: same name).

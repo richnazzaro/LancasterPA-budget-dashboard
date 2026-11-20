@@ -1,0 +1,37 @@
+source_page,row_label,column,ocr_text,problem,value
+65,1300000- DIR NEIGHBOR ENG,object_code,,object_code_as_printed,
+65,1300000- LANGUAGE SERVICE COO,object_code,,object_code_as_printed,
+70,1301000- VISITOR CENTER MANAG,object_code,,object_code_as_printed,
+70,1301000- SPECIAL EVENTS,object_code,,object_code_as_printed,
+70,1301000- TRAVEL CONSULTANT FT,object_code,,object_code_as_printed,
+70,1301000- TRAVEL CONSULTANT,object_code,,object_code_as_printed,
+70,1301000- SPECIAL P EVENTS MGR,object_code,,object_code_as_printed,
+70,1301000- TRAVEL CONSULTANT,object_code,,object_code_as_printed,
+73,1302000- PROGRAM MANAGER,object_code,,object_code_as_printed,
+73,1302000- ENGAGEMENT SPECIALIS,object_code,,object_code_as_printed,
+73,1302000- CITY HALL RECEPTION,object_code,,object_code_as_printed,
+73,1320000- CITY HALL RECEPTION,object_code,,object_code_as_printed,
+82,TOTAL 611000 EMPLOYEES,salary,None,stripped_marks+unreadable,
+99,1501001-611500 RECORDS PROCESSOR,salary_2024_proposed,,no_salary_printed,0
+99,1501001-611500 RECORDS PROCESSOR,salary_2024_proposed,,no_salary_printed,0
+99,1501001-611500 RECORDS PROCESSOR,salary_2024_proposed,,no_salary_printed,0
+100,1501001-613200 POL LT 12HR,salary_2024_proposed,,no_salary_printed,0
+101,1501001-613300 POL DET 8HR,salary_2024_proposed,,no_salary_printed,0
+101,1501001-613300 POL DET 8HR,salary_2024_proposed,,no_salary_printed,0
+101,1501001-613300 POL DET 8HR,salary_2024_proposed,,no_salary_printed,0
+101,1501001-613300 POL DET 8HR,salary_2024_proposed,,no_salary_printed,0
+101,1501001-613300 POL DET 8HR,salary_2024_proposed,,no_salary_printed,0
+102,1501001-613300 POL SGT 8HR,salary_2024_proposed,,no_salary_printed,0
+102,1501001-613300 POL SGT 8HR,salary_2024_proposed,,no_salary_printed,0
+105,1501001-614000 POL OFFICER 12HR,salary_2024_proposed,,no_salary_printed,0
+106,1501001-614000 POL OFFICER 12HR,salary_2024_proposed,,no_salary_printed,0
+106,1501001-614000 POL OFFICER 12HR,salary_2024_proposed,,no_salary_printed,0
+106,1501001-614000 POL OFF 8HR,salary_2024_proposed,,no_salary_printed,0
+107,1501001-614000 POL OFF 10HR,salary_2024_proposed,,no_salary_printed,0
+107,1501001-614000 POL OFF 10HR,salary_2024_proposed,,no_salary_printed,0
+107,1501001-614000 POL OFF 10HR,salary_2024_proposed,,no_salary_printed,0
+107,1501001-614000 POL OFF 10HR,salary_2024_proposed,,no_salary_printed,0
+107,1501001-614000 POL OFF 10HR,salary_2024_proposed,,no_salary_printed,0
+117,1502001-613200 FIRE LIEUTENANT,salary_2024_proposed,,no_salary_printed,0
+193,56188000-611500 UTILITY SERV COORD,salary_2024_proposed,,no_salary_printed,0
+229,56289500-611500 UTILITY SERV COORD,salary_2024_proposed,,no_salary_printed,0
