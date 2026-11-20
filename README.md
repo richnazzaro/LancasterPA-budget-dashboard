@@ -27,7 +27,7 @@ Clicking a dollar amount opens the budget-book PDF **at the page it came from**.
 ### What the site shows
 - **Home (all departments):**
   - the total for the selected fund, year and figure;
-  - one card per department, with bars comparing the selected figure (mint) with the comparison figure (gold);
+  - one card per department, with bars comparing the selected figure (teal) with the comparison figure (orange);
   - a "Totals by Year" line chart;
   - a "Revenue vs. Expenses by Fund" chart.
 - **Department page** (`#/department/public-safety`), modeled on the LA Controller's budget site:

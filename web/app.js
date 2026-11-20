@@ -1,5 +1,5 @@
 /* Budget Explorer: plain JS, no build step. Entity name, title and data paths come from config.json;
- * brand and chart colors come from the CSS variables in styles.css. Data: <paths.data>budget.json (scripts/build_dataset.py).
+ * brand and chart colors (light and dark) come from the CSS variables in styles.css. Data: <paths.data>budget.json (scripts/build_dataset.py).
  * Routes (hash-based, so GitHub Pages needs no server rules):
  *   #/                                        all departments
  *   #/department/<dept>                       one department
@@ -450,7 +450,7 @@
     }
     const pr = (d, kind) => printedFund(d.fund, kind, k);
     const lk = (d, kind, n) => { const x = pr(d, kind); return x ? src(money(n), k, x.doc, x.page) : money(n); };
-    const dcell = (n) => `<span class="${n >= 0 ? 'up' : 'down'}">${money(n)}</span>`;
+    const dcell = (n) => { const r = Math.round(n); return `<span class="${r > 0 ? 'up' : r < 0 ? 'down' : 'flat'}">${money(n)}</span>`; };
     $('re-table').innerHTML = `<thead><tr><th scope="col">Fund</th><th scope="col" class="num">Revenue</th><th scope="col" class="num">Expenses</th><th scope="col" class="num">Revenue minus expenses</th></tr></thead>
       <tbody>${data.map((d) => `<tr><th scope="row">${esc(d.fund)}</th><td class="num">${lk(d, 'revenue', d.rev)}</td><td class="num">${lk(d, 'expense', d.exp)}</td><td class="num">${dcell(d.rev - d.exp)}</td></tr>`).join('')}</tbody>
       <tfoot><tr><td>All funds</td><td class="num">${money(data.reduce((t, d) => t + d.rev, 0))}</td><td class="num">${money(data.reduce((t, d) => t + d.exp, 0))}</td><td class="num">${dcell(data.reduce((t, d) => t + d.rev - d.exp, 0))}</td></tr></tfoot>`;
@@ -759,11 +759,17 @@
       return;
     }
     loadTokens();
+    if (window.Chart) { Chart.defaults.font.family = getComputedStyle(document.documentElement).getPropertyValue('--font').trim(); Chart.defaults.color = MUTED; }
+    // Charts are drawn on canvas, so wait for the web font before the first draw (but never more than 1.5s).
+    await Promise.race([document.fonts?.ready, new Promise((r) => setTimeout(r, 1500))]);
+    // Light/dark follows the device; redraw the charts in the new colors when it changes.
+    matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => { loadTokens(); if (window.Chart) Chart.defaults.color = MUTED; onRoute(false); });
     DEFAULT_FUND = D.funds.includes(CFG.default_fund) ? CFG.default_fund : '';
     document.title = CFG.site_title;
     $('wordmark').textContent = CFG.site_title;
     document.querySelector('meta[name=description]')?.setAttribute('content', CFG.description);
     $('footer-text').textContent = CFG.footer;
+    if (CFG.tagline) $('tagline').textContent = CFG.tagline;
     wire();
     renderAbout();
     onRoute(false);
