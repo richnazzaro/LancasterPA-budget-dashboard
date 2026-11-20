@@ -98,7 +98,7 @@ main:focus { outline: none; }
 /* White header with a thin city-red stripe on top, like the city's site. */
 .site-header { background: var(--header-bg); border-top: 4px solid var(--accent); border-bottom: 1px solid var(--border); }
 .brand { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.tagline { margin: 0; font-size: 13px; line-height: 16px; color: var(--muted); }
+.tagline { margin: 0; font-size: 13px; line-height: 18px; color: var(--muted); }
 .header-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 16px; padding-bottom: 16px; }
 .wordmark { font-weight: 800; font-size: 22px; letter-spacing: .01em; text-transform: uppercase; text-decoration: none; line-height: 1.1; color: var(--fg); }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; border-radius: 6px; font: 500 14px/20px var(--font); padding: 8px 16px; cursor: pointer; text-decoration: none; }
@@ -256,7 +256,7 @@ select { appearance: none; width: 100%; height: 40px; background: var(--card) ur
   .share { font-size: 13px; }
   .panel { padding: 16px; }
   .panel-title { font-size: 16px; line-height: 24px; margin-bottom: 16px; }
-  .dept-name { font-size: 22px; line-height: 28px; }
+  .dept-name { font-size: 22px; line-height: 30px; }
   .dept-total { font-size: 18px; line-height: 28px; }
   .pie-wrap { grid-template-columns: minmax(0, 1fr); }
   .pie-box { height: 240px; }
@@ -581,7 +581,7 @@ details.values summary:hover { color: var(--fg); }
 .hero-delta { margin: 0 0 8px; font-size: 20px; line-height: 28px; color: var(--muted); }
 .hero-delta .up, .hero-delta .down { font-size: 20px; }
 .known-link { white-space: nowrap; font-size: 14px; }
-.res-annot { margin: 12px 0 0; font-size: 14px; line-height: 20px; color: var(--muted); max-width: 80ch; }
+.res-annot { margin: 12px 0 0; font-size: 14px; line-height: 20px; color: var(--muted); max-width: 68ch; }
 .res-flag { font-weight: 700; color: var(--fg); }
 .res-note-row td { font-size: 14px; color: var(--muted); background: var(--hover); }
 .nb { white-space: nowrap; }
@@ -594,3 +594,11 @@ details.values summary:hover { color: var(--fg); }
 h1, h2, h3, .panel-title, .total-label, .dept-name, .wc-lede, .wc-lede-sm { text-wrap: balance; }
 p, li, .hint, .wc-note, .notice, .dept-sub { text-wrap: pretty; }
 a.src { white-space: nowrap; }
+
+/* Moved-between-funds cards sit inside a panel: separate them with rules, not nested boxes. */
+.wc-moved .wc-shift { border: 0; border-radius: 0; padding: 0; background: none; }
+.wc-moved .wc-shifts { gap: 24px 32px; }
+.wc-facts, .wc-facts-line, .wc-benefits, .wc-policy ul, .wc-traj { max-width: 70ch; }
+.wc-note { max-width: 70ch; }
+.wc-dept .wc-moved { border: 0; background: none; padding: 0; margin: 20px 0 0; }
+.wc-dept .wc-moved > .total-label { font-size: 16px; }
