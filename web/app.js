@@ -1442,7 +1442,10 @@
   function applyTheme(redraw = true) {
     const t = currentTheme();
     document.querySelector('meta[name=color-scheme]')?.setAttribute('content', document.documentElement.dataset.theme || 'light dark');
-    $('theme-toggle')?.setAttribute('aria-label', `Color theme: ${t}. Switch to ${t === 'dark' ? 'light' : 'dark'} theme.`);
+    const next = t === 'dark' ? 'light' : 'dark';
+    $('theme-toggle')?.setAttribute('aria-label', `Switch to ${next} theme`);
+    $('theme-toggle')?.setAttribute('title', `Switch to ${next} theme`);
+    if ($('theme-label')) $('theme-label').textContent = next === 'dark' ? 'Dark' : 'Light';
     loadTokens();
     if (window.Chart) Chart.defaults.color = MUTED;
     if (redraw) onRoute(false);

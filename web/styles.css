@@ -105,15 +105,18 @@ main:focus { outline: none; }
 .btn-outline { background: var(--card); color: var(--fg); border: 1px solid var(--border); }
 .btn-outline:hover { background: var(--muted-bg); }
 .header-actions { display: flex; align-items: center; gap: 8px; flex: none; }
-.theme-toggle { width: 38px; padding: 8px 0; font-size: 18px; line-height: 20px; }
+.theme-toggle { padding: 8px 12px; gap: 6px; font-size: 14px; line-height: 20px; min-width: 40px; }
+.theme-toggle .ico-to-dark, .theme-toggle .ico-to-light { font-size: 18px; line-height: 20px; }
 .theme-toggle:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
-.theme-toggle .ico-dark { display: none; }
-:root[data-theme="dark"] .theme-toggle .ico-light { display: none; }
-:root[data-theme="dark"] .theme-toggle .ico-dark { display: inline; }
+/* The button names the action: the moon (and "Dark") while the page is light, the sun (and "Light") while it is dark. */
+.theme-toggle .ico-to-light { display: none; }
+:root[data-theme="dark"] .theme-toggle .ico-to-dark { display: none; }
+:root[data-theme="dark"] .theme-toggle .ico-to-light { display: inline; }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .theme-toggle .ico-light { display: none; }
-  :root:not([data-theme="light"]) .theme-toggle .ico-dark { display: inline; }
+  :root:not([data-theme="light"]) .theme-toggle .ico-to-dark { display: none; }
+  :root:not([data-theme="light"]) .theme-toggle .ico-to-light { display: inline; }
 }
+@media (max-width: 767px) { .theme-toggle .theme-label { display: none; } .theme-toggle { padding: 8px 0; width: 44px; } }
 .btn-primary { background: var(--btn-bg); color: var(--btn-fg); border: 0; }
 .btn-primary:hover { filter: brightness(1.1); }
 
@@ -139,14 +142,16 @@ select { appearance: none; width: 100%; height: 40px; background: var(--card) ur
 
 /* Department cards (home) */
 .cards { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 24px; }
-.card { background: var(--card-50); border: 1px solid var(--border-50); border-radius: 8px; padding: 24px; cursor: pointer; transition: border-color .2s; }
-.card:hover { border-color: var(--border-strong); }
+.card { background: var(--card-50); border: 1px solid var(--border-50); border-radius: 8px; padding: 24px; cursor: pointer; transition: border-color .2s, box-shadow .2s, transform .2s; }
+.card:hover, .card:focus-within { border-color: var(--sel); background: var(--hover); box-shadow: 0 4px 14px rgba(0, 0, 0, .10); transform: translateY(-1px); }
+.card:hover .chev, .card:focus-within .chev { color: var(--sel-ink); transform: translateX(3px); }
+.card:hover h2 a, .card:hover h3 a, .card:focus-within h2 a, .card:focus-within h3 a { text-decoration: underline; }
 .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
 .card :is(h2, h3) { margin: 0; font-size: 18px; line-height: 28px; font-weight: 600; display: flex; flex-wrap: wrap; align-items: center; column-gap: 8px; }
 .card :is(h2, h3) a { text-decoration: none; }
 .card :is(h2, h3) a:hover { text-decoration: underline; }
 .share { font-size: 14px; font-weight: 400; color: var(--muted); }
-.chev { flex: none; color: var(--muted); margin-top: 6px; }
+.chev { flex: none; color: var(--muted); margin-top: 6px; transition: transform .2s, color .2s; }
 .bars { display: flex; flex-direction: column; gap: 12px; }
 .bar-label { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; line-height: 18px; font-weight: 500; margin-bottom: 4px; }
 .bar-label.cmp { color: var(--cmp-ink); }
@@ -275,7 +280,7 @@ select { appearance: none; width: 100%; height: 40px; background: var(--card) ur
   .wordmark { font-size: 17px; }
   .tagline { font-size: 13px; }
 }
-@media (prefers-reduced-motion: reduce) { .fill, .card { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .fill, .card, .chev { transition: none; } .card:hover, .card:focus-within { transform: none; } }
 @media (forced-colors: active) { .fill { background: CanvasText !important; } .fill.cmp { background: GrayText !important; } }
 
 /* Source links: the amount is the link; quiet until hovered or focused. */
@@ -580,3 +585,12 @@ details.values summary:hover { color: var(--fg); }
 .res-flag { font-weight: 700; color: var(--fg); }
 .res-note-row td { font-size: 14px; color: var(--muted); background: var(--hover); }
 .nb { white-space: nowrap; }
+
+/* The comparison bar is thinner and lighter than the selected one, so amber never outweighs blue. */
+.bar-label.cmp + .track { height: 12px; }
+.fill.cmp { opacity: .65; }
+
+/* Text wrapping: balanced headings, no one-word last lines, amounts never split. */
+h1, h2, h3, .panel-title, .total-label, .dept-name, .wc-lede, .wc-lede-sm { text-wrap: balance; }
+p, li, .hint, .wc-note, .notice, .dept-sub { text-wrap: pretty; }
+a.src { white-space: nowrap; }
