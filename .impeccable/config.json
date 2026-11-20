@@ -1,0 +1,26 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "web/index.html"
+        ],
+        "createdAt": "2026-11-20T21:00:56.200Z",
+        "reason": "assistant: static scan of the ruled site-nav list; links have 44px min-height and the live render scans clean on all routes"
+      },
+      {
+        "rule": "border-accent-on-rounded",
+        "value": "*",
+        "files": [
+          "web/styles.css"
+        ],
+        "createdAt": "2026-11-20T21:17:58.089Z",
+        "reason": "assistant: .jump a and .cmp-tabs button are underline tabs with border-radius: 0 (verified in CSS); the edit hook flags them although the live detector reports nothing"
+      }
+    ]
+  }
+}
