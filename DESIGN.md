@@ -33,9 +33,9 @@ typography:
     letterSpacing: "-0.01em"
   deck:
     fontFamily: "Source Serif 4, Georgia, Times New Roman, serif"
-    fontSize: "38px"
+    fontSize: "26px"
     fontWeight: 600
-    lineHeight: "44px"
+    lineHeight: "32px"
   figure:
     fontFamily: "Source Serif 4, Georgia, Times New Roman, serif"
     fontSize: "44px"
@@ -114,7 +114,7 @@ components:
 
 The site is the city's budget book, set properly: open sections divided by rules rather than boxes, a contents rail on the left, running section labels, and figures set in a serif the way a ledger prints them. Color is money color: paper, ink, banknote green for the figure you are reading, ledger red only for shortfalls. Nothing floats; nothing is carded.
 
-Density is that of a reference book: hairline-ruled rows, tabular figures, long text capped near 70ch. Voice is plain and sober. On the home page a serif deck sentence says what changed, set in ink under the title; the total sits beneath it as evidence, then the charts and tables.
+Density is that of a reference book: hairline-ruled rows, tabular figures, text running the full width of the reading column (the user chose full-width text over a 70ch cap on 2026-11-20; the reading column itself is capped by the page layout). Voice is plain and sober. On the home page a serif deck sentence says what changed, set in ink under the title; the total sits beneath it as evidence, then the charts and tables.
 
 The previous look (blue and amber boxed cards matched to another site) is retired; none of its rules carry over.
 
@@ -142,7 +142,7 @@ A restrained money palette: near-white paper, green-black ink, one green, one re
 - **Ink Gray** (#5f6862; dark #8b968e): the comparison figure, at least 3:1 on paper and on the bar track; differs from green in lightness as well as hue and is drawn thinner (12px track versus 18px) at 65% opacity.
 - **Hairline** (#d3d8d2) and **Track** (#e6e9e4): row dividers and empty bar tracks. **Hover Wash** (#eceee9; green at 6% for row hover).
 - **Footer Ink** (#14201a): the only dark slab in light theme.
-- **Category set**, for pies and legends only: ink, sage (#6b7770), olive gold (#8a7a2c), stone (#b8b09a), steel (#5f7f8f), slate (#4d6b86), umber (#8a5a44), deep ink (#3b4a42). Ink and sage also mark Proposed (a hollow diamond) on trends; Revised is drawn in the selected green.
+- **Category set**, for chart series and legends only (the category breakdown is a ruled table, not a pie): ink, sage (#6b7770), olive gold (#8a7a2c), stone (#b8b09a), steel (#5f7f8f), slate (#4d6b86), umber (#8a5a44), deep ink (#3b4a42). Ink and sage also mark Proposed (a hollow diamond) on trends; Revised is drawn in the selected green.
 
 ### Named Rules
 **The Money Colors Rule.** Green means the figure being read: the total, selected bars, the selected state. Red means a shortfall; gray means the thing compared against. Labels, names and crumbs are ink. Direction of change (more or less spending) is not good or bad, so up and down use ink with an arrow, never green or red.
@@ -158,11 +158,11 @@ A restrained money palette: near-white paper, green-black ink, one green, one re
 
 ### Hierarchy
 - **Display** (700, 56px, 1.04, -0.01em): page headline. Steps to 44px under 1024px and 32px on phones.
-- **Deck** (600, 38px, 44px, ink; 28px on phones; capped near 28ch): the home sentence saying what changed, with the direction arrow in ink.
+- **Deck** (600, 26px, 32px, ink; 28px on phones; full column width): the home sentence saying what changed, with the direction arrow in ink.
 - **Figure** (700, 44px, 48px, banknote green): the home total, demoted below the deck behind a 13px uppercase muted label; 36px on phones. Department pages use a 52px serif name and a 28px total. The What changed lead figure is 52px (40px on home).
 - **Title** (600, 22px, 30px): list-row names such as department and bureau.
 - **Stat** (700, 30-36px serif): tile and compare values.
-- **Body** (400, 16px, 1.5): prose, capped at 70ch.
+- **Body** (400, 16px, 1.5): prose, full column width.
 - **Table** (400, 14px, 20px; 13px on phones): rows, with right-aligned tabular numbers; headers 600 with a 2px ink rule. Ledger department names are 18px/26px serif 600.
 - **Label** (600, 14px, 0.16em, uppercase, ink): section labels at the head of each ruled section; the rail outline heading is 12px, 0.14em, muted.
 
@@ -174,7 +174,7 @@ A restrained money palette: near-white paper, green-black ink, one green, one re
 
 On wide screens (1100px and up) the masthead becomes a sticky 300px contents rail on the left (name, disclaimer, Overview / What changed / Reserve Fund / About the data, search, theme) closed by a 3px double ink rule; the main column is at most 1360px with 64px side padding and 48px top. Under the active page only, the rail nests that page's trail and an "On this page" outline. Below 1100px the rail becomes a top bar with the sections as a scrolling row, and on phones the outline becomes a collapsed "On this page" details block under the page heading. From 1750px the page keeps a 1040px reading column and a sticky 260px right-hand "Reading notes" margin (3px double rule, 14px muted); it is hidden on About. Breakpoints: 1100, 1023, 767, 420, 339px.
 
-Rhythm: 8px base; 16px gaps; 24px between grid items; 56px between sections (40px on phones). Home leads with What changed, with Totals by Year beside it in a two-column grid that collapses to one under 1024px. About is its own page (#/about) with readable book names linking to the PDFs, in two columns from 1280px. Department and bureau lists run as hairline rows, two columns from 1024px. Phones reorder so the verdict comes first, then controls, then charts. Touch targets are 44px on phones, with invisible hit areas grown around quiet amount links.
+Rhythm: 8px base; 16px gaps; 24px between grid items; 56px between sections (40px on phones). Home leads with What changed, with Totals by Year beside it in a two-column grid that collapses to one under 1024px. About is its own page (#/about) with readable book names linking to the PDFs; from 1280px its sections sit two to a row in a grid, with the known-problems list and the downloads spanning the full width (a grid, not CSS columns, so opening the list does not reflow the page). Wider than 1750px the main column fills the space beside a 260px Reading notes margin. Department and bureau pages carry a Staff section (budgeted positions and salaries by year) between the bureau list and the category table. Department and bureau lists run as hairline rows, two columns from 1024px. Phones reorder so the verdict comes first, then controls, then charts. Touch targets are 44px on phones, with invisible hit areas grown around quiet amount links.
 
 ## Elevation & Depth
 
@@ -205,6 +205,9 @@ Square. Panels, rows, bars, tiles and swatches have 0 radius; controls, stamps a
 ### Lists and tables
 - **Rows:** top 1px ink rule, rows separated by 1px hairline, 22px vertical padding; hover washes green; the chevron nudges 3px right.
 - **Tables:** 14px, 12px 16px cell padding, 2px ink head rule, sortable heads show an arrow; totals in a 600 footer.
+- **Year grids (Staff section):** the same table with 8px horizontal padding and headers stacked year over figure ("2027" / "Revised"), so up to nine year columns fit the column without scrolling. Sub-blocks inside a section use the 16px 700 sans sub-heading (`.wc-h3`), not a second label.
+- **Printed and calculated totals:** a total the book prints is shown as printed, with no mark. A total the site adds up itself (no printed total covers exactly those lines) carries a quiet muted sans 14px "calculated" label: "(calculated)" after a figure in a sentence or header, on its own line under the amount in a table cell or bar label, and once in a column head when every figure in the column is calculated. Never colored.
+- **Gap flag:** a printed total whose lines add up to something else by more than rounding keeps the printed figure and carries a ledger-red ≠ sign (half size beside the big total), with a muted 14px note, no box, starting with the same ≠: what the book prints, what its lines add up to, the difference, and the reviewed explanation. A page gives each note once, where the figure first appears; later copies carry the sign only. The red never appears without the sign and the words.
 - **Department ledger:** a table under a 1px ink rule; the department name is an 18px serif ink link in a flush-left first column, whole rows are clickable with the green wash, the footer total has a 2px ink rule.
 - **Category table:** the share column carries an inline square share bar (10px tall, track fill, banknote green bar) beside the percentage, on hairline-ruled rows; the bar is hidden on phones. Amounts are the links to the PDF page: ink, no underline, dotted underline on hover or focus.
 

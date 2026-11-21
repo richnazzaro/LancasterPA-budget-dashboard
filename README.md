@@ -6,7 +6,7 @@ A public, independent view of the **City of Lancaster, PA** budget, built from t
 
 **Contact:** budget@nazwel.net, for errors or questions about a figure. The site shows it in the footer and on the About page; it is set by `contact_email` in `web/config.json`.
 
-This README covers how the site presents the data, where the data lives, and how to use the site. For how the PDFs are turned into data, see [docs/PIPELINE.md](docs/PIPELINE.md).
+This README covers how the site presents the data, where the data lives, and how to use the site. For how the PDFs are turned into data, see [docs/PIPELINE.md](docs/PIPELINE.md). To rebuild everything by hand from a fresh copy (setup, extraction, checks, preview and publishing), see [docs/REBUILD.md](docs/REBUILD.md).
 
 ---
 
@@ -28,27 +28,31 @@ Clicking a dollar amount opens the budget-book PDF **at the page it came from**.
 
 ### What the site shows
 - **Home (all departments):**
-  - a plain opening sentence saying whether the total is up or down against the comparison, by how much, and, for the General Fund, how much is **drawn from the reserve** (the "Fund Balance Reserve" revenue lines, object `499000`): "Up $5.0M (6.0%) from 2026 Projected, with $4.7M drawn from savings. See the Reserve Fund". The draw amount links to its source page. Below it, the total itself;
-    The draw is summed from the data for each figure (2027 Revised $4,735,088; 2027 Proposed $4,268,753; 2026 Projected $6,315,053; none in the Actual years) and shown only where there is a draw;
+  - a plain opening sentence saying whether the total is up or down against the comparison, by how much, and, for the General Fund, how much is **drawn from the reserve** (the "Fund Balance Reserve" revenue lines, object `499000`): "Up $5.0M (6.0%) from 2026 Projected, with $4.7M drawn from savings. See the Reserve Fund". The draw amount links to its source page. The draw is summed from the data for each figure (2027 Revised $4,735,088; 2027 Proposed $4,268,753; 2026 Projected $6,315,053; none in the Actual years) and shown only where there is a draw;
+  - the total itself, **exactly as the city printed it** whenever the book prints a total for exactly the lines in view (a fund total, a department roll-up or a bureau's section total). The site re-adds the lines only to check it: rounding (up to $5 on a section, up to 50 cents a line on a roll-up) is not mentioned, and a real gap keeps the printed figure, adds a ledger-red **≠** and a note with the lines' sum, the difference and the reviewed explanation from `data/known_issues.csv`. Where the book prints no such total (all funds together, departments and bureaus regrouped to the 2027 org chart, categories, a line-item search), the figure is the site's own sum, labelled **calculated**. The same rule applies to the fund table, the department ledger, bureau cards, Totals by Year, line-item footers and What changed; About explains it once;
   - the controls, folded into a one-line strip with the year's status (for example "2027: Revised proposal, not adopted");
   - side by side (stacked on narrower screens): a **"What changed in 2027"** summary (the headline sentence, the four headline numbers and a "See everything that changed" button) and a **"Totals by Year"** line chart. The summary appears for the newest year's Spending view;
   - a **Departments** ledger: one ruled row per department with the comparison figure, the selected figure, the signed change and its share of the total (the whole row is a link);
-  - an "Income vs. Spending by Fund" chart.
+  - an "Income vs. Spending by Fund" chart and table.
 - **Departments and bureaus follow the city's 2027 org chart** (`Budget PDFs - City/2027 Org Chart.pdf`). Every budget line is placed in an org-chart bureau by its account number (org code), so every year is grouped the same way, even where an older book printed a group under another department or name. For example, Human Resources appears under Executive in every year. The full mapping, with the evidence for each choice, is in [`data/org_structure_2027.csv`](data/org_structure_2027.csv).
 - **Department page** (`#/department/public-safety`). Top to bottom:
-  - breadcrumbs (Home › Department › Bureau), the total and status, and a row of in-page links (What changed · Compare · Bureaus · Categories · Line items);
+  - breadcrumbs (Home › Department › Bureau), the total and status, and a row of in-page links (What changed · Compare · Bureaus · Staff · Categories · Line items);
   - **"What does this department do?"**: a collapsible description quoted from the city's `Org Descriptions 2027.pdf`, with a small link to its page in that PDF (closed by default; Legislative, City Controller, Public Safety and General Revenue have none, so it is left out);
   - the controls, folded into a one-line strip with a "Change view" button so the figures come first;
   - **What changed**: headline sentence, the reserve/fund moves, and, behind short disclosures, the change by bureau, positions and the largest line changes;
   - **Compare**, one panel with two tabs: "This year vs. comparison" (both totals, the change, the by-category bars and a category table behind "Show as a table") and "Over time" (totals by year; in 2027 Revised is a solid green dot joined by a dashed line and Proposed a hollow diamond; the axis starts above zero and says so);
   - a **bureau list**: one card per bureau or office on the org chart (name, share of the department, selected-vs-comparison bars, the whole card is a link; two columns on wide screens), with several budget groups combined where the chart has one bureau. Budget groups that are not a bureau (for example Administrative Services' city-wide Insurance, Fringe Benefits, Debt Service and Community Involvement budgets, or a department's fee revenue) form one card labelled "Department-wide costs (not a bureau)" or "Department revenue (not a bureau)". Departments with no bureaus on the chart (Legislative, City Controller, and General Revenue, which is not on the chart) have no bureau list and no bureau pages;
+  - **Staff**: two tables by bureau and year (on a bureau page, that bureau alone):
+    - **Budgeted positions**, 2022–2027 (2027 as Proposed and Revised), from each year's staffing schedule. The city publishes budgeted positions only, never actual headcount, so these years are labelled by year rather than Actual. Counts are as printed (fractions are shared positions); full-time and part-time are not split, because the 2023–2025 books don't mark them. Each count opens its schedule page;
+    - **Salaries and wages**: the "Salaries & Wages" budget lines (salaries, overtime, temporary wages; benefits are separate), under the usual one-figure rule (Actual 2020–2025, Projected 2026, Proposed and Revised 2027);
+    - on a bureau page, a list of every position title in the newest schedule with its count and salary;
   - a **category table**: each spending category with its amount and a share bar;
   - a searchable, sortable line-item table (20 rows at a time) with the account code under each name and **Export this view (CSV)**, which downloads every row matching the search, with figure, comparison, change and the source book and page, built in the browser.
 - **Bureau page** (`#/department/<dept>/bureau/<bureau>`, e.g. `#/department/administrative-services/bureau/bureau-of-treasury`): the same layout for one org-chart bureau, across all its funds and years (including its own compact **What changed** section with positions), with **"What does this bureau do?"** from the descriptions PDF. Public Works bureaus also name their division. The department-wide group has a page too (`.../bureau/department-wide`) that lists the budget groups in it. Older bureau links (`.../bureau/<fund>--<printed group>`) redirect to the bureau that group now belongs to, or to the department page.
 - **Reserve Fund** (in the Fund selector): the General Fund balance, from each book's "Fund Balance Projection" page. It shows the year-end balance and how it changes each year, using the same one-figure-per-year rule. Where the city's page disagrees with itself, the Revised column is used and the difference is explained on the page: for 2025 the 2027 book prints $13,479,257 (Proposed column) and $25,604,677 (Revised column), so 2025 shows +111.2%, flagged on the chart bar and the table row with a link to the known issues and the source page. A one-line note ties its "Revenues" to the General Fund revenue (revenues plus the reserve draw). For 2026 Projected and 2027 Revised the draw equals the page's drawdown; for 2027 Proposed the city's own page does not add up (a $475,000 gap, logged in the known issues), and `check_dataset.py` reports it rather than forcing it.
 - **Jump to… search** (header): finds departments, bureaus and line items (by name or account code). A line item opens its bureau page with the line-item search filled in. Keyboard and screen-reader accessible (combobox).
 - **What changed** (`#/changes`; reached from the summary at the top of the home page and from every department page): what is different in the newest budget. It follows the Fund selector (General Fund by default) and the Proposed / Revised choice, and compares with the prior year's **Projected** figure by default. A badge says when a proposal is being compared with a year-end estimate or with actual spending, with a one-click switch to the latest **Actual**. The page shows:
-  - a one-sentence summary generated from the data (for example: "The 2027 Revised budget spends $87.7M from the General Fund, $5.0M (6.0%) more than the city expects to spend in 2026. $1.25M of that is Street Cleaning and Trees work moved from the Stormwater Management Fund. It's balanced by drawing $4.8M from the reserve.");
+  - a one-sentence summary generated from the data (for example: "The 2027 Revised budget spends $87.7M from the General Fund, $5.0M (6.0%) more than the city expects to spend in 2026. $1.25M of that is Street Cleaning and Trees work moved from the Stormwater Management Fund. It's balanced by drawing $4.7M from the reserve.");
   - four headline numbers: the spending change, the reserve draw, the change in full-time positions, and how the revision changed the proposal;
   - **Moved into / out of the General Fund**: work that moved between funds, found from the city's own line notes ("Budget has been moved to the General Fund …"), with the dollars and positions on each side and the notes quoted. Because the General Fund is paid for mostly by taxes and the other funds by fees, every move into or out of it is called out. In 2027 these are Street Cleaning and Trees (Stormwater → General Fund), Water grounds maintenance (Water → General Fund, billed back to the Water Fund), and nuisance abatement (General Fund → Solid Waste);
   - changes by category and by department (bars, or a table);
@@ -73,7 +77,7 @@ Funds: General, Stormwater Management, Sewer, Water, Solid Waste & Recycling, Li
 |---|---|---|
 | Source budget books (PDF) | [`Budget PDFs - City/`](Budget%20PDFs%20-%20City/), also published at `<site>/pdfs/` | 2022–2027 books |
 | Data the site reads | [`web/data/budget.json`](web/data/budget.json) | Every figure shown, with its source book and page |
-| Budgeted positions | [`web/data/staffing.json`](web/data/staffing.json) | Per book. Position changes per bureau are on the "What changed" page |
+| Budgeted positions | [`web/data/staffing.json`](web/data/staffing.json) | Per book: each year's own schedule (the newest book's Proposed and Revised). Shown in the Staff section of department and bureau pages, and as position changes on the "What changed" page |
 | Books that disagree | [`web/data/conflicts.json`](web/data/conflicts.json) | Where overlapping books print different values for the same figure |
 | What changed | [`web/data/changes.json`](web/data/changes.json) | Newest year compared with the prior year's Projected, the latest Actual, and the Proposal: totals by fund, category, department and bureau, changed lines, shifts between funds, position counts per bureau (raw and adjusted, with artifacts) |
 | Tax-policy notes | [`data/policy_notes.csv`](data/policy_notes.csv) | Hand-entered facts not in the budget tables (tax rates), each with a source |
@@ -119,11 +123,15 @@ The JSON files can also be downloaded from the live site: `<site>/data/budget.js
 
 ## Repository layout
 ```
-Budget PDFs - City/   source budget books (2022–2027)
-config/               per-book layout settings for the extractor
-data/                 reviewed issues, audited corrections, 2027 org structure and descriptions
-data/processed/       extracted CSVs (committed; the site is built from them)
-scripts/              extraction, validation and site-data build (see docs/PIPELINE.md)
-web/                  the static site (index.html, app.js, styles.css, config.json, data/)
-docs/PIPELINE.md      how PDFs become data: OCR, validation, corrections, adding a new book
+Budget PDFs - City/        source budget books (2022–2027), the 2027 org chart and unit descriptions
+config/                    per-book layout settings for the extractor
+data/                      reviewed issues, audited corrections, tax-policy notes, 2027 org structure and descriptions
+data/processed/            extracted CSVs (committed; the site is built from them)
+scripts/                   extraction, validation and site-data build (see docs/PIPELINE.md)
+web/                       the static site (index.html, app.js, styles.css, config.json, data/; pdfs/ links to the books)
+docs/PIPELINE.md           how PDFs become data: OCR, validation, corrections, adding a new book
+docs/REBUILD.md            rebuilding everything by hand from a fresh clone, and publishing
+.github/workflows/         pages.yml: builds, checks and publishes the site on every push to main
+PRODUCT.md, DESIGN.md      who the site is for, and its design system (used with the Impeccable design skill)
+.impeccable/               the Impeccable design record (config, design tokens, surface brief)
 ```
