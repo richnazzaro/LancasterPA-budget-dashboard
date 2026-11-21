@@ -34,8 +34,6 @@ General Fund, other governmental funds and total, and the General Fund's
 unassigned balance, for the ACFR's own year; the General Fund total must equal
 the schedule's "Fund balance at December 31, modified accrual basis", and the
 same year printed in a later ACFR's ten-year table must agree.
-Each figure in data/county/acfr_substitutions.csv must read as recorded (both
-the schedule's printed figure and the figure used instead).
 
 Every check allows the books' $5 rounding. A difference over $5 fails the run
 unless data/county/known_issues.csv lists it (same source_doc, page and label),
@@ -65,7 +63,6 @@ CONFIG_DIR = ROOT / "config" / "county" / "acfr"
 PDF_DIR = ROOT / "Budget PDFs - County" / "ACFR"
 OUT_DIR = ROOT / "data" / "processed" / "county"
 KNOWN_ISSUES_FILE = ROOT / "data" / "county" / "known_issues.csv"
-SUBSTITUTIONS_FILE = ROOT / "data" / "county" / "acfr_substitutions.csv"
 TOLERANCE = 5
 PIECE_GAP = 3  # points: pieces of one split amount touch; columns are 15+ pt apart
 
@@ -447,17 +444,6 @@ def run(cfg, known):
     gf_page = next(s["page"] for s in cfg["schedules"] if s["fund"] == "General Fund")
     add("schedule vs governmental funds statement", "General Fund",
         f"{fy} General Fund Transfers out actual vs governmental funds statement p{gp}", "actual", sched_out, gaap_out, gf_page)
-    # A figure the site takes from another page (data/county/acfr_substitutions.csv) must still read as recorded.
-    if SUBSTITUTIONS_FILE.exists():
-        with SUBSTITUTIONS_FILE.open(newline="", encoding="utf-8") as f:
-            subs = [r for r in csv.DictReader(f) if int(r["fiscal_year"]) == fy]
-        for sub in subs:
-            if not (sub["fund"] == "General Fund" and sub["line"] == "Transfers out" and int(sub["used_page"]) == gp):
-                raise ValueError(f"acfr_substitutions.csv: only General Fund transfers out from the governmental funds statement is supported: {sub}")
-            add("substitution as recorded", sub["fund"], f"{fy} substitution {sub['fund']} {sub['line']} printed", sub["column"],
-                int(sub["printed"]), sched_out, int(sub["printed_page"]))
-            add("substitution as recorded", sub["fund"], f"{fy} substitution {sub['fund']} {sub['line']} used", sub["column"],
-                int(sub["used"]), gaap_out, int(sub["used_page"]))
     tieouts(rows, cfg, add)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     write_csv(OUT_DIR / f"actuals_acfr_{fy}.csv", COLUMNS, rows)

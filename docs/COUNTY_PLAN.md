@@ -285,10 +285,10 @@ Steps 1–3 can be checked without touching the site. Step 2 can run alongside s
      - Special-fund original expenditure, 2023 and 2024. Each gap equals the ACFR's own planned deficit, which the books do not show. Fund B's gaps are only partly explained.
      - Children & Youth 2025: the ACFR's original expenditure repeats the 2024 figure.
      - **New source error:** the Liquid Fuels schedule's Excess and Net change variances are wrong in all three ACFRs. They subtract the expenditure variance instead of adding it. The 2023 Transfers in variance is blank.
-     - **2024 transfers out:** the schedule prints (18,962,872), the 2023 figure. The p43 statement prints (21,630,095). The site uses p43 (`data/county/acfr_substitutions.csv`) and flags the 2024 General Fund net change.
+     - **2024 transfers out:** the schedule prints (18,962,872), the 2023 figure. The p43 statement prints (21,630,095). The site shows the printed (18,962,872), flagged (see "Printed-totals rule" below); the 2024 General Fund net change is flagged too.
 4. **Build:** `budget.json` has measure `actual` in a separate `actuals` block (not `series`; these are not account lines).
    - Levels: fund totals; transfers; General Fund revenue by source; General Fund spending by function.
-   - Each figure carries its ACFR document and page, the ACFR's final budget, and any flags or substitution.
+   - Each figure carries its ACFR document and page, the ACFR's final budget, and any flags.
    - The ACFR's Original column and its variances are never exported.
    - `actuals.book` gives the books' budget totals for the same fund and year.
    - `actuals_note` has the site wording.
@@ -300,3 +300,11 @@ Steps 1–3 can be checked without touching the site. Step 2 can run alongside s
 - Site work: show actuals beside the fund totals, and General Fund by source and by function (`web/app.js` is untouched).
 - 2026 ACFR (about mid-2027): add `config/county/acfr/2026.json` and run `scripts/extract_county_acfr.py`.
 - A department-to-function mapping stays out. Research section 5 shows it can only be approximate.
+
+**Printed-totals rule, done (2026-11-21).** The user's rule: show every figure exactly as printed. Our sums are used only to flag a printed figure that is wrong or a line that is missing. Rounding-only gaps get no flag.
+- `budget.json` `printed` now holds every total the books print for each shown year, 1,054 values in all. These are department Revenue/Expense totals, the General Fund and Other Funds grand totals, and the by-account report's account rows and account-group totals, each with its page. The printed figure is the displayed total.
+- A `flags` record (`{year|budget: {sum, gap, lines, allowance, known_issue, kind}}`) appears only where the lines miss the printed figure by more than max($5, $0.50 × lines summed). There are none today.
+- A rounding-only gap explained in `known_issues.csv` is linked in `notes` and is not flagged. This covers the 2026 book's $7 / $11 General Fund gap, and a newly logged $6 gap in the 2024 book (2023, p120).
+- `known_issues.csv` has a new `kind` column: `rounding`, `source_error` or `basis_difference`.
+- The 2024 ACFR General Fund transfers out is shown as printed on p114, (18,962,872), and flagged. `acfr_substitutions.csv` is removed. ACFR figure flags are now `[{known_issue, kind}]`.
+- `check_county.py` checks that every printed total is shown exactly as printed, and that every one the books print is there. It recomputes each flag and note (a gap beyond rounding with no known issue fails), and checks that no actual carries a substituted value. Result: "0 series mismatches".

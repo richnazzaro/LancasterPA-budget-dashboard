@@ -19,8 +19,8 @@ validation_*.csv and data/county/*.csv directly and does not import the build.
 6. Conflicts: every line where an older book prints a different figure for a shown year is in conflicts.json,
    and nothing else is.
 7. Actuals (budget.json `actuals`, from data/processed/county/actuals_acfr_<year>.csv): every figure recomputed
-   from the CSVs, config/county/acfr/*.json, data/county/acfr_substitutions.csv and known_issues.csv (level, line,
-   actual, final, document, page, substitution, flags), and nothing else shown; no Original or variance figure;
+   from the CSVs, config/county/acfr/*.json and known_issues.csv (level, line, actual as printed on its schedule
+   page, final, document, page, flags with their kind), and nothing else shown; no Original or variance figure;
    no actual for a year without an ACFR; the General Fund's sources and functions add to its printed totals and
    every fund's net change foots (with the printed figures); the books' totals beside them equal the CSV sums;
    every ACFR check over $5 in validation_acfr_<year>.csv is in known_issues.csv; and fund_balance_gaap.json
@@ -146,6 +146,8 @@ def main() -> int:
                 dept_sum[(key, funds[f], kd, depts[d])] += v  # Other Funds department totals are printed per fund
     undocumented = shown_printed = 0
     for p in budget["printed"]:
+        if p["level"] not in ("section", "rollup"):
+            continue  # account rows and groups: checked with the flags below
         for key, printed in p["values"].items():
             if "department" in p:
                 sv = dept_sum[(key, p.get("dept_fund") or p["group"], p["kind"], p["department"])]
@@ -164,6 +166,7 @@ def main() -> int:
                 undocumented += not hit
             print(f"{'ok  ' if abs(diff) <= TOLERANCE else 'DIFF'} {key:12s} {p['label']:58s} p.{p['page']:<4d} printed {printed:>14,.0f}  shown {sv:>14,.0f}  diff {diff:+,.0f}{tail}")
     print(f"{shown_printed} printed totals compared; {undocumented} differences over ${TOLERANCE} are not in data/county/known_issues.csv")
+    failures += check_printed_display(budget, csv_rows, want_book, known, docs)
 
     # ---- org ------------------------------------------------------------------------------------------
     print("\nCounty groups and departments (data/county/org_units.csv):")
@@ -406,6 +409,95 @@ def check_conflicts(conflicts, rows_by_doc, live, want_book) -> int:
     return bad
 
 
+ROUNDING_CELL, ROUNDING_PER_LINE = 5, 0.5
+
+
+def check_printed_display(budget, csv_rows, want_book, known, docs) -> int:
+    """Printed-totals rule: every total the chosen book prints for a shown year is in budget.json `printed` with the
+    printed figure, and nothing else is; a flag is present exactly where the lines miss the printed figure by more
+    than max($5, $0.50 x lines summed), with the right sum, gap, line count, allowance and known issue."""
+    print("\nPrinted totals as displayed (printed-totals rule) and their flags:")
+    norm = lambda t: re.sub(r"[^a-z0-9]", "", t.lower())
+    acct_re = re.compile(r"(General Fund|Other Funds) (revenue|expense) account (?:(\d{4})|group (\d\d) total)")
+    want = {}
+    for fy, doc in want_book.items():
+        key = f"{fy}|budget"
+        if key not in budget["series"]:
+            continue
+        stem = doc[:-4]
+        for r in read(PROCESSED / f"validation_{stem}.csv"):
+            if r["column"] != f"budget_{fy}" or not r["printed"].strip():
+                continue
+            if r["check"] in ("department total", "grand total vs departments") or \
+                    (r["check"] == "by-account report" and acct_re.fullmatch(r["label"])):
+                want[(doc, int(r["source_page"]), r["label"], key)] = amt(r["printed"])
+    got = {}
+    for p in budget["printed"]:
+        for key, v in p["values"].items():
+            got[(docs[p["doc"]], p["page"], p["label"], key)] = v
+    bad = 0
+    for k in sorted(set(want) | set(got)):
+        if want.get(k) is None or got.get(k) is None or abs(want[k] - got[k]) > 0:
+            bad += 1
+            if bad <= 10:
+                print(f"FAIL printed total {k}: shown {got.get(k)}, printed {want.get(k)}")
+    print(f"{'ok  ' if not bad else 'FAIL'} {len(got)} printed totals (departments, fund grand totals, by-account rows and groups) "
+          f"are shown exactly as printed, and every one the books print for a shown year is there")
+
+    def member(p, r):
+        side = "revenue" if r["side"] == "revenue" else "expense"
+        if side != p.get("kind") or r["section"] != p.get("group"):
+            return False
+        if "department" in p:
+            return r["department"] == p["department"] and ("dept_fund" not in p or r["fund"] == p["dept_fund"])
+        if "account" in p:
+            return r["account"] == p["account"]
+        if "account_group" in p:
+            return r["account"][:2] == p["account_group"]
+        return True
+
+    fbad = nflags = nnotes = 0
+    for p in budget["printed"]:
+        doc = docs[p["doc"]]
+        if p["level"] in ("account", "account_group") and not p.get("name"):
+            fbad += 1
+            print(f"FAIL {p['label']}: no name")
+        ki = next((i for i, k in enumerate(known) if k["source_doc"] == doc and int(k["source_page"] or 0) == p["page"]
+                   and norm(k["label"]) == norm(p["label"])), None)
+        for key, pv in p["values"].items():
+            fy = int(key.split("|")[0])
+            vals = [amt(r["amount"]) for r in csv_rows(fy) if r["doc_type"] == "budget" and member(p, r)]
+            total, n = sum(vals), sum(1 for x in vals if x)
+            gap = pv - total
+            allowance = max(ROUNDING_CELL, ROUNDING_PER_LINE * n)
+            flag = (p.get("flags") or {}).get(key)
+            note = (p.get("notes") or {}).get(key)
+            if abs(gap) > allowance:
+                nflags += 1
+                ok = flag is not None and abs(flag["sum"] - total) < 0.5 and abs(flag["gap"] - gap) < 0.5 and flag["lines"] == n \
+                    and flag["allowance"] == allowance and flag["known_issue"] == ki \
+                    and flag["kind"] == (known[ki].get("kind", "") if ki is not None else None)
+                print(f"{'FLAG' if ok else 'FAIL'} {key:12s} {p['label']} p.{p['page']}: printed {pv:,.0f}, lines {total:,.0f} ({n}), "
+                      f"gap {gap:+,.0f} > ${allowance:,.2f}; known issue: {ki if ki is not None else 'NONE'}")
+                fbad += not ok
+                fbad += ki is None  # a real gap must be explained in known_issues.csv
+            else:
+                if flag is not None:
+                    fbad += 1
+                    print(f"FAIL {key} {p['label']} p.{p['page']}: flagged, but gap {gap:+,.2f} is within rounding (${allowance:,.2f})")
+                want_note = ki if (ki is not None and abs(gap) >= 0.5) else None
+                if note != want_note:
+                    fbad += 1
+                    print(f"FAIL {key} {p['label']} p.{p['page']}: note {note}, expected {want_note}")
+                if want_note is not None:
+                    nnotes += 1
+                    print(f"ok   {key:12s} {p['label']} p.{p['page']}: printed {pv:,.0f}, lines {total:,.0f}, gap {gap:+,.0f} "
+                          f"is rounding (allowance ${allowance:,.2f}); not flagged, known issue {ki} ({known[ki].get('kind', '')})")
+    print(f"{'ok  ' if not fbad else 'FAIL'} {nflags} flags for gaps beyond rounding (each with its sum, gap and known issue); "
+          f"{nnotes} rounding-only gaps linked to known_issues.csv without a flag")
+    return bad + fbad
+
+
 ACFR_LEVEL = {("revenue", "line"): "revenue_source", ("expenditure", "line"): "function",
               ("revenue", "total"): "fund_total", ("expenditure", "total"): "fund_total", ("net_change", "net_change"): "fund_total"}
 
@@ -431,8 +523,6 @@ def check_actuals(budget, rows_by_doc, want_book) -> int:
     print(f"{'ok  ' if ok else 'FAIL'} the newest budget year ({max(want_book)}) has actuals only if its ACFR is configured")
 
     known = read(DATA / "known_issues.csv") if (DATA / "known_issues.csv").exists() else []
-    spath = DATA / "acfr_substitutions.csv"
-    subs = {(int(r["fiscal_year"]), r["fund"], r["line"], r["column"]): r for r in (read(spath) if spath.exists() else [])}
     want = Counter()
     for y in years:
         doc = configs[y]["source_doc"]
@@ -445,39 +535,34 @@ def check_actuals(budget, rows_by_doc, want_book) -> int:
                 level = ACFR_LEVEL.get((r["section"], r["row_type"]))
             if level is None:
                 continue
-            v, d, p, printed, printed_p = int(r["actual"]), doc, int(r["source_page"]), None, None
-            sub = subs.get((y, r["fund"], r["line"], "actual"))
-            if sub:
-                printed, printed_p = v, p
-                v, d, p = int(sub["used"]), sub["used_doc"], int(sub["used_page"])
+            v, d, p = int(r["actual"]), doc, int(r["source_page"])
             me = f"{y} {r['fund']} {r['line']}"
-            flags = tuple(sorted(i for i, k in enumerate(known) if k["source_doc"] == doc and int(k["source_page"] or 0) == int(r["source_page"])
+            flags = tuple((i, k.get("kind", "")) for i, k in sorted((i, k) for i, k in enumerate(known) if k["source_doc"] == doc and int(k["source_page"] or 0) == int(r["source_page"])
                                  and (k["label"] == me or k["label"].startswith(me + " "))))
             want[(y, r["fund"], level, r["section"], r["line"], r["heading"] or None, v,
-                  int(r["final"]) if r["final"] != "" else None, d, p, printed, printed_p, flags)] += 1
+                  int(r["final"]) if r["final"] != "" else None, d, p, flags)] += 1
     got = Counter()
     forbidden = 0
     for f in a["figures"]:
-        forbidden += any(k in f for k in ("original", "variance"))
+        forbidden += any(k in f for k in ("original", "variance", "printed", "substitution"))
         got[(f["year"], f["fund"], f["level"], f["section"], f["line"], f.get("heading"), f["v"], f["final"], docs[f["doc"]],
-             f["p"], f.get("printed"), f.get("printed_p"), tuple(f.get("flags", [])))] += 1
+             f["p"], tuple((g["known_issue"], g["kind"]) for g in f.get("flags", [])))] += 1
     for x in list((want - got) + (got - want))[:10]:
         print(f"FAIL actual figure {'missing' if x in want else 'not in the CSVs'}: {x}")
     nbad = sum((want - got).values()) + sum((got - want).values())
     bad += nbad
-    print(f"{'ok  ' if not nbad else 'FAIL'} {len(a['figures'])} actual figures equal the CSV rows (value, final budget, document, page, "
-          f"substitutions, flags), and nothing else is shown")
+    print(f"{'ok  ' if not nbad else 'FAIL'} {len(a['figures'])} actual figures equal the CSV rows (value as printed, final budget, document, "
+          f"page, flags), and nothing else is shown")
     bad += forbidden
-    print(f"{'ok  ' if not forbidden else 'FAIL'} no figure carries the ACFR's Original column or a variance")
+    print(f"{'ok  ' if not forbidden else 'FAIL'} no figure carries the ACFR's Original column, a variance or a substituted value")
     flagged = sum(1 for f in a["figures"] if f.get("flags"))
-    print(f"     {flagged} figures flagged from known_issues.csv; {sum(1 for f in a['figures'] if 'printed' in f)} taken from another page "
-          f"(acfr_substitutions.csv)")
+    print(f"     {flagged} figures flagged from known_issues.csv")
 
     # Footing with the printed figures, from the JSON.
     fbad = 0
     by = defaultdict(dict)
     for f in a["figures"]:
-        by[(f["year"], f["fund"])][(f["level"], f["line"])] = f.get("printed", f["v"])
+        by[(f["year"], f["fund"])][(f["level"], f["line"])] = f["v"]
     for (y, fund), figs in sorted(by.items()):
         rev, exp = figs.get(("fund_total", "Total revenues")), figs.get(("fund_total", "Total expenditures"))
         net = figs.get(("fund_total", "Net change in fund balances"))

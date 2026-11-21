@@ -209,9 +209,7 @@ variance = favourable difference from final,Fund B,Fund B Net change in fund bal
 cash-basis fund balance rolls forward,Fund B,"Fund B Fund balance, December 31, cash basis",actual,2234218,2234218,0,True,County-ACFR-2024.pdf,124,
 modified-accrual fund balance reconciles,Fund B,"Fund B Fund balance at December 31, modified accrual basis",actual,1138204,1138204,0,True,County-ACFR-2024.pdf,124,
 Table 3 vs General Fund schedule,General Fund,2024 Total general fund (Table 3) vs schedule modified accrual balance,actual,74186759,74186759,0,True,County-ACFR-2024.pdf,129,
-schedule vs governmental funds statement,General Fund,2024 General Fund Transfers out actual vs governmental funds statement p43,actual,-18962872,-21630095,2667223,False,County-ACFR-2024.pdf,114,The 2024 General Fund budget-vs-actual schedule (p114) prints Transfers out actu...
-substitution as recorded,General Fund,2024 substitution General Fund Transfers out printed,actual,-18962872,-18962872,0,True,County-ACFR-2024.pdf,114,
-substitution as recorded,General Fund,2024 substitution General Fund Transfers out used,actual,-21630095,-21630095,0,True,County-ACFR-2024.pdf,43,
+schedule vs governmental funds statement,General Fund,2024 General Fund Transfers out actual vs governmental funds statement p43,actual,-18962872,-21630095,2667223,False,County-ACFR-2024.pdf,114,The 2024 General Fund budget-vs-actual schedule (County-ACFR-2024.pdf p114) prin...
 ACFR original vs book,General Fund,2024 General Fund original revenue vs County-2025-Budget-Book.pdf,original,182661641,182661643,-2,True,County-ACFR-2024.pdf,114,
 ACFR original vs book,General Fund,2024 General Fund original expenditure + transfers out vs County-2025-Budget-Book.pdf,original,198866073,182561646,16304427,False,County-ACFR-2024.pdf,114,"The ACFR's 2024 'Original' General Fund budget is total expenditures 185,071,157..."
 ACFR original vs book,Fund Y,2024 Fund Y original revenue + transfers in vs County-2025-Budget-Book.pdf,original,53138716,53138716,0,True,County-ACFR-2024.pdf,115,

@@ -19,9 +19,16 @@ Shapes follow the City JSON so web/app.js can reuse its code:
              category (Taxes, Intergovernmental, ...), as the City's bureau is its printed revenue group;
              expense lines: category = the printed category, bureau = the printed department name.
   series     "<year>|budget": a, v, p, doc, column ("budget"), funds, plus book_year.
-  printed    the books' department totals (level "section"; in Other Funds with `dept_fund`, the fund whose
-             lines the total closes) and General Fund / Other Funds grand totals (level "rollup") for the
-             columns shown, with page.
+  printed    every total the books print, for the columns shown, with page: department totals (level "section";
+             in Other Funds with `dept_fund`, the fund whose lines the total closes), General Fund / Other Funds
+             grand totals ("rollup"), and the by-account report's account rows ("account", with `account` and
+             `name`) and account-group totals ("account_group", with `account_group` and `name`).
+             Printed-totals rule (user, 2026-11-21): each printed figure in `values` is the displayed total for
+             its grouping and year, never our sum. `flags` {key: {sum, gap (printed - sum), lines, allowance,
+             known_issue, kind}} marks a gap larger than rounding: max($5, $0.50 x the lines summed). A
+             rounding-only gap that known_issues.csv explains is linked in `notes` {key: known_issue}, not flagged.
+             Our sums appear only where no printed total exists (e.g. per-fund totals in Other Funds), and
+             the site labels those as calculated.
   org        County groups by department letter (A general government, B courts and row offices,
              C corrections, D human services) as `departments`, and each department code as a unit,
              from data/county/org_units.csv.
@@ -42,9 +49,9 @@ so they sit in their own block, budget.json `actuals`, not in `series`:
                function        General Fund expenditure by function (heading "Debt service" for its two lines).
              The ACFR's Original column and its variances are never exported: for 2023 and 2024 its Original is not
              the adopted budget (data/county/known_issues.csv), and the budget shown is the books'.
-             A figure the site takes from another page carries `printed` and `printed_p`
-             (data/county/acfr_substitutions.csv); a figure with a known issue carries `flags` (indexes into
-             known_issues). A General Fund or special-fund total never maps to departments.
+             Every figure is shown as printed on its schedule page. A figure with a known issue carries `flags`:
+             [{"known_issue": index into known_issues, "kind": its kind}]. A General Fund or special-fund total
+             never maps to departments.
   book       the books' budget totals for the same year and fund (revenue, expense), from the book the series uses,
              for showing beside the actual totals. A special fund's book revenue includes transfers in.
   sources    each ACFR: doc index, file, path, URL, title.
@@ -268,8 +275,14 @@ def closing_fund(book: dict, fy: int, department: str, side: str, page: int) -> 
     return max(last, key=lambda f: (last[f], f)) if last else None
 
 
+ACCOUNT_RE = re.compile(r"(General Fund|Other Funds) (revenue|expense) account (?:(\d{4})|group (\d\d) total)")
+ROUNDING_CELL, ROUNDING_PER_LINE = 5, 0.5  # the printed-totals rule: rounding is at most $5 a cell or $0.50 a line summed
+
+
 def printed_totals(processed: Path, live: list, fig_book: dict, docs, shown: set) -> list:
-    """Department totals and General Fund / Other Funds grand totals each book prints, for the columns shown."""
+    """Every total each book prints, for the columns shown: department totals (level "section"), General Fund /
+    Other Funds grand totals ("rollup"), and the by-account report's account rows ("account") and account-group
+    totals ("account_group"). The printed figure is the displayed total for that grouping and year."""
     out = []
     for book in live:
         path = processed / f"validation_{book['stem']}.csv"
@@ -278,6 +291,9 @@ def printed_totals(processed: Path, live: list, fig_book: dict, docs, shown: set
         items = {}
         for r in read_csv(path):
             level = {"department total": "section", "grand total vs departments": "rollup"}.get(r["check"])
+            am = ACCOUNT_RE.fullmatch(r["label"]) if r["check"] == "by-account report" else None
+            if am:
+                level = "account" if am.group(3) else "account_group"
             m = re.fullmatch(r"budget_(\d{4})", r["column"])
             if not level or not m or parse_amount(r["printed"]) is None:
                 continue
@@ -285,12 +301,19 @@ def printed_totals(processed: Path, live: list, fig_book: dict, docs, shown: set
             key = f"{fy}|{MEASURE}"
             if fig_book.get(fy) is not book or key not in shown:
                 continue
-            lm = re.fullmatch(r"(General Fund|Other Funds) (revenue|expense)(?:: (.+))?", r["label"])
             item = items.setdefault((level, r["label"], r["source_page"]), {
                 "level": level, "label": r["label"], "page": int(r["source_page"]), "doc": docs(book["doc"]),
                 "values": {}, "passed": True})
             item["values"][key] = parse_amount(r["printed"])
             item["passed"] &= r["passed"] == "True"
+            if am:
+                item["group"], item["kind"] = am.group(1), am.group(2)
+                if am.group(3):
+                    item["account"] = am.group(3)
+                else:
+                    item["account_group"] = am.group(4)
+                continue
+            lm = re.fullmatch(r"(General Fund|Other Funds) (revenue|expense)(?:: (.+))?", r["label"])
             if lm:
                 item["group"], item["kind"] = lm.group(1), lm.group(2)
                 if lm.group(3):
@@ -301,6 +324,49 @@ def printed_totals(processed: Path, live: list, fig_book: dict, docs, shown: set
                     item["fund"] = "General Fund"
         out.extend(items.values())
     return out
+
+
+def members(item: dict, r: dict) -> bool:
+    """Whether a budget_long row is one of the lines a printed total adds up."""
+    side = "revenue" if r["side"] == "revenue" else "expense"
+    if side != item.get("kind") or r["section"] != item.get("group"):
+        return False
+    if "department" in item:
+        return r["department"] == item["department"] and ("dept_fund" not in item or r["fund"] == item["dept_fund"])
+    if "account" in item:
+        return r["account"] == item["account"]
+    if "account_group" in item:
+        return r["account"][:2] == item["account_group"]
+    return True  # a General Fund / Other Funds grand total
+
+
+def flag_printed(printed: list, fig_book: dict, known: list, docs) -> None:
+    """Under the printed-totals rule the printed figure is shown. A flag is added only where the lines differ from
+    it by more than rounding can explain: max($5, $0.50 x the lines summed). Rounding-only gaps that known_issues.csv
+    explains are linked as `notes` (not flags). Each item also gets `name` for account rows and groups."""
+    norm = lambda t: re.sub(r"[^a-z0-9]", "", t.lower())
+    for item in printed:
+        doc = docs.items[item["doc"]]
+        ki = next((i for i, k in enumerate(known) if k["source_doc"] == doc and int(k["source_page"] or 0) == item["page"]
+                   and norm(k["label"]) == norm(item["label"])), None)
+        for key, pv in item["values"].items():
+            fy = int(key.split("|")[0])
+            rows = [r for r in fig_book[fy]["rows"] if int(r["fiscal_year"]) == fy and r["doc_type"] == MEASURE and members(item, r)]
+            vals = [parse_amount(r["amount"]) or 0 for r in rows]
+            total, n = sum(vals), sum(1 for x in vals if x)
+            if "account" in item or "account_group" in item:
+                # name from the book's lines in either of its years (an account can print 0 in the year shown)
+                names = [r["account_name"] if "account" in item else r["category"] for r in fig_book[fy]["rows"]
+                         if r["doc_type"] == MEASURE and members(item, r)]
+                if names and "name" not in item:
+                    item["name"] = max(set(names), key=names.count)
+            gap = round(pv - total, 2)
+            allowance = max(ROUNDING_CELL, ROUNDING_PER_LINE * n)
+            if abs(gap) > allowance:
+                item.setdefault("flags", {})[key] = {"sum": total, "gap": gap, "lines": n, "allowance": allowance,
+                                                     "known_issue": ki, "kind": known[ki].get("kind", "") if ki is not None else None}
+            elif ki is not None and gap:
+                item.setdefault("notes", {})[key] = ki
 
 
 def actual_level(r: dict) -> str | None:
@@ -319,8 +385,6 @@ def build_actuals(processed: Path, docs, known: list, fig_book: dict) -> dict | 
     years = [y for y in sorted(configs) if (processed / f"actuals_acfr_{y}.csv").exists()]
     if not years:
         return None
-    spath = DATA / "acfr_substitutions.csv"
-    subs = {(int(r["fiscal_year"]), r["fund"], r["line"], r["column"]): r for r in (read_csv(spath) if spath.exists() else [])}
     flag_of = defaultdict(list)
     for i, k in enumerate(known):
         flag_of[(k["source_doc"], int(k["source_page"] or 0), k["label"])].append(i)
@@ -340,18 +404,12 @@ def build_actuals(processed: Path, docs, known: list, fig_book: dict) -> dict | 
                  "doc": d, "p": int(r["source_page"])}
             if r["heading"]:
                 f["heading"] = r["heading"]
-            sub = subs.get((y, r["fund"], r["line"], "actual"))
-            if sub:
-                if int(sub["printed"]) != f["v"] or sub["printed_doc"] != cfg["source_doc"]:
-                    sys.exit(f"acfr_substitutions.csv: {y} {r['fund']} {r['line']} printed {sub['printed']}, the CSV has {f['v']}")
-                f.update(printed=f["v"], printed_p=f["p"], v=int(sub["used"]), doc=docs(sub["used_doc"]), p=int(sub["used_page"]),
-                         substitution=sub["evidence"])
             # Known issues about this figure: same page, label "<year> <fund> <line>" (or that followed by more words).
             me = f"{y} {r['fund']} {r['line']}"
             flags = sorted(i for (doc, page, label), ids in flag_of.items() for i in ids
                            if doc == cfg["source_doc"] and page == int(r["source_page"]) and (label == me or label.startswith(me + " ")))
             if flags:
-                f["flags"] = flags
+                f["flags"] = [{"known_issue": i, "kind": known[i].get("kind", "")} for i in flags]
             figures.append(f)
         # The books' totals for the same year and fund, from the book the budget series uses.
         b = fig_book.get(y)
@@ -448,6 +506,9 @@ def build(processed: Path = PROCESSED, out: Path = OUT) -> dict:
     org = build_org(shown_codes, printed_names)
 
     printed = printed_totals(processed, live, fig_book, docs, set(series))
+    kpath = DATA / "known_issues.csv"
+    known = read_csv(kpath) if kpath.exists() else []
+    flag_printed(printed, fig_book, known, docs)
 
     # What changed: newest year against the year before, with account merges folded in.
     comparisons, merge_rules = {}, []
@@ -471,8 +532,6 @@ def build(processed: Path = PROCESSED, out: Path = OUT) -> dict:
     for b in live:
         docs(b["doc"])
     used = {b["doc"] for b in fig_book.values()}
-    kpath = DATA / "known_issues.csv"
-    known = read_csv(kpath) if kpath.exists() else []
     actuals = build_actuals(processed, docs, known, fig_book)
     budget = {
         "entity": "county",
