@@ -26,6 +26,8 @@
    position counts equal the staffing CSVs, and the adjusted counts differ from the raw ones only by the
    listed artifacts (moves between funds net to zero across funds).
 Exits 1 on any failure of checks 1, 2, 4, 6 and the CSV part of 5. Standard library only.
+Usage: python3 scripts/check_dataset.py [--entity city|county]
+  --entity county checks web/data/county/ against data/processed/county/ (scripts/check_county.py).
 """
 from __future__ import annotations
 
@@ -359,6 +361,13 @@ def budget_stem(doc: str) -> str:
 
 
 def main() -> int:
+    import argparse
+    ap = argparse.ArgumentParser(description="Check the dashboard JSON against the processed CSVs.")
+    ap.add_argument("--entity", choices=["city", "county"], default="city",
+                    help="city (default): web/data/; county: web/data/county/ (scripts/check_county.py)")
+    if ap.parse_args().entity == "county":
+        import check_county
+        return check_county.main()
     budget = json.loads((ROOT / "web" / "data" / "budget.json").read_text())
     acc = budget["accounts"]
     shown = defaultdict(float)

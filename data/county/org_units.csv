@@ -1,0 +1,52 @@
+department_code,department,group_letter,group,book_section,section_page,department_page,source_doc
+A1100,Line-Item Grants,A,General Government,Operating Department Summaries,29,42,County-2026-Budget-Book.pdf
+A1111,Commissioners Office,A,General Government,Operating Department Summaries,29,32,County-2026-Budget-Book.pdf
+A1112,Purchasing,A,General Government,Operating Department Summaries,29,34,County-2026-Budget-Book.pdf
+A1113,Human Resources,A,General Government,Operating Department Summaries,29,36,County-2026-Budget-Book.pdf
+A1114,Fiscal Affairs,A,General Government,Operating Department Summaries,29,38,County-2026-Budget-Book.pdf
+A1120,Budget Services,A,General Government,Operating Department Summaries,29,40,County-2026-Budget-Book.pdf
+A1150,Commissioner Grants,A,General Government,Operating Department Summaries,29,42,County-2026-Budget-Book.pdf
+A1212,Property Assessment,A,General Government,Operating Department Summaries,29,44,County-2026-Budget-Book.pdf
+A1218,Veterans Affairs,A,General Government,Operating Department Summaries,29,46,County-2026-Budget-Book.pdf
+A1219,Legal Department,A,General Government,Operating Department Summaries,29,48,County-2026-Budget-Book.pdf
+A1220,Voter Registration,A,General Government,Operating Department Summaries,29,50,County-2026-Budget-Book.pdf
+A1300,Engineers Office,A,General Government,Liquid Fuels Summary,105,108,County-2026-Budget-Book.pdf
+A1400,Treasurers Office,A,General Government,Operating Department Summaries,29,52,County-2026-Budget-Book.pdf
+A1511,Controllers Office,A,General Government,Operating Department Summaries,29,54,County-2026-Budget-Book.pdf
+A1611,Recorder of Deeds,A,General Government,Operating Department Summaries,29,56,County-2026-Budget-Book.pdf
+A1700,Tax Collectors,A,General Government,Operating Department Summaries,29,58,County-2026-Budget-Book.pdf
+A2311,Public Defender,A,General Government,Operating Department Summaries,29,60,County-2026-Budget-Book.pdf
+A2400,Emergency Management,A,General Government,Operating Department Summaries,32,66,County-2025-Budget-Book.pdf
+A2410,Department of Public Safety,A,General Government,Operating Department Summaries,29,62,County-2026-Budget-Book.pdf
+A2413,Communications,A,General Government,Operating Department Summaries,32,66,County-2025-Budget-Book.pdf
+A2600,Planning,A,General Government,Operating Department Summaries,29,64,County-2026-Budget-Book.pdf
+A2700,Ag Preserve,A,General Government,Operating Department Summaries,29,66,County-2026-Budget-Book.pdf
+A2800,Information Technology,A,General Government,Operating Department Summaries,29,68,County-2026-Budget-Book.pdf
+A3100,Facilities Management,A,General Government,Operating Department Summaries,29,70,County-2026-Budget-Book.pdf
+B1111,Court Administration,B,Courts and Row Offices,Judicial Department Summaries,87,90,County-2026-Budget-Book.pdf
+B1112,Law Library,B,Courts and Row Offices,Judicial Department Summaries,87,95,County-2026-Budget-Book.pdf
+B1113,Legal Services,B,Courts and Row Offices,Judicial Department Summaries,87,91,County-2026-Budget-Book.pdf
+B1115,Judicial Operations,B,Courts and Row Offices,Judicial Department Summaries,87,92,County-2026-Budget-Book.pdf
+B1116,Court Reporters,B,Courts and Row Offices,Judicial Department Summaries,87,97,County-2026-Budget-Book.pdf
+B1117,Jury Services,B,Courts and Row Offices,Judicial Department Summaries,87,93,County-2026-Budget-Book.pdf
+B1118,Domestic Relations,B,Courts and Row Offices,Funded Agency Summaries,124,126,County-2026-Budget-Book.pdf
+B1120,APPS - Supervision Services,B,Courts and Row Offices,Judicial Department Summaries,87,99,County-2026-Budget-Book.pdf
+B1121,Juvenile Probation,B,Courts and Row Offices,Judicial Department Summaries,87,102,County-2026-Budget-Book.pdf
+B1122,APPS - Special Supervision,B,Courts and Row Offices,Judicial Department Summaries,87,100,County-2026-Budget-Book.pdf
+B1211,Clerk of Courts Office,B,Courts and Row Offices,Operating Department Summaries,29,73,County-2026-Budget-Book.pdf
+B1300,District Attorneys Office,B,Courts and Row Offices,Operating Department Summaries,29,75,County-2026-Budget-Book.pdf
+B1411,Register of Wills Office,B,Courts and Row Offices,Operating Department Summaries,29,77,County-2026-Budget-Book.pdf
+B1511,Prothonotary,B,Courts and Row Offices,Operating Department Summaries,29,79,County-2026-Budget-Book.pdf
+B1600,Magisterial District Court,B,Courts and Row Offices,Judicial Department Summaries,87,104,County-2026-Budget-Book.pdf
+B1711,Sheriffs Office,B,Courts and Row Offices,Operating Department Summaries,29,81,County-2026-Budget-Book.pdf
+B1811,Coroners Office,B,Courts and Row Offices,Operating Department Summaries,29,84,County-2026-Budget-Book.pdf
+C1200,Prison,C,Corrections,Operating Department Summaries,29,86,County-2026-Budget-Book.pdf
+C1300,State Institutions,C,Corrections,Funded Agency Summaries,124,128,County-2026-Budget-Book.pdf
+C1411,Youth Intervention Center,C,Corrections,Funded Agency Summaries,124,130,County-2026-Budget-Book.pdf
+D1400,Children & Youth,D,Human Services,Funded Agency Summaries,124,132,County-2026-Budget-Book.pdf
+D1600,Office of Aging,D,Human Services,Funded Agency Summaries,124,135,County-2026-Budget-Book.pdf
+D1700,Drug & Alcohol,D,Human Services,Funded Agency Summaries,124,138,County-2026-Budget-Book.pdf
+D1800,Behavioral Health,D,Human Services,Funded Agency Summaries,124,140,County-2026-Budget-Book.pdf
+D1900,Intellectual Disabilities,D,Human Services,Funded Agency Summaries,124,143,County-2026-Budget-Book.pdf
+D2100,Early Intervention,D,Human Services,Funded Agency Summaries,124,145,County-2026-Budget-Book.pdf
+D2400,HUD,D,Human Services,Funded Agency Summaries,124,147,County-2026-Budget-Book.pdf

@@ -32,7 +32,8 @@ Outputs (web/data/):
                   (data/policy_notes.csv)
 
 Standard library only, so GitHub Actions can run it with no installs.
-Usage: python3 scripts/build_dataset.py [--processed DIR] [--out DIR]
+Usage: python3 scripts/build_dataset.py [--entity city|county] [--processed DIR] [--out DIR]
+  --entity county builds web/data/county/ from data/processed/county/ (see scripts/build_county.py).
 """
 from __future__ import annotations
 
@@ -447,9 +448,18 @@ def write_json(path: Path, data) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--processed", type=Path, default=ROOT / "data" / "processed")
-    ap.add_argument("--out", type=Path, default=ROOT / "web" / "data")
+    ap.add_argument("--entity", choices=["city", "county"], default="city",
+                    help="city (default): web/data/; county: data/processed/county -> web/data/county/ (scripts/build_county.py)")
+    ap.add_argument("--processed", type=Path, default=None)
+    ap.add_argument("--out", type=Path, default=None)
     args = ap.parse_args()
+    if args.entity == "county":
+        import build_county
+        out = args.out or build_county.OUT
+        build_county.report(build_county.build(args.processed or build_county.PROCESSED, out), out)
+        return
+    args.processed = args.processed or ROOT / "data" / "processed"
+    args.out = args.out or ROOT / "web" / "data"
     budget = build(args.processed, args.out)
     print(f"Books: " + ", ".join(f"{b['year']}={b['doc']}{'' if b['used'] else ' (ignored)'}"
                                  for b in budget["books"]))

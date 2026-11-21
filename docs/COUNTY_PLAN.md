@@ -195,3 +195,47 @@ Steps 1–3 can be checked without touching the site. Step 2 can run alongside s
 **Still open from step 1:**
 - The 2025 book's "Departmental Budget Summary" pages (2023 actuals by category) are not extracted yet.
 - Fund letters (B, E, EI, F, G, H, R, Y) have no printed names. They are kept as "Fund B" and so on until a source names them.
+
+**Step 3, done (2026-11-20).**
+
+1. **Build:** `python3 scripts/build_dataset.py --entity county` runs `scripts/build_county.py`.
+   - It reads `data/processed/county/` and `data/county/`, and writes `web/data/county/budget.json`, `changes.json` and `conflicts.json`. There is no `staffing.json` and no reserve.
+   - The default (`--entity city`) is unchanged. With a fixed `PYTHONHASHSEED`, the City JSON and the City check output are byte-identical to before, apart from the timestamp.
+2. **Figure rule:** each year shows measure `budget` from the newest book that prints it:
+   - 2024 from the 2025 book;
+   - 2025 and 2026 from the 2026 book.
+   A 2024 book will add 2023 with no code change; this was tested with a stand-in book.
+3. **Line key:** lines are keyed by fund plus account code. A3100 Facilities Management prints the same accounts in the General Fund and in Funds Y and H.
+4. **Shapes follow the City JSON** so `app.js` can reuse its code:
+   - Revenue lines have category `Revenue`, with the printed revenue category (Taxes, Intergovernmental, …) as their `bureau`. This matches the City's printed revenue group.
+   - Expense lines keep the printed category, with the department name as their `bureau`.
+   - `org.departments` are the four letter groups, and `org.units` are the 51 department codes.
+   - Each series also has `book_year`. The County `rule` has no `book_offset`, so Phase 3 must handle `bookYearOf()` in `app.js`.
+5. **Groups:** `data/county/org_units.csv` has one row per department code. Each row has:
+   - the department name as printed in the newest book that has it;
+   - its letter group (A general government, B courts and row offices, C corrections, D human services);
+   - the book section and divider page in the 2026 book: Operating p29, Judicial p87, Liquid Fuels p105, Funded Agencies p124;
+   - its department page.
+   A2400 and A2413 appear only in the 2025 book (p66). A code the file does not list is placed in its letter group under its printed name, with a note, so a new book never stops the build.
+6. **What changed:** 2026 against 2025, line by line, using `changes.compare`.
+   - The merges in `account_changes.csv` are folded into both years, so wages are compared as 7112 + 7113 + 7114 against 7113.
+   - The 41 merged lines are listed under `merges`, with each component account and page.
+   - Totals: spending is $319.3M → $340.0M (+$20.6M), and income is $312.7M → $330.9M (+$18.2M).
+7. **Conflicts:** there are 11 lines where the 2025 book's 2025 column differs from the 2026 book's:
+   - ten are the 7216 → 7215 fold, each tagged with `account_change`;
+   - one is A2410-7115, by $2 (326,483 against 326,485).
+8. **Checks:** `python3 scripts/check_dataset.py --entity county` runs `scripts/check_county.py`. It recomputes everything from the CSVs without importing the build:
+   - the figure rule;
+   - every line and its page;
+   - fund totals;
+   - 298 printed totals;
+   - the org mapping and its sums;
+   - every changed line, merge and scope total;
+   - the conflicts list.
+   Result: "0 series mismatches". Tampered JSON fails, as expected.
+9. **Known issue:** in the 2026 book, the General Fund expense lines add to $7 (2025) and $11 (2026) more than the printed Grand Total on p28.
+   - Each department is within $3 of its printed total, so the gap is rounding spread over many departments.
+   - It is logged in `data/county/known_issues.csv`.
+10. **Publish:** `.github/workflows/pages.yml` builds and checks both entities in separate steps, so either one failing stops the publish.
+
+**Found in passing:** the City build is not byte-stable from run to run. `changes.json` key order follows Python's string hash seed, although the values are identical. This was already true before step 3.
