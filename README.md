@@ -2,7 +2,7 @@
 
 A public, independent view of the **City of Lancaster, PA** budget, built from the city's published budget books.
 
-**Live site:** https://budget.nazwel.net (the old `richnazzaro.github.io/LancasterPA-budget-dashboard` address forwards there)
+**Live site:** https://budget.nazwel.net
 
 This README covers how the site presents the data, where the data lives, and how to use the site. For how the PDFs are turned into data, see [docs/PIPELINE.md](docs/PIPELINE.md).
 
