@@ -7,8 +7,9 @@
    when the newest book has both columns); every earlier year has "actual" when any
    book reports an audited actual for it, otherwise "projected"; never adopted,
    amended or year-to-date.
-3. Every fund roll-up the book prints is within $5 of the shown line-item sum
-   (known source-PDF issues are reported, not failed).
+3. Printed totals: every section, department and fund total the books print equals the validation CSV, its
+   line sum and rounding flag re-add from budget_long ($5 for a section, $0.50 per line for a roll-up), and the
+   totals the site can display are matched to them; every flag that shows is listed (failures: value, sum, flag).
 4. Org structure (2027 org chart): every shown line's org code maps to an org unit; the
    mapping in budget.json equals data/org_structure_2027.csv; for every year, figure and
    revenue/expense, the unit (bureau) totals of each department add up to that department's
@@ -25,7 +26,7 @@
    funds are listed with their evidence (the city's notes) and their sums are re-added from the series;
    position counts equal the staffing CSVs, and the adjusted counts differ from the raw ones only by the
    listed artifacts (moves between funds net to zero across funds).
-Exits 1 on any failure of checks 1, 2, 4, 6 and the CSV part of 5. Standard library only.
+Exits 1 on any failure of checks 1, 2, 3, 4, 6 and the CSV part of 5. Standard library only.
 Usage: python3 scripts/check_dataset.py [--entity city|county]
   --entity county checks web/data/county/ against data/processed/county/ (scripts/check_county.py).
 """
@@ -356,6 +357,129 @@ def check_changes(budget: dict) -> int:
     return bad
 
 
+ROUNDING_PER_CELL, ROUNDING_PER_LINE = 5, 0.5
+
+
+def check_printed(budget: dict) -> int:
+    """Printed totals (budget.json `printed`): the site shows each as printed and flags only real gaps.
+
+    For every printed total: the value equals the validation CSV's printed cell (same book, label and page, the
+    column the selection rule uses); our sum of the lines it covers, re-added from budget_long (not from
+    budget.json's series), equals `sum` and `n`; `flag` is set exactly when the gap is more than rounding ($5 for a
+    section, $0.50 per line for a roll-up). Then every total the site can display (all funds, each fund, department,
+    bureau and What changed income source, by year, figure and income/spending) is matched to the printed total that covers
+    exactly its lines, the way app.js does; those are listed, with every flag that shows."""
+    print("\nPrinted totals (shown as printed; flagged only beyond rounding):")
+    processed = ROOT / "data" / "processed"
+    docs, funds, bureaus = budget["docs"], budget["funds"], budget["bureaus"]
+    stem_of = {b["doc"]: b["csv"][len("budget_long_"):-len(".csv")] for b in budget["books"]}
+    year_of = {b["doc"]: b["year"] for b in budget["books"]}
+    val, csv_rows = {}, {}
+    for doc, stem in stem_of.items():
+        vp = processed / f"validation_{stem}.csv"
+        if vp.exists():
+            with vp.open(newline="", encoding="utf-8") as f:
+                val[doc] = list(csv.DictReader(f))
+        with (processed / f"budget_long_{stem}.csv").open(newline="", encoding="utf-8") as f:
+            csv_rows[doc] = [r for r in csv.DictReader(f) if r["source_doc"] == doc]
+    bad = 0
+    for p in budget["printed"]:
+        doc = docs[p["doc"]]
+        row = next((r for r in val.get(doc, []) if r["level"] == p["level"] and r["label"] == p["label"] and int(r["source_page"]) == p["page"]), None)
+        if row is None:
+            print(f"FAIL {doc} p{p['page']} {p['label']!r}: not in the validation CSV")
+            bad += 1
+            continue
+        for key, printed in p["values"].items():
+            fy, measure = key.split("|")
+            rule = budget["rule"][measure]
+            want = next((float(row[c]) for c in (f"printed_{col}_{fy}" for col in rule["columns"]) if (row.get(c) or "").strip()), None)
+            if year_of[doc] - int(fy) != rule["book_offset"] or want is None or abs(want - printed) > 0.001:
+                print(f"FAIL {doc} p{p['page']} {p['label']!r} {key}: shown {printed} but the CSV prints {want}")
+                bad += 1
+            col = budget["series"][key]["column"]
+            total, n = 0.0, 0
+            for r in csv_rows[doc]:
+                if r["fiscal_year"] != fy or (r["doc_type"] != col if isinstance(col, str) else r["doc_type"] not in col):
+                    continue
+                if (r["category"] == "Revenue") != (p["kind"] == "revenue") or not r["amount"].strip() or float(r["amount"]) == 0:
+                    continue
+                pg = int(r["source_page"])
+                if any(r["fund"] == funds[f] and (b == -1 or r["bureau"] == bureaus[b]) and lo <= pg <= hi for f, b, lo, hi in p["m"]):
+                    total += float(r["amount"])
+                    n += 1
+            if abs(total - p["sum"][key]) > 0.001 or n != p["n"][key]:
+                print(f"FAIL {doc} p{p['page']} {p['label']!r} {key}: line sum {p['sum'][key]} ({p['n'][key]} lines) but the CSV gives {total} ({n})")
+                bad += 1
+            tol = ROUNDING_PER_CELL if p["level"] == "section" else max(ROUNDING_PER_CELL, ROUNDING_PER_LINE * n)
+            if (abs(total - printed) > tol) != (key in p["flag"]):
+                print(f"FAIL {doc} p{p['page']} {p['label']!r} {key}: gap {total - printed:+,.0f} vs rounding {tol:g}, flag {'set' if key in p['flag'] else 'not set'}")
+                bad += 1
+    n_vals = sum(len(p["values"]) for p in budget["printed"])
+    print(f"{'ok  ' if not bad else 'FAIL'} {len(budget['printed'])} printed totals, {n_vals} figures: values match the validation CSVs, line sums and flags re-derived from budget_long")
+
+    # Which displayed totals are printed, and which flags show (app.js totalOf / printedFor).
+    acc, org = budget["accounts"], budget["org"]
+    rev = budget["categories"].index("Revenue")
+    ch_path = ROOT / "web" / "data" / "changes.json"
+    wc_keys = {k for c in json.loads(ch_path.read_text())["comparisons"].values() for k in (c["from"], c["to"])} if ch_path.exists() else set()
+    shown, flags, calc_scopes = 0, [], Counter()
+    for key, s in budget["series"].items():
+        sdocs = s["doc"] if isinstance(s["doc"], list) else [s["doc"]] * len(s["a"])
+        R = []
+        for i, (a, v, pg, d) in enumerate(zip(s["a"], s["v"], s["p"], sdocs)):
+            u = org["codes"][acc[a][0].split("-")[0]]
+            R.append({"i": i, "fund": acc[a][2], "bureau": acc[a][4], "rev": acc[a][5] == rev, "p": pg, "d": d,
+                      "unit": u, "dept": org["units"][u]["dept"]})
+        members = {}
+        for j, p in enumerate(budget["printed"]):
+            if key in p["values"]:
+                members[j] = frozenset(r["i"] for r in R if r["d"] == p["doc"] and r["rev"] == (p["kind"] == "revenue")
+                                       and any(r["fund"] == f and (b == -1 or r["bureau"] == b) and lo <= r["p"] <= hi for f, b, lo, hi in p["m"]))
+        scopes = defaultdict(list)
+        for kind in (True, False):
+            K = [r for r in R if r["rev"] == kind]
+            def add(name, l):
+                if l:
+                    scopes[frozenset(r["i"] for r in l)].append(name)
+            add("all funds", K)
+            for f in {r["fund"] for r in K}:
+                add(funds[f], [r for r in K if r["fund"] == f])
+                for d in {r["dept"] for r in K}:
+                    add(f"{org['departments'][d]['name']} ({funds[f]})", [r for r in K if r["fund"] == f and r["dept"] == d])
+                for u in {r["unit"] for r in K}:
+                    add(f"{org['units'][u]['name']} ({funds[f]})", [r for r in K if r["fund"] == f and r["unit"] == u])
+                if kind and key in wc_keys:  # income sources on What changed (printed revenue groups)
+                    for b in {r["bureau"] for r in K if r["fund"] == f}:
+                        add(f"income source {bureaus[b]} ({funds[f]})", [r for r in K if r["fund"] == f and r["bureau"] == b])
+            for d in {r["dept"] for r in K}:
+                add(org["departments"][d]["name"], [r for r in K if r["dept"] == d])
+            for u in {r["unit"] for r in K}:
+                add(org["units"][u]["name"], [r for r in K if r["unit"] == u])
+        for sc, names in scopes.items():
+            hits = [j for j, m in members.items() if m == sc]
+            if not hits:
+                calc_scopes[key] += 1
+                continue
+            j = min(hits, key=lambda j: (2 if key in budget["printed"][j]["flag"] else 0) + (0 if budget["printed"][j].get("fund") else 1))
+            shown += 1
+            p = budget["printed"][j]
+            if key in p["flag"]:
+                flags.append((key, p, names))
+    print(f"ok   {shown} displayable totals are printed (shown as printed); {sum(calc_scopes.values())} have no printed total (shown as calculated)")
+    seen = set()
+    for key, p, names in sorted(flags, key=lambda x: (x[0], x[1]["page"])):
+        if (key, id(p)) in seen:
+            continue
+        seen.add((key, id(p)))
+        gap = p["sum"][key] - p["values"][key]
+        has = "issue" in p
+        print(f"FLAG {key:14s} {docs[p['doc']][:34]:34s} p{p['page']:<4d} {p['label'][:30]:30s} printed {p['values'][key]:>13,.0f} lines {p['sum'][key]:>13,.0f} gap {gap:+,.0f}"
+              f"  [{'; '.join(sorted(names))[:80]}]{'' if has else '  -> NOT in known_issues.csv'}")
+    print(f"{len(seen)} flags show on the site; {sum('issue' not in p for _, p, _ in flags)} without a reviewed note")
+    return bad
+
+
 def budget_stem(doc: str) -> str:
     return doc[:-4] if doc.lower().endswith(".pdf") else doc
 
@@ -431,41 +555,7 @@ def main() -> int:
         print(f"{'ok  ' if ok else 'FAIL'} {y}: shows {', '.join(sorted(got))}" + ("" if ok else f" (expected {', '.join(sorted(want))})"))
     failures += bad_years
 
-    print("\nPrinted fund roll-ups vs shown sums:")
-    # A book can print the same roll-up more than once (e.g. before and after a late section).
-    # Compare against the occurrence closest to the shown sum and report which one was used.
-    known = []
-    kpath = ROOT / "data" / "known_issues.csv"
-    if kpath.exists():
-        with kpath.open(newline="", encoding="utf-8") as f:
-            known = list(csv.DictReader(f))
-    norm = lambda t: re.sub(r"[^a-z]", "", t.lower())
-    groups = defaultdict(list)
-    for p in budget["printed"]:
-        if "fund" in p:
-            for key, printed in p["values"].items():
-                groups[(key, p["fund"], p["kind"])].append((p, printed))
-    undocumented = 0
-    for (key, fund, kind), cands in sorted(groups.items()):
-        totals = [v for (k, f, kd, _, _), v in shown.items() if k == key and f == fund and kd == kind]
-        if not totals:
-            continue
-        s_sum = sum(totals)
-        p, printed = min(cands, key=lambda c: abs(s_sum - c[1]))
-        diff = s_sum - printed
-        flag = "ok  " if abs(diff) <= TOLERANCE else "DIFF"
-        extra = f"  (also printed on p.{', '.join(str(c[0]['page']) for c in cands if c[0] is not p)})" if len(cands) > 1 else ""
-        doc = budget["docs"][p["doc"]]
-        tail = ""
-        if abs(diff) > TOLERANCE:
-            hit = [i for i in known if i["source_doc"] == doc and (norm(i["label"]) in norm(p["label"]) or norm(p["label"]) in norm(i["label"]))]
-            if hit:
-                tail = "  -> logged in known_issues.csv"
-            else:
-                tail = "  -> NOT in known_issues.csv"
-                undocumented += 1
-        print(f"{flag} {key:16s} {p['label']:42s} p.{p['page']:<4d} printed {printed:>14,.0f}  shown {s_sum:>14,.0f}  diff {diff:+,.0f}{extra}{tail}")
-    print(f"\n{undocumented} printed-total differences are not in known_issues.csv")
+    failures += check_printed(budget)
 
     failures += check_reserve(budget)
     failures += check_org(budget)
