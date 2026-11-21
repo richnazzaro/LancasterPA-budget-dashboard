@@ -30,10 +30,32 @@ Shapes follow the City JSON so web/app.js can reuse its code:
              compared as their combined total. Each merged line is listed under `merges`.
 No staffing.json and no reserve: the County books print no positions and no General Fund balance page.
 
+Actuals (measure "actual", 2023-2025): from the County's audited ACFRs, budgetary basis
+(data/processed/county/actuals_acfr_<year>.csv, written by extract_county_acfr.py). They are not account lines,
+so they sit in their own block, budget.json `actuals`, not in `series`:
+  figures    one per shown figure: year, fund (B, E, F, G, Y; "Fund H+R+EI", which the ACFR reports as one fund;
+             General Fund), level, section, line (as printed), v (actual, as printed: transfers out and deficits
+             negative), final (the ACFR's final budget), doc (index into docs) and p (PDF page). Levels:
+               fund_total      Total revenues, Total expenditures, Net change in fund balances, every fund;
+               transfer        Transfers in / Transfers out lines, every fund that prints one;
+               revenue_source  General Fund revenue by source;
+               function        General Fund expenditure by function (heading "Debt service" for its two lines).
+             The ACFR's Original column and its variances are never exported: for 2023 and 2024 its Original is not
+             the adopted budget (data/county/known_issues.csv), and the budget shown is the books'.
+             A figure the site takes from another page carries `printed` and `printed_p`
+             (data/county/acfr_substitutions.csv); a figure with a known issue carries `flags` (indexes into
+             known_issues). A General Fund or special-fund total never maps to departments.
+  book       the books' budget totals for the same year and fund (revenue, expense), from the book the series uses,
+             for showing beside the actual totals. A special fund's book revenue includes transfers in.
+  sources    each ACFR: doc index, file, path, URL, title.
+`actuals_note` holds the site wording (docs/COUNTY_RESEARCH.md, "What the site should say").
+fund_balance_gaap.json: the ACFRs' Table 3 fund balances (modified accrual, GAAP), kept apart from the budgetary rows.
+
 Standard library only.
 """
 from __future__ import annotations
 
+import json
 import re
 import sys
 from collections import defaultdict
@@ -52,6 +74,25 @@ MEASURE = "budget"
 REVENUE = "Revenue"  # the category app.js and changes.compare read as income
 GROUPS_ORDER = "ABCD"
 CHART_DOC, CHART_PAGE = "County-2026-Budget-Book.pdf", 30  # Class 2A county org chart
+ACFR_CONFIG = ROOT / "config" / "county" / "acfr"
+ACFR_PDF_DIR = "Budget PDFs - County/ACFR"
+ACTUAL = "actual"
+ACTUALS_NOTE = [
+    "Actual figures come from the County's audited Annual Comprehensive Financial Report. They are reported by fund, "
+    "revenue source and function, not by department or account line, so they appear next to budget totals and not next "
+    "to line items.",
+    "Actuals are on the County's budgetary (cash-like) basis, and include grant revenue and spending added after the "
+    "budget was adopted (ARPA, ERAP, opioid funds). Actual revenue ran 10-15% above the adopted budget in 2023-2025, "
+    "largely for that reason. Compare actual with the final budget in the ACFR, not only with the adopted budget.",
+    "Behavioral Health, Developmental Services (Intellectual Disabilities) and Early Intervention are reported together.",
+    "2026 has no actuals yet: the 2026 ACFR will be published around mid-2027.",
+    "The budget books count transfers to other funds (the County match) as General Fund expenditure, and count them "
+    "again as revenue of the receiving special funds. The ACFR reports transfers separately from revenue and "
+    "expenditure, so compare a book's total with the actual total plus transfers.",
+    "The budget shown is the County's adopted budget from its budget books. The ACFR's own 'original budget' column is "
+    "not used: for 2023 and 2024 it does not match the adopted budget.",
+]
+FUND_ORDER = ["General Fund", "Fund B", "Fund E", "Fund F", "Fund G", "Fund H+R+EI", "Fund Y"]
 
 
 def file_year(doc: str) -> int | None:
@@ -262,6 +303,93 @@ def printed_totals(processed: Path, live: list, fig_book: dict, docs, shown: set
     return out
 
 
+def actual_level(r: dict) -> str | None:
+    """The level an ACFR schedule row is shown at, or None when it is not shown."""
+    if r["row_type"] == "line" and r["section"] == "transfer":
+        return "transfer"
+    if r["row_type"] in ("total", "net_change") and r["section"] in ("revenue", "expenditure", "net_change"):
+        return "fund_total"
+    if r["row_type"] == "line" and r["fund"] == "General Fund":
+        return {"revenue": "revenue_source", "expenditure": "function"}.get(r["section"])
+    return None
+
+
+def build_actuals(processed: Path, docs, known: list, fig_book: dict) -> dict | None:
+    configs = {int(p.stem): json.loads(p.read_text()) for p in sorted(ACFR_CONFIG.glob("*.json"))}
+    years = [y for y in sorted(configs) if (processed / f"actuals_acfr_{y}.csv").exists()]
+    if not years:
+        return None
+    spath = DATA / "acfr_substitutions.csv"
+    subs = {(int(r["fiscal_year"]), r["fund"], r["line"], r["column"]): r for r in (read_csv(spath) if spath.exists() else [])}
+    flag_of = defaultdict(list)
+    for i, k in enumerate(known):
+        flag_of[(k["source_doc"], int(k["source_page"] or 0), k["label"])].append(i)
+    figures, sources, book = [], [], []
+    for y in years:
+        cfg = configs[y]
+        d = docs(cfg["source_doc"])
+        sources.append({"year": y, "doc": d, "file": cfg["source_doc"], "path": f"{ACFR_PDF_DIR}/{cfg['source_doc']}",
+                        "url": cfg["url"], "title": cfg["title"]})
+        rows = read_csv(processed / f"actuals_acfr_{y}.csv")
+        for r in sorted(rows, key=lambda r: FUND_ORDER.index(r["fund"])):  # stable: printed order within a fund
+            level = actual_level(r)
+            if level is None:
+                continue
+            f = {"year": y, "fund": r["fund"], "level": level, "section": r["section"], "line": r["line"],
+                 "v": int(r["actual"]), "final": int(r["final"]) if r["final"] != "" else None,
+                 "doc": d, "p": int(r["source_page"])}
+            if r["heading"]:
+                f["heading"] = r["heading"]
+            sub = subs.get((y, r["fund"], r["line"], "actual"))
+            if sub:
+                if int(sub["printed"]) != f["v"] or sub["printed_doc"] != cfg["source_doc"]:
+                    sys.exit(f"acfr_substitutions.csv: {y} {r['fund']} {r['line']} printed {sub['printed']}, the CSV has {f['v']}")
+                f.update(printed=f["v"], printed_p=f["p"], v=int(sub["used"]), doc=docs(sub["used_doc"]), p=int(sub["used_page"]),
+                         substitution=sub["evidence"])
+            # Known issues about this figure: same page, label "<year> <fund> <line>" (or that followed by more words).
+            me = f"{y} {r['fund']} {r['line']}"
+            flags = sorted(i for (doc, page, label), ids in flag_of.items() for i in ids
+                           if doc == cfg["source_doc"] and page == int(r["source_page"]) and (label == me or label.startswith(me + " ")))
+            if flags:
+                f["flags"] = flags
+            figures.append(f)
+        # The books' totals for the same year and fund, from the book the budget series uses.
+        b = fig_book.get(y)
+        if b:
+            tot = defaultdict(float)
+            for r in b["rows"]:
+                if int(r["fiscal_year"]) == y and r["doc_type"] == MEASURE:
+                    tot[(r["fund"], "revenue" if r["side"] == "revenue" else "expense")] += parse_amount(r["amount"]) or 0
+            for sched in cfg["schedules"]:
+                book.append({"year": y, "fund": sched["fund"], "book_funds": sched["book_funds"], "doc": docs(b["doc"]),
+                             "revenue": round(sum(tot[(bf, "revenue")] for bf in sched["book_funds"])),
+                             "expense": round(sum(tot[(bf, "expense")] for bf in sched["book_funds"]))})
+    funds = []
+    for name in FUND_ORDER:
+        sched = next((s for c in configs.values() for s in c["schedules"] if s["fund"] == name), None)
+        if sched:
+            funds.append({"fund": name, "acfr_fund": sched["acfr_fund"], "book_funds": sched["book_funds"]})
+    return {"measure": ACTUAL, "basis": "budgetary", "years": years,
+            "levels": ["fund_total", "transfer", "revenue_source", "function"],
+            "sign": "as printed: transfers out and deficits are negative",
+            "funds": funds, "sources": sources, "figures": figures, "book": book}
+
+
+def build_gaap_fund_balance(processed: Path) -> dict | None:
+    path = processed / "gaap_fund_balance_acfr.csv"
+    if not path.exists():
+        return None
+    configs = {json.loads(p.read_text())["source_doc"]: json.loads(p.read_text()) for p in sorted(ACFR_CONFIG.glob("*.json"))}
+    rows = read_csv(path)
+    return {"basis": "modified accrual (GAAP)",
+            "note": "Fund balances at December 31 from the ACFR's statistical section (Table 3, Fund Balances of Governmental "
+                    "Funds), on the GAAP (modified accrual) basis. They are not on the budgetary basis of the actuals in "
+                    "budget.json and are not comparable with budget figures.",
+            "sources": [{"file": d, "path": f"{ACFR_PDF_DIR}/{d}", "url": configs[d]["url"]} for d in sorted({r["source_doc"] for r in rows})],
+            "rows": [{"year": int(r["fiscal_year"]), "group": r["group"], "line": r["line"], "v": int(r["amount"]),
+                      "doc": r["source_doc"], "p": int(r["source_page"])} for r in rows]}
+
+
 def build(processed: Path = PROCESSED, out: Path = OUT) -> dict:
     books = load_books(processed)
     if not books:
@@ -344,12 +472,16 @@ def build(processed: Path = PROCESSED, out: Path = OUT) -> dict:
         docs(b["doc"])
     used = {b["doc"] for b in fig_book.values()}
     kpath = DATA / "known_issues.csv"
+    known = read_csv(kpath) if kpath.exists() else []
+    actuals = build_actuals(processed, docs, known, fig_book)
     budget = {
         "entity": "county",
         "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "newest_year": newest,
-        "measures": [MEASURE],
-        "rule": {MEASURE: {"book": "newest book that prints the year", "columns": [MEASURE]}},
+        "measures": [MEASURE] + ([ACTUAL] if actuals else []),
+        "rule": {MEASURE: {"book": "newest book that prints the year", "columns": [MEASURE]},
+                 **({ACTUAL: {"source": "County ACFR, budget-vs-actual schedules (budgetary basis)", "years": actuals["years"],
+                              "block": "actuals"}} if actuals else {})},
         "books": [{"doc": b["doc"], "year": b["year"], "years": b["years"], "csv": b["csv"], "used": b["doc"] in used,
                    "figures": [fy for fy, fb in sorted(fig_book.items()) if fb is b]} for b in live],
         "docs": docs.items,
@@ -361,11 +493,13 @@ def build(processed: Path = PROCESSED, out: Path = OUT) -> dict:
         "accounts": [list(a) for a in accounts.items],
         "series": dict(sorted(series.items())),
         "printed": printed,
-        "known_issues": read_csv(kpath) if kpath.exists() else [],
+        "known_issues": known,
         "missing_bureaus": {},
         "reserve": None,
         "conflict_count": len(conflicts),
         "org": org,
+        "actuals": actuals,
+        "actuals_note": ACTUALS_NOTE if actuals else [],
     }
     changes = {
         "year": newest,
@@ -383,6 +517,9 @@ def build(processed: Path = PROCESSED, out: Path = OUT) -> dict:
     write_json(out / "budget.json", budget)
     write_json(out / "conflicts.json", conflicts)
     write_json(out / "changes.json", changes)
+    gaap = build_gaap_fund_balance(processed)
+    if gaap:
+        write_json(out / "fund_balance_gaap.json", gaap)
     return budget
 
 
@@ -393,6 +530,14 @@ def report(budget: dict, out: Path) -> None:
         print(f"  {key:12s} {len(s['a']):4d} lines  total {sum(s['v']):>14,}  from {budget['docs'][s['doc']]}")
     if budget["org"]["unlisted"]:
         print(f"  departments not in org_units.csv: {', '.join(budget['org']['unlisted'])}")
+    a = budget.get("actuals")
+    if a:
+        for y in a["years"]:
+            figs = [f for f in a["figures"] if f["year"] == y]
+            gf = {f["line"]: f["v"] for f in figs if f["fund"] == "General Fund" and f["level"] == "fund_total"}
+            print(f"  {y}|actual  {len(figs):4d} figures  General Fund revenue {gf.get('Total revenues', 0):>14,}  "
+                  f"expenditure {gf.get('Total expenditures', 0):>14,}  from {budget['docs'][figs[0]['doc']] if figs else '-'}")
     print(f"Conflicts: {budget['conflict_count']} ({out / 'conflicts.json'})")
-    for name in ("budget.json", "conflicts.json", "changes.json"):
-        print(f"  {name}: {(out / name).stat().st_size:,} bytes")
+    for name in ("budget.json", "conflicts.json", "changes.json", "fund_balance_gaap.json"):
+        if (out / name).exists():
+            print(f"  {name}: {(out / name).stat().st_size:,} bytes")

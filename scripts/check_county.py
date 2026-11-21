@@ -18,6 +18,13 @@ validation_*.csv and data/county/*.csv directly and does not import the build.
    category, group, department and revenue-category figure, and each merged line's components.
 6. Conflicts: every line where an older book prints a different figure for a shown year is in conflicts.json,
    and nothing else is.
+7. Actuals (budget.json `actuals`, from data/processed/county/actuals_acfr_<year>.csv): every figure recomputed
+   from the CSVs, config/county/acfr/*.json, data/county/acfr_substitutions.csv and known_issues.csv (level, line,
+   actual, final, document, page, substitution, flags), and nothing else shown; no Original or variance figure;
+   no actual for a year without an ACFR; the General Fund's sources and functions add to its printed totals and
+   every fund's net change foots (with the printed figures); the books' totals beside them equal the CSV sums;
+   every ACFR check over $5 in validation_acfr_<year>.csv is in known_issues.csv; and fund_balance_gaap.json
+   equals data/processed/county/gaap_fund_balance_acfr.csv, with the General Fund and other funds adding to the total.
 Every failure counts toward the final "N series mismatches". Standard library only.
 """
 from __future__ import annotations
@@ -207,6 +214,7 @@ def main() -> int:
 
     failures += check_changes(budget, changes, csv_rows, want_book, book_year, newest)
     failures += check_conflicts(conflicts, rows_by_doc, live, want_book)
+    failures += check_actuals(budget, rows_by_doc, want_book)
 
     print(f"\n{failures} series mismatches")
     return 1 if failures else 0
@@ -395,6 +403,160 @@ def check_conflicts(conflicts, rows_by_doc, live, want_book) -> int:
         print(f"FAIL {x}")
     explained = sum(1 for c in conflicts if c.get("account_change"))
     print(f"{'ok  ' if not bad else 'FAIL'} {len(got)} line differences between books, {explained} of them from a recorded account change")
+    return bad
+
+
+ACFR_LEVEL = {("revenue", "line"): "revenue_source", ("expenditure", "line"): "function",
+              ("revenue", "total"): "fund_total", ("expenditure", "total"): "fund_total", ("net_change", "net_change"): "fund_total"}
+
+
+def check_actuals(budget, rows_by_doc, want_book) -> int:
+    print("\nActuals (ACFR, budgetary basis), recomputed from actuals_acfr_*.csv:")
+    a, docs = budget.get("actuals"), budget["docs"]
+    configs = {int(p.stem): json.loads(p.read_text()) for p in sorted((ROOT / "config" / "county" / "acfr").glob("*.json"))}
+    years = [y for y in sorted(configs) if (PROCESSED / f"actuals_acfr_{y}.csv").exists()]
+    if not years:
+        ok = not a
+        print(f"{'ok  ' if ok else 'FAIL'} no ACFR CSVs: no actuals")
+        return 0 if ok else 1
+    if not a:
+        print("FAIL actuals_acfr CSVs exist but budget.json has no actuals")
+        return 1
+    bad = 0
+    ok = a["years"] == years and "actual" in budget["measures"] and a["measure"] == "actual" and a["basis"] == "budgetary"
+    bad += not ok
+    print(f"{'ok  ' if ok else 'FAIL'} actual years {a['years']} (expected {years}); measure 'actual', budgetary basis")
+    ok = max(want_book) not in a["years"] or max(want_book) in configs
+    bad += not ok
+    print(f"{'ok  ' if ok else 'FAIL'} the newest budget year ({max(want_book)}) has actuals only if its ACFR is configured")
+
+    known = read(DATA / "known_issues.csv") if (DATA / "known_issues.csv").exists() else []
+    spath = DATA / "acfr_substitutions.csv"
+    subs = {(int(r["fiscal_year"]), r["fund"], r["line"], r["column"]): r for r in (read(spath) if spath.exists() else [])}
+    want = Counter()
+    for y in years:
+        doc = configs[y]["source_doc"]
+        for r in read(PROCESSED / f"actuals_acfr_{y}.csv"):
+            if r["section"] == "transfer" and r["row_type"] == "line":
+                level = "transfer"
+            elif r["fund"] != "General Fund" and r["row_type"] == "line":
+                continue  # special funds: totals and transfers only
+            else:
+                level = ACFR_LEVEL.get((r["section"], r["row_type"]))
+            if level is None:
+                continue
+            v, d, p, printed, printed_p = int(r["actual"]), doc, int(r["source_page"]), None, None
+            sub = subs.get((y, r["fund"], r["line"], "actual"))
+            if sub:
+                printed, printed_p = v, p
+                v, d, p = int(sub["used"]), sub["used_doc"], int(sub["used_page"])
+            me = f"{y} {r['fund']} {r['line']}"
+            flags = tuple(sorted(i for i, k in enumerate(known) if k["source_doc"] == doc and int(k["source_page"] or 0) == int(r["source_page"])
+                                 and (k["label"] == me or k["label"].startswith(me + " "))))
+            want[(y, r["fund"], level, r["section"], r["line"], r["heading"] or None, v,
+                  int(r["final"]) if r["final"] != "" else None, d, p, printed, printed_p, flags)] += 1
+    got = Counter()
+    forbidden = 0
+    for f in a["figures"]:
+        forbidden += any(k in f for k in ("original", "variance"))
+        got[(f["year"], f["fund"], f["level"], f["section"], f["line"], f.get("heading"), f["v"], f["final"], docs[f["doc"]],
+             f["p"], f.get("printed"), f.get("printed_p"), tuple(f.get("flags", [])))] += 1
+    for x in list((want - got) + (got - want))[:10]:
+        print(f"FAIL actual figure {'missing' if x in want else 'not in the CSVs'}: {x}")
+    nbad = sum((want - got).values()) + sum((got - want).values())
+    bad += nbad
+    print(f"{'ok  ' if not nbad else 'FAIL'} {len(a['figures'])} actual figures equal the CSV rows (value, final budget, document, page, "
+          f"substitutions, flags), and nothing else is shown")
+    bad += forbidden
+    print(f"{'ok  ' if not forbidden else 'FAIL'} no figure carries the ACFR's Original column or a variance")
+    flagged = sum(1 for f in a["figures"] if f.get("flags"))
+    print(f"     {flagged} figures flagged from known_issues.csv; {sum(1 for f in a['figures'] if 'printed' in f)} taken from another page "
+          f"(acfr_substitutions.csv)")
+
+    # Footing with the printed figures, from the JSON.
+    fbad = 0
+    by = defaultdict(dict)
+    for f in a["figures"]:
+        by[(f["year"], f["fund"])][(f["level"], f["line"])] = f.get("printed", f["v"])
+    for (y, fund), figs in sorted(by.items()):
+        rev, exp = figs.get(("fund_total", "Total revenues")), figs.get(("fund_total", "Total expenditures"))
+        net = figs.get(("fund_total", "Net change in fund balances"))
+        tr = sum(v for (lv, _), v in figs.items() if lv == "transfer")
+        if None in (rev, exp, net) or abs(rev - exp + tr - net) > 0:
+            fbad += 1
+            print(f"FAIL {y} {fund}: revenue {rev} - expenditure {exp} + transfers {tr} != net change {net}")
+        if fund == "General Fund":
+            for lv, tot in (("revenue_source", rev), ("function", exp)):
+                s_ = sum(v for (l, _), v in figs.items() if l == lv)
+                if s_ != tot:
+                    fbad += 1
+                    print(f"FAIL {y} General Fund {lv} figures add to {s_:,}, total {tot:,}")
+    bad += fbad
+    print(f"{'ok  ' if not fbad else 'FAIL'} {len(by)} fund-years: net change = revenue - expenditure + transfers (printed figures); "
+          f"General Fund sources and functions add to its totals")
+
+    # The books' totals shown beside the actuals.
+    bbad = 0
+    want_b = {}
+    for y in years:
+        if y not in want_book:
+            continue
+        tot = defaultdict(float)
+        for r in rows_by_doc[want_book[y]]:
+            if int(r["fiscal_year"]) == y:
+                tot[(r["fund"], "revenue" if r["side"] == "revenue" else "expense")] += amt(r["amount"])
+        for sc in configs[y]["schedules"]:
+            want_b[(y, sc["fund"])] = (want_book[y], round(sum(tot[(bf, "revenue")] for bf in sc["book_funds"])),
+                                       round(sum(tot[(bf, "expense")] for bf in sc["book_funds"])))
+    got_b = {(b["year"], b["fund"]): (docs[b["doc"]], b["revenue"], b["expense"]) for b in a["book"]}
+    for k in sorted(set(want_b) | set(got_b)):
+        if want_b.get(k) != got_b.get(k):
+            bbad += 1
+            print(f"FAIL book totals {k}: shown {got_b.get(k)}, csv {want_b.get(k)}")
+    bad += bbad
+    print(f"{'ok  ' if not bbad else 'FAIL'} {len(got_b)} book budget totals beside the actuals equal the CSV sums")
+
+    # Every ACFR check over $5 is in known_issues.csv.
+    norm = lambda t: re.sub(r"[^a-z0-9]", "", t.lower())
+    vbad = nchecks = 0
+    for y in years:
+        vpath = PROCESSED / f"validation_acfr_{y}.csv"
+        if not vpath.exists():
+            vbad += 1
+            print(f"FAIL {vpath.name} missing")
+            continue
+        for c in read(vpath):
+            nchecks += 1
+            if abs(float(c["diff"])) <= TOLERANCE:
+                continue
+            hit = [k for k in known if k["source_doc"] == c["source_doc"] and k["source_page"] == c["source_page"] and norm(k["label"]) == norm(c["label"])]
+            print(f"{'DIFF' if hit else 'FAIL'} {y} p{c['source_page']:>4} {c['label']} [{c['column']}] printed {float(c['printed']):,.0f} "
+                  f"computed {float(c['computed']):,.0f}  -> {'logged in known_issues.csv' if hit else 'NOT in known_issues.csv'}")
+            vbad += not hit
+    bad += vbad
+    print(f"{'ok  ' if not vbad else 'FAIL'} {nchecks} ACFR checks (schedules, tie-outs to the books); every difference over ${TOLERANCE} is in known_issues.csv")
+
+    ok = bool(budget.get("actuals_note"))
+    bad += not ok
+    print(f"{'ok  ' if ok else 'FAIL'} actuals_note has the site wording ({len(budget.get('actuals_note', []))} paragraphs)")
+
+    # GAAP fund balances: a separate file, equal to the CSV.
+    gbad = 0
+    gpath, gjson = PROCESSED / "gaap_fund_balance_acfr.csv", WEB / "fund_balance_gaap.json"
+    if gpath.exists():
+        g = json.loads(gjson.read_text()) if gjson.exists() else {"rows": []}
+        w = Counter((int(r["fiscal_year"]), r["group"], r["line"], int(r["amount"]), r["source_doc"], int(r["source_page"])) for r in read(gpath))
+        h = Counter((r["year"], r["group"], r["line"], r["v"], r["doc"], r["p"]) for r in g["rows"])
+        gbad += sum(((w - h) + (h - w)).values())
+        for y in sorted({k[0] for k in w}):
+            val = {(k[1], k[2]): k[3] for k in w if k[0] == y}
+            if val[("General Fund", "Total general fund")] + val[("Other governmental funds", "Total all other governmental funds")] != \
+                    val[("All governmental funds", "Total fund balances of all governmental funds")]:
+                gbad += 1
+                print(f"FAIL {y} GAAP fund balances: General Fund + other funds != total")
+        gbad += "basis" not in g or "GAAP" not in g.get("basis", "") or any("fund_balance" in k for k in a)
+        print(f"{'ok  ' if not gbad else 'FAIL'} fund_balance_gaap.json: {len(h)} GAAP fund balances equal the CSV and add up; kept out of the budgetary actuals")
+    bad += gbad
     return bad
 
 

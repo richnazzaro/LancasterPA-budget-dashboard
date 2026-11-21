@@ -269,3 +269,34 @@ Steps 1–3 can be checked without touching the site. Step 2 can run alongside s
 10. **Publish:** `.github/workflows/pages.yml` builds and checks both entities in separate steps, so either one failing stops the publish.
 
 **Found in passing:** the City build is not byte-stable from run to run. `changes.json` key order follows Python's string hash seed, although the values are identical. This was already true before step 3.
+
+**Actuals, done (2026-11-21).** Audited actuals for 2023, 2024 and 2025 come from the County's ACFRs (budgetary basis), following the import spec in `docs/COUNTY_RESEARCH.md`. 2026 stays budget-only until its ACFR (mid-2027).
+
+1. **Sources:** `Budget PDFs - County/ACFR/County-ACFR-<year>.pdf` (6.2, 7.3 and 2.8 MB). Each `config/county/acfr/<year>.json` records the archive URL, the direct download URL and the schedule pages (PDF page numbers).
+2. **Extractor:** `scripts/extract_county_acfr.py` reads the seven budget-vs-actual schedules per year: General Fund; Children & Youth (Y); Behavioral Health & Developmental Services (H, R and EI combined); Domestic Relations (F); Office of Aging (G); Drug & Alcohol (E); Liquid Fuels (B).
+   - It writes `data/processed/county/actuals_acfr_<year>.csv` (Original, Final, Actual and Variance) and `validation_acfr_<year>.csv`.
+   - Split amounts are rebuilt by position: pieces of one amount touch (under 3 pt apart), and each amount goes to the column header it sits under.
+   - 677 checks: lines add to the printed totals; Excess and Net change foot; every printed variance is the favourable difference from the final budget; the cash-basis fund balance rolls forward; the modified-accrual balance reconciles and equals Table 3; General Fund transfers out equal the governmental funds statement (p43); each later ACFR's Table 3 agrees with the earlier ones.
+3. **Tie-outs to the books** (the book the site uses for each year):
+   - General Fund original revenue ties in all three years; 2025 original expenditure plus transfers ties.
+   - Every special fund's original revenue plus transfers in ties in all three years.
+   - Differences, all logged with evidence in `data/county/known_issues.csv` (24 new entries):
+     - General Fund original expenditure, 2023 (+7.76M) and 2024 (+16.30M). Cause not found.
+     - Special-fund original expenditure, 2023 and 2024. Each gap equals the ACFR's own planned deficit, which the books do not show. Fund B's gaps are only partly explained.
+     - Children & Youth 2025: the ACFR's original expenditure repeats the 2024 figure.
+     - **New source error:** the Liquid Fuels schedule's Excess and Net change variances are wrong in all three ACFRs. They subtract the expenditure variance instead of adding it. The 2023 Transfers in variance is blank.
+     - **2024 transfers out:** the schedule prints (18,962,872), the 2023 figure. The p43 statement prints (21,630,095). The site uses p43 (`data/county/acfr_substitutions.csv`) and flags the 2024 General Fund net change.
+4. **Build:** `budget.json` has measure `actual` in a separate `actuals` block (not `series`; these are not account lines).
+   - Levels: fund totals; transfers; General Fund revenue by source; General Fund spending by function.
+   - Each figure carries its ACFR document and page, the ACFR's final budget, and any flags or substitution.
+   - The ACFR's Original column and its variances are never exported.
+   - `actuals.book` gives the books' budget totals for the same fund and year.
+   - `actuals_note` has the site wording.
+   - `fund_balance_gaap.json` holds the Table 3 GAAP fund balances, kept apart from the budgetary rows.
+5. **Checks:** `check_county.py` recomputes every actual figure from the CSVs and fails on any ACFR difference over $5 that `known_issues.csv` does not list. Result: "0 series mismatches".
+6. **City:** the City output is unchanged (same content as before, apart from the timestamp).
+
+**Still open from Actuals:**
+- Site work: show actuals beside the fund totals, and General Fund by source and by function (`web/app.js` is untouched).
+- 2026 ACFR (about mid-2027): add `config/county/acfr/2026.json` and run `scripts/extract_county_acfr.py`.
+- A department-to-function mapping stays out. Research section 5 shows it can only be approximate.
