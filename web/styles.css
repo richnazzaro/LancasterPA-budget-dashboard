@@ -788,10 +788,21 @@ a.src { white-space: nowrap; }
 .trend-axis { margin: 6px 0 0; font-size: 13px; line-height: 18px; color: var(--muted); }
 .trend-axis:empty { display: none; }
 
-/* Calculated totals: the figure is the sum of the line items and differs from the book's printed total by rounding. */
-.calc-mark { font-family: var(--font); font-size: .5em; font-weight: 600; color: var(--muted); margin-left: .1em; vertical-align: super; line-height: 0; cursor: help; }
-.calc-note, .calc-foot { margin: 0 0 14px; font-size: 14px; line-height: 20px; color: var(--muted); }
-.calc-foot { margin-top: 8px; }
+/* Printed totals. A total is shown as the city printed it. Where the book prints no total for exactly the lines in
+   view, the figure is the site's own sum, followed by a quiet "calculated" label (never colored). In sentences it reads
+   "(calculated)"; at the head of a column it labels every figure below; in a table cell it sits under the amount.
+   A printed total whose lines add up to something else by more than rounding carries a ledger-red ≠ sign, and a plain
+   note (no box) gives the line sum, the gap and the reviewed explanation. Red always comes with the sign and words. */
+.calc-tag { font-family: var(--font); font-size: 14px; line-height: 20px; font-weight: 500; font-style: normal; color: var(--muted); letter-spacing: .02em; white-space: nowrap; vertical-align: baseline; }
+.calc-tag::before { content: "("; }
+.calc-tag::after { content: ")"; }
+.calc-head, td .calc-tag, .bar-label .calc-tag { display: block; }
+.calc-head::before, .calc-head::after, td .calc-tag::before, td .calc-tag::after, .bar-label .calc-tag::before, .bar-label .calc-tag::after { content: none; }
+.gap-mark { font-family: var(--font); font-weight: 700; color: var(--red); margin-left: .15em; cursor: help; }
+.big-total .gap-mark { font-size: .5em; vertical-align: .5em; }
+.gap-note { margin: 8px 0 14px; font-size: 14px; line-height: 20px; color: var(--muted); text-align: left; text-wrap: pretty; }
+.gap-note > .gap-mark:first-child { margin: 0 .2em 0 0; }
+.gap-note strong { color: var(--fg); font-weight: 600; }
 
 /* Staff section: positions and salaries by year */
 .staff-table th[scope="row"] { min-width: 10em; }

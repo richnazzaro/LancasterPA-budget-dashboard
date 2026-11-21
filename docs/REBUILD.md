@@ -91,7 +91,7 @@ python3 scripts/build_dataset.py
 python3 scripts/check_dataset.py
 ```
 
-`build_dataset.py` writes `web/data/budget.json`, `staffing.json`, `changes.json` and `conflicts.json`. `check_dataset.py` recomputes every figure the site shows from the CSVs and must end with **"0 series mismatches"**.
+`build_dataset.py` writes `web/data/budget.json`, `staffing.json`, `changes.json` and `conflicts.json`. `check_dataset.py` recomputes every figure the site shows from the CSVs, checks every printed total and gap flag (it lists each ≠ flag the site shows), and must end with **"0 series mismatches"**.
 
 ### Check the rebuild matches the repository
 

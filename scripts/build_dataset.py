@@ -65,6 +65,7 @@ FUND_ALIASES = {  # words used in printed roll-up labels -> fund names in the CS
     "wastewater": "Sewer Fund",
     "sewer": "Sewer Fund",
     "water fund": "Water Fund",
+    "water": "Water Fund",  # after stormwater and wastewater, so only plain "Water ..." labels reach it
     "solid waste": "Solid Waste & Recycling Fund",
     "long's park": "Long's Park Fund",
     "longs park": "Long's Park Fund",
@@ -233,14 +234,16 @@ def build(processed: Path, out: Path) -> dict:
         entry["column"] = s["c"][0] if len(set(s["c"])) == 1 else s["c"]
         out_series[key] = entry
 
-    printed = printed_totals(processed, designated, newest, docs, bureaus, set(out_series))
+    known_issues = read_csv(ROOT / "data" / "known_issues.csv") if (ROOT / "data" / "known_issues.csv").exists() else []
+    acct_rows = [list(a) for a in accounts.items]
+    printed = printed_totals(processed, designated, newest, docs, funds, bureaus, out_series, acct_rows,
+                             cats.index.get("Revenue"), known_issues)
 
     book_list = sorted(({"doc": b["doc"], "year": b["year"], "csv": b["csv"],
                          "used": designated.get(b["year"]) is b} for b in books.values()),
                        key=lambda b: b["year"])
     for b in book_list:
         docs(b["doc"])
-    known_issues = read_csv(ROOT / "data" / "known_issues.csv") if (ROOT / "data" / "known_issues.csv").exists() else []
 
     budget = {
         "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -258,9 +261,8 @@ def build(processed: Path, out: Path) -> dict:
         "series": out_series,
         "printed": printed,
         "known_issues": known_issues,
-        # Bureaus a book omits entirely, read from the reviewed known-issue notes
-        # ("... has no line-item pages for <bureau> (org N)"), keyed by source book.
-        "missing_bureaus": missing_bureaus(known_issues),
+        # Bureaus a book omits entirely (reviewed known-issue notes), keyed by source book.
+        "missing_bureaus": missing_bureaus(known_issues, books),
         "reserve": reserve_fund(processed, designated, newest, docs),
         "conflict_count": len(conflicts),
         # Departments and bureaus as on the 2027 org chart, with "what does it do" text
@@ -351,27 +353,105 @@ def reserve_fund(processed: Path, designated: dict, newest: int, docs) -> dict |
     return {"name": "Reserve Fund", "entries": entries}
 
 
-def missing_bureaus(known_issues: list) -> dict:
+def missing_bureaus(known_issues: list, books: dict) -> dict:
+    """Bureaus a book omits entirely, read from the reviewed notes ("... has no line-item pages for <bureau>
+    (org N)"), keyed by source book: [{name, org, fund}]. The fund comes from that org's lines in other books."""
+    fund_of = {}
+    for b in books.values():
+        for r in b["rows"]:
+            fund_of.setdefault(r["org_code"], r["fund"])
     out: dict = {}
     for i in known_issues:
-        for name in re.findall(r"no line-item pages for (.+?) \(org \d+\)", i.get("note", "")):
-            out.setdefault(i["source_doc"], [])
-            if name not in out[i["source_doc"]]:
-                out[i["source_doc"]].append(name)
+        for name, org in re.findall(r"no line-item pages for (.+?) \(org (\d+)\)", i.get("note", "")):
+            entry = {"name": name, "org": org, "fund": fund_of.get(org)}
+            if entry not in out.setdefault(i["source_doc"], []):
+                out[i["source_doc"]].append(entry)
     return out
 
 
-def printed_totals(processed: Path, designated: dict, newest: int, docs, bureaus, shown_keys: set) -> list:
-    """Printed section (bureau) and fund roll-up totals from the validation files,
-    restricted to the columns the selection rule uses, so the UI can link each
-    total to the page where the city prints it."""
+ROUNDING_PER_CELL = 5       # a section total the book prints over its own lines
+ROUNDING_PER_LINE = 0.5     # a roll-up: each summed line may be off by half a dollar
+
+
+def _norm_label(text: str) -> str:
+    text = re.sub(r"[^a-z0-9 ]+", " ", (text or "").lower())
+    text = re.sub(r"\b(exp|expense|expenses|fund)\b", " ", text)
+    return " ".join(text.split())
+
+
+def _issue_for(known_issues: list, doc: str, page: int, label: str):
+    """The reviewed known-issue note for a printed total (same book, page and label), if any."""
+    here = [(i, k) for i, k in enumerate(known_issues)
+            if k["source_doc"] == doc and str(k["source_page"]).strip() == str(page) and "/" not in k["label"]]
+    want = _norm_label(label)
+    for i, k in here:
+        got = _norm_label(k["label"])
+        if got == want or got.startswith(want) or want.startswith(got):
+            return i
+    return None
+
+
+def printed_totals(processed: Path, designated: dict, newest: int, docs, funds, bureaus,
+                   series: dict, accounts: list, revenue_cat, known_issues: list) -> list:
+    """Every section (bureau) and roll-up total the books print, for the figures the site shows.
+
+    Each item says which lines the printed total covers (`m`), so the site can tell whether a total it
+    displays is one the book prints: a list of [fund, bureau, first page, last page] (bureau -1 = every
+    line of that fund and `kind`). Sections cover their own lines; the last fund roll-up of a fund and kind
+    in a book covers the whole fund; other roll-ups (departments, subtotals) cover the run of sections the
+    validation step matched. Per shown figure: `values` (as printed), `sum` (our sum of those lines),
+    `n` (lines summed), and `flag` (the gap is more than rounding: $5 for a section, $0.50 per line for a
+    roll-up). `issue` points to the reviewed note in known_issues.csv."""
     out = []
+    shown_keys = set(series)
     for by, book in sorted(designated.items()):
         path = processed / f"validation_{book['stem']}.csv"
         if not path.exists():
             continue
-        for r in read_csv(path):
-            if r["level"] not in ("section", "rollup"):
+        val = [r for r in read_csv(path) if r["level"] in ("section", "rollup")]
+        # Section membership: same label, pages after the previous section of that label up to its total.
+        lines = defaultdict(set)  # label -> {(fund, page)}
+        for r in book["rows"]:
+            lines[r["bureau"]].add((r["fund"], int(r["source_page"]), r["category"] == "Revenue"))
+        prev_page = defaultdict(int)
+        specs, leaf = [], []  # per validation row; leaf sections in order (for roll-up runs)
+        for r in val:
+            page = int(r["source_page"])
+            if r["level"] == "section":
+                lo = prev_page[r["label"]] + 1
+                prev_page[r["label"]] = page
+                hit = {(f, rev) for f, pg, rev in lines.get(r["label"], ()) if lo <= pg <= page}
+                if not hit or int(r["members"] or 0) == 0:
+                    specs.append(None)
+                    continue
+                if len(hit) > 1:
+                    sys.exit(f"{book['doc']} p{page} section {r['label']!r} spans {sorted(hit)}")
+                (fund, rev), = hit
+                spec = {"m": [[funds(fund), bureaus(r["label"]), lo, page]], "kind": "revenue" if rev else "expense"}
+                specs.append(spec)
+                leaf.append((spec, printed_cells(r)))
+            else:
+                run = [x[0] for x in best_run(leaf, printed_cells(r))]
+                spec = {"m": [x for s in run for x in s["m"]],
+                        "kind": run[0]["kind"] if run and len({s["kind"] for s in run}) == 1 else None}
+                specs.append(spec)
+        # The last printed roll-up of each fund and kind is the fund total.
+        last_fund = {}
+        for i, r in enumerate(val):
+            if r["level"] == "rollup":
+                label = r["label"].lower()
+                fund = next((f for k, f in FUND_ALIASES.items() if k in label), None)
+                kind = "revenue" if "revenue" in label else "expense" if "expense" in label else None
+                if fund and kind:
+                    last_fund[(fund, kind)] = i
+        fund_of = {i: fk for fk, i in last_fund.items()}
+
+        for i, r in enumerate(val):
+            spec = specs[i]
+            if i in fund_of:
+                fund, kind = fund_of[i]
+                spec = {"m": [[funds(fund), -1, 0, 100000]], "kind": kind}
+            if not spec or not spec["m"] or not spec["kind"]:
                 continue
             values = {}
             for col, text in r.items():
@@ -384,7 +464,6 @@ def printed_totals(processed: Path, designated: dict, newest: int, docs, bureaus
                     continue
                 if measure in PROPOSED_MEASURES and fy != newest:
                     continue
-                # keep only the preferred column for each measure
                 key = f"{fy}|{measure}"
                 if key not in shown_keys:
                     continue  # only totals for figures the site actually shows
@@ -393,17 +472,66 @@ def printed_totals(processed: Path, designated: dict, newest: int, docs, bureaus
                     values[key] = (parse_amount(text), rank)
             if not values:
                 continue
-            item = {"level": r["level"], "label": r["label"], "page": int(r["source_page"]),
-                    "doc": docs(book["doc"]), "values": {k: v[0] for k, v in values.items()},
-                    "passed": r.get("passed") == "True"}
-            if r["level"] == "rollup":
-                label = r["label"].lower()
-                fund = next((f for k, f in FUND_ALIASES.items() if k in label), None)
-                kind = "revenue" if "revenue" in label else "expense" if "expense" in label else None
-                if fund and kind:
-                    item["fund"], item["kind"] = fund, kind
+            doc = docs(book["doc"])
+            item = {"level": r["level"], "label": r["label"], "page": int(r["source_page"]), "doc": doc,
+                    "kind": spec["kind"], "m": spec["m"], "values": {k: v[0] for k, v in values.items()},
+                    "sum": {}, "n": {}, "flag": []}
+            if i in fund_of:
+                item["fund"] = fund_of[i][0]
+            for key in item["values"]:
+                total, n = member_sum(series[key], accounts, item, doc, revenue_cat)
+                item["sum"][key], item["n"][key] = total, n
+                if abs(total - item["values"][key]) > tolerance(item["level"], n):
+                    item["flag"].append(key)
+            iss = _issue_for(known_issues, book["doc"], item["page"], r["label"])
+            if iss is not None:
+                item["issue"] = iss
             out.append(item)
     return out
+
+
+def printed_cells(r: dict) -> dict:
+    return {c: parse_amount(v) for c, v in r.items() if (c or "").startswith("printed_") and parse_amount(v) is not None}
+
+
+def best_run(leaf: list, cells: dict) -> list:
+    """The run of most recent sections a roll-up adds up. Unlike the validation step's first-fit search,
+    this picks the run with the fewest printed columns off by more than rounding, then the smallest gap,
+    so one bad column (a year-to-date figure, say) does not send it to the wrong run."""
+    best, run = None, [0] * 0
+    sums = defaultdict(float)
+    for n in range(1, len(leaf) + 1):
+        for c, v in leaf[-n][1].items():
+            sums[c] += v
+        diffs = [abs(sums[c] - v) for c, v in cells.items()]
+        if not diffs:
+            break
+        score = (sum(d > max(ROUNDING_PER_CELL, n) for d in diffs), max(diffs))
+        if best is None or score < best:
+            best, run = score, leaf[-n:]
+    return run
+
+
+def tolerance(level: str, n: int) -> float:
+    """Rounding: $5 for a printed section total, $0.50 for each line summed for a roll-up (at least $5)."""
+    return ROUNDING_PER_CELL if level == "section" else max(ROUNDING_PER_CELL, ROUNDING_PER_LINE * n)
+
+
+def member_sum(s: dict, accounts: list, item: dict, doc: int, revenue_cat):
+    """Our sum of the shown lines a printed total covers (same book, fund, section, pages, kind)."""
+    total, n = 0, 0
+    docs_ = s["doc"] if isinstance(s["doc"], list) else None
+    for j, a in enumerate(s["a"]):
+        if (docs_[j] if docs_ else s["doc"]) != doc:
+            continue
+        code, _, fund, _, bureau, cat = accounts[a]
+        if (cat == revenue_cat) != (item["kind"] == "revenue"):
+            continue
+        p = s["p"][j]
+        if any(fund == f and (b == -1 or b == bureau) and lo <= p <= hi for f, b, lo, hi in item["m"]):
+            total += s["v"][j]
+            n += 1
+    return (int(total) if float(total).is_integer() else total), n
 
 
 def staffing(processed: Path, designated: dict, newest: int) -> dict:

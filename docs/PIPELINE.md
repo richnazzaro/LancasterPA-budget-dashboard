@@ -90,7 +90,7 @@ A page whose header matches no configured layout stops the run.
 ## Building the site data
 ```bash
 python3 scripts/build_dataset.py   # data/processed/budget_long_*.csv + fund_balance_*.csv -> web/data/*.json
-python3 scripts/check_dataset.py   # every shown figure vs the CSVs and the printed fund totals, plus the org structure; must report 0 mismatches
+python3 scripts/check_dataset.py   # every shown figure vs the CSVs, every printed total and gap flag, plus the org structure; must report 0 mismatches
 ```
 `build_dataset.py` writes `budget.json` (every figure shown), `staffing.json`, `changes.json` and `conflicts.json`. It picks **one kind of figure per year**:
 - the newest year gets **proposed** and **revised**;
@@ -98,6 +98,12 @@ python3 scripts/check_dataset.py   # every shown figure vs the CSVs and the prin
 - earlier years get **actual**, from the book two years later.
 
 Adopted, amended and year-to-date columns, and older books' own-year proposals, are never shown. New `budget_long_*.csv` files are picked up automatically. Where overlapping books disagree, the disagreement is logged to `web/data/conflicts.json`. The Reserve Fund block in `budget.json` is built from `fund_balance_*.csv` under the same rule.
+
+**Printed totals** (`budget.json` `printed`, from the `validation_*.csv` files of the designated books, for the figures the site shows). The site shows every total as the city printed it, so each printed section, department roll-up and fund total says which lines it covers:
+- `m`: a list of `[fund, bureau, first page, last page]` (indexes into `funds` and `bureaus`; bureau `-1` means every line of the fund) and `kind` (`revenue`/`expense`). A section covers its own lines (its label, from the page after the previous section with that label up to its TOTAL). The last fund roll-up of a fund and kind in a book covers the whole fund. Other roll-ups cover the run of preceding sections that best re-adds to every printed column (fewest columns off, then the smallest gap), so one bad year-to-date column does not pick the wrong run.
+- `values` (as printed), `sum` and `n` (our sum of the shown lines it covers, and how many), `flag` (the figures whose gap is more than rounding: $5 for a section, $0.50 per line for a roll-up), and `issue` (index into `known_issues` of the reviewed note for that book, page and label).
+- The site (`totalOf()` in `app.js`) shows the printed value whenever the lines in view are exactly a printed total's lines; otherwise its own sum, labelled "calculated". `missing_bureaus` lists bureaus a book omits entirely (`[{name, org, fund}]`, from the known-issue notes) so calculated totals that cannot be complete say so.
+- `check_dataset.py` re-reads each printed value from the validation CSV, re-adds `sum`/`n` from `budget_long` and re-derives every flag, then matches every total the site can display to the printed total that covers exactly its lines and lists every flag that shows.
 
 ### Positions (`staffing.json`)
 One entry per staffing schedule: each book's own-year schedule (2022–2026, `measure: "budgeted"`) and the newest book's two schedules (`"proposed"` and `"revised"`). Each position row is `[unit, title, ft_pt, org_code, object_code, count, salary, page]`; `unit` and `title` index the `units` and `titles` lists. The city publishes budgeted positions only, so there is no Actual for positions. The site's Staff section places each position in an org-chart bureau by its org code, the same way as the budget lines. Its salary table does not use `staffing.json`: it sums the "Salaries & Wages" budget lines from `budget.json` under the one-figure rule.
