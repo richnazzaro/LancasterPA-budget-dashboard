@@ -742,7 +742,7 @@ a.src { white-space: nowrap; }
    Deck, folded status line, category table, About page, margin notes, phone outline
    ------------------------------------------------------------------------------------------------------ */
 /* The deck: what changed, set in ink under the title. The total below is evidence, not the headline. */
-.deck { margin: 0 0 18px; font-family: var(--serif); font-size: 38px; line-height: 44px; font-weight: 600; color: var(--fg); }
+.deck { margin: 0 0 18px; font-family: var(--serif); font-size: 26px; line-height: 32px; font-weight: 600; color: var(--fg); }
 .deck .up, .deck .down { font-weight: 700; }
 .deck .up::before, .deck .down::before { font-size: .55em; color: var(--fg); vertical-align: .25em; }
 .deck .deck-link { font-family: var(--font); font-size: 16px; font-weight: 600; white-space: nowrap; }
