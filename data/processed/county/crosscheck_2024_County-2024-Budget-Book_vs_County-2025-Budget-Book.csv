@@ -1,0 +1,1817 @@
+fiscal_year,section,fund,department_code,side,account,older,account_name,older_page,newer,newer_page,diff,differs
+2024,General Fund,,A1100,expense,7361,3962544.0,Program Support Payment,103.0,3962544.0,13.0,0.0,False
+2024,General Fund,,A1100,revenue,6444,150000.0,Other Fees,99.0,150000.0,10.0,0.0,False
+2024,General Fund,,A1111,expense,7111,299230.0,Elected Officials,103.0,299230.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7112,72450.0,Executive,103.0,72450.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7113,244898.0,Professional,103.0,244898.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7114,146928.0,Staff,103.0,146928.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7115,0.0,Wages,103.0,0.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7119,0.0,Tax Collectors,103.0,0.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7121,58408.0,Fica,103.0,58408.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7122,65575.0,Retirement,103.0,65575.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7123,3534.0,Life Insurance,103.0,3534.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7127,360.0,Unemployment Comp,103.0,360.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7128,3130.0,Worker's Comp,103.0,3130.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7131,118452.0,Capital BlueCross,103.0,118452.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7132,3598.0,Dental,103.0,3598.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7133,1381.0,Vision,103.0,1381.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7215,4961.0,Office Supplies,103.0,4961.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7216,1400.0,Printing Supplies,103.0,1400.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7228,500.0,Other Equipment & Furniture,103.0,500.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7318,12500.0,Other Professional Services,103.0,12500.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7321,6660.0,Telephone & Telegraph,103.0,6660.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7322,1000.0,Postage,103.0,1000.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7323,1000.0,Travel - Mileage Reimbursement,103.0,1000.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7326,12395.0,Advertising & Public Relations,103.0,12395.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7328,5000.0,Staff Development,103.0,5000.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7331,12684.0,Insurance,103.0,12684.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7332,2500.0,Printing,103.0,2500.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7334,2257.0,Rent,103.0,2257.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7336,500.0,Equipment Maintenance & Repair,103.0,500.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7344,4700.0,Travel - Other,103.0,4700.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7361,5000.0,Program Support Payment,103.0,5000.0,13.0,0.0,False
+2024,General Fund,,A1111,expense,7367,28025.0,Association Dues,103.0,28025.0,13.0,0.0,False
+2024,General Fund,,A1111,revenue,6444,558877.0,Other Fees,99.0,558877.0,10.0,0.0,False
+2024,General Fund,,A1111,revenue,6721,8640.0,Rent & Royalty,99.0,8640.0,10.0,0.0,False
+2024,General Fund,,A1112,expense,7111,0.0,Elected Officials,103.0,0.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7112,0.0,Executive,103.0,0.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7113,0.0,Professional,103.0,0.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7114,623337.0,Staff,103.0,623337.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7115,0.0,Wages,103.0,0.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7119,0.0,Tax Collectors,103.0,0.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7121,47685.0,Fica,103.0,47685.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7122,53536.0,Retirement,103.0,53536.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7123,2885.0,Life Insurance,103.0,2885.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7127,720.0,Unemployment Comp,103.0,720.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7128,2551.0,Worker's Comp,103.0,2551.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7131,157936.0,Capital BlueCross,103.0,157936.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7132,4797.0,Dental,103.0,4797.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7133,1841.0,Vision,103.0,1841.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7215,4850.0,Office Supplies,103.0,4850.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7222,0.0,,,0.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7229,400.0,Uniforms,103.0,400.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7244,3600.0,Equip & Motor Vehicle Supplies,103.0,3600.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7251,960.0,Other Software,103.0,960.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7318,6070.0,Other Professional Services,103.0,6070.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7321,4269.0,Telephone & Telegraph,103.0,4269.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7322,2000.0,Postage,103.0,2000.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7323,450.0,Travel - Mileage Reimbursement,103.0,450.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7326,6000.0,Advertising & Public Relations,103.0,6000.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7328,7000.0,Staff Development,103.0,7000.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7331,6265.0,Insurance,103.0,6265.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7332,730.0,Printing,103.0,730.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7334,13204.0,Rent,103.0,13204.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7336,1100.0,Equipment Maintenance & Repair,103.0,1100.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7337,2700.0,Auto/Vehicle Maint & Repair,103.0,2700.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7367,1150.0,Association Dues,103.0,1150.0,13.0,0.0,False
+2024,General Fund,,A1112,expense,7534,3500.0,Computer Software,103.0,3500.0,13.0,0.0,False
+2024,General Fund,,A1113,expense,7111,0.0,Elected Officials,103.0,0.0,13.0,0.0,False
+2024,General Fund,,A1113,expense,7112,116438.0,Executive,104.0,116438.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7113,322459.0,Professional,104.0,322459.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7114,260960.0,Staff,104.0,260960.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7115,0.0,Wages,104.0,0.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7119,0.0,Tax Collectors,104.0,0.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7121,53539.0,Fica,104.0,53539.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7122,52108.0,Retirement,104.0,52108.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7123,3239.0,Life Insurance,104.0,3239.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7127,600.0,Unemployment Comp,104.0,600.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7128,2849.0,Worker's Comp,104.0,2849.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7131,131613.0,Capital BlueCross,104.0,131613.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7132,3997.0,Dental,104.0,3997.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7133,1534.0,Vision,104.0,1534.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7215,6500.0,Office Supplies,104.0,6500.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7251,1000.0,Other Software,104.0,1000.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7318,124630.0,Other Professional Services,104.0,124630.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7321,2400.0,Telephone & Telegraph,104.0,2400.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7322,950.0,Postage,104.0,950.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7323,1000.0,Travel - Mileage Reimbursement,104.0,1000.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7326,5000.0,Advertising & Public Relations,104.0,5000.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7328,13000.0,Staff Development,104.0,13000.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7329,6000.0,Transportation,104.0,6000.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7331,5000.0,Insurance,104.0,5000.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7332,500.0,Printing,104.0,500.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7334,1680.0,Rent,104.0,1680.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7336,2000.0,Equipment Maintenance & Repair,104.0,2000.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7346,450.0,Misc Services,104.0,450.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7367,2025.0,Association Dues,104.0,2025.0,14.0,0.0,False
+2024,General Fund,,A1113,expense,7387,45000.0,Wellness,104.0,45000.0,14.0,0.0,False
+2024,General Fund,,A1113,revenue,6444,134733.0,Other Fees,99.0,134733.0,10.0,0.0,False
+2024,General Fund,,A1114,expense,7114,1720000.0,Staff,104.0,1720000.0,14.0,0.0,False
+2024,General Fund,,A1114,expense,7198,430000.0,Benefits and Payroll Taxes,104.0,430000.0,14.0,0.0,False
+2024,General Fund,,A1114,expense,7199,231917.0,Payroll Contra,104.0,231917.0,14.0,0.0,False
+2024,General Fund,,A1114,expense,7312,14400.0,Management Consulting,104.0,14400.0,14.0,0.0,False
+2024,General Fund,,A1114,expense,7328,19800.0,Staff Development,104.0,19800.0,14.0,0.0,False
+2024,General Fund,,A1114,expense,7331,150000.0,Insurance,104.0,150000.0,14.0,0.0,False
+2024,General Fund,,A1114,expense,7334,2708729.0,Rent,104.0,2708729.0,14.0,0.0,False
+2024,General Fund,,A1114,expense,7336,568638.0,Equipment Maintenance & Repair,104.0,568638.0,14.0,0.0,False
+2024,General Fund,,A1114,expense,7345,150000.0,Other Contractual Services,104.0,150000.0,14.0,0.0,False
+2024,General Fund,,A1114,expense,7347,25000.0,Refunds,104.0,25000.0,14.0,0.0,False
+2024,General Fund,,A1114,expense,7361,250000.0,Program Support Payment,104.0,250000.0,14.0,0.0,False
+2024,General Fund,,A1114,expense,7376,450000.0,Constable Costs,104.0,450000.0,14.0,0.0,False
+2024,General Fund,,A1114,expense,7377,450000.0,Sheriff Constables,104.0,450000.0,14.0,0.0,False
+2024,General Fund,,A1114,expense,7951,5339346.0,Interest Expense,104.0,5339346.0,14.0,0.0,False
+2024,General Fund,,A1114,expense,7952,75450.0,Bank Charges,104.0,75450.0,14.0,0.0,False
+2024,General Fund,,A1114,expense,7953,14145000.0,Bond Redemption,104.0,14145000.0,14.0,0.0,False
+2024,General Fund,,A1114,expense,7965,13794916.0,S Transfers To Other Funds,104.0,13794916.0,14.0,0.0,False
+2024,General Fund,,A1114,revenue,6444,700000.0,Other Fees,99.0,700000.0,10.0,0.0,False
+2024,General Fund,,A1114,revenue,6711,9500000.0,Interest,99.0,9500000.0,10.0,0.0,False
+2024,General Fund,,A1114,revenue,6713,270000.0,Loan Repayment Principal,99.0,270000.0,10.0,0.0,False
+2024,General Fund,,A1114,revenue,6721,1095460.0,Rent & Royalty,99.0,1095460.0,10.0,0.0,False
+2024,General Fund,,A1114,revenue,6964,3065927.0,Indirect Revenue,99.0,3065927.0,10.0,0.0,False
+2024,General Fund,,A1120,expense,7111,0.0,Elected Officials,104.0,0.0,14.0,0.0,False
+2024,General Fund,,A1120,expense,7112,109486.0,Executive,104.0,109486.0,14.0,0.0,False
+2024,General Fund,,A1120,expense,7113,56475.0,Professional,104.0,56475.0,14.0,0.0,False
+2024,General Fund,,A1120,expense,7114,80058.0,Staff,104.0,80058.0,14.0,0.0,False
+2024,General Fund,,A1120,expense,7115,0.0,Wages,104.0,0.0,14.0,0.0,False
+2024,General Fund,,A1120,expense,7119,0.0,Tax Collectors,104.0,0.0,14.0,0.0,False
+2024,General Fund,,A1120,expense,7121,18821.0,Fica,104.0,18821.0,14.0,0.0,False
+2024,General Fund,,A1120,expense,7122,21130.0,Retirement,104.0,21130.0,14.0,0.0,False
+2024,General Fund,,A1120,expense,7123,1139.0,Life Insurance 7,104.0,1139.0,14.0,0.0,False
+2024,General Fund,,A1120,expense,7127,180.0,Unemployment Comp,104.0,180.0,14.0,0.0,False
+2024,General Fund,,A1120,expense,7128,1009.0,Worker's Comp,104.0,1009.0,14.0,0.0,False
+2024,General Fund,,A1120,expense,7131,39484.0,Capita BlueCross,104.0,39484.0,14.0,0.0,False
+2024,General Fund,,A1120,expense,7132,1199.0,Denta,104.0,1199.0,14.0,0.0,False
+2024,General Fund,,A1120,expense,7133,460.0,Vision,104.0,460.0,14.0,0.0,False
+2024,General Fund,,A1120,expense,7215,600.0,Office Supplies,104.0,600.0,14.0,0.0,False
+2024,General Fund,,A1120,expense,7321,720.0,Telephone & Telegraph,104.0,720.0,14.0,0.0,False
+2024,General Fund,,A1120,expense,7328,5785.0,Staff Development,104.0,5785.0,14.0,0.0,False
+2024,General Fund,,A1120,expense,7331,2055.0,Insurance,104.0,2055.0,14.0,0.0,False
+2024,General Fund,,A1120,expense,7334,840.0,Rent,105.0,840.0,14.0,0.0,False
+2024,General Fund,,A1150,expense,7361,65900.0,Program Support Payment,105.0,65900.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7111,0.0,Elected Officials,105.0,0.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7112,0.0,Executive,105.0,0.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7113,0.0,Professional,105.0,0.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7114,1179238.0,Staff,105.0,1179238.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7115,28947.0,Wages,105.0,28947.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7119,0.0,Tax Collectors,105.0,0.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7121,92426.0,Fica,105.0,92426.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7122,101280.0,Retirement,105.0,101280.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7123,5457.0,Life Insurance,105.0,5457.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7127,1320.0,Unemployment Comp,105.0,1320.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7128,4954.0,Worker's Comp,105.0,4954.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7131,276387.0,Capital BlueCross,105.0,276387.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7132,8395.0,Dental,105.0,8395.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7133,3222.0,Vision,105.0,3222.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7215,9500.0,S Office Supplies,105.0,9500.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7221,0.0,,,0.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7318,64320.0,Other Professional Services,105.0,64320.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7321,4848.0,Telephone & Telegraph,105.0,4848.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7322,14700.0,Postage,105.0,14700.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7323,33470.0,Travel - Mileage Reimbursement,105.0,33470.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7326,704.0,Advertising & Public Relations,105.0,704.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7328,28585.0,Staff Development,105.0,28585.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7331,11462.0,Insurance,105.0,11462.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7332,3000.0,Printing,105.0,3000.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7334,1440.0,Rent,105.0,1440.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7336,1200.0,Equipment Maintenance & Repair,105.0,1200.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7343,20000.0,Travel-Certification-Licenses,105.0,20000.0,15.0,0.0,False
+2024,General Fund,,A1212,expense,7367,5105.0,Association Dues,105.0,5105.0,15.0,0.0,False
+2024,General Fund,,A1212,revenue,6323,2000.0,State Direct,99.0,2000.0,10.0,0.0,False
+2024,General Fund,,A1212,revenue,6444,7500.0,fOther Fees,99.0,7500.0,10.0,0.0,False
+2024,General Fund,,A1212,revenue,6477,4500.0,Assessment Appeals,99.0,4500.0,10.0,0.0,False
+2024,General Fund,,A1218,expense,7111,0.0,Elected Officials,105.0,0.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7112,74019.0,Executive,105.0,74019.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7113,0.0,Professional,105.0,0.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7114,150384.0,Staff,105.0,150384.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7115,0.0,Wages,105.0,0.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7119,0.0,Tax Collectors,105.0,0.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7121,17167.0,Fica,105.0,17167.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7122,19273.0,Retirement,105.0,19273.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7123,1039.0,Life Insurance,105.0,1039.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7127,240.0,Unemployment Comp,105.0,240.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7128,920.0,Worker's Comp,105.0,920.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7131,52645.0,Capita BlueCross,105.0,52645.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7132,1599.0,Dental,105.0,1599.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7133,614.0,Vision,105.0,614.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7215,3500.0,Office Supplies,105.0,3500.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7244,2000.0,Equip & Motor Vehicle Supplies,105.0,2000.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7321,4058.0,Telephone & Telegraph,105.0,4058.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7322,2300.0,Postage,105.0,2300.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7323,2000.0,Travel - Mileage Reimbursement,105.0,2000.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7326,1000.0,Advertising & Public Relations,105.0,1000.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7328,4000.0,Staff Development,105.0,4000.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7331,2102.0,Insurance,105.0,2102.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7332,700.0,Printing,105.0,700.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7334,4996.0,Rent,105.0,4996.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7336,3000.0,Equipment Maintenance & Repair,105.0,3000.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7381,12000.0,Headstones,105.0,12000.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7382,63000.0,Burials,105.0,63000.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7383,25000.0,Flags & Markers,105.0,25000.0,15.0,0.0,False
+2024,General Fund,,A1218,expense,7384,11000.0,Maintenance Of Graves,105.0,11000.0,15.0,0.0,False
+2024,General Fund,,A1219,expense,7111,0.0,Elected Officials,105.0,0.0,15.0,0.0,False
+2024,General Fund,,A1219,expense,7112,0.0,Executive,105.0,0.0,15.0,0.0,False
+2024,General Fund,,A1219,expense,7113,379137.0,Professional,105.0,379137.0,15.0,0.0,False
+2024,General Fund,,A1219,expense,7114,248209.0,Staff,105.0,248209.0,15.0,0.0,False
+2024,General Fund,,A1219,expense,7115,0.0,Wages,106.0,0.0,15.0,0.0,False
+2024,General Fund,,A1219,expense,7119,0.0,Tax Collectors,106.0,0.0,16.0,0.0,False
+2024,General Fund,,A1219,expense,7121,47992.0,Fica,106.0,47992.0,16.0,0.0,False
+2024,General Fund,,A1219,expense,7122,53880.0,Retirement,106.0,53880.0,16.0,0.0,False
+2024,General Fund,,A1219,expense,7123,2902.0,Life Insurance,106.0,2902.0,16.0,0.0,False
+2024,General Fund,,A1219,expense,7127,480.0,Unemployment Comp,106.0,480.0,16.0,0.0,False
+2024,General Fund,,A1219,expense,7128,2564.0,Worker's Comp,106.0,2564.0,16.0,0.0,False
+2024,General Fund,,A1219,expense,7131,105290.0,Capital BlueCross,106.0,105290.0,16.0,0.0,False
+2024,General Fund,,A1219,expense,7132,3198.0,Dental,106.0,3198.0,16.0,0.0,False
+2024,General Fund,,A1219,expense,7133,1227.0,Vision,106.0,1227.0,16.0,0.0,False
+2024,General Fund,,A1219,expense,7215,1500.0,Office Supplies,106.0,1500.0,16.0,0.0,False
+2024,General Fund,,A1219,expense,7216,800.0,Printing Supplies,106.0,800.0,16.0,0.0,False
+2024,General Fund,,A1219,expense,7314,642500.0,Legal,106.0,642500.0,16.0,0.0,False
+2024,General Fund,,A1219,expense,7321,650.0,Telephone & Telegraph,106.0,650.0,16.0,0.0,False
+2024,General Fund,,A1219,expense,7322,1500.0,Postage,106.0,1500.0,16.0,0.0,False
+2024,General Fund,,A1219,expense,7323,200.0,Travel - Mileage Reimbursement,106.0,200.0,16.0,0.0,False
+2024,General Fund,,A1219,expense,7328,9905.0,Staff Development,106.0,9905.0,16.0,0.0,False
+2024,General Fund,,A1219,expense,7331,5842.0,Insurance,106.0,5842.0,16.0,0.0,False
+2024,General Fund,,A1219,expense,7332,2540.0,Printing,106.0,2540.0,16.0,0.0,False
+2024,General Fund,,A1219,expense,7534,0.0,Computer Software,106.0,0.0,,0.0,False
+2024,General Fund,,A1219,revenue,6444,313230.0,Other Fees,99.0,313230.0,10.0,0.0,False
+2024,General Fund,,A1220,expense,7111,0.0,Elected Officials,106.0,0.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7112,87852.0,Executive,106.0,87852.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7113,0.0,Professional,106.0,0.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7114,409091.0,Staff,106.0,409091.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7115,128096.0,S Wages,106.0,128096.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7119,0.0,Tax Collectors,106.0,0.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7121,47815.0,Fica,106.0,47815.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7122,44640.0,Retirement,106.0,44640.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7123,2300.0,Life Insurance,106.0,2300.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7127,960.0,Unemployment Comp,106.0,960.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7128,2559.0,Worker's Comp,106.0,2559.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7131,118452.0,Capital BlueCross,106.0,118452.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7132,3598.0,Dental,106.0,3598.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7133,1381.0,Vision,106.0,1381.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7213,350.0,Books Films & Materials,106.0,350.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7215,15000.0,S Office Supplies,106.0,15000.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7221,1200.0,Food ©,106.0,1200.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7228,39500.0,Other Equipment & Furniture,106.0,39500.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7244,1200.0,Equip & Motor Vehicle Supplies,106.0,1200.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7318,503050.0,Other Professional Services,106.0,503050.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7321,5775.0,Telephone & Telegraph,106.0,5775.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7322,191390.0,Postage,106.0,191390.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7323,8100.0,Travel - Mileage Reimbursement,106.0,8100.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7324,20000.0,Freight & Messenger,106.0,20000.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7326,56850.0,Advertising & Public Relations,106.0,56850.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7328,2867.0,Staff Development,106.0,2867.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7331,4773.0,Insurance,106.0,4773.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7332,413860.0,Printing,106.0,413860.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7333,200.0,Bonding Premium,106.0,200.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7334,720788.0,Rent,106.0,720788.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7335,5000.0,Electric,106.0,5000.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7336,239839.0,Equipment Maintenance & Repair,106.0,239839.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7338,3700.0,Heat,106.0,3700.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7344,1500.0,Travel - Other,106.0,1500.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7345,213500.0,Other Contractual Services,106.0,213500.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7376,10000.0,Constable Costs,106.0,10000.0,16.0,0.0,False
+2024,General Fund,,A1220,expense,7951,18430.0,Interest Expense,106.0,18430.0,16.0,0.0,False
+2024,General Fund,,A1220,revenue,6321,1882685.0,State Grants,99.0,1882685.0,10.0,0.0,False
+2024,General Fund,,A1220,revenue,6323,357155.0,State Direct,99.0,357155.0,10.0,0.0,False
+2024,General Fund,,A1220,revenue,6418,0.0,Filing Fees,99.0,0.0,10.0,0.0,False
+2024,General Fund,,A1220,revenue,6463,800.0,Concessions,99.0,800.0,10.0,0.0,False
+2024,General Fund,,A1400,expense,7111,86527.0,Elected Officials,106.0,86527.0,16.0,0.0,False
+2024,General Fund,,A1400,expense,7112,68871.0,Executive,106.0,68871.0,16.0,0.0,False
+2024,General Fund,,A1400,expense,7113,103444.0,Professional,106.0,103444.0,16.0,0.0,False
+2024,General Fund,,A1400,expense,7114,253974.0,Staff,106.0,253974.0,16.0,0.0,False
+2024,General Fund,,A1400,expense,7115,21290.0,Wages,106.0,21290.0,16.0,0.0,False
+2024,General Fund,,A1400,expense,7119,0.0,Tax Collectors,106.0,0.0,16.0,0.0,False
+2024,General Fund,,A1400,expense,7121,40859.0,Fica,106.0,40859.0,16.0,0.0,False
+2024,General Fund,,A1400,expense,7122,44044.0,Retirement,107.0,44044.0,16.0,0.0,False
+2024,General Fund,,A1400,expense,7123,2374.0,Life Insurance,107.0,2374.0,16.0,0.0,False
+2024,General Fund,,A1400,expense,7127,537.0,Unemployment Comp,107.0,537.0,16.0,0.0,False
+2024,General Fund,,A1400,expense,7128,2179.0,Worker's Comp,107.0,2179.0,17.0,0.0,False
+2024,General Fund,,A1400,expense,7131,105290.0,Capita BlueCross,107.0,105290.0,17.0,0.0,False
+2024,General Fund,,A1400,expense,7132,3198.0,Dental,107.0,3198.0,17.0,0.0,False
+2024,General Fund,,A1400,expense,7133,1227.0,Vision,107.0,1227.0,17.0,0.0,False
+2024,General Fund,,A1400,expense,7212,5135.0,Forms & Documents,107.0,5135.0,17.0,0.0,False
+2024,General Fund,,A1400,expense,7215,4098.0,Office Supplies,107.0,4098.0,17.0,0.0,False
+2024,General Fund,,A1400,expense,7228,1590.0,Other Equipment & Furniture,107.0,1590.0,17.0,0.0,False
+2024,General Fund,,A1400,expense,7314,1422.0,Legal,107.0,1422.0,17.0,0.0,False
+2024,General Fund,,A1400,expense,7321,3388.0,Telephone & Telegraph,107.0,3388.0,17.0,0.0,False
+2024,General Fund,,A1400,expense,7322,16476.0,Postage,107.0,16476.0,17.0,0.0,False
+2024,General Fund,,A1400,expense,7323,0.0,Travel - Mileage Reimbursement,107.0,0.0,,0.0,False
+2024,General Fund,,A1400,expense,7326,225.0,Advertising & Public Relations,107.0,225.0,17.0,0.0,False
+2024,General Fund,,A1400,expense,7328,4658.0,Staff Development,107.0,4658.0,17.0,0.0,False
+2024,General Fund,,A1400,expense,7331,5524.0,Insurance,107.0,5524.0,17.0,0.0,False
+2024,General Fund,,A1400,expense,7332,3576.0,Printing,107.0,3576.0,17.0,0.0,False
+2024,General Fund,,A1400,expense,7333,4064.0,Bonding Premium,107.0,4064.0,17.0,0.0,False
+2024,General Fund,,A1400,expense,7334,4065.0,Rent,107.0,4065.0,17.0,0.0,False
+2024,General Fund,,A1400,expense,7336,10089.0,Equipment Maintenance & Repair,107.0,10089.0,17.0,0.0,False
+2024,General Fund,,A1400,expense,7344,1517.0,Travel - Other,107.0,1517.0,17.0,0.0,False
+2024,General Fund,,A1400,expense,7952,124324.0,Bank Charges,107.0,124324.0,17.0,0.0,False
+2024,General Fund,,A1400,revenue,6163,1780000.0,Delinquent Tax,99.0,1780000.0,10.0,0.0,False
+2024,General Fund,,A1400,revenue,6164,105000.0,Delinquent Tax/Interest,99.0,105000.0,10.0,0.0,False
+2024,General Fund,,A1400,revenue,6211,60000.0,Dog Licenses,99.0,60000.0,10.0,0.0,False
+2024,General Fund,,A1400,revenue,6212,60.0,Fish Licenses,99.0,60.0,10.0,0.0,False
+2024,General Fund,,A1400,revenue,6213,1000.0,Hunting Licenses,99.0,1000.0,10.0,0.0,False
+2024,General Fund,,A1400,revenue,6251,200.0,Firearms Licenses,99.0,200.0,10.0,0.0,False
+2024,General Fund,,A1400,revenue,6252,35000.0,Bingo Licenses,99.0,35000.0,10.0,0.0,False
+2024,General Fund,,A1400,revenue,6415,165000.0,Delinquent Tax Fees,99.0,165000.0,10.0,0.0,False
+2024,General Fund,,A1400,revenue,6442,850000.0,Real Estate Fee,99.0,850000.0,10.0,0.0,False
+2024,General Fund,,A1400,revenue,6444,190000.0,Other Fees,99.0,190000.0,10.0,0.0,False
+2024,General Fund,,A1400,revenue,6467,95000.0,Excise Tax Reimbursement,99.0,95000.0,10.0,0.0,False
+2024,General Fund,,A1511,expense,7111,86527.0,Elected Officials,107.0,86527.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7112,0.0,Executive,107.0,0.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7113,652272.0,Professional,107.0,652272.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7114,755090.0,Staff,107.0,755090.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7115,15045.0,Wages,107.0,15045.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7119,0.0,Tax Collectors,107.0,0.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7121,115433.0,Fica,107.0,115433.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7122,128304.0,Retirement,107.0,128304.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7123,6914.0,Life Insurance,107.0,6914.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7127,1380.0,Unemployment Comp,107.0,1380.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7128,6187.0,3 Worker's Comp,107.0,6187.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7131,302710.0,Capital BlueCross,107.0,302710.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7132,9194.0,Dental,107.0,9194.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7133,3529.0,Vision,107.0,3529.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7212,1500.0,Forms & Documents,107.0,1500.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7215,3500.0,Office Supplies,107.0,3500.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7228,300.0,Other Equipment & Furniture,107.0,300.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7251,1500.0,Other Software,107.0,1500.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7252,1000.0,Other Hardware,107.0,1000.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7311,107300.0,Accounting & Auditing,107.0,107300.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7314,500.0,Legal,107.0,500.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7317,16000.0,Solicitor,107.0,16000.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7321,5500.0,Telephone & Telegraph,107.0,5500.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7322,20000.0,Postage,107.0,20000.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7323,350.0,Travel - Mileage Reimbursement,107.0,350.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7326,1500.0,Advertising & Public Relations,107.0,1500.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7328,7535.0,Staff Development iS,107.0,7535.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7331,14208.0,Insurance,107.0,14208.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7332,6500.0,Printing,107.0,6500.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7334,11936.0,Rent,107.0,11936.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7336,400.0,Equipment Maintenance & Repair,107.0,400.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7343,1005.0,Travel-Certification-Licenses,107.0,1005.0,17.0,0.0,False
+2024,General Fund,,A1511,expense,7344,2040.0,Travel - Other,107.0,2040.0,17.0,0.0,False
+2024,General Fund,,A1511,revenue,6444,48000.0,Other Fees,99.0,48000.0,10.0,0.0,False
+2024,General Fund,,A1611,expense,7111,86527.0,Elected Officials,107.0,86527.0,17.0,0.0,False
+2024,General Fund,,A1611,expense,7112,0.0,Executive,107.0,0.0,17.0,0.0,False
+2024,General Fund,,A1611,expense,7113,0.0,Professional,107.0,0.0,17.0,0.0,False
+2024,General Fund,,A1611,expense,7114,224775.0,Staff,107.0,224775.0,17.0,0.0,False
+2024,General Fund,,A1611,expense,7115,0.0,Wages,107.0,0.0,17.0,0.0,False
+2024,General Fund,,A1611,expense,7119,0.0,Tax Collectors,107.0,0.0,17.0,0.0,False
+2024,General Fund,,A1611,expense,7121,23815.0,Fica,107.0,23815.0,17.0,0.0,False
+2024,General Fund,,A1611,expense,7122,26736.0,Retirement,107.0,26736.0,17.0,0.0,False
+2024,General Fund,,A1611,expense,7123,1441.0,Life insurance,108.0,1441.0,17.0,0.0,False
+2024,General Fund,,A1611,expense,7127,300.0,Unemployment Comp,108.0,300.0,17.0,0.0,False
+2024,General Fund,,A1611,expense,7128,1276.0,Worker's Comp,108.0,1276.0,17.0,0.0,False
+2024,General Fund,,A1611,expense,7131,78968.0,Capital BlueCross -,108.0,78968.0,17.0,0.0,False
+2024,General Fund,,A1611,expense,7132,2398.0,Dental,108.0,2398.0,17.0,0.0,False
+2024,General Fund,,A1611,expense,7133,921.0,Vision,108.0,921.0,18.0,0.0,False
+2024,General Fund,,A1611,expense,7213,100.0,Books Films & Materials,108.0,100.0,18.0,0.0,False
+2024,General Fund,,A1611,expense,7215,2000.0,Office Supplies,108.0,2000.0,18.0,0.0,False
+2024,General Fund,,A1611,expense,7216,4000.0,Printing Supplies,108.0,4000.0,18.0,0.0,False
+2024,General Fund,,A1611,expense,7317,5700.0,Solicitor,108.0,5700.0,18.0,0.0,False
+2024,General Fund,,A1611,expense,7318,135000.0,Other Professional Services,108.0,135000.0,18.0,0.0,False
+2024,General Fund,,A1611,expense,7321,1400.0,Telephone & Telegraph,108.0,1400.0,18.0,0.0,False
+2024,General Fund,,A1611,expense,7322,100.0,Postage,108.0,100.0,18.0,0.0,False
+2024,General Fund,,A1611,expense,7323,2500.0,Travel - Mileage Reimbursement,108.0,2500.0,18.0,0.0,False
+2024,General Fund,,A1611,expense,7328,3495.0,Staff Development,108.0,3495.0,18.0,0.0,False
+2024,General Fund,,A1611,expense,7331,4175.0,Insurance,108.0,4175.0,18.0,0.0,False
+2024,General Fund,,A1611,expense,7332,4400.0,Printing,108.0,4400.0,18.0,0.0,False
+2024,General Fund,,A1611,expense,7334,3850.0,Rent,108.0,3850.0,18.0,0.0,False
+2024,General Fund,,A1611,expense,7336,650.0,Equipment Maintenance & Repair,108.0,650.0,18.0,0.0,False
+2024,General Fund,,A1611,expense,7346,175.0,Misc Services,108.0,175.0,18.0,0.0,False
+2024,General Fund,,A1611,revenue,6215,951.0,Office Comm/Notary,99.0,951.0,10.0,0.0,False
+2024,General Fund,,A1611,revenue,6216,290000.0,Pa Stamps,99.0,290000.0,10.0,0.0,False
+2024,General Fund,,A1611,revenue,6231,587741.0,Local Realty Tax,99.0,587741.0,10.0,0.0,False
+2024,General Fund,,A1611,revenue,6412,1153306.0,Record Legal Instruments,99.0,1153306.0,10.0,0.0,False
+2024,General Fund,,A1611,revenue,6441,140000.0,Secured Tranasaction,99.0,140000.0,10.0,0.0,False
+2024,General Fund,,A1611,revenue,6444,206128.0,Other Fees,99.0,206128.0,10.0,0.0,False
+2024,General Fund,,A1700,expense,7111,0.0,Elected Officials,108.0,0.0,18.0,0.0,False
+2024,General Fund,,A1700,expense,7112,0.0,Executive,108.0,0.0,18.0,0.0,False
+2024,General Fund,,A1700,expense,7113,0.0,Professional,108.0,0.0,18.0,0.0,False
+2024,General Fund,,A1700,expense,7114,0.0,Staff,108.0,0.0,18.0,0.0,False
+2024,General Fund,,A1700,expense,7115,0.0,S Wages,108.0,0.0,18.0,0.0,False
+2024,General Fund,,A1700,expense,7119,21139.0,Tax Collectors,108.0,21139.0,18.0,0.0,False
+2024,General Fund,,A1700,expense,7121,1617.0,Fica,108.0,1617.0,18.0,0.0,False
+2024,General Fund,,A1700,expense,7122,0.0,Retirement,108.0,0.0,18.0,0.0,False
+2024,General Fund,,A1700,expense,7123,0.0,Life Insurance,108.0,0.0,18.0,0.0,False
+2024,General Fund,,A1700,expense,7127,0.0,Unemployment Comp,108.0,0.0,18.0,0.0,False
+2024,General Fund,,A1700,expense,7128,0.0,Worker's Comp,108.0,0.0,18.0,0.0,False
+2024,General Fund,,A1700,expense,7131,0.0,Capital BlueCross,108.0,0.0,18.0,0.0,False
+2024,General Fund,,A1700,expense,7132,0.0,Dental,108.0,0.0,18.0,0.0,False
+2024,General Fund,,A1700,expense,7133,0.0,Vision,108.0,0.0,18.0,0.0,False
+2024,General Fund,,A1700,expense,7322,93500.0,Postage,108.0,93500.0,18.0,0.0,False
+2024,General Fund,,A1700,expense,7331,246.0,Insurance,108.0,246.0,18.0,0.0,False
+2024,General Fund,,A1700,expense,7333,25775.0,Bonding Premium,108.0,25775.0,18.0,0.0,False
+2024,General Fund,,A1700,expense,7346,3500.0,Misc Services,108.0,3500.0,18.0,0.0,False
+2024,General Fund,,A1700,expense,7356,7011.0,Commission To Tax Collectors,108.0,7011.0,18.0,0.0,False
+2024,General Fund,,A1700,revenue,6111,127223428.0,Real Estate At Discount,99.0,127223428.0,10.0,0.0,False
+2024,General Fund,,A2311,expense,7111,0.0,Elected Officials,108.0,0.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7112,0.0,Executive,108.0,0.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7113,1641838.0,Professional,108.0,1641838.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7114,640356.0,Staff,108.0,640356.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7115,0.0,Wages,108.0,0.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7119,0.0,Tax Collectors,108.0,0.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7121,174588.0,Fica,108.0,174588.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7122,196009.0,Retirement,108.0,196009.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7123,10562.0,Life Insurance,108.0,10562.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7127,2040.0,Unemployment Comp,108.0,2040.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7128,9321.0,Worker's Comp,108.0,9321.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7131,447484.0,Capital BlueCross,108.0,447484.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7132,13591.0,Dental,108.0,13591.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7133,5217.0,Vision,108.0,5217.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7213,40228.0,Books Films & Materials,108.0,40228.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7215,9000.0,Office Supplies,108.0,9000.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7251,1492.0,Other Software,108.0,1492.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7252,800.0,Other Hardware,108.0,800.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7318,66200.0,Other Professional Services,108.0,66200.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7321,9289.0,Telephone & Telegraph i,108.0,9289.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7322,6600.0,Postage,108.0,6600.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7323,7799.0,Travel - Mileage Reimbursement,108.0,7799.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7328,33690.0,Staff Development,108.0,33690.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7331,27741.0,Insurance,108.0,27741.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7332,2500.0,Printing,108.0,2500.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7334,7593.0,Rent,109.0,7593.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7343,1110.0,Travel-Certification-Licenses,109.0,1110.0,18.0,0.0,False
+2024,General Fund,,A2311,expense,7345,20400.0,Other Contractual Services,109.0,20400.0,18.0,0.0,False
+2024,General Fund,,A2311,revenue,6444,0.0,Other Fees,99.0,0.0,,0.0,False
+2024,General Fund,,A2400,expense,7111,0.0,Elected Officials,109.0,0.0,18.0,0.0,False
+2024,General Fund,,A2400,expense,7112,101481.0,Executive,109.0,101481.0,18.0,0.0,False
+2024,General Fund,,A2400,expense,7113,0.0,Professional,109.0,0.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7114,571279.0,Staff,109.0,571279.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7115,121717.0,Wages,109.0,121717.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7119,0.0,Tax Collectors,109.0,0.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7121,60778.0,Fica,109.0,60778.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7122,65893.0,Retirement °S,109.0,65893.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7123,3115.0,Life Insurance,109.0,3115.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7127,1117.0,Unemployment Comp,109.0,1117.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7128,3252.0,Worker's Comp,109.0,3252.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7131,144774.0,Capital BlueCross,109.0,144774.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7132,4397.0,Dental,109.0,4397.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7133,1688.0,Vision,109.0,1688.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7213,25450.0,Books Films & Materials,109.0,25450.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7215,6500.0,Office Supplies,109.0,6500.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7221,76000.0,Food,109.0,76000.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7222,500.0,Cleaning Supplies,109.0,500.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7227,37369.0,Other Oper Supplies,109.0,37369.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7228,4225.0,Other Equipment & Furniture,109.0,4225.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7229,4000.0,Uniforms,109.0,4000.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7232,1275.0,Medical & Dental Supplies,109.0,1275.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7244,12200.0,Equip & Motor Vehicle Supplies,109.0,12200.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7251,1000.0,Other Software,109.0,1000.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7252,3000.0,Other Hardware,109.0,3000.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7318,45820.0,Other Professional Services,109.0,45820.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7321,81820.0,Telephone & Telegraph,109.0,81820.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7322,1350.0,Postage,109.0,1350.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7323,500.0,Travel - Mileage Reimbursement,109.0,500.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7328,3400.0,Staff Development,109.0,3400.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7331,48923.0,Insurance,109.0,48923.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7332,2000.0,Printing,109.0,2000.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7334,201017.0,Rent,109.0,201017.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7335,8000.0,Electric,109.0,8000.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7336,152955.0,Equipment Maintenance & Repair,109.0,152955.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7337,12750.0,Auto/Vehicle Maint & Repair,109.0,12750.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7338,13500.0,Heat Ss,109.0,13500.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7343,11850.0,Travel-Certification-Licenses,109.0,11850.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7344,0.0,Travel - Other,109.0,0.0,,0.0,False
+2024,General Fund,,A2400,expense,7354,6790.0,Payment For Local Services,109.0,6790.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7367,1055.0,Association Dues,109.0,1055.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7395,9000.0,Tuition Program,109.0,9000.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7522,30000.0,Building Improvements,109.0,30000.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7532,42189.0,Machnry & Equipment,109.0,42189.0,19.0,0.0,False
+2024,General Fund,,A2400,expense,7536,0.0,Computer Hardware,109.0,0.0,,0.0,False
+2024,General Fund,,A2400,expense,7952,850.0,Bank Charges,109.0,850.0,19.0,0.0,False
+2024,General Fund,,A2400,revenue,6311,159593.0,Federal Grants,99.0,159593.0,10.0,0.0,False
+2024,General Fund,,A2400,revenue,6321,100222.0,State Grants,99.0,100222.0,10.0,0.0,False
+2024,General Fund,,A2400,revenue,6444,45000.0,Other Fees,99.0,45000.0,10.0,0.0,False
+2024,General Fund,,A2400,revenue,6454,70248.0,Other Support,99.0,70248.0,10.0,0.0,False
+2024,General Fund,,A2400,revenue,6465,160000.0,Pavilion Fees,99.0,160000.0,10.0,0.0,False
+2024,General Fund,,A2400,revenue,6469,190000.0,Training Fees,99.0,190000.0,10.0,0.0,False
+2024,General Fund,,A2410,expense,7111,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7112,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7113,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7114,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7115,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7119,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7121,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7122,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7123,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7127,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7128,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7129,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7131,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7132,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7133,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7213,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7215,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7221,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7222,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7226,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7228,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7229,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7232,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7241,0.0,,,0.0,19.0,0.0,False
+2024,General Fund,,A2410,expense,7244,0.0,,,0.0,20.0,0.0,False
+2024,General Fund,,A2410,expense,7252,0.0,,,0.0,20.0,0.0,False
+2024,General Fund,,A2410,expense,7318,0.0,,,0.0,20.0,0.0,False
+2024,General Fund,,A2410,expense,7321,0.0,,,0.0,20.0,0.0,False
+2024,General Fund,,A2410,expense,7322,0.0,,,0.0,20.0,0.0,False
+2024,General Fund,,A2410,expense,7323,0.0,,,0.0,20.0,0.0,False
+2024,General Fund,,A2410,expense,7324,0.0,,,0.0,20.0,0.0,False
+2024,General Fund,,A2410,expense,7326,0.0,,,0.0,20.0,0.0,False
+2024,General Fund,,A2410,expense,7328,0.0,,,0.0,20.0,0.0,False
+2024,General Fund,,A2410,expense,7331,0.0,,,0.0,20.0,0.0,False
+2024,General Fund,,A2410,expense,7332,0.0,,,0.0,20.0,0.0,False
+2024,General Fund,,A2410,expense,7334,0.0,,,0.0,20.0,0.0,False
+2024,General Fund,,A2410,expense,7335,0.0,,,0.0,20.0,0.0,False
+2024,General Fund,,A2410,expense,7336,0.0,,,0.0,20.0,0.0,False
+2024,General Fund,,A2410,expense,7337,0.0,,,0.0,20.0,0.0,False
+2024,General Fund,,A2410,expense,7338,0.0,,,0.0,20.0,0.0,False
+2024,General Fund,,A2410,expense,7343,0.0,,,0.0,20.0,0.0,False
+2024,General Fund,,A2410,expense,7344,0.0,,,0.0,20.0,0.0,False
+2024,General Fund,,A2410,expense,7354,0.0,,,0.0,20.0,0.0,False
+2024,General Fund,,A2410,expense,7367,0.0,,,0.0,20.0,0.0,False
+2024,General Fund,,A2410,expense,7395,0.0,,,0.0,20.0,0.0,False
+2024,General Fund,,A2410,expense,7952,0.0,,,0.0,20.0,0.0,False
+2024,General Fund,,A2410,revenue,6311,0.0,,,0.0,10.0,0.0,False
+2024,General Fund,,A2410,revenue,6321,0.0,,,0.0,10.0,0.0,False
+2024,General Fund,,A2410,revenue,6444,0.0,,,0.0,10.0,0.0,False
+2024,General Fund,,A2410,revenue,6454,0.0,,,0.0,10.0,0.0,False
+2024,General Fund,,A2410,revenue,6465,0.0,,,0.0,10.0,0.0,False
+2024,General Fund,,A2410,revenue,6469,0.0,,,0.0,10.0,0.0,False
+2024,General Fund,,A2410,revenue,6721,0.0,,,0.0,10.0,0.0,False
+2024,General Fund,,A2413,expense,7111,0.0,Elected Officials,109.0,0.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7112,140899.0,Executive,109.0,140899.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7113,119030.0,Professional,109.0,119030.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7114,5732469.0,Staff,109.0,5732469.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7115,119492.0,Wages,109.0,119492.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7119,0.0,Tax Collectors -,109.0,0.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7121,467560.0,Fica,109.0,467560.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7122,519791.0,Retirement,109.0,519791.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7123,27731.0,Life Insurance,109.0,27731.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7127,5700.0,Unemployment Comp,109.0,5700.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7128,25037.0,Worker's Comp -,109.0,25037.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7131,1197678.0,Capital BlueCross,109.0,1197678.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7132,36376.0,Dental a,109.0,36376.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7133,13962.0,Vision,109.0,13962.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7199,-620919.0,Payroll Contra,109.0,-620919.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7213,898.0,Books Films & Materials,110.0,898.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7215,12500.0,Office Supplies,110.0,12500.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7221,4500.0,Food,110.0,4500.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7222,10500.0,Cleaning Supplies,110.0,10500.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7226,500.0,Agricultrl Supplies,110.0,500.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7228,10000.0,Other Equipment & Furniture,110.0,10000.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7241,8000.0,Building & Bridge Supplies,110.0,8000.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7244,37000.0,Equip & Motor Vehicle Supplies,110.0,37000.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7251,5000.0,Other Software,110.0,5000.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7252,10000.0,Other Hardware,110.0,10000.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7318,512767.0,Other Professional Services,110.0,512767.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7321,709200.0,Telephone & Telegraph,110.0,709200.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7322,1000.0,Postage,110.0,1000.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7323,4000.0,Travel - Mileage Reimbursement,110.0,4000.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7324,700.0,Freight & Messenger,110.0,700.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7326,8000.0,Advertising & Public Relations,110.0,8000.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7328,64630.0,Staff Development,110.0,64630.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7331,83766.0,Insurance,110.0,83766.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7332,6000.0,Printing cS,110.0,6000.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7334,532804.0,Rent,110.0,532804.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7335,90000.0,Electric,110.0,90000.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7336,1520707.0,Equipment Maintenance & Repair,110.0,1520707.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7337,8000.0,Auto/Vehicle Maint & Repair,110.0,8000.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7344,15850.0,Travel - Other,110.0,15850.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7346,4250.0,Misc Services,110.0,4250.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7532,51920.0,Machnry & Equipment,110.0,51920.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7534,46500.0,Computer Software,110.0,46500.0,20.0,0.0,False
+2024,General Fund,,A2413,expense,7536,42000.0,Computer Hardware,110.0,42000.0,20.0,0.0,False
+2024,General Fund,,A2413,revenue,6444,9800000.0,Other Fees,99.0,9800000.0,10.0,0.0,False
+2024,General Fund,,A2413,revenue,6734,139778.0,Refunds,99.0,139778.0,11.0,0.0,False
+2024,General Fund,,A2600,expense,7111,0.0,Elected Officials,110.0,0.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7112,0.0,Executive,110.0,0.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7113,1244816.0,Professional,110.0,1244816.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7114,390693.0,Staff,110.0,390693.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7115,21305.0,Wages,110.0,21305.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7119,0.0,Tax Collectors,110.0,0.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7121,126746.0,Fica,110.0,126746.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7122,140467.0,Retirement,110.0,140467.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7123,7568.0,Life Insurance,110.0,7568.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7127,1620.0,Unemployment Comp,110.0,1620.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7128,6788.0,Worker's Comp,110.0,6788.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7131,342194.0,Capital BlueCross,110.0,342194.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7132,10393.0,Dental,110.0,10393.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7133,3989.0,Vision,110.0,3989.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7213,75.0,Books Films & Materials,110.0,75.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7215,9500.0,Office Supplies,110.0,9500.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7221,0.0,,,0.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7227,800.0,Other Oper Supplies,110.0,800.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7228,4100.0,Other Equipment & Furniture,110.0,4100.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7244,850.0,Equip & Motor Vehicle Supplies,110.0,850.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7252,1500.0,Other Hardware,110.0,1500.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7318,330495.0,Other Professional Services,110.0,330495.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7321,7340.0,Telephone & Telegraph,110.0,7340.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7322,750.0,Postage,110.0,750.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7323,10400.0,Travel - Mileage Reimbursement,110.0,10400.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7326,17100.0,Advertising & Public Relations,110.0,17100.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7328,28270.0,Staff Development,110.0,28270.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7331,19662.0,Insurance,110.0,19662.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7332,2800.0,Printing,110.0,2800.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7334,2940.0,Rent,110.0,2940.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7336,32662.0,Equipment Maintenance & Repair,110.0,32662.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7337,200.0,Auto/Vehicle Maint & Repair,110.0,200.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7344,3900.0,Travel - Other,110.0,3900.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7345,15840.0,Other Contractual Services,110.0,15840.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7354,65000.0,Payment For Local Services,110.0,65000.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7532,0.0,Machnry & Equipment,110.0,0.0,21.0,0.0,False
+2024,General Fund,,A2600,expense,7536,0.0,Computer Hardware,110.0,0.0,,0.0,False
+2024,General Fund,,A2600,revenue,6311,998675.0,Federal Grants,99.0,998675.0,11.0,0.0,False
+2024,General Fund,,A2600,revenue,6321,132000.0,State Grants,99.0,132000.0,11.0,0.0,False
+2024,General Fund,,A2600,revenue,6417,165000.0,Zoning & Subdivision Fees,99.0,165000.0,11.0,0.0,False
+2024,General Fund,,A2600,revenue,6755,16670.0,Private Grants,100.0,16670.0,11.0,0.0,False
+2024,General Fund,,A2700,expense,7111,0.0,Elected Officials,112.0,0.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7112,0.0,Executive,112.0,0.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7113,288563.0,Professional,112.0,288563.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7114,85697.0,Staff,112.0,85697.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7115,0.0,Wages,112.0,0.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7119,0.0,Tax Collectors,112.0,0.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7121,28631.0,Fica,112.0,28631.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7122,32144.0,Retirement,112.0,32144.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7123,1732.0,Life Insurance,112.0,1732.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7127,360.0,Unemployment Comp,112.0,360.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7128,1534.0,Worker's Comp,112.0,1534.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7131,78968.0,Capital BlueCross,112.0,78968.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7132,2398.0,Dental,112.0,2398.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7133,921.0,Vision,112.0,921.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7215,6000.0,Office Supplies,112.0,6000.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7319,1360.0,Advisory Council,112.0,1360.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7321,2280.0,Telephone & Telegraph,112.0,2280.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7322,4153.0,Postage,112.0,4153.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7323,2698.0,Travel - Mileage Reimbursement,112.0,2698.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7326,2000.0,Advertising & Public Relations,112.0,2000.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7328,1330.0,Staff Development,112.0,1330.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7331,3791.0,Insurance,112.0,3791.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7332,2000.0,Printing,112.0,2000.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7334,940.0,Rent,112.0,940.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7344,400.0,Travel - Other,112.0,400.0,21.0,0.0,False
+2024,General Fund,,A2700,expense,7345,1280.0,Other Contractual Services,112.0,1280.0,21.0,0.0,False
+2024,General Fund,,A2700,revenue,6323,180000.0,State Direct,100.0,180000.0,11.0,0.0,False
+2024,General Fund,,A2700,revenue,6351,150000.0,Other Governmental,100.0,150000.0,11.0,0.0,False
+2024,General Fund,,A2800,expense,7111,0.0,Elected Officials,112.0,0.0,21.0,0.0,False
+2024,General Fund,,A2800,expense,7112,0.0,Executive i,112.0,0.0,21.0,0.0,False
+2024,General Fund,,A2800,expense,7113,1959713.0,Professional,112.0,1959713.0,21.0,0.0,False
+2024,General Fund,,A2800,expense,7114,1144328.0,Staff,112.0,1144328.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7115,0.0,Wages,112.0,0.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7119,0.0,Tax Collectors,112.0,0.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7121,237459.0,Fica,112.0,237459.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7122,266594.0,Retirement,112.0,266594.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7123,14365.0,Life Insurance,112.0,14365.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7127,2700.0,Unemployment Comp,112.0,2700.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7128,12722.0,Worker's Comp,112.0,12722.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7131,592259.0,Capital BlueCross,112.0,592259.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7132,17988.0,Dental,112.0,17988.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7133,6904.0,Vision 7,112.0,6904.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7215,12950.0,Office Supplies,112.0,12950.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7216,5500.0,Printing Supplies,112.0,5500.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7228,0.0,Other Equipment & Furniture,112.0,0.0,,0.0,False
+2024,General Fund,,A2800,expense,7244,1500.0,Equip & Motor Vehicle Supplies,112.0,1500.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7251,2153668.0,Other Software,112.0,2153668.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7252,420.0,Other Hardware,112.0,420.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7318,204799.0,Other Professional Services,112.0,204799.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7321,227000.0,Telephone & Telegraph,112.0,227000.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7322,1275.0,Postage,112.0,1275.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7323,3350.0,Travel - Mileage Reimbursement,112.0,3350.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7324,500.0,Freight & Messenger,112.0,500.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7326,600.0,Advertising & Public Relations,112.0,600.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7328,31870.0,Staff Development,112.0,31870.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7331,31519.0,Insurance,112.0,31519.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7332,390.0,Printing,112.0,390.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7334,8309.0,Rent 7,112.0,8309.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7336,157207.0,Equipment Maintenance & Repair,112.0,157207.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7337,600.0,Auto/Vehicle Maint & Repair,112.0,600.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7344,500.0,Travel - Other,112.0,500.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7367,60.0,Association Dues,112.0,60.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7534,22000.0,Computer Software,112.0,22000.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7536,18800.0,Computer Hardware,112.0,18800.0,22.0,0.0,False
+2024,General Fund,,A2800,expense,7952,0.0,Bank Charges,112.0,0.0,,0.0,False
+2024,General Fund,,A2800,revenue,6321,0.0,,,0.0,11.0,0.0,False
+2024,General Fund,,A2800,revenue,6439,11500.0,Mapping & Publication,100.0,11500.0,11.0,0.0,False
+2024,General Fund,,A2800,revenue,6444,438381.0,Other Fees,100.0,438381.0,11.0,0.0,False
+2024,General Fund,,A3100,expense,7111,0.0,Elected Officials,112.0,0.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7112,0.0,Executive,111.0,0.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7113,214492.0,Professional,111.0,214492.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7114,2023572.0,Staff,111.0,2023572.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7115,430682.0,Wages,111.0,430682.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7119,0.0,Tax Collectors,111.0,0.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7121,204159.0,Fica,111.0,204159.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7122,197627.0,Retirement,111.0,197627.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7123,10354.0,Life Insurance,111.0,10354.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7127,4660.0,Unemployment Comp,111.0,4660.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7128,12021.0,Worker's Comp,111.0,12021.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7131,526452.0,Capita BlueCross,111.0,526452.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7132,15990.0,Dental,111.0,15990.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7133,6137.0,Vision,111.0,6137.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7213,300.0,Books Films & Materials,111.0,300.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7215,7097.0,S Office Supplies cS,111.0,7097.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7221,1500.0,Food cS,111.0,1500.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7222,89589.0,Cleaning Supplies,111.0,89589.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7225,3815.0,Clothing,111.0,3815.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7226,34560.0,Agricultrl Supplies,111.0,34560.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7227,20605.0,Other Oper Supplies,111.0,20605.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7228,30388.0,Other Equipment & Furniture,111.0,30388.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7229,17298.0,Uniforms,111.0,17298.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7232,4738.0,Medical & Dental Supplies,111.0,4738.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7241,257880.0,Building & Bridge Supplies,111.0,257880.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7244,74170.0,Equip & Motor Vehicle Supplies,111.0,74170.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7318,65000.0,Other Professional Services,111.0,65000.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7321,41713.0,Telephone & Telegraph,111.0,41713.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7322,760.0,Postage,111.0,760.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7323,19898.0,Travel - Mileage Reimbursement,111.0,19898.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7326,2085.0,Advertising & Public Relations,111.0,2085.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7328,28884.0,Staff Development,111.0,28884.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7331,43328.0,Insurance,111.0,43328.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7332,11373.0,Printing,111.0,11373.0,22.0,0.0,False
+2024,General Fund,,A3100,expense,7334,151265.0,Rent,111.0,151265.0,23.0,0.0,False
+2024,General Fund,,A3100,expense,7335,1644835.0,Electric,111.0,1644835.0,23.0,0.0,False
+2024,General Fund,,A3100,expense,7336,54325.0,Equipment Maintenance & Repair,111.0,54325.0,23.0,0.0,False
+2024,General Fund,,A3100,expense,7337,58110.0,Auto/Vehicle Maint & Repair,111.0,58110.0,23.0,0.0,False
+2024,General Fund,,A3100,expense,7338,416880.0,Heat,111.0,416880.0,23.0,0.0,False
+2024,General Fund,,A3100,expense,7339,466562.0,Water & Sewage,111.0,466562.0,23.0,0.0,False
+2024,General Fund,,A3100,expense,7342,187792.0,Laundry & Sanitation,111.0,187792.0,23.0,0.0,False
+2024,General Fund,,A3100,expense,7345,1864934.0,Other Contractual Services,111.0,1864934.0,23.0,0.0,False
+2024,General Fund,,A3100,expense,7351,266790.0,Building Maintenance & Repair,111.0,266790.0,23.0,0.0,False
+2024,General Fund,,A3100,expense,7353,5440.0,Payment To State,111.0,5440.0,23.0,0.0,False
+2024,General Fund,,A3100,expense,7354,26850.0,Payment For Local Services,111.0,26850.0,23.0,0.0,False
+2024,General Fund,,A3100,expense,7515,64885.0,Land Improvements,111.0,64885.0,23.0,0.0,False
+2024,General Fund,,A3100,expense,7522,94000.0,Building Improvements,111.0,94000.0,23.0,0.0,False
+2024,General Fund,,A3100,expense,7523,35000.0,Bridge & Road tmprovements,111.0,35000.0,23.0,0.0,False
+2024,General Fund,,A3100,expense,7531,37288.0,Furniture & Fixtures,111.0,37288.0,23.0,0.0,False
+2024,General Fund,,A3100,expense,7532,0.0,Machnry & Equipment,111.0,0.0,,0.0,False
+2024,General Fund,,A3100,expense,7533,14928.0,Vehicles cS,111.0,14928.0,23.0,0.0,False
+2024,General Fund,,A3100,expense,7952,18892.0,Bank Charges,111.0,18892.0,23.0,0.0,False
+2024,General Fund,,A3100,revenue,6321,102489.0,State Grants i,100.0,102489.0,11.0,0.0,False
+2024,General Fund,,A3100,revenue,6413,1000.0,County Fines,100.0,1000.0,11.0,0.0,False
+2024,General Fund,,A3100,revenue,6444,2930.0,Other Fees,100.0,2930.0,11.0,0.0,False
+2024,General Fund,,A3100,revenue,6461,45000.0,Season Pass Collections,100.0,45000.0,11.0,0.0,False
+2024,General Fund,,A3100,revenue,6462,138701.0,Admission Fees,100.0,138701.0,11.0,0.0,False
+2024,General Fund,,A3100,revenue,6463,410.0,Concessions,100.0,410.0,11.0,0.0,False
+2024,General Fund,,A3100,revenue,6464,117506.0,Recreation & Education Fees,100.0,117506.0,11.0,0.0,False
+2024,General Fund,,A3100,revenue,6465,100000.0,Pavilion Fees,100.0,100000.0,11.0,0.0,False
+2024,General Fund,,A3100,revenue,6721,97078.0,Rent & Royalty,100.0,97078.0,11.0,0.0,False
+2024,General Fund,,A3100,revenue,6753,650.0,Reimbursement For Damage,100.0,650.0,11.0,0.0,False
+2024,General Fund,,B1111,expense,7111,0.0,Elected Officials,111.0,0.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7112,0.0,Executive,111.0,0.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7113,342204.0,Professional,111.0,342204.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7114,622149.0,Staff,111.0,622149.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7115,0.0,Wages,111.0,0.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7119,0.0,Tax Collectors,111.0,0.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7121,73773.0,Fica,111.0,73773.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7122,82824.0,Retirement,111.0,82824.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7123,4463.0,Life Insurance,111.0,4463.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7127,1140.0,Unemployment Comp,111.0,1140.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7128,3954.0,Worker's Comp,111.0,3954.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7131,250065.0,Capital BlueCross,111.0,250065.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7132,7595.0,Denta,111.0,7595.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7133,2915.0,Vision,111.0,2915.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7213,551.0,Books Films & Materials,113.0,551.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7215,5500.0,Office Supplies,113.0,5500.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7221,500.0,Food,113.0,500.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7229,0.0,,,0.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7314,1622.0,Lega,113.0,1622.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7318,12443.0,Other Professional Services,113.0,12443.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7321,9915.0,Telephone & Telegraph,113.0,9915.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7322,9218.0,Postage,113.0,9218.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7323,1735.0,Travel - Mileage Reimbursement,113.0,1735.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7328,8100.0,Staff Development,113.0,8100.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7331,9204.0,Insurance,113.0,9204.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7332,3000.0,Printing,113.0,3000.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7334,32814.0,Rent,113.0,32814.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7336,5200.0,Equipment Maintenance & Repair,113.0,5200.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7344,2650.0,Travel - Other,113.0,2650.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7345,23993.0,Other Contractual Services,113.0,23993.0,23.0,0.0,False
+2024,General Fund,,B1111,expense,7367,1389.0,Association Dues,113.0,1389.0,23.0,0.0,False
+2024,General Fund,,B1112,expense,7111,0.0,Elected Officials,113.0,0.0,23.0,0.0,False
+2024,General Fund,,B1112,expense,7112,0.0,Executive,113.0,0.0,23.0,0.0,False
+2024,General Fund,,B1112,expense,7113,68016.0,Professional,113.0,68016.0,23.0,0.0,False
+2024,General Fund,,B1112,expense,7114,0.0,Staff,113.0,0.0,23.0,0.0,False
+2024,General Fund,,B1112,expense,7115,43701.0,Wages,113.0,43701.0,23.0,0.0,False
+2024,General Fund,,B1112,expense,7119,0.0,Tax Collectors,113.0,0.0,23.0,0.0,False
+2024,General Fund,,B1112,expense,7121,8546.0,Fica,113.0,8546.0,23.0,0.0,False
+2024,General Fund,,B1112,expense,7122,7987.0,Retirement,113.0,7987.0,23.0,0.0,False
+2024,General Fund,,B1112,expense,7123,315.0,Life Insurance,113.0,315.0,23.0,0.0,False
+2024,General Fund,,B1112,expense,7127,180.0,Unemployment Comp,113.0,180.0,23.0,0.0,False
+2024,General Fund,,B1112,expense,7128,458.0,Worker's Comp,113.0,458.0,23.0,0.0,False
+2024,General Fund,,B1112,expense,7131,13161.0,Capital BlueCross,113.0,13161.0,23.0,0.0,False
+2024,General Fund,,B1112,expense,7132,400.0,Dental,113.0,400.0,23.0,0.0,False
+2024,General Fund,,B1112,expense,7133,153.0,Vision,113.0,153.0,23.0,0.0,False
+2024,General Fund,,B1112,expense,7213,297238.0,Books Films & Materials,113.0,297238.0,23.0,0.0,False
+2024,General Fund,,B1112,expense,7215,450.0,Office Supplies,113.0,450.0,23.0,0.0,False
+2024,General Fund,,B1112,expense,7251,995.0,Other Software,113.0,995.0,23.0,0.0,False
+2024,General Fund,,B1112,expense,7318,2000.0,Other Professional Services,113.0,2000.0,24.0,0.0,False
+2024,General Fund,,B1112,expense,7321,644.0,Telephone & Telegraph,113.0,644.0,24.0,0.0,False
+2024,General Fund,,B1112,expense,7322,60.0,Postage,113.0,60.0,24.0,0.0,False
+2024,General Fund,,B1112,expense,7323,300.0,Travel - Mileage Reimbursement,113.0,300.0,24.0,0.0,False
+2024,General Fund,,B1112,expense,7326,400.0,Advertising & Public Relations,113.0,400.0,24.0,0.0,False
+2024,General Fund,,B1112,expense,7328,666.0,Staff Development,113.0,666.0,24.0,0.0,False
+2024,General Fund,,B1112,expense,7331,1256.0,Insurance,113.0,1256.0,24.0,0.0,False
+2024,General Fund,,B1112,expense,7332,3300.0,Printing,113.0,3300.0,24.0,0.0,False
+2024,General Fund,,B1112,expense,7336,540.0,Equipment Maintenance & Repair,113.0,540.0,24.0,0.0,False
+2024,General Fund,,B1112,expense,7375,650.0,Rep Typ Interpreter,113.0,650.0,24.0,0.0,False
+2024,General Fund,,B1112,revenue,6413,200.0,County Fines,100.0,200.0,11.0,0.0,False
+2024,General Fund,,B1112,revenue,6444,50.0,Other Fees,100.0,50.0,11.0,0.0,False
+2024,General Fund,,B1112,revenue,6463,8250.0,Concessions,100.0,8250.0,11.0,0.0,False
+2024,General Fund,,B1113,expense,7314,377596.0,Legal,113.0,377596.0,24.0,0.0,False
+2024,General Fund,,B1113,expense,7318,60560.0,Other Professional Services,113.0,60560.0,24.0,0.0,False
+2024,General Fund,,B1113,expense,7345,34000.0,Other Contractual Services,113.0,34000.0,24.0,0.0,False
+2024,General Fund,,B1113,expense,7346,49152.0,Misc Services,113.0,49152.0,24.0,0.0,False
+2024,General Fund,,B1113,expense,7373,4020.0,Viewers,113.0,4020.0,24.0,0.0,False
+2024,General Fund,,B1113,expense,7374,15200.0,Arbitrators,113.0,15200.0,24.0,0.0,False
+2024,General Fund,,B1113,expense,7375,344276.0,S Rep Typ Interpreter,113.0,344276.0,24.0,0.0,False
+2024,General Fund,,B1113,expense,7399,922906.0,Other Services,113.0,922906.0,24.0,0.0,False
+2024,General Fund,,B1113,revenue,6323,70000.0,State Direct,100.0,70000.0,11.0,0.0,False
+2024,General Fund,,B1113,revenue,6351,100000.0,Other Governmental,100.0,100000.0,11.0,0.0,False
+2024,General Fund,,B1113,revenue,6411,100000.0,County Costs,100.0,100000.0,11.0,0.0,False
+2024,General Fund,,B1113,revenue,6418,0.0,Filing Fees,100.0,0.0,,0.0,False
+2024,General Fund,,B1113,revenue,6444,60000.0,Other Fees,100.0,60000.0,11.0,0.0,False
+2024,General Fund,,B1113,revenue,6456,600.0,Act 66 PFA Fees,100.0,600.0,11.0,0.0,False
+2024,General Fund,,B1115,expense,7111,0.0,Elected Officials,113.0,0.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7112,0.0,Executive,113.0,0.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7113,711247.0,Professional,113.0,711247.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7114,1159734.0,Staff,113.0,1159734.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7115,468080.0,Wages,113.0,468080.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7119,0.0,Tax Collectors,113.0,0.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7121,178938.0,Fica,113.0,178938.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7122,200893.0,Retirement,113.0,200893.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7123,8660.0,Life Insurance,113.0,8660.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7127,3540.0,Unemployment Comp,113.0,3540.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7128,9578.0,Worker's Comp,113.0,9578.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7131,421162.0,Capita BlueCross,113.0,421162.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7132,12792.0,Dental,114.0,12792.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7133,4910.0,Vision,114.0,4910.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7213,108376.0,Books Films & Materials,114.0,108376.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7215,7500.0,S Office Supplies,114.0,7500.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7225,0.0,,,0.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7228,0.0,,,0.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7251,62460.0,Other Software,114.0,62460.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7321,17302.0,Telephone & Telegraph,114.0,17302.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7322,4276.0,Postage,114.0,4276.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7323,500.0,Travel - Mileage Reimbursement,114.0,500.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7328,10300.0,Staff Development,114.0,10300.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7331,19935.0,Insurance,114.0,19935.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7332,1500.0,Printing,114.0,1500.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7336,1970.0,Equipment Maintenance & Repair,114.0,1970.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7344,0.0,,,0.0,24.0,0.0,False
+2024,General Fund,,B1115,expense,7367,11546.0,Association Dues,114.0,11546.0,24.0,0.0,False
+2024,General Fund,,B1115,revenue,6323,699873.0,State Direct,100.0,699873.0,11.0,0.0,False
+2024,General Fund,,B1115,revenue,6444,140187.0,Other Fees,100.0,140187.0,11.0,0.0,False
+2024,General Fund,,B1115,revenue,6734,0.0,Refunds,100.0,0.0,,0.0,False
+2024,General Fund,,B1116,expense,7111,0.0,Elected Officials,114.0,0.0,24.0,0.0,False
+2024,General Fund,,B1116,expense,7112,0.0,Executive,114.0,0.0,24.0,0.0,False
+2024,General Fund,,B1116,expense,7113,972477.0,Professional,114.0,972477.0,24.0,0.0,False
+2024,General Fund,,B1116,expense,7114,84091.0,Staff,114.0,84091.0,24.0,0.0,False
+2024,General Fund,,B1116,expense,7115,0.0,Wages,114.0,0.0,24.0,0.0,False
+2024,General Fund,,B1116,expense,7119,0.0,Tax Collectors,114.0,0.0,24.0,0.0,False
+2024,General Fund,,B1116,expense,7121,80827.0,Fica,114.0,80827.0,24.0,0.0,False
+2024,General Fund,,B1116,expense,7122,90744.0,Retirement,114.0,90744.0,24.0,0.0,False
+2024,General Fund,,B1116,expense,7123,4888.0,Life Insurance,114.0,4888.0,24.0,0.0,False
+2024,General Fund,,B1116,expense,7127,840.0,Unemployment Comp,114.0,840.0,24.0,0.0,False
+2024,General Fund,,B1116,expense,7128,4332.0,Worker's Comp,114.0,4332.0,24.0,0.0,False
+2024,General Fund,,B1116,expense,7131,184258.0,Capital BlueCross,114.0,184258.0,24.0,0.0,False
+2024,General Fund,,B1116,expense,7132,5596.0,Dental,114.0,5596.0,24.0,0.0,False
+2024,General Fund,,B1116,expense,7133,2148.0,Vision,114.0,2148.0,24.0,0.0,False
+2024,General Fund,,B1116,expense,7215,9996.0,Office Supplies,114.0,9996.0,24.0,0.0,False
+2024,General Fund,,B1116,expense,7251,6032.0,Other Software,114.0,6032.0,24.0,0.0,False
+2024,General Fund,,B1116,expense,7318,20000.0,Other Professional Services,114.0,20000.0,24.0,0.0,False
+2024,General Fund,,B1116,expense,7321,5173.0,Telephone & Telegraph,114.0,5173.0,24.0,0.0,False
+2024,General Fund,,B1116,expense,7322,100.0,Postage,114.0,100.0,25.0,0.0,False
+2024,General Fund,,B1116,expense,7323,2230.0,Travel - Mileage Reimbursement,114.0,2230.0,25.0,0.0,False
+2024,General Fund,,B1116,expense,7328,5687.0,Staff Development,114.0,5687.0,25.0,0.0,False
+2024,General Fund,,B1116,expense,7331,13600.0,Insurance,114.0,13600.0,25.0,0.0,False
+2024,General Fund,,B1116,expense,7332,150.0,Printing,114.0,150.0,25.0,0.0,False
+2024,General Fund,,B1116,expense,7334,950.0,Rent,114.0,950.0,25.0,0.0,False
+2024,General Fund,,B1116,expense,7336,508.0,Equipment Maintenance & Repair,114.0,508.0,25.0,0.0,False
+2024,General Fund,,B1116,expense,7343,3100.0,Travel-Certification-Licenses,114.0,3100.0,25.0,0.0,False
+2024,General Fund,,B1116,expense,7345,85000.0,Other Contractual Services,114.0,85000.0,25.0,0.0,False
+2024,General Fund,,B1116,expense,7367,6735.0,Association Dues,114.0,6735.0,25.0,0.0,False
+2024,General Fund,,B1116,revenue,6444,135000.0,Other Fees,100.0,135000.0,11.0,0.0,False
+2024,General Fund,,B1116,revenue,6476,11900.0,Stipend,100.0,11900.0,11.0,0.0,False
+2024,General Fund,,B1117,expense,7111,0.0,Elected Officials,114.0,0.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7112,0.0,Executive,114.0,0.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7113,0.0,Professional,114.0,0.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7114,38949.0,Staff,114.0,38949.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7115,0.0,Wages,114.0,0.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7119,0.0,Tax Collectors,114.0,0.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7121,2980.0,Fica,114.0,2980.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7122,3345.0,Retirement,114.0,3345.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7123,180.0,Life Insurance,114.0,180.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7127,60.0,Unemployment Comp,114.0,60.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7128,160.0,Worker's Comp,114.0,160.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7131,13161.0,Capital BlueCross,114.0,13161.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7132,400.0,Dental -,114.0,400.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7133,153.0,Vision,114.0,153.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7215,3000.0,Office Supplies,114.0,3000.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7221,7500.0,Food,114.0,7500.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7321,2032.0,Telephone & Telegraph,114.0,2032.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7322,30000.0,Postage,114.0,30000.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7328,3000.0,Staff Development,114.0,3000.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7329,300.0,Transportation,114.0,300.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7331,303.0,Insurance,114.0,303.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7332,11326.0,Printing,114.0,11326.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7334,65765.0,Rent,114.0,65765.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7336,16634.0,Equipment Maintenance & Repair,115.0,16634.0,25.0,0.0,False
+2024,General Fund,,B1117,expense,7371,99890.0,Jury Pay & Expense,115.0,99890.0,25.0,0.0,False
+2024,General Fund,,B1117,revenue,6323,15500.0,State Direct,100.0,15500.0,11.0,0.0,False
+2024,General Fund,,B1120,expense,7111,0.0,Elected Officials,115.0,0.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7112,121880.0,Executive,115.0,121880.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7113,4760690.0,Professional,115.0,4760690.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7114,2073790.0,Staff,115.0,2073790.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7115,0.0,Wages,115.0,0.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7119,0.0,Tax Collectors,115.0,0.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7121,532162.0,Fica,115.0,532162.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7122,597454.0,Retirement,115.0,597454.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7123,32198.0,Life Insurance,115.0,32198.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7127,6720.0,Unemployment Comp,115.0,6720.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7128,28504.0,Worker's Comp,115.0,28504.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7131,1487227.0,Capital BlueCross,115.0,1487227.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7132,45171.0,Dental,115.0,45171.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7133,17338.0,Vision,115.0,17338.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7213,817.0,Books Films & Materials,115.0,817.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7215,19738.0,Office Supplies,115.0,19738.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7227,86899.0,Other Oper Supplies,115.0,86899.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7228,0.0,,,0.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7229,14175.0,Uniforms,115.0,14175.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7244,6000.0,Equip & Motor Vehicle Supplies,115.0,6000.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7251,55100.0,Other Software,115.0,55100.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7252,0.0,,,0.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7318,16495.0,Other Professional Services,115.0,16495.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7321,73911.0,Telephone & Telegraph,115.0,73911.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7322,11000.0,Postage,115.0,11000.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7323,66047.0,Travel - Mileage Reimbursement,115.0,66047.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7326,4100.0,Advertising & Public Relations,115.0,4100.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7328,30804.0,Staff Development,115.0,30804.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7331,84049.0,Insurance,115.0,84049.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7332,1000.0,Printing,115.0,1000.0,25.0,0.0,False
+2024,General Fund,,B1120,expense,7334,312555.0,Rent,115.0,312555.0,26.0,0.0,False
+2024,General Fund,,B1120,expense,7336,7044.0,Equipment Maintenance & Repair,115.0,7044.0,26.0,0.0,False
+2024,General Fund,,B1120,expense,7337,2460.0,Auto/Vehicle Maint & Repair,115.0,2460.0,26.0,0.0,False
+2024,General Fund,,B1120,expense,7343,981.0,Travel-Certification-Licenses,115.0,981.0,26.0,0.0,False
+2024,General Fund,,B1120,expense,7344,600.0,Travel - Other,115.0,600.0,26.0,0.0,False
+2024,General Fund,,B1120,expense,7345,247768.0,Other Contractual Services,115.0,247768.0,26.0,0.0,False
+2024,General Fund,,B1120,revenue,6321,421090.0,State Grants,100.0,421090.0,11.0,0.0,False
+2024,General Fund,,B1120,revenue,6444,2148174.0,Other Fees,100.0,2148174.0,11.0,0.0,False
+2024,General Fund,,B1121,expense,7111,0.0,Elected Officials,115.0,0.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7112,0.0,Executive,115.0,0.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7113,2559317.0,Professional,115.0,2559317.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7114,280589.0,Staff,115.0,280589.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7115,100841.0,Wages,115.0,100841.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7119,0.0,Tax Collectors,115.0,0.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7121,224967.0,Fica,115.0,224967.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7122,249776.0,Retirement,115.0,249776.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7123,13144.0,Life Insurance,115.0,13144.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7127,2700.0,Unemployment Comp,115.0,2700.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7128,12047.0,Worker's Comp,115.0,12047.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7131,552775.0,Capital BlueCross,115.0,552775.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7132,16789.0,Dental,115.0,16789.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7133,6444.0,Vision,115.0,6444.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7215,5832.0,Office Supplies,115.0,5832.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7228,4380.0,Other Equipment & Furniture,115.0,4380.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7229,6075.0,Uniforms,115.0,6075.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7244,6000.0,Equip & Motor Vehicle Supplies,115.0,6000.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7318,18900.0,Other Professional Services,115.0,18900.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7321,18644.0,Telephone & Telegraph,115.0,18644.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7322,5622.0,Postage,115.0,5622.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7323,27648.0,Travel - Mileage Reimbursement,115.0,27648.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7325,24000.0,State Aided Staff Development,115.0,24000.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7328,6020.0,Staff Development,115.0,6020.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7331,36855.0,Insurance,115.0,36855.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7332,1500.0,Printing,115.0,1500.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7334,47162.0,Rent,115.0,47162.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7336,443.0,Equipment Maintenance & Repair,115.0,443.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7337,419.0,Auto/Vehicle Maint & Repair,116.0,419.0,26.0,0.0,False
+2024,General Fund,,B1121,expense,7421,16980.0,Rehabilitation,116.0,16980.0,26.0,0.0,False
+2024,General Fund,,B1121,revenue,6311,100000.0,Federal Grants,100.0,100000.0,11.0,0.0,False
+2024,General Fund,,B1121,revenue,6321,715000.0,State Grants,100.0,715000.0,11.0,0.0,False
+2024,General Fund,,B1122,expense,7111,0.0,Elected Officials,116.0,0.0,26.0,0.0,False
+2024,General Fund,,B1122,expense,7112,0.0,Executive,116.0,0.0,26.0,0.0,False
+2024,General Fund,,B1122,expense,7113,879794.0,Professional,116.0,879794.0,26.0,0.0,False
+2024,General Fund,,B1122,expense,7114,149382.0,Staff,116.0,149382.0,26.0,0.0,False
+2024,General Fund,,B1122,expense,7115,34134.0,Wages,116.0,34134.0,26.0,0.0,False
+2024,General Fund,,B1122,expense,7119,0.0,Tax Collectors,116.0,0.0,26.0,0.0,False
+2024,General Fund,,B1122,expense,7121,81343.0,Fica,116.0,81343.0,26.0,0.0,False
+2024,General Fund,,B1122,expense,7122,88392.0,Retirement,116.0,88392.0,26.0,0.0,False
+2024,General Fund,,B1122,expense,7123,4764.0,Life Insurance,116.0,4764.0,26.0,0.0,False
+2024,General Fund,,B1122,expense,7127,1225.0,Unemployment Comp,116.0,1225.0,26.0,0.0,False
+2024,General Fund,,B1122,expense,7128,4359.0,Worker's Comp,116.0,4359.0,26.0,0.0,False
+2024,General Fund,,B1122,expense,7131,223742.0,Capital BlueCross,116.0,223742.0,26.0,0.0,False
+2024,General Fund,,B1122,expense,7132,6796.0,Dental,116.0,6796.0,26.0,0.0,False
+2024,General Fund,,B1122,expense,7133,2608.0,Vision,116.0,2608.0,26.0,0.0,False
+2024,General Fund,,B1122,expense,7228,0.0,,,0.0,26.0,0.0,False
+2024,General Fund,,B1122,expense,7229,2025.0,Uniforms,116.0,2025.0,26.0,0.0,False
+2024,General Fund,,B1122,expense,7318,8208.0,Other Professional Services cS,116.0,8208.0,26.0,0.0,False
+2024,General Fund,,B1122,expense,7323,2376.0,Travel - Mileage Reimbursement,116.0,2376.0,26.0,0.0,False
+2024,General Fund,,B1122,expense,7326,1374.0,Advertising & Public Relations,116.0,1374.0,26.0,0.0,False
+2024,General Fund,,B1122,expense,7331,9711.0,Insurance,116.0,9711.0,26.0,0.0,False
+2024,General Fund,,B1122,expense,7336,250.0,Equipment Maintenance & Repair,116.0,250.0,26.0,0.0,False
+2024,General Fund,,B1122,revenue,6444,1500483.0,Other Fees,100.0,1500483.0,11.0,0.0,False
+2024,General Fund,,B1211,expense,7111,86527.0,Elected Officials,116.0,86527.0,26.0,0.0,False
+2024,General Fund,,B1211,expense,7112,0.0,Executive,116.0,0.0,26.0,0.0,False
+2024,General Fund,,B1211,expense,7113,0.0,Professional,116.0,0.0,26.0,0.0,False
+2024,General Fund,,B1211,expense,7114,496918.0,Staff,116.0,496918.0,26.0,0.0,False
+2024,General Fund,,B1211,expense,7115,32387.0,Wages,116.0,32387.0,26.0,0.0,False
+2024,General Fund,,B1211,expense,7119,0.0,Tax Collectors,116.0,0.0,26.0,0.0,False
+2024,General Fund,,B1211,expense,7121,47111.0,Fica,116.0,47111.0,26.0,0.0,False
+2024,General Fund,,B1211,expense,7122,50110.0,Retirement,116.0,50110.0,27.0,0.0,False
+2024,General Fund,,B1211,expense,7123,2701.0,Life Insurance,116.0,2701.0,27.0,0.0,False
+2024,General Fund,,B1211,expense,7127,900.0,Unemployment Comp,116.0,900.0,27.0,0.0,False
+2024,General Fund,,B1211,expense,7128,2520.0,Worker's Comp,116.0,2520.0,27.0,0.0,False
+2024,General Fund,,B1211,expense,7131,197420.0,Capital BlueCross,116.0,197420.0,27.0,0.0,False
+2024,General Fund,,B1211,expense,7132,5996.0,Dental,116.0,5996.0,27.0,0.0,False
+2024,General Fund,,B1211,expense,7133,2301.0,Vision,116.0,2301.0,27.0,0.0,False
+2024,General Fund,,B1211,expense,7212,0.0,,,0.0,27.0,0.0,False
+2024,General Fund,,B1211,expense,7213,400.0,Books Films & Materials,116.0,400.0,27.0,0.0,False
+2024,General Fund,,B1211,expense,7215,11700.0,Office Supplies,116.0,11700.0,27.0,0.0,False
+2024,General Fund,,B1211,expense,7314,0.0,Legal,116.0,0.0,27.0,0.0,False
+2024,General Fund,,B1211,expense,7321,4311.0,Telephone & Telegraph,116.0,4311.0,27.0,0.0,False
+2024,General Fund,,B1211,expense,7322,25000.0,Postage,116.0,25000.0,27.0,0.0,False
+2024,General Fund,,B1211,expense,7323,0.0,,,0.0,27.0,0.0,False
+2024,General Fund,,B1211,expense,7328,0.0,Staff Development,116.0,0.0,27.0,0.0,False
+2024,General Fund,,B1211,expense,7331,7594.0,Insurance,116.0,7594.0,27.0,0.0,False
+2024,General Fund,,B1211,expense,7332,3503.0,Printing,116.0,3503.0,27.0,0.0,False
+2024,General Fund,,B1211,expense,7336,800.0,Equipment Maintenance & Repair,116.0,800.0,27.0,0.0,False
+2024,General Fund,,B1211,expense,7344,0.0,,,0.0,27.0,0.0,False
+2024,General Fund,,B1211,expense,7363,0.0,,,0.0,27.0,0.0,False
+2024,General Fund,,B1211,expense,7367,0.0,,,0.0,27.0,0.0,False
+2024,General Fund,,B1211,expense,7372,1000.0,Witness Expense,116.0,1000.0,27.0,0.0,False
+2024,General Fund,,B1211,revenue,6411,746806.0,County Costs,100.0,746806.0,11.0,0.0,False
+2024,General Fund,,B1211,revenue,6444,420736.0,Other Fees,100.0,420736.0,11.0,0.0,False
+2024,General Fund,,B1300,expense,7111,211495.0,Elected Officials,116.0,211495.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7112,224262.0,Executive,116.0,224262.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7113,2756827.0,Professional,116.0,2756827.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7114,2340118.0,Staff,116.0,2340118.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7115,77280.0,Wages,116.0,77280.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7119,0.0,Tax Collectors,116.0,0.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7121,429164.0,Fica,116.0,429164.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7122,477732.0,Retirement,116.0,477732.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7123,25605.0,Life Insurance,116.0,25605.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7127,4810.0,Unemployment Comp,116.0,4810.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7128,22975.0,Worker's Comp,116.0,22975.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7131,1026581.0,Capital BlueCross,116.0,1026581.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7132,31180.0,Dental,116.0,31180.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7133,11968.0,Vision,116.0,11968.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7199,-19069.0,Payroll Contra,116.0,-19069.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7213,20794.0,Books Films & Materials,116.0,20794.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7215,22500.0,Office Supplies,116.0,22500.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7221,750.0,Food,117.0,750.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7227,28258.0,Other Oper Supplies,117.0,28258.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7228,48159.0,Other Equipment & Furniture,117.0,48159.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7229,0.0,,,0.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7244,12000.0,Equip & Motor Vehicle Supplies,117.0,12000.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7251,2000.0,Other Software,117.0,2000.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7252,2000.0,Other Hardware,117.0,2000.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7314,1000.0,Legal,117.0,1000.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7318,131850.0,Other Professional Services,117.0,131850.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7321,42700.0,Telephone & Telegraph,117.0,42700.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7322,19000.0,Postage,117.0,19000.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7323,10500.0,Travel - Mileage Reimbursement,117.0,10500.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7328,52550.0,Staff Development,117.0,52550.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7331,70734.0,Insurance,117.0,70734.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7332,12500.0,Printing,117.0,12500.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7334,99978.0,Rent,117.0,99978.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7336,125039.0,Equipment Maintenance & Repair,117.0,125039.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7337,10300.0,Auto/Vehicle Maint & Repair,117.0,10300.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7343,7250.0,Travel-Certification-Licenses,117.0,7250.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7345,154799.0,Other Contractual Services,117.0,154799.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7361,100000.0,Program Support Payment,117.0,100000.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7367,24964.0,Association Dues,117.0,24964.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7372,28500.0,Witness Expense,117.0,28500.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7375,25000.0,S Rep Typ Interpreter a,117.0,25000.0,27.0,0.0,False
+2024,General Fund,,B1300,expense,7532,0.0,Machnry & Equipment,117.0,0.0,,0.0,False
+2024,General Fund,,B1300,expense,7533,0.0,Vehicles,117.0,0.0,,0.0,False
+2024,General Fund,,B1300,expense,7536,18000.0,Computer Hardware,117.0,18000.0,27.0,0.0,False
+2024,General Fund,,B1300,revenue,6311,684810.0,Federal Grants,100.0,684810.0,11.0,0.0,False
+2024,General Fund,,B1300,revenue,6321,137471.0,State Grants,100.0,137471.0,11.0,0.0,False
+2024,General Fund,,B1300,revenue,6351,63000.0,Other Governmental,100.0,63000.0,11.0,0.0,False
+2024,General Fund,,B1300,revenue,6421,68000.0,Administrative Fee,100.0,68000.0,11.0,0.0,False
+2024,General Fund,,B1300,revenue,6444,540300.0,Other Fees,100.0,540300.0,11.0,0.0,False
+2024,General Fund,,B1411,expense,7111,88527.0,Elected Officials,117.0,88527.0,27.0,0.0,False
+2024,General Fund,,B1411,expense,7112,0.0,Executive,117.0,0.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7113,0.0,Professional,117.0,0.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7114,288838.0,Staff,117.0,288838.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7115,0.0,Wages,117.0,0.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7119,0.0,Tax Collectors,117.0,0.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7121,28868.0,Fica,117.0,28868.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7122,32410.0,Retirement,117.0,32410.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7123,1748.0,Life Insurance,117.0,1748.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7127,480.0,Unemployment Comp,117.0,480.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7128,1544.0,Worker's Comp,117.0,1544.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7131,118452.0,Capital BlueCross,117.0,118452.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7132,3598.0,Dental,117.0,3598.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7133,1381.0,Vision,117.0,1381.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7215,6000.0,Office Supplies,117.0,6000.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7317,3500.0,Solicitor,117.0,3500.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7318,900.0,Other Professional Services,117.0,900.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7321,2500.0,Telephone & Telegraph,117.0,2500.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7322,4000.0,Postage,117.0,4000.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7323,800.0,Travel - Mileage Reimbursement,117.0,800.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7326,10000.0,Advertising & Public Relations,117.0,10000.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7328,4000.0,Staff Development,117.0,4000.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7331,4000.0,Insurance,117.0,4000.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7332,3800.0,Printing,117.0,3800.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7334,10000.0,Rent,117.0,10000.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7336,31000.0,Equipment Maintenance & Repair,117.0,31000.0,28.0,0.0,False
+2024,General Fund,,B1411,expense,7344,850.0,Travel - Other,117.0,850.0,28.0,0.0,False
+2024,General Fund,,B1411,revenue,6217,1250000.0,Writs,100.0,1250000.0,11.0,0.0,False
+2024,General Fund,,B1411,revenue,6218,115000.0,Marriage Licenses,100.0,115000.0,11.0,0.0,False
+2024,General Fund,,B1411,revenue,6323,330000.0,State Direct,100.0,330000.0,11.0,0.0,False
+2024,General Fund,,B1411,revenue,6412,275000.0,Record Legal Instruments,100.0,275000.0,12.0,0.0,False
+2024,General Fund,,B1411,revenue,6444,150000.0,Other Fees,100.0,150000.0,12.0,0.0,False
+2024,General Fund,,B1511,expense,7111,86527.0,Elected Officials,117.0,86527.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7112,184051.0,Executive,117.0,184051.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7113,0.0,Professional,117.0,0.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7114,512236.0,Staff,117.0,512236.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7115,33878.0,Wages,117.0,33878.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7119,0.0,Tax Collectors,117.0,0.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7121,62477.0,Fica,117.0,62477.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7122,69063.0,Retirement,117.0,69063.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7123,3625.0,Life Insurance,117.0,3625.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7127,1200.0,Unemployment Comp,117.0,1200.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7128,3345.0,Worker's Comp,117.0,3345.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7131,250065.0,Capita BlueCross,118.0,250065.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7132,7595.0,Dental,118.0,7595.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7133,2915.0,Vision,118.0,2915.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7215,26000.0,Office Supplies,118.0,26000.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7221,2000.0,Food,118.0,2000.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7252,3000.0,Other Hardware,118.0,3000.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7317,1300.0,Solicitor,118.0,1300.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7318,500.0,Other Professional Services,118.0,500.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7321,5000.0,Telephone & Telegraph,118.0,5000.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7322,26000.0,Postage,118.0,26000.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7323,400.0,Travel - Mileage Reimbursement,118.0,400.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7326,0.0,,,0.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7328,4880.0,Staff Development,118.0,4880.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7331,9183.0,Insurance,118.0,9183.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7332,5500.0,Printing,118.0,5500.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7334,1850.0,Rent,118.0,1850.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7336,45209.0,Equipment Maintenance & Repair,118.0,45209.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7344,4000.0,Travel - Other,118.0,4000.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7347,500.0,Refunds,118.0,500.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7367,1500.0,Association Dues,118.0,1500.0,28.0,0.0,False
+2024,General Fund,,B1511,expense,7536,4000.0,Computer Hardware,118.0,4000.0,28.0,0.0,False
+2024,General Fund,,B1511,revenue,6436,1100000.0,Prothonotary Fee,101.0,1100000.0,12.0,0.0,False
+2024,General Fund,,B1600,expense,7111,0.0,Elected Officials,118.0,0.0,28.0,0.0,False
+2024,General Fund,,B1600,expense,7112,0.0,Executive,118.0,0.0,28.0,0.0,False
+2024,General Fund,,B1600,expense,7113,0.0,Professional,118.0,0.0,28.0,0.0,False
+2024,General Fund,,B1600,expense,7114,3083684.0,Staff,118.0,3083684.0,28.0,0.0,False
+2024,General Fund,,B1600,expense,7115,274730.0,Wages,118.0,274730.0,28.0,0.0,False
+2024,General Fund,,B1600,expense,7119,0.0,Tax Collectors,118.0,0.0,28.0,0.0,False
+2024,General Fund,,B1600,expense,7121,256919.0,Fica,118.0,256919.0,28.0,0.0,False
+2024,General Fund,,B1600,expense,7122,285316.0,Retirement,118.0,285316.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7123,14276.0,Life insurance,118.0,14276.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7127,5378.0,Unemployment Comp,118.0,5378.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7128,13738.0,Worker's Comp,118.0,13738.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7131,973936.0,Capital BlueCross,118.0,973936.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7132,29581.0,Dental,118.0,29581.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7133,11354.0,Vision,118.0,11354.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7212,2025.0,Forms & Documents,118.0,2025.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7213,7217.0,Books Films & Materials,118.0,7217.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7215,77974.0,Office Supplies,118.0,77974.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7228,2500.0,Other Equipment & Furniture,118.0,2500.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7318,25000.0,Other Professional Services,118.0,25000.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7321,66440.0,Telephone & Telegraph,118.0,66440.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7322,250000.0,Postage,118.0,250000.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7323,12000.0,Travel - Mileage Reimbursement,118.0,12000.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7326,600.0,Advertising & Public Relations,118.0,600.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7328,3300.0,Staff Development,118.0,3300.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7329,0.0,,,0.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7331,30164.0,Insurance,118.0,30164.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7332,13850.0,Printing,118.0,13850.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7334,712816.0,Rent,118.0,712816.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7335,29596.0,Electric,118.0,29596.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7336,11682.0,Equipment Maintenance & Repair,118.0,11682.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7338,3000.0,Heat,118.0,3000.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7345,11492.0,Other Contractual Services,118.0,11492.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7532,4000.0,Machnry & Equipment,118.0,4000.0,29.0,0.0,False
+2024,General Fund,,B1600,expense,7952,8000.0,Bank Charges,118.0,8000.0,29.0,0.0,False
+2024,General Fund,,B1600,revenue,6321,25000.0,State Grants,101.0,25000.0,12.0,0.0,False
+2024,General Fund,,B1600,revenue,6411,1975000.0,County Costs,101.0,1975000.0,12.0,0.0,False
+2024,General Fund,,B1711,expense,7111,86527.0,Elected Officials,118.0,86527.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7112,0.0,Executive,118.0,0.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7113,0.0,Professional,118.0,0.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7114,3472154.0,Staff,118.0,3472154.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7115,74890.0,Wages,118.0,74890.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7119,0.0,Tax Collectors,118.0,0.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7121,277968.0,Fica,118.0,277968.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7122,312073.0,Retirement,118.0,312073.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7123,16462.0,Life Insurance,118.0,16462.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7127,3540.0,Unemployment Comp,118.0,3540.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7128,14893.0,Worker's Comp,118.0,14893.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7131,737033.0,Capital BlueCross,119.0,737033.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7132,22385.0,Dental,119.0,22385.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7133,8592.0,Vision,119.0,8592.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7213,4988.0,Books Films & Materials,119.0,4988.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7215,19250.0,Office Supplies,119.0,19250.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7216,15040.0,Printing Supplies,119.0,15040.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7221,1500.0,Food,119.0,1500.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7222,0.0,Cleaning Supplies,119.0,0.0,,0.0,False
+2024,General Fund,,B1711,expense,7227,133175.0,Other Oper Supplies,119.0,133175.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7228,7000.0,Other Equipment & Furniture,119.0,7000.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7229,84600.0,Uniforms,119.0,84600.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7232,11800.0,Medical & Dental Supplies,119.0,11800.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7244,38775.0,Equip & Motor Vehicle Supplies,119.0,38775.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7314,24000.0,Legal,119.0,24000.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7318,1113162.0,Other Professional Services,119.0,1113162.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7321,37893.0,Telephone & Telegraph,119.0,37893.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7322,44000.0,Postage,119.0,44000.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7323,55000.0,Trave - Mileage Reimbursement,119.0,55000.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7326,63000.0,Advertising & Public Relations,119.0,63000.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7328,42775.0,Staff Development,119.0,42775.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7329,328500.0,Transportation,119.0,328500.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7331,60755.0,Insurance,119.0,60755.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7332,10960.0,Printing,119.0,10960.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7334,507413.0,Rent,119.0,507413.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7336,250265.0,Equipment Maintenance & Repair,119.0,250265.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7337,32500.0,Auto/Vehicle Maint & Repair,119.0,32500.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7342,1500.0,Laundry & Sanitation,119.0,1500.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7343,5000.0,Travel-Certification-Licenses,119.0,5000.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7347,6000.0,Refunds,119.0,6000.0,29.0,0.0,False
+2024,General Fund,,B1711,expense,7532,10000.0,Machnry & Equipment,119.0,10000.0,30.0,0.0,False
+2024,General Fund,,B1711,expense,7534,0.0,Computer Software,119.0,0.0,30.0,0.0,False
+2024,General Fund,,B1711,expense,7536,9000.0,Computer Hardware,119.0,9000.0,30.0,0.0,False
+2024,General Fund,,B1711,revenue,6251,240000.0,Firearms Licenses,101.0,240000.0,12.0,0.0,False
+2024,General Fund,,B1711,revenue,6311,8000.0,Federal Grants,101.0,8000.0,12.0,0.0,False
+2024,General Fund,,B1711,revenue,6321,18000.0,State Grants,101.0,18000.0,12.0,0.0,False
+2024,General Fund,,B1711,revenue,6411,200000.0,County Costs,101.0,200000.0,12.0,0.0,False
+2024,General Fund,,B1711,revenue,6437,30000.0,Act 79 Disability Fund,101.0,30000.0,12.0,0.0,False
+2024,General Fund,,B1711,revenue,6438,180000.0,Writ Fees,101.0,180000.0,12.0,0.0,False
+2024,General Fund,,B1711,revenue,6442,120000.0,RealEstate Fee,101.0,120000.0,12.0,0.0,False
+2024,General Fund,,B1711,revenue,6443,120000.0,Personal Property Fees,101.0,120000.0,12.0,0.0,False
+2024,General Fund,,B1711,revenue,6444,360250.0,Other Fees,101.0,360250.0,12.0,0.0,False
+2024,General Fund,,B1711,revenue,6456,1500.0,Act 66 PFA Fees,101.0,1500.0,12.0,0.0,False
+2024,General Fund,,B1811,expense,7111,86527.0,Elected Officials,119.0,86527.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7112,104233.0,Executive,119.0,104233.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7113,539545.0,Professional,119.0,539545.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7114,45095.0,Staff,119.0,45095.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7115,50166.0,Wages,119.0,50166.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7119,0.0,Tax Collectors,119.0,0.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7121,63156.0,Fica,119.0,63156.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7122,66596.0,Retirement,119.0,66596.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7123,3588.0,Life Insurance,119.0,3588.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7127,838.0,Unemployment Comp,119.0,838.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7128,3375.0,Worker's Comp,119.0,3375.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7131,157936.0,Capital BlueCross,119.0,157936.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7132,4797.0,Dental,119.0,4797.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7133,1841.0,Vision,119.0,1841.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7215,1450.0,Office Supplies,119.0,1450.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7227,12500.0,Other Oper Supplies,119.0,12500.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7229,3250.0,Uniforms,119.0,3250.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7232,25000.0,Medical & Dental Supplies,119.0,25000.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7244,12000.0,Equip & Motor Vehicle Supplies,119.0,12000.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7314,12800.0,Legal,119.0,12800.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7315,477502.0,Medical & Dental,119.0,477502.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7318,147580.0,Other Professional Services,119.0,147580.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7321,31800.0,Telephone & Telegraph,119.0,31800.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7322,400.0,Postage,119.0,400.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7323,1000.0,Travel - Mileage Reimbursement,119.0,1000.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7328,15460.0,Staff Development,119.0,15460.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7329,0.0,Transportation,119.0,0.0,,0.0,False
+2024,General Fund,,B1811,expense,7331,10915.0,Insurance,119.0,10915.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7332,1000.0,Printing,119.0,1000.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7334,73952.0,Rent,119.0,73952.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7336,33344.0,Equipment Maintenance & Repair,119.0,33344.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7337,8540.0,Auto/Vehicle Maint & Repair,119.0,8540.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7342,18936.0,Laundry & Sanitation 1S,119.0,18936.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7345,78107.0,Other Contractual Services,120.0,78107.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7354,8000.0,Payment For Local Services,120.0,8000.0,30.0,0.0,False
+2024,General Fund,,B1811,expense,7532,24000.0,Machnry & Equipment,120.0,24000.0,30.0,0.0,False
+2024,General Fund,,B1811,revenue,6444,203000.0,Other Fees,101.0,203000.0,12.0,0.0,False
+2024,General Fund,,C1200,expense,7111,0.0,Elected Officials,120.0,0.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7112,0.0,Executive,120.0,0.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7113,654978.0,Professional,120.0,654978.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7114,17942374.0,Staff,120.0,17942374.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7115,0.0,Wages,120.0,0.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7119,0.0,Tax Collectors,120.0,0.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7121,1422698.0,Fica,120.0,1422698.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7122,1597252.0,Retirement,120.0,1597252.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7123,86089.0,Life Insurance,120.0,86089.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7127,14820.0,Unemployment Comp,120.0,14820.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7128,215049.0,Worker's Comp,120.0,215049.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7131,3250841.0,Capital BlueCross,120.0,3250841.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7132,98736.0,Dental,120.0,98736.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7133,37897.0,Vision,120.0,37897.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7199,-2716829.0,Payroll Contra,120.0,-2716829.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7213,1500.0,Books Films & Materials,120.0,1500.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7215,34700.0,Office Supplies,120.0,34700.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7221,20750.0,Food,120.0,20750.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7222,65320.0,Cleaning Supplies,120.0,65320.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7225,47800.0,Clothing,120.0,47800.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7227,380710.0,Other Oper Supplies cS,120.0,380710.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7228,75450.0,Other Equipment & Furniture,120.0,75450.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7229,38500.0,Uniforms,120.0,38500.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7232,414500.0,Medical & Dental Supplies,120.0,414500.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7233,8200.0,Linens,120.0,8200.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7235,20000.0,Kitchenware,120.0,20000.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7244,6000.0,Equip & Motor Vehicle Supplies,120.0,6000.0,30.0,0.0,False
+2024,General Fund,,C1200,expense,7251,5900.0,Other Software,120.0,5900.0,31.0,0.0,False
+2024,General Fund,,C1200,expense,7318,3625.0,Other Professional Services,120.0,3625.0,31.0,0.0,False
+2024,General Fund,,C1200,expense,7321,1138290.0,Telephone & Telegraph,120.0,1138290.0,31.0,0.0,False
+2024,General Fund,,C1200,expense,7322,4500.0,Postage,120.0,4500.0,31.0,0.0,False
+2024,General Fund,,C1200,expense,7323,1680.0,Travel - Mileage Reimbursement,120.0,1680.0,31.0,0.0,False
+2024,General Fund,,C1200,expense,7326,4000.0,Advertising & Public Relations,120.0,4000.0,31.0,0.0,False
+2024,General Fund,,C1200,expense,7328,159050.0,Staff Development,120.0,159050.0,31.0,0.0,False
+2024,General Fund,,C1200,expense,7331,189320.0,Insurance cS,120.0,189320.0,31.0,0.0,False
+2024,General Fund,,C1200,expense,7332,3700.0,Printing,120.0,3700.0,31.0,0.0,False
+2024,General Fund,,C1200,expense,7334,133692.0,Rent,120.0,133692.0,31.0,0.0,False
+2024,General Fund,,C1200,expense,7336,217880.0,Equipment Maintenance & Repair,120.0,217880.0,31.0,0.0,False
+2024,General Fund,,C1200,expense,7337,3000.0,Auto/Vehicle Maint & Repair,120.0,3000.0,31.0,0.0,False
+2024,General Fund,,C1200,expense,7343,2000.0,Travel-Certification-Licenses,120.0,2000.0,31.0,0.0,False
+2024,General Fund,,C1200,expense,7345,6885486.0,Other Contractual Services,120.0,6885486.0,31.0,0.0,False
+2024,General Fund,,C1200,expense,7367,4010.0,Association Dues,120.0,4010.0,31.0,0.0,False
+2024,General Fund,,C1200,expense,7532,0.0,) Machnry & Equipment,120.0,0.0,,0.0,False
+2024,General Fund,,C1200,revenue,6215,0.0,Office Comm/Notary,101.0,0.0,,0.0,False
+2024,General Fund,,C1200,revenue,6321,550000.0,State Grants,101.0,550000.0,12.0,0.0,False
+2024,General Fund,,C1200,revenue,6444,2050311.0,Other Fees,101.0,2050311.0,12.0,0.0,False
+2024,General Fund,,C1200,revenue,6446,25000.0,Weekender Fee-Prison,101.0,25000.0,12.0,0.0,False
+2024,General Fund,,C1200,revenue,6475,0.0,,,0.0,12.0,0.0,False
+2024,General Fund,,C1200,revenue,6478,23000.0,Bail Processing Fee /,101.0,23000.0,12.0,0.0,False
+2024,General Fund,,C1200,revenue,6721,80000.0,Rent & Royalty,101.0,80000.0,12.0,0.0,False
+2024,General Fund,,C1200,revenue,6734,0.0,,,0.0,12.0,0.0,False
+2024,Other Funds,B,A1300,expense,7215,45.0,Office Supplies,162.0,45.0,137.0,0.0,False
+2024,Other Funds,B,A1300,expense,7226,500.0,Agricultrl Supplies,162.0,500.0,137.0,0.0,False
+2024,Other Funds,B,A1300,expense,7228,475.0,Other Equipment & Furniture,162.0,475.0,137.0,0.0,False
+2024,Other Funds,B,A1300,expense,7241,20000.0,Building & Bridge Supplies,162.0,20000.0,137.0,0.0,False
+2024,Other Funds,B,A1300,expense,7244,7500.0,Equip & Motor Vehicle Supplies,162.0,7500.0,137.0,0.0,False
+2024,Other Funds,B,A1300,expense,7313,75000.0,Engineer & Architect,162.0,75000.0,137.0,0.0,False
+2024,Other Funds,B,A1300,expense,7314,1500.0,Legal,162.0,1500.0,137.0,0.0,False
+2024,Other Funds,B,A1300,expense,7318,20750.0,Other Professional Services,162.0,20750.0,137.0,0.0,False
+2024,Other Funds,B,A1300,expense,7323,100.0,Travel - Mileage Reimbursement,162.0,100.0,137.0,0.0,False
+2024,Other Funds,B,A1300,expense,7326,2500.0,Advertising & Public Relations,162.0,2500.0,137.0,0.0,False
+2024,Other Funds,B,A1300,expense,7334,3750.0,Rent,162.0,3750.0,137.0,0.0,False
+2024,Other Funds,B,A1300,expense,7335,1500.0,Electric,162.0,1500.0,137.0,0.0,False
+2024,Other Funds,B,A1300,expense,7336,500.0,Equipment Maintenance & Repair,162.0,500.0,137.0,0.0,False
+2024,Other Funds,B,A1300,expense,7337,3500.0,Auto/Vehicle Maint & Repair,162.0,3500.0,137.0,0.0,False
+2024,Other Funds,B,A1300,expense,7345,260000.0,Other Contractual Services,162.0,260000.0,137.0,0.0,False
+2024,Other Funds,B,A1300,expense,7351,75000.0,Building Maintenance & Repair,162.0,75000.0,137.0,0.0,False
+2024,Other Funds,B,A1300,expense,7523,2901500.0,Bridge & Road Improvements,162.0,2901500.0,137.0,0.0,False
+2024,Other Funds,B,A1300,expense,7533,0.0,,,0.0,137.0,0.0,False
+2024,Other Funds,B,A1300,revenue,6311,226000.0,Federal Grants,160.0,226000.0,135.0,0.0,False
+2024,Other Funds,B,A1300,revenue,6321,1665375.0,State Grants,160.0,1665375.0,135.0,0.0,False
+2024,Other Funds,B,A1300,revenue,6711,1000.0,Interest,160.0,1000.0,135.0,0.0,False
+2024,Other Funds,E,D1700,expense,7111,0.0,Elected Officials,162.0,0.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7112,120578.0,Executive,162.0,120578.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7113,139188.0,Professional,162.0,139188.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7114,200666.0,Staff,162.0,200666.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7115,53836.0,S Wages,162.0,53836.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7119,0.0,Tax Collectors,162.0,0.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7121,39342.0,Fica,162.0,39342.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7122,39545.0,Retirement,162.0,39545.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7123,2131.0,Life Insurance,162.0,2131.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7127,540.0,Unemployment Comp,162.0,540.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7128,5939.0,Worker's Comp,162.0,5939.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7131,92129.0,Capital BlueCross,162.0,92129.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7132,2798.0,Dental,162.0,2798.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7133,1074.0,Vision,162.0,1074.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7215,3200.0,Office Supplies,162.0,3200.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7222,0.0,,,0.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7228,2000.0,Other Equipment & Furniture,162.0,2000.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7251,5000.0,Other Software,162.0,5000.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7312,30000.0,Management Consulting,162.0,30000.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7318,2540000.0,Other Professional Services,162.0,2540000.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7319,0.0,Advisory Council,162.0,0.0,,0.0,False
+2024,Other Funds,E,D1700,expense,7321,4560.0,Telephone & Telegraph,162.0,4560.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7322,300.0,Postage,162.0,300.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7323,4850.0,Travel - Mileage Reimbursement,162.0,4850.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7328,1000.0,Staff Development,162.0,1000.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7331,7010.0,Insurance,162.0,7010.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7332,3600.0,Printing,162.0,3600.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7334,4200.0,Rent,162.0,4200.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7336,2000.0,Equipment Maintenance & Repair,162.0,2000.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7344,0.0,,,0.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7345,3175.0,Other Contractual Services i,162.0,3175.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7346,250.0,Misc Services,162.0,250.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7367,8500.0,Association Dues,162.0,8500.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7421,4432496.0,Rehabilitation,162.0,4432496.0,137.0,0.0,False
+2024,Other Funds,E,D1700,expense,7964,148400.0,Indirect Expense,162.0,148400.0,137.0,0.0,False
+2024,Other Funds,E,D1700,revenue,6311,3835632.0,Federal Grants,160.0,3835632.0,135.0,0.0,False
+2024,Other Funds,E,D1700,revenue,6321,2901823.0,State Grants,160.0,2901823.0,135.0,0.0,False
+2024,Other Funds,E,D1700,revenue,6323,140000.0,State Direct,160.0,140000.0,135.0,0.0,False
+2024,Other Funds,E,D1700,revenue,6471,120072.0,Act 198 Revenue,160.0,120072.0,135.0,0.0,False
+2024,Other Funds,E,D1700,revenue,6473,694086.0,Health Choice Revenues,160.0,694086.0,135.0,0.0,False
+2024,Other Funds,E,D1700,revenue,6711,6924.0,Interest,160.0,6924.0,135.0,0.0,False
+2024,Other Funds,E,D1700,revenue,6751,10770.0,Contributions,160.0,10770.0,135.0,0.0,False
+2024,Other Funds,E,D1700,revenue,6965,160000.0,Transfer From Other Funds,160.0,160000.0,135.0,0.0,False
+2024,Other Funds,E,D1700,revenue,6967,29000.0,HSDF,160.0,29000.0,135.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7111,0.0,Elected Officials,162.0,0.0,137.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7112,0.0,Executive,162.0,0.0,137.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7113,1502931.0,Professional,162.0,1502931.0,137.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7114,495925.0,Staff,162.0,495925.0,137.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7115,0.0,Wages,162.0,0.0,137.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7119,0.0,Tax Collectors,162.0,0.0,137.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7121,152913.0,Fica,162.0,152913.0,137.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7122,171674.0,Retirement,162.0,171674.0,137.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7123,9252.0,Life Insurance,162.0,9252.0,137.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7127,2100.0,Unemployment Comp,162.0,2100.0,137.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7128,23113.0,Worker's Comp,162.0,23113.0,137.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7131,460646.0,Capital BlueCross,162.0,460646.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7132,13991.0,Dental,162.0,13991.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7133,5370.0,Vision,163.0,5370.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7213,450.0,Books Films & Materials,163.0,450.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7215,5000.0,Office Supplies,163.0,5000.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7221,700.0,Food,163.0,700.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7222,130.0,Cleaning Supplies,163.0,130.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7228,5000.0,Other Equipment & Furniture,163.0,5000.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7251,22501.0,Other Software,163.0,22501.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7252,15002.0,Other Hardware,163.0,15002.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7318,44500.0,Other Professional Services,163.0,44500.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7321,27702.0,Telephone & Telegraph,163.0,27702.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7322,18002.0,Postage,163.0,18002.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7323,10000.0,Travel - Mileage Reimbursement,163.0,10000.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7326,0.0,,,0.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7328,16000.0,Staff Development,163.0,16000.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7331,19000.0,tnsurance,163.0,19000.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7332,1500.0,Printing,163.0,1500.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7334,232702.0,Rent,163.0,232702.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7336,0.0,,,0.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7344,500.0,Travel - Other,163.0,500.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7345,10302.0,Other Contractual Services,163.0,10302.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7346,500.0,Misc Services,163.0,500.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7367,801.0,Association Dues,163.0,801.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7386,0.0,Boarding Fees,163.0,0.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7399,6200.0,Other Services,163.0,6200.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7401,4310509.0,MASTRR Claims,163.0,4310509.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7534,30701.0,Computer Software,163.0,30701.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,expense,7964,95000.0,indirect Expense,163.0,95000.0,138.0,0.0,False
+2024,Other Funds,EI,D2100,revenue,6311,547912.0,Federal Grants,160.0,547912.0,135.0,0.0,False
+2024,Other Funds,EI,D2100,revenue,6321,4984705.0,State Grants,160.0,4984705.0,135.0,0.0,False
+2024,Other Funds,EI,D2100,revenue,6327,1600000.0,Medical Assistance,160.0,1600000.0,135.0,0.0,False
+2024,Other Funds,EI,D2100,revenue,6444,100000.0,Other Fees,160.0,100000.0,135.0,0.0,False
+2024,Other Funds,EI,D2100,revenue,6965,478000.0,Transfer From Other Funds,160.0,478000.0,135.0,0.0,False
+2024,Other Funds,F,B1118,expense,7111,0.0,Elected Officials,163.0,0.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7112,121880.0,Executive,163.0,121880.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7113,3071161.0,Professional,163.0,3071161.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7114,1255026.0,Staff,163.0,1255026.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7115,0.0,Wages,163.0,0.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7119,0.0,Tax Collectors,163.0,0.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7121,340277.0,Fica,163.0,340277.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7122,382027.0,Retirement,163.0,382027.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7123,20589.0,Life tnsurance,163.0,20589.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7127,4560.0,Unemployment Comp,163.0,4560.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7128,18231.0,Worker's Comp,163.0,18231.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7131,1000259.0,Capital BlueCross,163.0,1000259.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7132,30380.0,Dental,163.0,30380.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7133,11661.0,Vision,163.0,11661.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7213,4400.0,Books Films & Materials,163.0,4400.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7215,70000.0,Office Supplies,163.0,70000.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7228,40000.0,Other Equipment & Furniture,163.0,40000.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7251,21240.0,Other Software,163.0,21240.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7252,5000.0,Other Hardware,163.0,5000.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7314,1500.0,Legat,163.0,1500.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7316,12000.0,Hospital Services,163.0,12000.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7318,130200.0,Other Professional Services,163.0,130200.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7321,43731.0,Telephone & Telegraph,163.0,43731.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7322,80000.0,Postage,163.0,80000.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7323,1000.0,Travel - Mileage Reimbursement,163.0,1000.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7324,400.0,Freight & Messenger,163.0,400.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7326,3000.0,Advertising & Public Relations,163.0,3000.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7328,22650.0,Staff Development,163.0,22650.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7331,49151.0,Insurance,163.0,49151.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7332,5000.0,Printing,163.0,5000.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7334,34107.0,Rent,163.0,34107.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7336,2500.0,Equipment Maintenance & Repair,163.0,2500.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7343,3000.0,Travel-Certification-Licenses,163.0,3000.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7344,48350.0,Travel - Other,163.0,48350.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7531,0.0,,,0.0,138.0,0.0,False
+2024,Other Funds,F,B1118,expense,7532,14000.0,Machnry & Equipment,163.0,14000.0,139.0,0.0,False
+2024,Other Funds,F,B1118,expense,7534,10000.0,Computer Software,163.0,10000.0,139.0,0.0,False
+2024,Other Funds,F,B1118,expense,7536,10000.0,Computer Hardware,163.0,10000.0,139.0,0.0,False
+2024,Other Funds,F,B1118,expense,7952,2200.0,Bank Charges,163.0,2200.0,139.0,0.0,False
+2024,Other Funds,F,B1118,expense,7964,708750.0,Indirect Expense,163.0,708750.0,139.0,0.0,False
+2024,Other Funds,F,B1118,revenue,6312,273734.0,Incentive Payment,160.0,273734.0,135.0,0.0,False
+2024,Other Funds,F,B1118,revenue,6313,4510608.0,Federal Direct,160.0,4510608.0,135.0,0.0,False
+2024,Other Funds,F,B1118,revenue,6444,10000.0,Other Fees,160.0,10000.0,135.0,0.0,False
+2024,Other Funds,F,B1118,revenue,6445,5000.0,Blood Test Fees,160.0,5000.0,135.0,0.0,False
+2024,Other Funds,F,B1118,revenue,6711,400000.0,Interest,160.0,400000.0,135.0,0.0,False
+2024,Other Funds,F,B1118,revenue,6965,2378889.0,Transfer From Other Funds,160.0,2378889.0,135.0,0.0,False
+2024,Other Funds,G,D1600,expense,7111,0.0,:'€lected Officials,164.0,0.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7112,0.0,Executive,164.0,0.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7113,1088467.0,Professional,164.0,1088467.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7114,2646298.0,Staff,164.0,2646298.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7115,218335.0,Wages,164.0,218335.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7119,0.0,Tax Collectors,164.0,0.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7121,302412.0,Fica,164.0,302412.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7122,339516.0,Retirement,164.0,339516.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7123,17289.0,Life Insurance,164.0,17289.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7127,4320.0,Unemployment Comp,164.0,4320.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7128,45663.0,Worker's Comp,164.0,45663.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7131,881807.0,Capital BlueCross,164.0,881807.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7132,26783.0,Dental,164.0,26783.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7133,10280.0,Vision,164.0,10280.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7215,27650.0,Office Supplies,164.0,27650.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7221,251250.0,Food,164.0,251250.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7227,255500.0,Other Oper Supplies,164.0,255500.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7228,5000.0,Other Equipment & Furniture,164.0,5000.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7232,150000.0,Medica & Dental Supplies,164.0,150000.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7244,1000.0,Equip & Motor Vehicle Supplies,164.0,1000.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7251,26500.0,Other Software cS,164.0,26500.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7314,250000.0,Legal,164.0,250000.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7318,61000.0,Other Professional Services,164.0,61000.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7319,5000.0,Advisory Council,164.0,5000.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7321,103986.0,Telephone & Telegraph,164.0,103986.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7322,19650.0,Postage,164.0,19650.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7323,80300.0,Travel - Mileage Reimbursement,164.0,80300.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7326,80000.0,Advertising & Public Relations,164.0,80000.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7328,32675.0,Staff Development,164.0,32675.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7329,200000.0,Transportation,164.0,200000.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7331,56977.0,Insurance,164.0,56977.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7332,20000.0,Printing cS,164.0,20000.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7334,13080.0,Rent,164.0,13080.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7345,3402722.0,Other Contractual Services,164.0,3402722.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7346,71250.0,Misc Services,164.0,71250.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7353,1.0,Payment To State,164.0,1.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7367,10000.0,Association Dues,164.0,10000.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7375,200.0,S Rep Typ Interpreter,164.0,200.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7434,200000.0,Recreation & Education,164.0,200000.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7438,1074554.0,Home Delivered Meals,164.0,1074554.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7443,1295000.0,Homemaker,164.0,1295000.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7447,150000.0,Outreach,164.0,150000.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7451,0.0,Transportation N,164.0,0.0,,0.0,False
+2024,Other Funds,G,D1600,expense,7522,150000.0,Building Improvements,164.0,150000.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7531,115000.0,Furniture & Fixtures,164.0,115000.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7536,500000.0,Computer Hardware,164.0,500000.0,139.0,0.0,False
+2024,Other Funds,G,D1600,expense,7964,615353.0,Indirect Expense,164.0,615353.0,139.0,0.0,False
+2024,Other Funds,G,D1600,revenue,6311,391765.0,Federal Grants,160.0,391765.0,135.0,0.0,False
+2024,Other Funds,G,D1600,revenue,6321,10163990.0,State Grants,160.0,10163990.0,135.0,0.0,False
+2024,Other Funds,G,D1600,revenue,6323,2205479.0,State Direct,160.0,2205479.0,135.0,0.0,False
+2024,Other Funds,G,D1600,revenue,6444,54870.0,Other Fees,160.0,54870.0,135.0,0.0,False
+2024,Other Funds,G,D1600,revenue,6751,548361.0,Contributions cS,160.0,548361.0,135.0,0.0,False
+2024,Other Funds,G,D1600,revenue,6965,1440353.0,Transfer From Other Funds,160.0,1440353.0,135.0,0.0,False
+2024,Other Funds,H,A3100,expense,7222,2250.0,Cleaning Supplies,165.0,2250.0,140.0,0.0,False
+2024,Other Funds,H,A3100,expense,7241,3600.0,Building & Bridge Supplies,165.0,3600.0,140.0,0.0,False
+2024,Other Funds,H,A3100,expense,7244,1000.0,Equip & Motor Vehicle Supplies,165.0,1000.0,140.0,0.0,False
+2024,Other Funds,H,A3100,expense,7321,750.0,Telephone & Telegraph,165.0,750.0,140.0,0.0,False
+2024,Other Funds,H,A3100,expense,7335,24000.0,Electric,165.0,24000.0,140.0,0.0,False
+2024,Other Funds,H,A3100,expense,7336,574.0,Equipment Maintenance & Repair,165.0,574.0,140.0,0.0,False
+2024,Other Funds,H,A3100,expense,7338,6500.0,Heat,165.0,6500.0,140.0,0.0,False
+2024,Other Funds,H,A3100,expense,7339,2000.0,Water & Sewage,165.0,2000.0,140.0,0.0,False
+2024,Other Funds,H,A3100,expense,7342,8400.0,Laundry & Sanitation,165.0,8400.0,140.0,0.0,False
+2024,Other Funds,H,A3100,expense,7345,44191.0,Other Contractual Services,165.0,44191.0,140.0,0.0,False
+2024,Other Funds,H,A3100,expense,7351,5275.0,Building Maintenance & Repair,165.0,5275.0,140.0,0.0,False
+2024,Other Funds,H,A3100,expense,7353,100.0,Payment To State,165.0,100.0,140.0,0.0,False
+2024,Other Funds,H,A3100,expense,7354,100.0,Payment For Local Services,165.0,100.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7111,0.0,Elected Officials,164.0,0.0,139.0,0.0,False
+2024,Other Funds,H,D1800,expense,7112,0.0,Executive,164.0,0.0,139.0,0.0,False
+2024,Other Funds,H,D1800,expense,7113,3981829.0,Professional,164.0,3981829.0,139.0,0.0,False
+2024,Other Funds,H,D1800,expense,7114,872587.0,Staff,164.0,872587.0,139.0,0.0,False
+2024,Other Funds,H,D1800,expense,7115,129017.0,Wages,164.0,129017.0,139.0,0.0,False
+2024,Other Funds,H,D1800,expense,7119,0.0,Tax Collectors,164.0,0.0,139.0,0.0,False
+2024,Other Funds,H,D1800,expense,7121,381233.0,Fica,164.0,381233.0,139.0,0.0,False
+2024,Other Funds,H,D1800,expense,7122,416926.0,Retirement,164.0,416926.0,139.0,0.0,False
+2024,Other Funds,H,D1800,expense,7123,22464.0,Life Insurance,164.0,22464.0,139.0,0.0,False
+2024,Other Funds,H,D1800,expense,7127,5574.0,Unemployment Comp,164.0,5574.0,139.0,0.0,False
+2024,Other Funds,H,D1800,expense,7128,57400.0,Worker's Comp,164.0,57400.0,139.0,0.0,False
+2024,Other Funds,H,D1800,expense,7131,1105549.0,Capital BlueCross,164.0,1105549.0,139.0,0.0,False
+2024,Other Funds,H,D1800,expense,7132,33578.0,Dental,164.0,33578.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7133,12888.0,! Vision,164.0,12888.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7213,500.0,! Books Films & Materials,164.0,500.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7215,12000.0,S Office Supplies,164.0,12000.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7221,700.0,Food,165.0,700.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7222,1000.0,Cleaning Supplies,165.0,1000.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7227,500.0,Other Oper Supplies,165.0,500.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7228,5000.0,Other Equipment & Furniture,165.0,5000.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7229,2000.0,Uniforms,165.0,2000.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7232,500.0,Medical & Dental Supplies,165.0,500.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7251,50000.0,Other Software,165.0,50000.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7252,35000.0,Other Hardware,165.0,35000.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7314,100000.0,Legal,165.0,100000.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7318,0.0,Other Professional Services,165.0,0.0,,0.0,False
+2024,Other Funds,H,D1800,expense,7321,96000.0,Telephone & Telegraph,165.0,96000.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7322,10000.0,Postage,165.0,10000.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7323,85000.0,Travel - Mileage Reimbursement,165.0,85000.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7326,0.0,,,0.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7327,1500.0,Independent Monitoring,165.0,1500.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7328,15000.0,Staff Development,165.0,15000.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7331,60000.0,Insurance,165.0,60000.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7332,6000.0,Printing,165.0,6000.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7334,683992.0,Rent,165.0,683992.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7336,5000.0,Equipment Maintenance & Repair,165.0,5000.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7337,0.0,Auto/Vehicle Maint & Repair,165.0,0.0,,0.0,False
+2024,Other Funds,H,D1800,expense,7341,0.0,,,0.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7344,2500.0,Travel - Other,165.0,2500.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7345,140000.0,Other Contractual Services,165.0,140000.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7346,8000.0,Misc Services,165.0,8000.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7347,0.0,,,0.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7357,0.0,Security Deposits,165.0,0.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7367,5800.0,Association Dues,165.0,5800.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7386,65000.0,Boarding Fees,165.0,65000.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7388,0.0,,,0.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7399,17000.0,Other Services,165.0,17000.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7401,10525266.0,MASTRR Claims,165.0,10525266.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7446,72000.0,Legal Hearing,165.0,72000.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7451,2500.0,Transportation N,165.0,2500.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7470,797501.0,MH/MR Base Funded Svcs-Non-SSR,165.0,797501.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7522,0.0,,,0.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7531,0.0,,,0.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7534,74440.0,Computer Software,165.0,74440.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7536,0.0,,,0.0,140.0,0.0,False
+2024,Other Funds,H,D1800,expense,7964,295061.0,Indirect Expense,165.0,295061.0,140.0,0.0,False
+2024,Other Funds,H,D1800,revenue,6311,1845904.0,Federal Grants,160.0,1845904.0,135.0,0.0,False
+2024,Other Funds,H,D1800,revenue,6314,179086.0,Title xx,160.0,179086.0,135.0,0.0,False
+2024,Other Funds,H,D1800,revenue,6321,14104526.0,State Grants,160.0,14104526.0,135.0,0.0,False
+2024,Other Funds,H,D1800,revenue,6327,62000.0,Medical Assistance,160.0,62000.0,135.0,0.0,False
+2024,Other Funds,H,D1800,revenue,6444,203925.0,Other Fees,160.0,203925.0,135.0,0.0,False
+2024,Other Funds,H,D1800,revenue,6454,0.0,,,0.0,135.0,0.0,False
+2024,Other Funds,H,D1800,revenue,6463,300.0,Concessions,160.0,300.0,135.0,0.0,False
+2024,Other Funds,H,D1800,revenue,6473,3311145.0,Health Choice Revenues,160.0,3311145.0,135.0,0.0,False
+2024,Other Funds,H,D1800,revenue,6965,585660.0,Transfer From Other Funds cS,160.0,585660.0,135.0,0.0,False
+2024,Other Funds,H,D2400,expense,7334,512060.0,Rent,165.0,512060.0,140.0,0.0,False
+2024,Other Funds,H,D2400,expense,7341,28572.0,Administrative Cost,165.0,28572.0,140.0,0.0,False
+2024,Other Funds,H,D2400,expense,7345,144723.0,Other Contractual Services,165.0,144723.0,140.0,0.0,False
+2024,Other Funds,H,D2400,expense,7346,32000.0,Misc Services,165.0,32000.0,140.0,0.0,False
+2024,Other Funds,H,D2400,expense,7357,19000.0,Security Deposits,165.0,19000.0,140.0,0.0,False
+2024,Other Funds,H,D2400,expense,7401,117300.0,MASTRR Claims,165.0,117300.0,140.0,0.0,False
+2024,Other Funds,H,D2400,revenue,6311,514932.0,Federal Grants,160.0,514932.0,135.0,0.0,False
+2024,Other Funds,H,D2400,revenue,6444,185000.0,Other Fees,160.0,185000.0,135.0,0.0,False
+2024,Other Funds,H,D2400,revenue,6454,9000.0,Other Support,160.0,9000.0,135.0,0.0,False
+2024,Other Funds,H,D2400,revenue,6479,144723.0,Grant Match,160.0,144723.0,135.0,0.0,False
+2024,Other Funds,R,D1900,expense,7111,0.0,Elected Officials,165.0,0.0,140.0,0.0,False
+2024,Other Funds,R,D1900,expense,7112,0.0,Executive,165.0,0.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7113,2477634.0,Professional,165.0,2477634.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7114,138221.0,Staff,165.0,138221.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7115,51121.0,S Wages,165.0,51121.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7119,0.0,Tax Collectors,165.0,0.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7121,204024.0,Fica,165.0,204024.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7122,229056.0,Retirement,165.0,229056.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7123,12103.0,Life Insurance,165.0,12103.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7127,2940.0,Unemployment Comp,165.0,2940.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7128,30860.0,Worker's Comp,166.0,30860.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7131,631742.0,Capital BlueCross,166.0,631742.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7132,19188.0,Dental,166.0,19188.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7133,7365.0,Vision,166.0,7365.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7213,1000.0,Books Films & Materials,166.0,1000.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7215,4500.0,Office Supplies,166.0,4500.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7221,800.0,Food,166.0,800.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7222,0.0,,,0.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7228,4200.0,Other Equipment & Furniture,166.0,4200.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7251,23500.0,Other Software,166.0,23500.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7252,25255.0,Other Hardware,166.0,25255.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7318,2500.0,Other Professional Services,166.0,2500.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7321,43000.0,Telephone & Telegraph,166.0,43000.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7322,20000.0,Postage,166.0,20000.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7323,65000.0,Travel - Mileage Reimbursement,166.0,65000.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7326,250.0,Advertising & Public Relations,166.0,250.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7328,9500.0,Staff Development,166.0,9500.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7331,34240.0,Insurance,166.0,34240.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7332,1750.0,Printing,166.0,1750.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7334,332180.0,Rent,166.0,332180.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7336,1000.0,Equipment Maintenance & Repair,166.0,1000.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7344,1000.0,Travel - Other,166.0,1000.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7345,10500.0,Other Contractual Services,166.0,10500.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7346,2000.0,Misc Services,166.0,2000.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7357,0.0,,,0.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7367,3250.0,Association Dues,166.0,3250.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7385,0.0,,,0.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7386,0.0,,,0.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7399,34820.0,Other Services,166.0,34820.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7401,2504699.0,MASTRR Claims,166.0,2504699.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7470,687025.0,MH/MR Base Funded Svcs-Non-SSR,166.0,687025.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7476,40000.0,MR Person Dir Waiv Svcs-NonSRR,166.0,40000.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7534,106100.0,Computer Software,166.0,106100.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7536,2000.0,Computer Hardware,166.0,2000.0,141.0,0.0,False
+2024,Other Funds,R,D1900,expense,7964,116400.0,Indirect Expense,166.0,116400.0,141.0,0.0,False
+2024,Other Funds,R,D1900,revenue,6311,972000.0,Federal Grants,160.0,972000.0,135.0,0.0,False
+2024,Other Funds,R,D1900,revenue,6314,153522.0,Title Xx,160.0,153522.0,135.0,0.0,False
+2024,Other Funds,R,D1900,revenue,6321,3830000.0,State Grants,160.0,3830000.0,135.0,0.0,False
+2024,Other Funds,R,D1900,revenue,6327,2900000.0,Medical Assistance,160.0,2900000.0,135.0,0.0,False
+2024,Other Funds,R,D1900,revenue,6444,25200.0,Other Fees,160.0,25200.0,135.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7111,0.0,Elected Officials,167.0,0.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7112,0.0,Executive,167.0,0.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7113,0.0,Professional,167.0,0.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7114,48496.0,Staff,167.0,48496.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7115,0.0,Wages,167.0,0.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7119,0.0,Tax Collectors,167.0,0.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7121,3710.0,Fica,167.0,3710.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7122,4165.0,Retirement,167.0,4165.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7123,224.0,Life Insurance,167.0,224.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7127,60.0,Unemployment Comp,167.0,60.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7128,199.0,Worker's Comp,167.0,199.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7131,13161.0,Capital BlueCross,167.0,13161.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7132,400.0,Dental,167.0,400.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7133,153.0,Vision,167.0,153.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7222,135.0,Cleaning Supplies,167.0,135.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7226,525.0,Agricultrl Supplies,167.0,525.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7241,27900.0,Building & Bridge Supplies,167.0,27900.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7244,1725.0,Equip & Motor Vehicle Supplies,167.0,1725.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7331,1480.0,Insurance cS,167.0,1480.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7335,243268.0,Electric,167.0,243268.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7336,3804.0,Equipment Maintenance & Repair,167.0,3804.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7337,650.0,Auto/Vehicle Maint & Repair,167.0,650.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7338,66335.0,Heat,167.0,66335.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7339,56765.0,Water & Sewage,167.0,56765.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7342,13810.0,Laundry & Sanitation,167.0,13810.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7345,126337.0,Other Contractual Services iS,167.0,126337.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7351,104025.0,Building Maintenance & Repair,167.0,104025.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7353,1200.0,Payment To State,167.0,1200.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7522,0.0,,,0.0,142.0,0.0,False
+2024,Other Funds,Y,A3100,expense,7532,0.0,,,0.0,142.0,0.0,False
+2024,Other Funds,Y,C1300,expense,7225,10900.0,Clothing,167.0,10900.0,142.0,0.0,False
+2024,Other Funds,Y,C1300,expense,7231,1700.0,Orugs & Medicine,167.0,1700.0,142.0,0.0,False
+2024,Other Funds,Y,C1300,expense,7315,3000.0,Medical & Dental,167.0,3000.0,143.0,0.0,False
+2024,Other Funds,Y,C1300,expense,7318,0.0,,,0.0,143.0,0.0,False
+2024,Other Funds,Y,C1300,expense,7329,4000.0,Transportation,167.0,4000.0,143.0,0.0,False
+2024,Other Funds,Y,C1300,expense,7345,1974602.0,Other Contractual Services,167.0,1974602.0,143.0,0.0,False
+2024,Other Funds,Y,C1300,expense,7347,12500.0,Refunds,167.0,12500.0,143.0,0.0,False
+2024,Other Funds,Y,C1300,expense,7437,1578240.0,Group Homes,167.0,1578240.0,143.0,0.0,False
+2024,Other Funds,Y,C1300,expense,7442,1724659.0,Board,167.0,1724659.0,143.0,0.0,False
+2024,Other Funds,Y,C1300,revenue,6311,0.0,Federal Grants,161.0,0.0,,0.0,False
+2024,Other Funds,Y,C1300,revenue,6321,60400.0,State Grants,161.0,60400.0,136.0,0.0,False
+2024,Other Funds,Y,C1300,revenue,6323,3769353.0,State Direct,161.0,3769353.0,136.0,0.0,False
+2024,Other Funds,Y,C1300,revenue,6452,6500.0,Social Security,161.0,6500.0,136.0,0.0,False
+2024,Other Funds,Y,C1300,revenue,6453,4309.0,Dependent Support,161.0,4309.0,136.0,0.0,False
+2024,Other Funds,Y,C1300,revenue,6965,1469039.0,Transfer From Other Funds,161.0,1469039.0,136.0,0.0,False
+2024,Other Funds,Y,C1300,revenue,6999,0.0,,,0.0,136.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7111,0.0,Elected Officials,167.0,0.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7112,119999.0,Executive,167.0,119999.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7113,0.0,Professional,167.0,0.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7114,4219717.0,Staff,167.0,4219717.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7115,399535.0,Wages,167.0,399535.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7119,0.0,Tax Collectors,167.0,0.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7121,362553.0,Fica,167.0,362553.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7122,407035.0,) Retirement,167.0,407035.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7123,20079.0,Life Insurance,168.0,20079.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7127,4680.0,Unemployment Comp,168.0,4680.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7128,37535.0,Worker's Comp,168.0,37535.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7131,842323.0,Capital BlueCross,168.0,842323.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7132,25583.0,Dental,168.0,25583.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7133,9820.0,Vision /,168.0,9820.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7215,20000.0,Office Supplies -,168.0,20000.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7222,22751.0,Cleaning Supplies,168.0,22751.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7225,7000.0,Clothing,168.0,7000.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7227,100000.0,Other Oper Supplies,168.0,100000.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7228,5700.0,Other Equipment & Furniture,168.0,5700.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7229,4500.0,Uniforms -,168.0,4500.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7233,4000.0,Linens,168.0,4000.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7241,35000.0,Building & Bridge Supplies,168.0,35000.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7244,11000.0,Equip & Motor Vehicle Supplies,168.0,11000.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7251,71200.0,Other Software,168.0,71200.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7252,1250.0,Other Hardware,168.0,1250.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7314,30000.0,Legal -,168.0,30000.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7321,34800.0,Telephone & Telegraph,168.0,34800.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7322,2400.0,Postage,168.0,2400.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7323,2700.0,Travel - Mileage Reimbursement,168.0,2700.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7326,450.0,Advertising & Public Relations,168.0,450.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7328,46000.0,Staff Development,168.0,46000.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7331,47206.0,Insurance,168.0,47206.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7332,1500.0,Printing,168.0,1500.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7334,38318.0,Rent,168.0,38318.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7337,2000.0,Auto/Vehicle Maint & Repair,168.0,2000.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7342,2000.0,Laundry & Sanitation,168.0,2000.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7345,1129510.0,Other Contractual Services,168.0,1129510.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7346,6528.0,Misc Services,168.0,6528.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7367,180.0,Association Dues,168.0,180.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7522,116000.0,) Building Improvements,168.0,116000.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,expense,7964,380000.0,Indirect Expense,168.0,380000.0,143.0,0.0,False
+2024,Other Funds,Y,C1411,revenue,6313,115804.0,Federal Direct,161.0,115804.0,136.0,0.0,False
+2024,Other Funds,Y,C1411,revenue,6323,5942039.0,State Direct,161.0,5942039.0,136.0,0.0,False
+2024,Other Funds,Y,C1411,revenue,6965,3186941.0,Transfer From Other Funds,161.0,3186941.0,136.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7111,0.0,Elected Officials,166.0,0.0,141.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7112,127797.0,Executive,166.0,127797.0,141.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7113,5843440.0,Professional,166.0,5843440.0,141.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7114,1443278.0,Staff,166.0,1443278.0,141.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7115,238122.0,Wages,166.0,238122.0,141.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7119,0.0,Tax Collectors,166.0,0.0,141.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7121,585427.0,Fica,166.0,585427.0,141.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7122,641345.0,Retirement,166.0,641345.0,141.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7123,34313.0,Life Insurance,166.0,34313.0,141.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7127,8277.0,Unemployment Comp,166.0,8277.0,141.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7128,88489.0,Worker's Comp,166.0,88489.0,141.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7131,1684646.0,Capital BlueCross,166.0,1684646.0,141.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7132,51167.0,Dental,166.0,51167.0,141.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7133,19639.0,Vision,166.0,19639.0,141.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7213,2000.0,Books Films & Materials,166.0,2000.0,141.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7215,23450.0,Office Supplies,166.0,23450.0,141.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7222,1950.0,Cleaning Supplies,166.0,1950.0,141.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7225,41250.0,Clothing,166.0,41250.0,141.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7227,2500.0,Other Oper Supplies,166.0,2500.0,141.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7228,10800.0,Other Equipment & Furniture,166.0,10800.0,141.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7231,1500.0,Drugs & Medicine,166.0,1500.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7244,3200.0,Equip & Motor Vehicle Supplies,166.0,3200.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7251,160380.0,Other Software,166.0,160380.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7252,51750.0,Other Hardware,166.0,51750.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7314,685000.0,Legal,166.0,685000.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7315,28200.0,Medical & Dental,166.0,28200.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7318,582150.0,Other Professional Services,166.0,582150.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7319,1200.0,Advisory Council,166.0,1200.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7321,145301.0,Telephone & Telegraph,166.0,145301.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7322,36550.0,Postage,166.0,36550.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7323,300500.0,Travel - Mileage Reimbursement,166.0,300500.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7326,61200.0,Advertising & Public Relations,166.0,61200.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7328,56500.0,Staff Development,166.0,56500.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7329,92500.0,Transportation,167.0,92500.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7331,95162.0,Insurance,167.0,95162.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7332,12200.0,Printing,167.0,12200.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7334,526267.0,Rent,167.0,526267.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7336,12000.0,Equipment Maintenance & Repair,167.0,12000.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7337,1300.0,Auto/Vehicle Maint & Repair,167.0,1300.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7342,4500.0,Laundry & Sanitation,167.0,4500.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7344,3600.0,Travel - Other,167.0,3600.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7345,6777755.0,Other Contractual Services,167.0,6777755.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7364,6573000.0,Subsidies,167.0,6573000.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7399,1628000.0,Other Services,167.0,1628000.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7421,347500.0,Rehabilitation,167.0,347500.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7431,60000.0,Day Care,167.0,60000.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7434,400.0,Recreation & Education,167.0,400.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7442,8443729.0,Board,167.0,8443729.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7536,123200.0,Computer Hardware,167.0,123200.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7952,150.0,Bank Charges,167.0,150.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,expense,7964,877152.0,Indirect Expense,167.0,877152.0,142.0,0.0,False
+2024,Other Funds,Y,D1400,revenue,6311,1435544.0,Federal Grants,160.0,1435544.0,135.0,0.0,False
+2024,Other Funds,Y,D1400,revenue,6313,7317995.0,Federal Direct -$,160.0,7317995.0,135.0,0.0,False
+2024,Other Funds,Y,D1400,revenue,6314,291070.0,Title Xx,160.0,291070.0,135.0,0.0,False
+2024,Other Funds,Y,D1400,revenue,6321,1847143.0,State Grants,160.0,1847143.0,135.0,0.0,False
+2024,Other Funds,Y,D1400,revenue,6323,20118075.0,State Direct,160.0,20118075.0,135.0,0.0,False
+2024,Other Funds,Y,D1400,revenue,6452,331704.0,Social Security,160.0,331704.0,136.0,0.0,False
+2024,Other Funds,Y,D1400,revenue,6453,195204.0,Dependent Support,161.0,195204.0,136.0,0.0,False
+2024,Other Funds,Y,D1400,revenue,6965,7047596.0,Transfer From Other Funds,161.0,7047596.0,136.0,0.0,False

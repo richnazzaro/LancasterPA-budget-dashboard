@@ -25,20 +25,25 @@ data/county/known_issues.csv; 0 otherwise.
 
 import argparse
 import json
+import re
 import sys
 from collections import defaultdict
+from functools import partial
 from pathlib import Path
 
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from county_rows import (DEPT_CODE_RE, amount, open_pdf, page_kind,  # noqa: E402
-                         read_page, split_label)
+from county_rows import (DEPT_CODE_RE, amount, ocr_bounds, ocr_lines,  # noqa: E402
+                         ocr_words, open_pdf, page_kind, read_page, read_words,
+                         split_label)
+from ocr_pages import cache_dir, ocr_document  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "data" / "processed" / "county"
 CONFIG_DIR = ROOT / "config" / "county"
 KNOWN_ISSUES_FILE = ROOT / "data" / "county" / "known_issues.csv"
+OCR_CORRECTIONS_FILE = ROOT / "data" / "county" / "ocr_corrections.csv"
 
 # The County's spreadsheet rounds each cell on its own, as the city's does.
 ROUNDING_TOLERANCE = 5
@@ -57,11 +62,79 @@ def num(cell):
     return 0 if v is None else v
 
 
+def row_keys(rows):
+    """Each row's label as read, with " #2", " #3" ... on repeats within the page."""
+    seen, keys = defaultdict(int), []
+    for r in rows:
+        label = " ".join(t for t, _ in r["label_words"])
+        seen[label] += 1
+        keys.append(label if seen[label] == 1 else f"{label} #{seen[label]}")
+    return keys
+
+
+class Corrections:
+    """Cell and label fixes for misread OCR, from data/county/ocr_corrections.csv.
+
+    Each row names a page, the row's label as read (row_keys), a column
+    ("label", "budget_<year>", "variance" or "percent"), the text as read
+    (ocr_text) and the corrected value, with the evidence; the columns are
+    those of the city's data/ocr_corrections.csv. A fix whose row or value as
+    read is not found is reported as a failed check, so a re-OCR that reads
+    differently cannot slip by.
+    """
+
+    FIELDS = {"variance": 2, "percent": 3}
+
+    def __init__(self, doc):
+        self.rows = []
+        if OCR_CORRECTIONS_FILE.exists():
+            c = pd.read_csv(OCR_CORRECTIONS_FILE, dtype=str, keep_default_na=False)
+            self.rows = c[c.source_doc == doc].to_dict("records")
+        self.used = set()
+        self.stale = []
+
+    def apply(self, page_no, rows, years):
+        fixes = [(i, c) for i, c in enumerate(self.rows) if c["source_page"] == str(page_no)]
+        if not fixes:
+            return rows
+        keys = row_keys(rows)
+        for i, c in fixes:
+            hit = [r for r, k in zip(rows, keys) if k == c["row_label"]]
+            if len(hit) != 1:
+                self.stale.append((page_no, f"correction row not found: {c['row_label']}"))
+                continue
+            r = hit[0]
+            if c["column"] == "label":
+                if " ".join(t for t, _ in r["label_words"]) != c["ocr_text"]:
+                    self.stale.append((page_no, f"correction {c['row_label']} label: read differently"))
+                    continue
+                # keep the words' positions: re-split the corrected text over the old x0s
+                xs = [x for _, x in r["label_words"]]
+                new = c["corrected_value"].split(" ")
+                r["label_words"] = [(t, xs[min(j, len(xs) - 1)]) for j, t in enumerate(new)]
+                r.setdefault("as_read", []).append(f"label={c['ocr_text']}")
+            else:
+                field = c["column"]
+                if field.startswith("budget_"):
+                    j = years.index(int(field[7:]))
+                else:
+                    j = self.FIELDS[field]
+                if r["cells"][j] != c["ocr_text"]:
+                    self.stale.append((page_no, f"correction {c['row_label']} {field}: "
+                                                f"read {r['cells'][j]!r}, not {c['ocr_text']!r}"))
+                    continue
+                r["cells"][j] = c["corrected_value"]
+                r.setdefault("as_read", []).append(f"{field}={c['ocr_text']}")
+            self.used.add(i)
+        return rows
+
+
 class Book:
     def __init__(self, pdf_path, cfg=None):
         self.cfg = cfg or {}
         self.pdf = Path(pdf_path)
         self.doc = self.pdf.name
+        self.corrections = Corrections(self.doc)
         self.years = None
         self.lines = []          # detail line items
         self.dept_totals = []    # printed department totals in the detail reports
@@ -75,40 +148,68 @@ class Book:
 
     # --- reading -------------------------------------------------------------
 
+    def pages(self):
+        """Yield (page number, text lines, reader) for every page. reader(bounds)
+        returns read_page's (bounds, rows). A book whose config has "ocr" is
+        read from its OCR words (scripts/ocr_pages.py, cached)."""
+        ocr = self.cfg.get("ocr")
+        if not ocr:
+            with open_pdf(self.pdf) as pdf:
+                for page_no, page in enumerate(pdf.pages, 1):
+                    text = (page.extract_text() or "").strip().splitlines()
+                    yield page_no, text, partial(read_page, page)
+            return
+        dpi, clean, years = ocr["dpi"], ocr.get("clean", False), ocr["column_years"]
+        ocr_document(self.pdf, dpi, fallback_rotate=ocr.get("fallback_rotate", 90), clean=clean)
+        for tsv in sorted(cache_dir(self.pdf, dpi, clean).glob("page_*.tsv")):
+            words = ocr_words(tsv, dpi)
+            yield (int(tsv.stem.split("_")[1]), ocr_lines(words, years),
+                   partial(read_words, words, find_header=partial(ocr_bounds, years=years)))
+
+    def ordered_pages(self):
+        """pages() in reading order. Config "page_order" lists pages bound out
+        of order, as [page, the page it should be read after]."""
+        pages = list(self.pages()) if self.cfg.get("page_order") else self.pages()
+        for page, after in self.cfg.get("page_order", []):
+            i = next(i for i, p in enumerate(pages) if p[0] == page)
+            moved = pages.pop(i)
+            j = next(i for i, p in enumerate(pages) if p[0] == after)
+            pages.insert(j + 1, moved)
+        return pages
+
     def read(self):
-        with open_pdf(self.pdf) as pdf:
-            prev_kind, bounds = None, None
-            dp_state = {}
-            for page_no, page in enumerate(pdf.pages, 1):
-                text = (page.extract_text() or "").strip().splitlines()
-                kind, section, side = page_kind(text)
-                if kind == "deptpage-cont" and prev_kind not in ("deptpage", "deptpage-cont"):
-                    kind = None
-                if kind is None and prev_kind in ("deptpage", "deptpage-cont") and text \
-                        and "$" in text[0] and not text[0].startswith("County of"):
-                    kind = "deptpage-cont"
-                if kind in (None, "deptsummary"):
-                    prev_kind = kind
-                    continue
-                b, rows = read_page(page, bounds if kind == "deptpage-cont" else None)
-                if not b:
-                    self.unparsed.append((page_no, "no column header"))
-                    prev_kind = kind
-                    continue
-                bounds = b
-                if self.years is None:
-                    self.years = b["years"]
-                elif self.years != b["years"]:
-                    self.unparsed.append((page_no, f"years {b['years']} differ from {self.years}"))
-                if kind == "detail":
-                    self._detail(page_no, section, side, b, rows)
-                elif kind == "bydept":
-                    self._bydept(page_no, section, side, b, rows)
-                elif kind == "byaccount":
-                    self._byaccount(page_no, section, side, b, rows)
-                else:
-                    self._deptpage(page_no, b, rows, dp_state)
+        prev_kind, bounds = None, None
+        dp_state = {}
+        for page_no, text, reader in self.ordered_pages():
+            kind, section, side = page_kind(text)
+            if kind == "deptpage-cont" and prev_kind not in ("deptpage", "deptpage-cont"):
+                kind = None
+            if kind is None and prev_kind in ("deptpage", "deptpage-cont") and text \
+                    and "$" in text[0] and not text[0].startswith("County of"):
+                kind = "deptpage-cont"
+            if kind in (None, "deptsummary"):
                 prev_kind = kind
+                continue
+            b, rows = reader(bounds if kind == "deptpage-cont" else None)
+            if not b:
+                self.unparsed.append((page_no, "no column header"))
+                prev_kind = kind
+                continue
+            rows = self.corrections.apply(page_no, rows, b["years"])
+            bounds = b
+            if self.years is None:
+                self.years = b["years"]
+            elif self.years != b["years"]:
+                self.unparsed.append((page_no, f"years {b['years']} differ from {self.years}"))
+            if kind == "detail":
+                self._detail(page_no, section, side, b, rows)
+            elif kind == "bydept":
+                self._bydept(page_no, section, side, b, rows)
+            elif kind == "byaccount":
+                self._byaccount(page_no, section, side, b, rows)
+            else:
+                self._deptpage(page_no, b, rows, dp_state)
+            prev_kind = kind
 
     def _values(self, page_no, label, cells):
         y1, y2, var = amount(cells[0]), amount(cells[1]), amount(cells[2])
@@ -149,7 +250,7 @@ class Book:
             self.lines.append(dict(section=section, side=side, fund=st["fund"] or "",
                                    department_code=st["code"], department=st["dept"],
                                    account=acct, account_name=name, y1=y1, y2=y2,
-                                   page=page_no))
+                                   page=page_no, as_read="; ".join(r.get("as_read", []))))
         self._dstate = st
 
     def _bydept(self, page_no, section, side, b, rows):
@@ -172,44 +273,43 @@ class Book:
                                     page=page_no, y1=y1, y2=y2))
 
     def _byaccount(self, page_no, section, side, b, rows):
-        group = getattr(self, "_agroup", None)
+        """Rows: "61 Taxes 6111Real Estate At Discount" (group code and name on
+        the group's first account), "6112 ..." (an account), "61 Total" and
+        "Grand Total". An account's group is its code's first two digits; a
+        printed group code that disagrees is reported. OCR may drop the
+        group code ("Taxes 6111 ..."), glue "64Total" or misread "79" as "793".
+        """
         for r in rows:
             if is_footer(r["label_words"]) or not r["label_words"]:
                 continue
-            words = r["label_words"]
-            label = " ".join(t for t, _ in words)
+            words = [t for t, _ in r["label_words"]]
+            label = " ".join(words)
             y1, y2 = self._values(page_no, label, r["cells"])
             if label == "Grand Total":
                 self.byaccount.append(dict(section=section, side=side, kind="grand",
                                            group=None, account=None, page=page_no, y1=y1, y2=y2))
                 continue
-            first = words[0][0]
-            if first.isdigit() and len(first) == 2:
-                group = first
-                rest = [t for t, _ in words[1:]]
-                if rest and rest[0] == "Total":
-                    self.byaccount.append(dict(section=section, side=side, kind="group",
-                                               group=group, account=None, page=page_no,
-                                               y1=y1, y2=y2))
-                    continue
-                # "61 Taxes 6111Real Estate At Discount": group name, then the account
-                name_words, acct_words = [], []
-                for t in rest:
-                    if acct_words or (t[:4].isdigit() and len(t) >= 4):
-                        acct_words.append(t)
-                    else:
-                        name_words.append(t)
-                self.groups[group] = " ".join(name_words)
-                words_acct = acct_words
-            else:
-                words_acct = [t for t, _ in words]
-            acct = words_acct[0][:4] if words_acct and words_acct[0][:4].isdigit() else None
-            if acct is None:
+            m = re.fullmatch(r"(\d\d) ?Total", label)
+            if m:
+                self.byaccount.append(dict(section=section, side=side, kind="group",
+                                           group=m.group(1), account=None, page=page_no,
+                                           y1=y1, y2=y2))
+                continue
+            i = next((i for i, t in enumerate(words) if re.match(r"^\d{4}", t)), None)
+            if i is None:
                 self.unparsed.append((page_no, label))
                 continue
+            acct = words[i][:4]
+            group = acct[:2]
+            head = words[:i]
+            if head and head[0].isdigit():
+                if len(head[0]) == 2 and head[0] != group:
+                    self.unparsed.append((page_no, f"{label}: group {head[0]} vs account {acct}"))
+                head = head[1:]
+            if head:
+                self.groups[group] = " ".join(head)
             self.byaccount.append(dict(section=section, side=side, kind="account", group=group,
                                        account=acct, page=page_no, y1=y1, y2=y2))
-        self._agroup = group
 
     def _deptpage(self, page_no, b, rows, st):
         for r in rows:
@@ -262,6 +362,12 @@ class Book:
                             printed=p, parsed=c, diff=diff,
                             passed=abs(diff) <= ROUNDING_TOLERANCE))
 
+        def flag(check, page, label, column):
+            # a problem, not an amount: always a failure (recorded as printed
+            # 0 vs parsed 1, which the $5 tolerance would otherwise pass)
+            out.append(dict(check=check, source_page=page, label=label, column=column,
+                            printed=0, parsed=1, diff=1, passed=False))
+
         def pair(check, page, label, printed, computed):
             add(check, page, label, printed[0], computed[0], y1n)
             add(check, page, label, printed[1], computed[1], y2n)
@@ -276,8 +382,8 @@ class Book:
             pair("department total", t["page"], f"{t['section']} {t['side']}: {t['printed_name']}",
                  (num_or0(t["y1"]), num_or0(t["y2"])), (m.y1.sum(), m.y2.sum()))
             if t["printed_name"] != t["department"]:
-                add("department total name", t["page"], f"{t['printed_name']} vs {t['department']}",
-                    0, 1, "name")
+                flag("department total name", t["page"], f"{t['printed_name']} vs {t['department']}",
+                     "name")
 
         # 2. grand totals vs the printed department totals (each of which is
         # checked against its lines above; summing ~1,200 separately rounded
@@ -372,10 +478,17 @@ class Book:
         # every department line must have a code
         for row in self.lines:
             if not row["department_code"]:
-                add("department code", row["page"], f"{row['department']} has no code", 0, 1, "code")
+                flag("department code", row["page"], f"{row['department']} has no code", "code")
                 break
         for page, text in self.unparsed:
-            add("unparsed row", page, text, 0, 1, "row")
+            flag("unparsed row", page, text, "row")
+        for page, text in self.corrections.stale:
+            flag("ocr correction", page, text, "correction")
+        for i, c in enumerate(self.corrections.rows):
+            if i not in self.corrections.used and not any(
+                    str(p) == c["source_page"] and c["row_label"] in t for p, t in self.corrections.stale):
+                flag("ocr correction", c["source_page"], f"correction not applied: {c['row_label']}",
+                     "correction")
         return pd.DataFrame(out)
 
 
@@ -459,6 +572,8 @@ def run(pdf, quiet=False):
     items = pd.DataFrame(book.lines).rename(columns={"y1": f"budget_{y1}", "y2": f"budget_{y2}",
                                                      "page": "source_page"})
     items.insert(0, "source_doc", book.doc)
+    if not items.as_read.astype(bool).any():
+        items = items.drop(columns="as_read")   # text books: nothing was corrected
     items["category"] = [category(s, a, groups) for s, a in zip(items.side, items.account)]
     items.to_csv(OUT_DIR / f"line_items_{pdf.stem}.csv", index=False)
 
