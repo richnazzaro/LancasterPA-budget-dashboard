@@ -787,3 +787,8 @@ a.src { white-space: nowrap; }
 
 .trend-axis { margin: 6px 0 0; font-size: 13px; line-height: 18px; color: var(--muted); }
 .trend-axis:empty { display: none; }
+
+/* Calculated totals: the figure is the sum of the line items and differs from the book's printed total by rounding. */
+.calc-mark { font-family: var(--font); font-size: .5em; font-weight: 600; color: var(--muted); margin-left: .1em; vertical-align: super; line-height: 0; cursor: help; }
+.calc-note, .calc-foot { margin: 0 0 14px; font-size: 14px; line-height: 20px; color: var(--muted); }
+.calc-foot { margin-top: 8px; }

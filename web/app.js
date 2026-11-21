@@ -71,6 +71,18 @@
     const shown = sum(rows(k).filter((r) => r.fund === fi && (kind === 'revenue') === isRevenue(r)));
     return c.reduce((b, x) => (Math.abs(x.values[k] - shown) < Math.abs(b.values[k] - shown) ? x : b));
   };
+  /* Fund totals on screen are the sum of their line items. Where that differs from the book's printed total by
+     the city's rounding (each cell is rounded on its own), mark the figure as calculated. Gaps over $100 are not
+     rounding; rollupNote() explains those instead. Returns null when there is nothing to flag. */
+  const calcGap = (fund, kind, k, shown) => {
+    const pr = fund && k ? printedFund(fund, kind, k) : null;
+    if (!pr) return null;
+    const printed = pr.values[k], gap = Math.round(shown) - Math.round(printed);
+    return gap === 0 || Math.abs(gap) > 100 ? null : { printed, gap, pr };
+  };
+  const CALC_NOTE = 'Calculated: the sum of the line items. The budget book prints a total a few dollars different because the city rounds each line on its own.';
+  const calcMark = (g) => (g ? `<sup class="calc-mark" title="${esc(`Calculated from the line items. The book prints ${money(g.printed)} (rounding).`)}">†<span class="sr-only"> calculated from the line items; the book prints ${money(g.printed)}</span></sup>` : '');
+  const calcFoot = (any) => (any ? `<p class="calc-foot"><span aria-hidden="true">† </span>${CALC_NOTE}</p>` : '');
 
   /* ---------- data access ---------- */
   function rows(k) {
@@ -579,7 +591,9 @@
       .sort((a, b) => (b.sel?.total || 0) - (a.sel?.total || 0) || (b.cmp?.total || 0) - (a.cmp?.total || 0));
     const ledger = items.length ? ledgerHTML(items, { total, k }) : '<p class="empty">No lines for this selection.</p>';
 
-    const totalHTML = (() => { const pf = S.f ? printedFund(S.f, S.k, k) : null; return pf ? src(money(total), k, pf.doc, pf.page) : money(total); })();
+    const homeGap = S.f ? calcGap(S.f, S.k, k, total) : null;
+    const totalHTML = (() => { const pf = S.f ? printedFund(S.f, S.k, k) : null; return (pf ? src(money(total), k, pf.doc, pf.page) : money(total)) + calcMark(homeGap); })();
+    const calcLine = homeGap ? `<p class="calc-note"><span aria-hidden="true">† </span>Calculated from the line items. The budget book prints ${src(money(homeGap.printed), k, homeGap.pr.doc, homeGap.pr.page)}; the ${money(Math.abs(homeGap.gap))} difference is the city's rounding.</p>` : '';
     // The deck says what a resident came to learn: up or down, by how much, and what covers it.
     const deck = (() => {
       if (!S.c || !series(S.c)) return '';
@@ -590,7 +604,7 @@
     })();
     return `<header class="page-head"><h1 id="page-h">${esc(scope)} ${kindWord}: ${esc(seriesLabel(k))}</h1>
         ${deck || `${heroDelta(k, total)}${drawNote(k)}`}
-        <p class="big-total" aria-live="polite"><span class="big-label">${esc(scope)} ${kindWord}</span> ${totalHTML}</p>${rollupNote(list)}</header>
+        <p class="big-total" aria-live="polite"><span class="big-label">${esc(scope)} ${kindWord}</span> ${totalHTML}</p>${calcLine}${rollupNote(list)}</header>
       <div class="home-flow">${filtersHTML({ closedFirst: true, lead: statusHTML() })}
       ${(() => { const wc = homeChangesHTML(); return `<div class="overview${wc ? '' : ' overview-single'}">${trendHTML({}, 'Totals by Year')}${wc}</div>`; })()}</div>
       <section class="panel" id="sec-departments" tabindex="-1" aria-labelledby="dep-t"><h2 class="panel-title" id="dep-t">Departments</h2>
@@ -623,11 +637,13 @@
       }));
     }
     const pr = (d, kind) => printedFund(d.fund, kind, k);
-    const lk = (d, kind, n) => { const x = pr(d, kind); return x ? src(money(n), k, x.doc, x.page) : money(n); };
+    let anyCalc = false;
+    const lk = (d, kind, n) => { const x = pr(d, kind), g = calcGap(d.fund, kind, k, n); if (g) anyCalc = true; return (x ? src(money(n), k, x.doc, x.page) : money(n)) + calcMark(g); };
     const dcell = (n) => { const r = Math.round(n); return `<span class="${r > 0 ? 'up' : r < 0 ? 'down neg' : 'flat'}">${money(n)}</span>`; };
     $('re-table').innerHTML = `<thead><tr><th scope="col">Fund</th><th scope="col" class="num">Income</th><th scope="col" class="num">Spending</th><th scope="col" class="num">Income minus spending</th></tr></thead>
       <tbody>${data.map((d) => `<tr><th scope="row">${esc(d.fund)}</th><td class="num">${lk(d, 'revenue', d.rev)}</td><td class="num">${lk(d, 'expense', d.exp)}</td><td class="num">${dcell(d.rev - d.exp)}</td></tr>`).join('')}</tbody>
       <tfoot><tr><td>All funds</td><td class="num">${money(data.reduce((t, d) => t + d.rev, 0))}</td><td class="num">${money(data.reduce((t, d) => t + d.exp, 0))}</td><td class="num">${dcell(data.reduce((t, d) => t + d.rev - d.exp, 0))}</td></tr></tfoot>`;
+    $('re-table').parentElement.insertAdjacentHTML('afterend', calcFoot(anyCalc));
   }
 
   /* ---------- department / bureau pages ---------- */
@@ -1037,11 +1053,13 @@
     return `<p class="wc-badge"><span class="wc-badge-tag">Comparing a proposal with ${what}</span>${sw}</p>`;
   }
 
-  function tilesHTML(c, sc) {
+  function tilesHTML(c, sc, { foot = true } = {}) {
     const tiles = [];
     const ex = sc.expense;
+    let anyCalc = false;
+    const ck = (x, k, kind) => { const g = x && S.f ? calcGap(S.f, kind, k, vOf(x)) : null; if (g) anyCalc = true; return lnk(x) + calcMark(g); };
     if (ex) tiles.push(['Spending change', deltaHTML(vOf(ex.total.t) - vOf(ex.total.f), vOf(ex.total.f), mny),
-      `${esc(seriesLabel(c.from))} ${lnk(ex.total.f)} → ${esc(seriesLabel(c.to))} ${lnk(ex.total.t)}`]);
+      `${esc(seriesLabel(c.from))} ${ck(ex.total.f, c.from, 'expense')} → ${esc(seriesLabel(c.to))} ${ck(ex.total.t, c.to, 'expense')}`]);
     const dr = sc.revenue?.draw;
     if (dr) tiles.push(['Drawn from the reserve', `<span>${lnk(dr.t, mny(vOf(dr.t)))}</span>`, `${esc(seriesLabel(c.from))}: ${lnk(dr.f, dr.f ? mny(vOf(dr.f)) : '$0')}. Money taken from savings; the budget's “Fund Balance Reserve” line.`]);
     else if (sc.revenue) tiles.push(['Income change', deltaHTML(vOf(sc.revenue.total.t) - vOf(sc.revenue.total.f), vOf(sc.revenue.total.f), mny), `${esc(seriesLabel(c.from))} ${lnk(sc.revenue.total.f)} → ${lnk(sc.revenue.total.t)}`]);
@@ -1060,8 +1078,8 @@
     }
     const rc = revisionCmp();
     const rx = rc?.scopes[scopeName()]?.expense;
-    if (rx) tiles.push(['Revision vs. proposal', deltaHTML(vOf(rx.total.t) - vOf(rx.total.f), vOf(rx.total.f), mny), `Proposed ${lnk(rx.total.f)} → Revised ${lnk(rx.total.t)}`]);
-    return `<ul class="wc-tiles">${tiles.map(([h, big, sub]) => `<li class="wc-tile"><h2 class="wc-tile-h">${h}</h2><p class="wc-tile-v">${big}</p><p class="wc-tile-s">${sub}</p></li>`).join('')}</ul>`;
+    if (rx) tiles.push(['Revision vs. proposal', deltaHTML(vOf(rx.total.t) - vOf(rx.total.f), vOf(rx.total.f), mny), `Proposed ${ck(rx.total.f, rc.from, 'expense')} → Revised ${ck(rx.total.t, rc.to, 'expense')}`]);
+    return `<ul class="wc-tiles">${tiles.map(([h, big, sub]) => `<li class="wc-tile"><h2 class="wc-tile-h">${h}</h2><p class="wc-tile-v">${big}</p><p class="wc-tile-s">${sub}</p></li>`).join('')}</ul>${calcFoot(foot && anyCalc)}`;
   }
 
   function shiftCard(s, c) {
@@ -1276,7 +1294,7 @@
     const sc = c?.scopes[scopeName()];
     if (!sc?.expense) return '';
     return `<section class="panel wc-home" aria-labelledby="wch-t"><h2 class="panel-title" id="wch-t">What changed in ${D.newest_year}</h2>
-      <p class="wc-lede-sm">${headlineSentence(c, sc)}</p>${badgeHTML(c)}${tilesHTML(c, sc)}
+      <p class="wc-lede-sm">${headlineSentence(c, sc)}</p>${badgeHTML(c)}${tilesHTML(c, sc, { foot: false })}
       <p class="wc-home-more"><a class="btn btn-primary" href="${esc(changesHash())}">See everything that changed →</a></p></section>`;
   }
 
