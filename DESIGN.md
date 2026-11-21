@@ -196,6 +196,7 @@ Square. Panels, rows, bars, tiles and swatches have 0 radius; controls, stamps a
 
 ### Tabs and segmented controls
 - **Style:** 40px tall, 1px ink border, buttons separated by 1px ink rules. Selected tab inverts to ink fill with paper text; hover is the green wash.
+- **Entity switch (City / County):** two square tabs under the site name at the top of the rail, the same 40px (46px on phones) 1px-ink buttons as above, inverted when selected. They are links (`#/` and `#/county/`), not radio buttons, and have no color of their own: the County is told apart by its name, the tagline, the tabs and the running status line, never by a second accent.
 - **Section tabs (Compare panel) and Jump links:** underline style: muted text, selected is ink with a 3px green underline.
 
 ### Inputs / Fields
@@ -238,4 +239,4 @@ Square. Panels, rows, bars, tiles and swatches have 0 radius; controls, stamps a
 - **Don't** use orange or amber anywhere; keep category colors away from the green and red.
 - **Don't** color changes green or red by direction; ink and an arrow carry it.
 - **Don't** show "p. N" text next to figures.
-- **Don't** show Adopted or Amended figures; one kind of figure per year.
+- **Don't** show Adopted or Amended figures; one kind of figure per year. County exception: its figures are labelled "Budget", and the newest year's status line may say "adopted Dec 24, 2025 (Resolution 79 of 2025)" because that is the County's own record, not a label on the figures.

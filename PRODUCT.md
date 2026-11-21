@@ -25,20 +25,21 @@ Independent, source-linked and honest about the source's flaws. Every figure lin
 
 ## Operating Context
 
-Data comes from the city's budget PDFs, extracted and validated by a pipeline with cross-checks to the printed totals. A planned later addition is Lancaster County data. The General Fund is the default view because it is the tax-funded fund; shifts into it are flagged.
+Data comes from the city's budget PDFs, extracted and validated by a pipeline with cross-checks to the printed totals. Lancaster County is a second volume of the same site (City and County tabs in the rail): its Budget from the County's own books, with audited Actual only where the annual financial report gives it at the same level. The General Fund is the default view because it is the tax-funded fund; shifts into it are flagged.
 
 ## Capabilities and Constraints
 
 - Views: Home (Totals by Year, What changed, departments, funds), department and bureau pages with line items and a Staff section (budgeted positions and salaries by year), What changed, Reserve Fund, About the data.
 - One kind of figure per year: historic years Actual, the prior budget year Projected, the new year Proposed and Revised. Adopted and Amended are never shown.
 - Links from numbers to PDF pages (`#page=N`) stay, quiet and without "p. N" text.
-- Entity name, title, footer, default fund and data paths live in `web/config.json`; all colors live in the `:root` block of `web/styles.css` (charts read them from there). Keep it that way.
+- County figures are labelled "Budget" (never Adopted or Proposed on screen; the newest year's status line cites Resolution 79 of 2025), and audited figures "Actual". The County has no Staff section and no Reserve Fund page.
+- Entity name, title, footer, default fund, fund names and data paths live in the `entities` map of `web/config.json`; all colors live in the `:root` block of `web/styles.css` (charts read them from there). Keep it that way.
 - The site must work with no build step on GitHub Pages.
 - The lacontroller.app look-matching rule in CLAUDE.md is released for this redesign (owner, 2026-11-20).
 
 ## Brand Commitments
 
-- Name: Lancaster Budget Explorer. Header carries the disclaimer "This is an independent project, not associated with the City of Lancaster." (set in `web/config.json`).
+- Name: Lancaster Budget Explorer. Header carries the disclaimer "This is an independent project, not associated with the City of Lancaster." (set in `web/config.json`; the County's reads "not associated with the County of Lancaster").
 - Binding visual constraints volunteered by the owner for the redesign: the floating-card page treatment reads as AI-generated and is to be replaced; the color theme must be accessible and draw on traditional colors for money. Their specific meaning is to be confirmed in new-work, not assumed here.
 
 ## Evidence on Hand

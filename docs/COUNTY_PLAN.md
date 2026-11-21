@@ -308,3 +308,18 @@ Steps 1–3 can be checked without touching the site. Step 2 can run alongside s
 - `known_issues.csv` has a new `kind` column: `rounding`, `source_error` or `basis_difference`.
 - The 2024 ACFR General Fund transfers out is shown as printed on p114, (18,962,872), and flagged. `acfr_substitutions.csv` is removed. ACFR figure flags are now `[{known_issue, kind}]`.
 - `check_county.py` checks that every printed total is shown exactly as printed, and that every one the books print is there. It recomputes each flag and note (a gap beyond rounding with no known issue fails), and checks that no actual carries a substituted value. Result: "0 series mismatches".
+
+**Step 4, site pages (2026-11-21).** The County pages are in `web/`; the City output is unchanged (checked: the rendered text, links and titles of nine City routes are identical to `main`'s).
+1. **Switch and routes:** City / County tabs under the site name in the rail. `#/county/...` is the County, plain `#/...` the City. A bare address opens the last choice (`localStorage`, in try/catch). `config.json` has an `entities` map (name, wording, default fund, fund names, adopted-resolution text, data and PDF paths, optional data files). Each entity's data loads once, on first visit.
+2. **Pages:**
+   - Overview: deck "General Fund spending up $15.8M (8.5%) from the 2025 Budget, spending $9.0M more than it expects to collect", with a note (spending $201,945,900 against income $192,961,058, a gap of $8,984,842 calculated) that the book prints no General Fund balance page, and the audited General Fund balance from the ACFR. The status line cites Resolution 79 of 2025.
+   - What changed: from the County `changes.json`; account merges are noted under the merged lines and described on About.
+   - Departments: the four letter groups, then the departments, then line items. Fund selector with the fund names.
+   - About: sources and the figure rule, Actual figures (all `actuals_note` wording), departments and fund names, the audited General Fund balance, validation, merged accounts, printed and calculated totals, known problems, downloads.
+   - No Staff section and no Reserve Fund entry. There is no Balances page yet (the Capital Reserve, Liquid Fuels/bridge and Act 13 balance pages are not extracted).
+3. **Actuals:** a Budget and Actual section on the overview: fund totals (income and spending, 2023–2025), and for the General Fund, income by source and spending by function as their own tables. 2024 transfers out and net change keep the ≠ flag with the known-issue note. No variance is computed and the ACFR's Original column is not used.
+4. **Printed totals:** the County's `printed` items have no member lists, so `app.js` derives what each covers from its kind, fund group, department, account or account group (as `build_county.py` does) and applies the same rule as the City.
+5. **PDFs:** `Budget PDFs - City/county` is a symlink to `Budget PDFs - County`, so `web/pdfs/county/` resolves (the workflow's `cp -RL` copies it). Audited reports are under `pdfs/county/ACFR/`.
+6. **Checks:** City and County builds and checks both report 0 series mismatches. Impeccable detect: 66 advisory findings, none non-advisory and none on the new rules (all existing).
+
+**Still open:** a Balances page for the County's printed balance pages; Budget-side figures by revenue source and function (the books and the ACFR classify them differently); screenshots with `impeccable shot` and the finish review; refreshing `.impeccable/design.json`.

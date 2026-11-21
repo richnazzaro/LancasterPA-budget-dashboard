@@ -37,7 +37,7 @@ jobs:
           python scripts/build_dataset.py --entity county
           python scripts/check_dataset.py --entity county
       - name: Assemble site
-        # web/pdfs is a symlink to "Budget PDFs - City"; -L copies the PDFs themselves.
+        # web/pdfs is a symlink to "Budget PDFs - City", which holds a "county" symlink to "Budget PDFs - County" (pdfs/county/); -L copies the PDFs themselves.
         run: |
           mkdir _site
           cp -RL web/. _site/

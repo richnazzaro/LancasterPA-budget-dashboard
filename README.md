@@ -26,6 +26,17 @@ Each budget book prints several years side by side. The site shows **one kind of
 ### Every amount links to its source page
 Clicking a dollar amount opens the budget-book PDF **at the page it came from**. This works for totals, categories and line items. Page numbers are not printed on screen, because the link is the amount itself.
 
+### City and County
+The two tabs at the top of the left rail (**City**, **County**) switch between the City of Lancaster and Lancaster County. County pages live at `#/county/...`; a plain `#/...` address is still the City, so every existing link works. A bare address opens the entity the visitor last chose (kept in `localStorage`). `web/config.json` has an `entities` map (name, wording, default fund, fund names, data and PDF paths); the County's data is `web/data/county/` and its books are served from `pdfs/county/` (`Budget PDFs - City/county` is a symlink to `Budget PDFs - County`, so the publish workflow's `cp -RL` copies them).
+
+The County view shows the same pages with County figures, all labelled **Budget** (the newest year, 2026, was adopted Dec 24, 2025 by Resolution 79 of 2025), plus:
+- the fund letters with their names (Liquid Fuels, Drug & Alcohol, Early Intervention, Domestic Relations, Aging, Behavioral Health, Developmental Services, Children & Youth);
+- departments grouped as the County's book groups them (General Government, Courts and Row Offices, Corrections, Human Services), each with its departments and line items;
+- the deck sentence "General Fund spending up $15.8M (8.5%) from the 2025 Budget, spending $9.0M more than it expects to collect", with a note that the book prints no General Fund balance page;
+- **Budget and Actual**: audited 2023–2025 Actual from the County's annual financial reports beside the Budget, only at fund totals (income and spending), plus General Fund income by source and spending by function as their own small tables. No variance is shown, and the report's own "original budget" column is never used;
+- on About, the audited General Fund balance (modified accrual basis, labelled as audited year-end balances, not comparable with the budget);
+- no Staff section and no Reserve Fund page (the County prints no staffing schedule, and its printed balance pages are not extracted yet).
+
 ### What the site shows
 - **Home (all departments):**
   - a plain opening sentence saying whether the total is up or down against the comparison, by how much, and, for the General Fund, how much is **drawn from the reserve** (the "Fund Balance Reserve" revenue lines, object `499000`): "Up $5.0M (6.0%) from 2026 Projected, with $4.7M drawn from savings. See the Reserve Fund". The draw amount links to its source page. The draw is summed from the data for each figure (2027 Revised $4,735,088; 2027 Proposed $4,268,753; 2026 Projected $6,315,053; none in the Actual years) and shown only where there is a draw;
@@ -128,7 +139,7 @@ config/                    per-book layout settings for the extractor
 data/                      reviewed issues, audited corrections, tax-policy notes, 2027 org structure and descriptions
 data/processed/            extracted CSVs (committed; the site is built from them)
 scripts/                   extraction, validation and site-data build (see docs/PIPELINE.md)
-web/                       the static site (index.html, app.js, styles.css, config.json, data/; pdfs/ links to the books)
+web/                       the static site (index.html, app.js, styles.css, config.json, data/ and data/county/; pdfs/ links to the books, pdfs/county/ to the County's)
 docs/PIPELINE.md           how PDFs become data: OCR, validation, corrections, adding a new book
 docs/REBUILD.md            rebuilding everything by hand from a fresh clone, and publishing
 .github/workflows/         pages.yml: builds, checks and publishes the site on every push to main
