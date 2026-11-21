@@ -794,8 +794,6 @@ a.src { white-space: nowrap; }
 .calc-foot { margin-top: 8px; }
 
 /* Staff section: positions and salaries by year */
-.staff-h { margin: 28px 0 6px; font-size: 16px; line-height: 24px; font-weight: 700; }
-.staff-h:first-of-type { margin-top: 0; }
 .staff-table th[scope="row"] { min-width: 10em; }
-.staff-table th, .staff-table td { padding-left: 8px; padding-right: 8px; }
+.staff-table th, .staff-table td { padding-left: 8px; padding-right: 8px; } /* the narrow-screen table padding, so nine year columns fit */
 .staff-table td.num { white-space: nowrap; }

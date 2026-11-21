@@ -771,10 +771,10 @@
     }
     const where = fsel ? ` in the ${esc(fsel)}` : '';
     return `<section class="panel" id="sec-staff" tabindex="-1" aria-labelledby="st-t"><h2 class="panel-title" id="st-t">Staff</h2>
-      <h3 class="staff-h">Budgeted positions${where}</h3>
+      <h3 class="wc-h3">Budgeted positions${where}</h3>
       <p class="panel-note">From each year's staffing schedule. The city publishes budgeted positions, not how many people were actually employed. Fractions are positions shared with other bureaus or funds. Counts open the schedule page in the budget book.</p>
       ${posTable}${titles}
-      <h3 class="staff-h">Salaries and wages${where}</h3>
+      <h3 class="wc-h3">Salaries and wages${where}</h3>
       <p class="panel-note">The “Salaries &amp; Wages” budget lines (salaries, overtime and temporary wages; benefits are separate): Actual through 2025, Projected for 2026, Proposed and Revised for 2027.</p>
       ${salTable}</section>`;
   }
