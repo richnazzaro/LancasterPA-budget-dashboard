@@ -792,3 +792,8 @@ a.src { white-space: nowrap; }
 .calc-mark { font-family: var(--font); font-size: .5em; font-weight: 600; color: var(--muted); margin-left: .1em; vertical-align: super; line-height: 0; cursor: help; }
 .calc-note, .calc-foot { margin: 0 0 14px; font-size: 14px; line-height: 20px; color: var(--muted); }
 .calc-foot { margin-top: 8px; }
+
+/* Staff section: positions and salaries by year */
+.staff-h { margin: 28px 0 6px; font-size: 16px; line-height: 24px; font-weight: 700; }
+.staff-h:first-of-type { margin-top: 0; }
+.staff-table th[scope="row"] { white-space: nowrap; }

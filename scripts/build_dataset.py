@@ -24,7 +24,7 @@ Outputs (web/data/):
   budget.json     dimension tables + one column-oriented series per (year, measure)
                   + an `org` block: 2027 org-chart departments/bureaus, org code -> unit,
                   and description text with source pages (scripts/org_structure.py)
-  staffing.json   positions per book (for a later personnel view)
+  staffing.json   positions per book (Staff section; newest book: proposed and revised)
   conflicts.json  disagreements between overlapping books
   changes.json    "What changed" in the newest year (scripts/changes.py): line-level comparisons,
                   totals by fund, category, department and bureau, shifts between funds found in the
@@ -407,7 +407,11 @@ def printed_totals(processed: Path, designated: dict, newest: int, docs, bureaus
 
 
 def staffing(processed: Path, designated: dict, newest: int) -> dict:
-    """Positions from each designated book's own-year schedule (revised when present)."""
+    """Positions from each designated book's own-year schedule.
+
+    Older years have one budgeted schedule per book ("budgeted"). The newest book prints the
+    proposed and the revised schedule side by side; both are kept, as "proposed" and "revised".
+    """
     result = {"units": [], "titles": [], "books": []}
     units, titles = Interner(), Interner()
     for by, book in sorted(designated.items()):
@@ -418,23 +422,27 @@ def staffing(processed: Path, designated: dict, newest: int) -> dict:
         if not rows:
             continue
         cols = rows[0].keys()
-        suffix = next((s for s in (f"{by}_proposed_revised", f"{by}_proposed", f"{by}_adopted")
-                       if f"count_{s}" in cols), None)
-        if suffix is None:
-            continue
-        positions = []
-        for r in rows:
-            count = parse_amount(r[f"count_{suffix}"])
-            salary = parse_amount(r[f"salary_{suffix}"])
-            if count is None:
+        if by == newest and f"count_{by}_proposed_revised" in cols and f"count_{by}_proposed" in cols:
+            picks = [(f"{by}_proposed", "proposed"), (f"{by}_proposed_revised", "revised")]
+        else:
+            suffix = next((s for s in (f"{by}_proposed_revised", f"{by}_proposed", f"{by}_adopted")
+                           if f"count_{s}" in cols), None)
+            if suffix is None:
                 continue
-            positions.append([units((r["fund"], r["department"], r["unit"])),
-                              titles(r["position_title"]), r["ft_pt"], r["org_code"],
-                              r["object_code"], count, salary, int(r["source_page"])])
-        result["books"].append({"doc": book["doc"], "year": by, "column": suffix,
-                                "status": "proposed" if by == newest else "proposed (book's own year)",
-                                # [unit, title, ft_pt, org, object, count, salary, page]
-                                "positions": positions})
+            picks = [(suffix, "budgeted" if by != newest else "proposed")]
+        for suffix, measure in picks:
+            positions = []
+            for r in rows:
+                count = parse_amount(r[f"count_{suffix}"])
+                salary = parse_amount(r[f"salary_{suffix}"])
+                if count is None:
+                    continue
+                positions.append([units((r["fund"], r["department"], r["unit"])),
+                                  titles(r["position_title"]), r["ft_pt"], r["org_code"],
+                                  r["object_code"], count, salary, int(r["source_page"])])
+            result["books"].append({"doc": book["doc"], "year": by, "column": suffix, "measure": measure,
+                                    # [unit, title, ft_pt, org, object, count, salary, page]
+                                    "positions": positions})
     result["units"] = [list(u) for u in units.items]
     result["titles"] = titles.items
     return result

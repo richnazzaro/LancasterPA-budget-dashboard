@@ -698,6 +698,87 @@
   /* In-page links (hash routing, so the data-scroll pattern, not href="#id"). */
   const jumpNav = (items) => `<nav class="jump" aria-label="On this page"><ul>${items.map(([id, label]) => `<li><a href="${esc(location.hash || '#/')}" data-scroll="${id}">${esc(label)}</a></li>`).join('')}</ul></nav>`;
 
+  /* ---------- Staff: budgeted positions and salary spending by year ----------
+     Positions come from each book's staffing schedule (staffing.json). The city publishes budgeted positions only,
+     never actual headcount, so every year is "budgeted"; the newest book prints Proposed and Revised schedules.
+     Salaries are the "Salaries & Wages" budget lines (salaries, overtime, temporary wages) and follow the site's
+     one-figure-per-year rule: Actual, Projected, then Proposed and Revised. Positions are placed in org-chart
+     bureaus by org code (O.codes), the same way as the budget lines. */
+  let ST = null;
+  function staffHTML(scope) {
+    if (!ST || S.k === 'revenue') return '';
+    const inScope = (u) => (scope.unit != null ? u === scope.unit : O.units[u].dept === scope.dept);
+    const fsel = scope.unit == null && S.f ? S.f : null; // a bureau page shows all of its funds, as elsewhere
+    // Positions: unit -> column -> { n, d, p }
+    const pcols = ST.books.map((b) => ({ k: `${b.year}|${b.measure}`, label: b.measure === 'budgeted' ? String(b.year) : `${b.year} ${LABEL[b.measure]}`, b }));
+    const pos = new Map();
+    for (const c of pcols) {
+      const d = D.docs.indexOf(c.b.doc);
+      for (const x of c.b.positions) {
+        const u = O.codes[x[3]];
+        if (u == null || !inScope(u) || (fsel && ST.units[x[0]][0] !== fsel)) continue;
+        if (!pos.has(u)) pos.set(u, new Map());
+        const cell = pos.get(u).get(c.k) || { n: 0, d, p: x[7] };
+        cell.n += x[5]; cell.p = Math.min(cell.p, x[7]);
+        pos.get(u).set(c.k, cell);
+      }
+    }
+    // Salaries & wages: unit -> series key -> { v, d, p }
+    const cat = D.categories.indexOf('Salaries & Wages');
+    const scols = [];
+    for (const y of years().slice().sort((a, b) => a - b)) for (const m of ORDER) if (series(key(y, m))) scols.push(key(y, m));
+    const sal = new Map();
+    for (const k of scols) {
+      for (const r of scoped(k, { ...scope, kind: 'expense' })) {
+        if (r.cat !== cat || !inScope(r.unit)) continue;
+        if (!sal.has(r.unit)) sal.set(r.unit, new Map());
+        const cell = sal.get(r.unit).get(k) || { v: 0, d: r.d, p: r.p };
+        cell.v += r.v; if (r.d === cell.d && r.p < cell.p) cell.p = r.p;
+        sal.get(r.unit).set(k, cell);
+      }
+    }
+    const ids = [...new Set([...pos.keys(), ...sal.keys()])];
+    if (!ids.length) return '';
+    const last = pcols[pcols.length - 1]?.k;
+    ids.sort((a, b) => (pos.get(b)?.get(last)?.n || 0) - (pos.get(a)?.get(last)?.n || 0) || (O.units[a].name < O.units[b].name ? -1 : 1));
+    const multi = scope.unit == null && ids.length > 1;
+    const rowHead = (u) => (scope.unit == null && O.departments[O.units[u].dept].bureaus ? `<a href="${esc(unitHash(u))}">${esc(unitLabel(u, 'expense'))}</a>` : esc(unitLabel(u, 'expense')));
+    const pdfLink = (text, d, p) => (d >= 0 && d != null ? `<a class="src" href="${pdfHref(d, p)}" target="_blank" rel="noopener" title="View in budget book">${text}</a>` : text);
+    const sumCol = (m, k, f) => { let t = 0, any = false; for (const u of ids) { const c = m.get(u)?.get(k); if (c) { t += f(c); any = true; } } return any ? t : null; };
+    const table = (caption, cols, m, cell, total) => `<div class="table-scroll" tabindex="0" role="region" aria-label="${esc(caption)}, scrollable"><table class="table tight staff-table" aria-label="${esc(caption)}">
+      <thead><tr><th scope="col">${scope.unit == null ? 'Bureau' : ''}</th>${cols.map((c) => `<th scope="col" class="num">${esc(c.label)}</th>`).join('')}</tr></thead>
+      <tbody>${ids.map((u) => `<tr><th scope="row">${rowHead(u)}</th>${cols.map((c) => `<td class="num">${cell(m.get(u)?.get(c.k), c.k)}</td>`).join('')}</tr>`).join('')}</tbody>
+      ${multi ? `<tfoot><tr><th scope="row">All</th>${cols.map((c) => `<td class="num">${total(c.k)}</td>`).join('')}</tr></tfoot>` : ''}</table></div>`;
+    const dash = '<span class="missing" title="Not in this year\'s schedule">—</span>';
+    const posTable = table('Budgeted positions by year', pcols, pos,
+      (c) => (c ? pdfLink(fmtN(c.n), c.d, c.p) : dash),
+      (k) => { const t = sumCol(pos, k, (c) => c.n); return t == null ? dash : fmtN(t); });
+    const salCols = scols.map((k) => ({ k, label: seriesLabel(k) }));
+    const salTable = table('Salaries and wages by year', salCols, sal,
+      (c, k) => (c ? src(mny(c.v), k, c.d, c.p) : dash),
+      (k) => { const t = sumCol(sal, k, (c) => c.v); return t == null ? dash : mny(t); });
+    // Titles in the newest schedule (bureau pages only).
+    let titles = '';
+    if (scope.unit != null && last) {
+      const b = pcols[pcols.length - 1].b, by = new Map();
+      for (const x of b.positions) {
+        if (O.codes[x[3]] !== scope.unit) continue;
+        const t = ST.titles[x[1]], g = by.get(t) || { n: 0, s: 0, ft: new Set() };
+        g.n += x[5]; g.s += x[6]; if (x[2]) g.ft.add(x[2]); by.set(t, g);
+      }
+      if (by.size) titles = `<details class="values"><summary>Positions in ${esc(pcols[pcols.length - 1].label)} (${by.size} titles)</summary><div class="table-scroll"><table class="table tight"><thead><tr><th scope="col">Title</th><th scope="col">Full or part time</th><th scope="col" class="num">Positions</th><th scope="col" class="num">Salaries</th></tr></thead>
+        <tbody>${[...by].sort((a, b) => b[1].s - a[1].s).map(([t, g]) => `<tr><td>${esc(t)}</td><td>${esc([...g.ft].join(', ') || 'Not printed')}</td><td class="num">${fmtN(g.n)}</td><td class="num">${money(g.s)}</td></tr>`).join('')}</tbody></table></div></details>`;
+    }
+    const where = fsel ? ` in the ${esc(fsel)}` : '';
+    return `<section class="panel" id="sec-staff" tabindex="-1" aria-labelledby="st-t"><h2 class="panel-title" id="st-t">Staff</h2>
+      <h3 class="staff-h">Budgeted positions${where}</h3>
+      <p class="panel-note">From each year's staffing schedule. The city publishes budgeted positions, not how many people were actually employed. Fractions are positions shared with other bureaus or funds. Counts open the schedule page in the budget book.</p>
+      ${posTable}${titles}
+      <h3 class="staff-h">Salaries and wages${where}</h3>
+      <p class="panel-note">The “Salaries &amp; Wages” budget lines (salaries, overtime and temporary wages; benefits are separate): Actual through 2025, Projected for 2026, Proposed and Revised for 2027.</p>
+      ${salTable}</section>`;
+  }
+
   function entityView({ title, subtitle, selRows, cmpRows, crumbs, bureauList = '', changes = '', deptPicker, scope, about = '' }) {
     const k = key(S.y, S.m), kindWord = S.k === 'revenue' ? 'Revenue' : 'Budget';
     const total = sum(selRows), cmpTotal = sum(cmpRows);
@@ -728,9 +809,10 @@
         <div class="cmp-pane" id="cmp-pane-time" role="tabpanel" aria-labelledby="cmp-tab-time"${cmpTab === 'time' ? '' : ' hidden'}>${trendHTML(scope, '', { bare: true })}</div></section>`;
     }
     const hasChanges = changes.includes('id="sec-changes"'), hasBureaus = bureauList.includes('id="sec-bureaus"');
-    const nav = [hasChanges && ['sec-changes', 'What changed'], cats.length && ['sec-compare', 'Compare'], hasBureaus && ['sec-bureaus', 'Bureaus'], cats.length && ['sec-categories', 'Categories'], ['sec-lines', 'Line items']].filter(Boolean);
+    const staff = staffHTML(scope);
+    const nav = [hasChanges && ['sec-changes', 'What changed'], cats.length && ['sec-compare', 'Compare'], hasBureaus && ['sec-bureaus', 'Bureaus'], staff && ['sec-staff', 'Staff'], cats.length && ['sec-categories', 'Categories'], ['sec-lines', 'Line items']].filter(Boolean);
     html += jumpNav(nav);
-    html += `<div class="entity-flow"><div class="dept-filters">${filtersHTML({ fund: !!deptPicker, scope, closedFirst: true })}</div>${changes}${compare}${bureauList}`;
+    html += `<div class="entity-flow"><div class="dept-filters">${filtersHTML({ fund: !!deptPicker, scope, closedFirst: true })}</div>${changes}${compare}${bureauList}${staff}`;
     html += categorySection(`${title} ${seriesLabel(k)} ${kindWord} Breakdown`, cats.map(withColor), { k, secId: 'sec-categories' });
     html += `<section class="panel" id="sec-lines" tabindex="-1" aria-labelledby="li-t"><h2 class="total-label" id="li-t">Line Items</h2><div id="li-holder"></div></section></div>`;
     return { html, cats };
@@ -1647,11 +1729,14 @@
       CFG = await (await fetch('config.json', { cache: 'no-cache' })).json();
       // changes.json feeds "What changed"; the rest of the site works without it.
       const chP = fetch(`${CFG.paths.data}changes.json`, { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      // staffing.json feeds the Staff section on department and bureau pages; optional like changes.json.
+      const stP = fetch(`${CFG.paths.data}staffing.json`, { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
       const res = await fetch(`${CFG.paths.data}budget.json`, { cache: 'no-cache' });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       D = await res.json();
       O = D.org;
       CH = await chP;
+      ST = await stP;
     } catch (err) {
       $('view').innerHTML = `<header class="page-head"><h1>Could not load the budget data</h1><p class="muted">budget data: ${esc(err.message)}. If you opened index.html from disk, serve the folder over HTTP instead.</p></header>`;
       return;
