@@ -195,3 +195,33 @@ Steps 1–3 can be checked without touching the site. Step 2 can run alongside s
 **Still open from step 1:**
 - The 2025 book's "Departmental Budget Summary" pages (2023 actuals by category) are not extracted yet.
 - Fund letters (B, E, EI, F, G, H, R, Y) have no printed names. They are kept as "Fund B" and so on until a source names them.
+
+**Step 2, done (2026-11-21).** The scanned 2024 book now goes through the same extractor and passes every check.
+
+1. **Layout:** same page types as the 2025 book.
+   - General Fund by department: p7 (revenue), p9 (expenditure).
+   - General Fund by account: p8, pp10–11.
+   - General Fund Department Account detail: pp99–101 (revenue), pp103–120 (expenditure).
+   - Other Funds: by department p159, detail pp160–168.
+   - "Departmental Budget Summary" pages: pp17–155, with 2022, 2023 and 2024 columns; not extracted yet.
+   - Two differences: the tables print the new year first ("2024 BUDGET | 2023 BUDGET"), and pp111 and 112 are bound in the wrong order. The config's `column_years` and `page_order` handle both.
+2. **OCR:** `ocr_pages.py --clean`, at 400 DPI (not the 300 the plan assumed).
+   - The photocopy shows the back of each sheet through the paper, so Tesseract's own threshold reads it as text. `clean_scan` thresholds at 140 and erases the dashed table rules.
+   - Pages are stretched 1.25× before OCR, so the 2024 column's touching digits come apart.
+   - Sample of 10 table pages, rows whose printed variance matches: under 5% raw, 87% cleaned at 300 DPI, 89% at 400 DPI, 93% stretched.
+   - The cache is separate (`dpi400-clean4`). City books use the old path, which is unchanged.
+3. **Rows:** `county_rows.read_words` runs on a text-layer or OCR word list; the text path is unchanged.
+   - For OCR: `ocr_words` reads the TSV, `ocr_lines` restores the report title and header for `page_kind`, and `ocr_bounds` finds the four cells from the amounts' right edges.
+   - `ocr_label` tidies codes and specks; rows are Tesseract's own lines.
+4. **Corrections:** `data/county/ocr_corrections.csv` has 177 fixes on 33 pages, each with the value as read and its evidence (the City file's columns).
+   - 84 came from `scripts/county_ocr_corrections.py`, which proposes a fix only when the printed variance and % change agree on it. Each was checked against the page image.
+   - 93 were read from the page image. Most are rows printed "- / 0.00%", where % change cannot say which year was misread. Every one was confirmed by the department totals and the by-department and by-account reports.
+   - By cell: 99 in the 2024 column, 40 in the 2023 column, 30 variance, 8 labels.
+   - No source errors were found: `known_issues.csv` is unchanged.
+5. **Checks:** 2,795 checks, 0 failures; 1,720 lines (General Fund 1,246, Other Funds 474).
+6. **Cross-book:** the 2024 book's 2024 budget equals the 2025 book's 2024 column on all 1,816 lines (0 differ). The County did not amend the 2024 budget between the books, and no OCR misread is left in that column. The 2023 column has no second book to compare against; the totals and reports check it.
+7. **A check fix from step 1:** flag-type checks (unparsed row, department code, department total name) recorded printed 0 vs parsed 1, which the $5 tolerance passed. They now always fail. The 2025 and 2026 books still pass every check.
+
+**Still open from step 2:**
+- The 2024 book's "Departmental Budget Summary" pages (2022 actuals by category) are not extracted.
+- Corrections are keyed by the row's label as read. A re-OCR with another Tesseract version reads differently, and its stale corrections fail the run until they are re-keyed. `county_ocr_corrections.py` re-proposes the arithmetic ones.

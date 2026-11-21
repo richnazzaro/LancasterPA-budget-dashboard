@@ -10,7 +10,8 @@ Usage:
 
 County books (any PDF in a folder named "Budget PDFs - County") go to
 extract_county.py instead of steps 2-3 below, then every pair of County books
-that print the same year is compared line by line.
+that print the same year is compared line by line. A scanned County book is
+OCR'd (cached) with the "ocr" settings of its config/county/ file.
 
 For each PDF:
   1. Detect whether it has a usable text layer (share of pages with text) or
@@ -351,8 +352,13 @@ def ingest_county(pdfs):
     import extract_county
     status = 0
     for p in pdfs:
-        if text_share(p)[0] < TEXT_BOOK_SHARE:
-            print(f"{p.name}: scanned; County OCR is not set up yet. Skipped.")
+        cfg_path = extract_county.CONFIG_DIR / f"{p.stem}.json"
+        cfg = json.loads(cfg_path.read_text()) if cfg_path.exists() else {}
+        if text_share(p)[0] < TEXT_BOOK_SHARE and "ocr" not in cfg:
+            # A scanned County book is read by OCR with the settings in its
+            # config (dpi, clean, column_years); see County-2024-Budget-Book.json.
+            print(f"{p.name}: scanned, and {cfg_path.relative_to(ROOT)} has no \"ocr\" "
+                  "settings. Skipped.")
             status = max(status, 2)
             continue
         code, rep = extract_county.run(p)

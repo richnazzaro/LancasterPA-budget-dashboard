@@ -1,0 +1,29 @@
+{
+  "source_doc": "County-2024-Budget-Book.pdf",
+  "original_file_name": "Lancaster%20County%20Budget%20Book%202024_….pdf (the full name was not recorded when the books were renamed)",
+  "entity": "County of Lancaster, PA",
+  "book_year": 2024,
+  "years": [
+    2023,
+    2024
+  ],
+  "edition": "Adopted: Resolution No. 91 of 2023 on p4.",
+  "layout": "Scanned photocopy (169 of 170 pages image-only), read by OCR. Line items from the 'Department Account' reports: General Fund revenue pp99-101, expenditure pp103-120; Other Funds revenue pp160-161, expenditure pp162-168. Checked against the by-department reports (pp7, 9, 159) and the by-account reports (pp8, 10-11). The tables print the new year first ('2024 BUDGET | 2023 BUDGET'). Like the 2025 book it has no line-item department pages; its 'Departmental Budget Summary' pages give category totals with 2022 actuals.",
+  "ocr": {
+    "_comment": "Rendered at 400 DPI and cleaned with ocr_pages.clean_scan (threshold 140, broken table rules erased): the copy shows the back of each sheet through the paper, and Tesseract's own threshold keeps it. On a sample of 9 table pages, 91% of rows read with a variance that matches, against 87% at 300 DPI and under 5% without cleaning.",
+    "dpi": 400,
+    "clean": true,
+    "fallback_rotate": 0,
+    "column_years": [
+      2024,
+      2023
+    ]
+  },
+  "page_order": [
+    [
+      111,
+      112
+    ]
+  ],
+  "_page_order": "p111 and p112 are bound in the wrong order: p112 ends with the 'A3100 Facilities Management' heading and its first line, and p111 continues Facilities Management, then starts Court Administration, which p113 continues."
+}
