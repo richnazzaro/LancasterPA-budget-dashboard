@@ -4,6 +4,8 @@ A public, independent view of the **City of Lancaster, PA** budget, built from t
 
 **Live site:** https://budget.nazwel.net
 
+**Contact:** budget@nazwel.net, for errors or questions about a figure. The site shows it in the footer and on the About page; it is set by `contact_email` in `web/config.json`.
+
 This README covers how the site presents the data, where the data lives, and how to use the site. For how the PDFs are turned into data, see [docs/PIPELINE.md](docs/PIPELINE.md). To rebuild everything by hand from a fresh copy (setup, extraction, checks, preview and publishing), see [docs/REBUILD.md](docs/REBUILD.md).
 
 ---

@@ -9,6 +9,7 @@
   "description": "City of Lancaster, PA budget by department, bureau and line item, from the city's published budget books.",
   "tagline": "This is an independent project, not associated with the City of Lancaster.",
   "footer": "An independent transparency project using the City of Lancaster's published budget books.",
+  "contact_email": "budget@nazwel.net",
   "default_fund": "General Fund",
   "paths": {
     "data": "data/",
