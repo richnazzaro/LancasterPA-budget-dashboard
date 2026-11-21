@@ -21,7 +21,7 @@ A public budget-transparency dashboard for the City of Lancaster, PA. It turns t
 
 ## Positioning
 
-Independent, source-linked and honest about the source's flaws. Every figure links to its PDF page; the site discloses where the city's own books disagree (42 known source errors, two printed 12/31/2025 reserve balances) and shows one kind of figure per year (Actual, Projected, Proposed, Revised) rather than mixing them. Plain-English narration of what changed. A neighboring site could not copy the validation behind it.
+Independent, source-linked and honest about the source's flaws. Every figure links to its PDF page; the site discloses where the city's own books disagree (40 reviewed source errors as of 11/2026, two printed 12/31/2025 reserve balances) and shows one kind of figure per year (Actual, Projected, Proposed, Revised) rather than mixing them. Plain-English narration of what changed. A neighboring site could not copy the validation behind it.
 
 ## Operating Context
 
@@ -29,7 +29,7 @@ Data comes from the city's budget PDFs, extracted and validated by a pipeline wi
 
 ## Capabilities and Constraints
 
-- Views: Home (Totals by Year, What changed, departments, funds), department and bureau pages with line items, What changed, Reserve Fund, About the data.
+- Views: Home (Totals by Year, What changed, departments, funds), department and bureau pages with line items and a Staff section (budgeted positions and salaries by year), What changed, Reserve Fund, About the data.
 - One kind of figure per year: historic years Actual, the prior budget year Projected, the new year Proposed and Revised. Adopted and Amended are never shown.
 - Links from numbers to PDF pages (`#page=N`) stay, quiet and without "p. N" text.
 - Entity name, title, footer, default fund and data paths live in `web/config.json`; all colors live in the `:root` block of `web/styles.css` (charts read them from there). Keep it that way.
@@ -38,12 +38,12 @@ Data comes from the city's budget PDFs, extracted and validated by a pipeline wi
 
 ## Brand Commitments
 
-- Name: Lancaster Budget Explorer. Header carries "Independent project. Not an official City of Lancaster website."
+- Name: Lancaster Budget Explorer. Header carries the disclaimer "This is an independent project, not associated with the City of Lancaster." (set in `web/config.json`).
 - Binding visual constraints volunteered by the owner for the redesign: the floating-card page treatment reads as AI-generated and is to be replaced; the color theme must be accessible and draw on traditional colors for money. Their specific meaning is to be confirmed in new-work, not assumed here.
 
 ## Evidence on Hand
 
-Real data for 2022 to 2027 in `web/data/*.json` (budget, changes, staffing, conflicts), real PDFs in `web/pdfs/`. No testimonials, press or usage metrics; none should be invented.
+Real data for 2020 to 2027 (positions 2022 to 2027) in `web/data/*.json` (budget, changes, staffing, conflicts), real PDFs in `web/pdfs/`. No testimonials, press or usage metrics; none should be invented.
 
 ## Product Principles
 

@@ -2,14 +2,17 @@
 
 How the City of Lancaster's budget books become the CSVs in `data/processed/` and the JSON the site reads. For how the site presents the data and how to edit it, see the [README](../README.md).
 
-Run it by hand, about once a year, when a new budget book is published. Paths below are relative to the repository root.
+Run it by hand, about once a year, when a new budget book is published. Paths below are relative to the repository root. To rebuild everything from a fresh clone, step by step, see [REBUILD.md](REBUILD.md).
 
 ## Setup
+Python 3.9 or newer (tested on 3.9.6; the publish workflow uses 3.12) and, for the one scanned book (2026), Tesseract:
 ```bash
+brew install tesseract            # only needed for OCR
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
+`build_dataset.py` and `check_dataset.py` use only the standard library, so they run without the venv.
 
 ## Running the extraction
 One command handles any budget book, scanned or not:
@@ -29,7 +32,7 @@ Exit status: 0 when everything passes or is a reviewed source issue, 1 when a bo
 
 The per-book scripts still work on their own: `scripts/extract_budget.py` (2027 book) and `scripts/extract_layout.py` (all others).
 
-This writes four files to `data/processed/`, suffixed with the PDF's name:
+Each book writes these files to `data/processed/`, suffixed with the PDF's name (plus the Fund Balance files below, and `crosscheck_*.csv`):
 
 | File | Contents |
 |---|---|
@@ -38,7 +41,10 @@ This writes four files to `data/processed/`, suffixed with the PDF's name:
 | `staffing_*.csv` | One row per budgeted position: title, bargaining unit, FT/PT, count, and salary. |
 | `validation_*.csv` | Every printed TOTAL row compared with the sum of the parsed lines. |
 
-A single budget book carries several years. The 2027 book has 2025 actual, 2026 adopted, 2026 amended, 2026 year-to-date, 2026 projected, and 2027 proposed figures. These are told apart by `fiscal_year` and `doc_type`.
+A single budget book carries several years. The 2027 book has eight columns: 2025 actual, 2026 adopted, 2026 amended, 2026 year-to-date, 2026 projected, 2026 revised projected, 2027 proposed and 2027 revised proposed. These are told apart by `fiscal_year` and `doc_type`. Its staffing schedule prints two columns, 2027 proposed and 2027 revised.
+
+### The 2027 book's explanatory notes
+Under many line items the city prints a short note ("Budget has been moved to the General Fund…"). The notes are set in their own font and overlap the table rows, so `extract_budget.py` separates characters by font, rebuilds the table rows from the rest, and attaches each note to its line as `description`. The note font is `CIDFont+F2` in the 11/16/2026 edition and `Calibri` in the 11/19/2026 edition, which was re-saved through macOS (its table font became `Calibri-Bold`); `NOTE_FONT_SUFFIXES` lists both. A new edition with other font names shows up as section totals that no longer validate: compare the fonts per page with `pdfplumber` and add the new name.
 
 ### General Fund reserve ("Fund Balance Projection" page)
 `scripts/fund_balance.py` (run automatically by `ingest.py`) extracts the page that carries the General Fund balance from the last closed year-end through the projected and proposed years.
@@ -86,12 +92,15 @@ A page whose header matches no configured layout stops the run.
 python3 scripts/build_dataset.py   # data/processed/budget_long_*.csv + fund_balance_*.csv -> web/data/*.json
 python3 scripts/check_dataset.py   # every shown figure vs the CSVs and the printed fund totals, plus the org structure; must report 0 mismatches
 ```
-`build_dataset.py` picks **one kind of figure per year**:
+`build_dataset.py` writes `budget.json` (every figure shown), `staffing.json`, `changes.json` and `conflicts.json`. It picks **one kind of figure per year**:
 - the newest year gets **proposed** and **revised**;
 - the year before it gets **projected** (the revised projection when one is printed), from the newest book;
 - earlier years get **actual**, from the book two years later.
 
 Adopted, amended and year-to-date columns, and older books' own-year proposals, are never shown. New `budget_long_*.csv` files are picked up automatically. Where overlapping books disagree, the disagreement is logged to `web/data/conflicts.json`. The Reserve Fund block in `budget.json` is built from `fund_balance_*.csv` under the same rule.
+
+### Positions (`staffing.json`)
+One entry per staffing schedule: each book's own-year schedule (2022–2026, `measure: "budgeted"`) and the newest book's two schedules (`"proposed"` and `"revised"`). Each position row is `[unit, title, ft_pt, org_code, object_code, count, salary, page]`; `unit` and `title` index the `units` and `titles` lists. The city publishes budgeted positions only, so there is no Actual for positions. The site's Staff section places each position in an org-chart bureau by its org code, the same way as the budget lines. Its salary table does not use `staffing.json`: it sums the "Salaries & Wages" budget lines from `budget.json` under the one-figure rule.
 
 ### Org structure (2027 org chart)
 `build_dataset.py` also adds an `org` block to `budget.json` (via `scripts/org_structure.py`, stdlib only). The site groups lines into departments and bureaus from it, not from the printed `department`/`bureau` columns. It is built from three committed CSVs:
@@ -119,3 +128,5 @@ The publish workflow (`.github/workflows/pages.yml`) runs both scripts on every 
 4. Run `build_dataset.py` and `check_dataset.py`. The new year becomes Proposed/Revised, and the earlier years move forward automatically.
    If the build stops on an unmapped org code, add it to `data/org_structure_2027.csv` (see "Org structure" above). When the city publishes a new org chart or descriptions, add the PDFs, rerun `scripts/extract_org_descriptions.py` (pointing `--pdf`/`--out` at the new edition) and review the unit and code tables.
 5. Commit the PDF, the config, `data/processed/` and `web/data/`, then push to `main`.
+
+To replace a book with an amended edition (as the 11/19/2026 2027 book replaced the 11/16 one), see [REBUILD.md](REBUILD.md#an-amended-edition-of-the-current-book).
