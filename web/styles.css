@@ -796,4 +796,6 @@ a.src { white-space: nowrap; }
 /* Staff section: positions and salaries by year */
 .staff-h { margin: 28px 0 6px; font-size: 16px; line-height: 24px; font-weight: 700; }
 .staff-h:first-of-type { margin-top: 0; }
-.staff-table th[scope="row"] { white-space: nowrap; }
+.staff-table th[scope="row"] { min-width: 10em; }
+.staff-table th, .staff-table td { padding-left: 8px; padding-right: 8px; }
+.staff-table td.num { white-space: nowrap; }

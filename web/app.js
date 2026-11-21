@@ -746,7 +746,7 @@
     const pdfLink = (text, d, p) => (d >= 0 && d != null ? `<a class="src" href="${pdfHref(d, p)}" target="_blank" rel="noopener" title="View in budget book">${text}</a>` : text);
     const sumCol = (m, k, f) => { let t = 0, any = false; for (const u of ids) { const c = m.get(u)?.get(k); if (c) { t += f(c); any = true; } } return any ? t : null; };
     const table = (caption, cols, m, cell, total) => `<div class="table-scroll" tabindex="0" role="region" aria-label="${esc(caption)}, scrollable"><table class="table tight staff-table" aria-label="${esc(caption)}">
-      <thead><tr><th scope="col">${scope.unit == null ? 'Bureau' : ''}</th>${cols.map((c) => `<th scope="col" class="num">${esc(c.label)}</th>`).join('')}</tr></thead>
+      <thead><tr><th scope="col">${scope.unit == null ? 'Bureau' : ''}</th>${cols.map((c) => `<th scope="col" class="num">${c.label.split(' ').map(esc).join('<br>')}</th>`).join('')}</tr></thead>
       <tbody>${ids.map((u) => `<tr><th scope="row">${rowHead(u)}</th>${cols.map((c) => `<td class="num">${cell(m.get(u)?.get(c.k), c.k)}</td>`).join('')}</tr>`).join('')}</tbody>
       ${multi ? `<tfoot><tr><th scope="row">All</th>${cols.map((c) => `<td class="num">${total(c.k)}</td>`).join('')}</tr></tfoot>` : ''}</table></div>`;
     const dash = '<span class="missing" title="Not in this year\'s schedule">—</span>';
