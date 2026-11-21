@@ -1,10 +1,16 @@
-"""One command for any City of Lancaster budget book: detect, extract, check.
+"""One command for any City of Lancaster or Lancaster County budget book: detect, extract, check.
 
 Usage:
     python scripts/ingest.py "Budget PDFs - City/2026-Adopted-Budget-2026.pdf"
     python scripts/ingest.py --all                 # every budget PDF in Budget PDFs - City/
                                                    # (skips the org chart and org descriptions PDFs)
     python scripts/ingest.py --all --dir "/path/to/Budget PDFs - City"
+    python scripts/ingest.py --county              # every County book in Budget PDFs - County/
+    python scripts/ingest.py "Budget PDFs - County/County-2026-Budget-Book.pdf"
+
+County books (any PDF in a folder named "Budget PDFs - County") go to
+extract_county.py instead of steps 2-3 below, then every pair of County books
+that print the same year is compared line by line.
 
 For each PDF:
   1. Detect whether it has a usable text layer (share of pages with text) or
@@ -45,6 +51,7 @@ from extract_layout import CONFIG_DIR, load_page_lines, load_text_page_lines
 from ocr_pages import cache_dir, ocr_document
 
 PDF_DIR = ROOT / "Budget PDFs - City"
+COUNTY_PDF_DIR = ROOT / "Budget PDFs - County"
 # PDFs in PDF_DIR that are not budget books. --all skips them; naming one explicitly is an error.
 # The org chart and org descriptions feed the dashboard's org structure instead
 # (scripts/extract_org_descriptions.py, data/org_*_2027.csv); they have no budget tables.
@@ -339,14 +346,41 @@ def ingest(pdf_path):
     return rep
 
 
+def ingest_county(pdfs):
+    """Extract and check County books (extract_county.py); return the exit status."""
+    import extract_county
+    status = 0
+    for p in pdfs:
+        if text_share(p)[0] < TEXT_BOOK_SHARE:
+            print(f"{p.name}: scanned; County OCR is not set up yet. Skipped.")
+            status = max(status, 2)
+            continue
+        code, rep = extract_county.run(p)
+        print("\n".join(rep))
+        status = max(status, code)
+    for year, a, b, n, nd, net in extract_county.crossbook():
+        print(f"cross-book {year}: {a} vs {b}: {n} lines, {nd} differ (net {net:+,.0f}); "
+              f"see data/processed/county/crosscheck_{year}_{a}_vs_{b}.csv")
+    return status
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("pdf", nargs="*", type=Path)
     ap.add_argument("--all", action="store_true", help="every PDF in --dir")
     ap.add_argument("--dir", type=Path, default=PDF_DIR)
     ap.add_argument("-v", "--verbose", action="store_true", help="show each extractor's log")
+    ap.add_argument("--county", action="store_true",
+                    help=f"every County book in {COUNTY_PDF_DIR.name}/")
     args = ap.parse_args()
+    if args.county:
+        sys.exit(ingest_county(sorted(COUNTY_PDF_DIR.glob("*.pdf"))))
     pdfs = sorted(args.dir.glob("*.pdf")) if args.all else args.pdf
+    county = [p for p in pdfs if p.resolve().parent.name == COUNTY_PDF_DIR.name]
+    if county:
+        if len(county) != len(pdfs):
+            ap.error("give City and County books in separate runs")
+        sys.exit(ingest_county(county))
     others = [p for p in pdfs if NOT_BUDGET_BOOK.search(p.stem)]
     if others and not args.all:
         ap.error("not a budget book: " + ", ".join(p.name for p in others))
