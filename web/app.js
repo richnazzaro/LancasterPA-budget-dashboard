@@ -560,8 +560,8 @@
       ? `<div class="table-scroll"><table class="table"><thead><tr><th scope="col">Line</th><th scope="col" class="num">Amount</th></tr></thead><tbody>${e.lines.map((l) => `<tr><td>${esc(resLineLabel(l, e))}</td><td class="num">${srcDoc(money(l.v), e.doc, l.p)}</td></tr>`).join('')}</tbody></table></div>`
       : `<p class="panel-note" style="margin:0 0 12px">For actual years the city's budget book prints only the closing balance.</p><div class="table-scroll"><table class="table"><tbody><tr><td>${esc(resLineLabel(end, e))}</td><td class="num">${srcDoc(money(end.v), e.doc, end.p)}</td></tr></tbody></table></div>`;
     return `<header class="page-head"><h1 id="page-h" tabindex="-1">${esc(name)}: ${esc(resLabel(e))}</h1>
-        ${ch && ch.p != null ? `<p class="deck"><span class="${ch.d < 0 ? 'down' : ch.d > 0 ? 'up' : 'flat'}">${ch.d < 0 ? 'Down' : ch.d > 0 ? 'Up' : 'No change'} ${mny(Math.abs(ch.d))} (${fmtPct(Math.abs(ch.p))})</span> from ${esc(ch.from)}.</p>` : ''}
         <p class="big-total" aria-live="polite"><span class="big-label">Year-end balance</span> ${srcDoc(money(end.v), e.doc, end.p)}</p>
+        ${ch && ch.p != null ? `<p class="deck"><span class="${ch.d < 0 ? 'down' : ch.d > 0 ? 'up' : 'flat'}">${ch.d < 0 ? 'Down' : ch.d > 0 ? 'Up' : 'No change'} ${mny(Math.abs(ch.d))} (${fmtPct(Math.abs(ch.p))})</span> from ${esc(ch.from)}.</p>` : ''}
         <span class="status${e.measure === 'proposed' || e.measure === 'revised' ? ' not-adopted' : ''}">${e.year}: ${esc(RES_STATUS[e.measure])}</span>
         ${notices.map((n) => `<div class="notice" role="note">${n}</div>`).join('')}${resGap}</header>
       ${filtersHTML()}
@@ -667,7 +667,7 @@
     const ledger = items.length ? ledgerHTML(items, { total, cmpTotal: cmp, k, notes: ledgerNotes }) : '<p class="empty">No lines for this selection.</p>';
     const totalHTML = fig(total, { notes, what });
     const flagNote = gapNotes(notes) + (total.x ? '' : missingNote(k, { fund: S.f }));
-    // The deck says what a resident came to learn: up or down, by how much, and what covers it.
+    // The deck says what a resident came to learn: up or down, by how much, and what covers it. It sits under the total.
     const deck = (() => {
       if (!cmp) return '';
       const d = total.v - cmp.v, p = pctOf(d, cmp.v);
@@ -676,8 +676,8 @@
       return `<p class="deck"><span class="${d > 0 ? 'up' : 'down'}">${d > 0 ? 'Up' : 'Down'} ${mny(Math.abs(d))} (${fmtPct(Math.abs(p))})<span class="sr-only"> ${d > 0 ? 'higher' : 'lower'}</span></span> from ${esc(seriesLabel(S.c))}${dr ? `, with ${drawParts(k, dr.v) ? drawSplit(drawParts(k, dr.v)) : `${src(millions(dr.v), k, dr.d, dr.p)} drawn from savings`}. <a class="deck-link" href="${esc(homeHash({ f: D.reserve.name }))}">See the Reserve Fund</a>` : '.'}</p>`;
     })();
     return `<header class="page-head"><h1 id="page-h">${esc(scope)} ${kindWord}: ${esc(seriesLabel(k))}</h1>
-        ${deck || `${heroDelta(k, total, cmp)}${drawNote(k)}`}
-        <p class="big-total" aria-live="polite"><span class="big-label">${esc(scope)} ${kindWord}</span> ${totalHTML}</p>${flagNote}</header>
+        <p class="big-total" aria-live="polite"><span class="big-label">${esc(scope)} ${kindWord}</span> ${totalHTML}</p>${flagNote}
+        ${deck || `${heroDelta(k, total, cmp)}${drawNote(k)}`}</header>
       <div class="home-flow">${filtersHTML({ closedFirst: true, lead: statusHTML() })}
       ${(() => { const wc = homeChangesHTML(); return `<div class="overview${wc ? '' : ' overview-single'}">${trendHTML({}, 'Totals by Year')}${wc}</div>`; })()}</div>
       <section class="panel" id="sec-departments" tabindex="-1" aria-labelledby="dep-t"><h2 class="panel-title" id="dep-t">Departments</h2>

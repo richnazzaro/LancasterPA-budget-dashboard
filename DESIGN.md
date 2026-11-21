@@ -114,7 +114,7 @@ components:
 
 The site is the city's budget book, set properly: open sections divided by rules rather than boxes, a contents rail on the left, running section labels, and figures set in a serif the way a ledger prints them. Color is money color: paper, ink, banknote green for the figure you are reading, ledger red only for shortfalls. Nothing floats; nothing is carded.
 
-Density is that of a reference book: hairline-ruled rows, tabular figures, text running the full width of the reading column (the user chose full-width text over a 70ch cap on 2026-11-20; the reading column itself is capped by the page layout). Voice is plain and sober. On the home page a serif deck sentence says what changed, set in ink under the title; the total sits beneath it as evidence, then the charts and tables.
+Density is that of a reference book: hairline-ruled rows, tabular figures, text running the full width of the reading column (the user chose full-width text over a 70ch cap on 2026-11-20; the reading column itself is capped by the page layout). Voice is plain and sober. On the home page the total sits under the title, and a serif deck sentence directly beneath it says what changed (the user's choice, 2026-11-21); then the charts and tables. The Reserve Fund page uses the same order.
 
 The previous look (blue and amber boxed cards matched to another site) is retired; none of its rules carry over.
 
@@ -158,8 +158,8 @@ A restrained money palette: near-white paper, green-black ink, one green, one re
 
 ### Hierarchy
 - **Display** (700, 56px, 1.04, -0.01em): page headline. Steps to 44px under 1024px and 32px on phones.
-- **Deck** (600, 26px, 32px, ink; 26px on phones too; full column width): the home sentence saying what changed, with the direction arrow in ink.
-- **Figure** (700, 44px, 48px, banknote green): the home total, demoted below the deck behind a 13px uppercase muted label; 36px on phones. Department pages use a 52px serif name and a 28px total. The What changed lead figure is 52px (40px on home).
+- **Deck** (600, 26px, 32px, ink; 26px on phones too; full column width): the home sentence saying what changed, with the direction arrow in ink, set directly under the total.
+- **Figure** (700, 44px, 48px, banknote green): the home total, directly under the title behind a 13px uppercase muted label, with the deck beneath it; 36px on phones. Department pages use a 52px serif name and a 28px total. The What changed lead figure is 52px (40px on home).
 - **Title** (600, 22px, 30px): list-row names such as department and bureau.
 - **Stat** (700, 30-36px serif): tile and compare values.
 - **Body** (400, 16px, 1.5): prose, full column width.
