@@ -26,7 +26,10 @@
    funds are listed with their evidence (the city's notes) and their sums are re-added from the series;
    position counts equal the staffing CSVs, and the adjusted counts differ from the raw ones only by the
    listed artifacts (moves between funds net to zero across funds).
-Exits 1 on any failure of checks 1, 2, 3, 4, 6 and the CSV part of 5. Standard library only.
+7. Department and bureau summaries (changes.json `summary`): every number a summary uses is re-derived from
+   the series and the staffing CSVs: the net change, the driver lines and categories, position counts and why
+   raw and adjusted differ, named titles' counts, and the fund shifts named.
+Exits 1 on any failure of checks 1, 2, 3, 4, 6, 7 and the CSV part of 5. Standard library only.
 """
 from __future__ import annotations
 
@@ -355,6 +358,148 @@ def check_changes(budget: dict) -> int:
     return bad
 
 
+def check_summaries(budget: dict) -> int:
+    """Department and bureau summaries (changes.json comparisons[*].summary), re-derived from budget.json's
+    series and the staffing CSVs rather than from changes.json's own groups: the net change; that each driver
+    line is in the department or bureau, moves the same way as the net and is among the largest moves (no line
+    left out is larger); each category driver's change; position counts from both schedules; that raw minus
+    adjusted equals the moved and missing-schedule positions; each named title's counts; and that each fund
+    shift named touches the General Fund and the department or bureau."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from changes import title_key  # the canonical title form only; counts are re-added from the CSVs here
+
+    print("\nDepartment and bureau summaries (What changed):")
+    ch = json.loads((ROOT / "web" / "data" / "changes.json").read_text())
+    acc, cats, funds = budget["accounts"], budget["categories"], budget["funds"]
+    codes, units, depts = budget["org"]["codes"], budget["org"]["units"], budget["org"]["departments"]
+    rev = cats.index("Revenue")
+    with (ROOT / "data" / "org_structure_2027.csv").open(newline="", encoding="utf-8") as f:
+        org_fund = {r["org_code"]: r["fund"] for r in csv.DictReader(f)}
+    bad, n_checked = 0, 0
+
+    def series_by(key):
+        s = budget["series"][key]
+        docs = s["doc"] if isinstance(s["doc"], list) else [s["doc"]] * len(s["a"])
+        return [(a, v, d, p) for a, v, p, d in zip(s["a"], s["v"], s["p"], docs)]
+
+    def schedule(doc_i, label):
+        doc = budget["docs"][doc_i]
+        m = re.search(r"(\d{4}) (Revised|Proposed)", label)
+        yr = m.group(1) if m else re.search(r"(\d{4})", label).group(1)
+        col = f"count_{yr}_proposed_revised" if m and m.group(2) == "Revised" else f"count_{yr}_proposed"
+        path = next(p for p in (ROOT / "data" / "processed").glob("staffing_*.csv") if budget_stem(doc) in p.name)
+        out = []  # (org, title key, n)
+        with path.open(newline="", encoding="utf-8") as f:
+            for r in csv.DictReader(f):
+                n = float(r[col]) if r.get(col, "").strip() else 0.0
+                if not n:
+                    continue
+                org = r["org_code"]
+                if org not in codes:
+                    near = [c for c in codes if len(c) == len(org) and c[:-1] == org[:-1]]
+                    org = near[0]
+                out.append((org, title_key(r["position_title"]), n))
+        return out
+
+    def fail(msg):
+        nonlocal bad
+        bad += 1
+        print(f"FAIL {msg}")
+
+    for cid, c in ch["comparisons"].items():
+        Sm = c.get("summary")
+        if not Sm:
+            continue
+        F, T = series_by(c["from"]), series_by(c["to"])
+        P = c.get("positions")
+        if P:
+            SF, ST = schedule(P["from_doc"], P["from_label"]), schedule(P["to_doc"], P["to_label"])
+            moved = [a for a in P["artifacts"] if a["kind"] == "moved"]
+            missing = [a for a in P["artifacts"] if a["kind"] == "missing_schedule"]
+        for scope, block in Sm.items():
+            fi = None if scope == "all" else funds.index(scope)
+            for kind, groups in block.items():
+                for g, s in groups.items():
+                    g = int(g)
+                    name = f"{cid} {scope} {'dept ' + depts[g]['name'] if kind == 'd' else 'bureau ' + units[g]['name']}"
+                    in_group = (lambda u: units[u]["dept"] == g) if kind == "d" else (lambda u: u == g)
+                    sel = lambda a: acc[a][5] != rev and (fi is None or acc[a][2] == fi) and in_group(codes[acc[a][0].split("-")[0]])
+                    net = sum(v for a, v, _d, _p in T if sel(a)) - sum(v for a, v, _d, _p in F if sel(a))
+                    n_checked += 1
+                    if abs(net - s["net"]) >= 0.5:
+                        fail(f"{name}: net {s['net']:+,} vs series {net:+,.0f}")
+                    lines = c["lines"]
+                    dl = lambda i: (lines[i][4] or 0) - (lines[i][1] or 0)
+                    mine = [i for i, ln in enumerate(lines) if sel(ln[0])]
+                    for i in s.get("drivers", []):
+                        n_checked += 1
+                        if i not in mine or dl(i) * s["net"] <= 0:
+                            fail(f"{name}: driver line {acc[lines[i][0]][0]} is outside the scope or moves against the net change")
+                    if s.get("drivers"):
+                        smallest = min(abs(dl(i)) for i in s["drivers"])
+                        bigger = [i for i in mine if i not in s["drivers"] and dl(i) * s["net"] > 0 and abs(dl(i)) > smallest]
+                        if bigger and len(s["drivers"]) < 3 and any(abs(dl(i)) >= 0.15 * abs(s["net"]) for i in bigger) or \
+                                (bigger and len(s["drivers"]) == 3):
+                            fail(f"{name}: line {acc[lines[bigger[0]][0]][0]} moves more than a named driver")
+                    for ci, v, d, p in s.get("cat_drivers", []):
+                        want = sum(vv for a, vv, _d, _p in T if sel(a) and acc[a][5] == ci) - sum(vv for a, vv, _d, _p in F if sel(a) and acc[a][5] == ci)
+                        n_checked += 1
+                        if abs(want - v) >= 0.5 or v * s["net"] <= 0:
+                            fail(f"{name}: category {cats[ci]} {v:+,} vs series {want:+,.0f}")
+                        if not any(dd == d and pp == p and acc[a][5] == ci and sel(a) for a, _v, dd, pp in T + F):
+                            fail(f"{name}: category {cats[ci]} links to doc {d} p{p}, where none of its lines is")
+                    pos = s.get("pos")
+                    if pos and P:
+                        keep = lambda o: in_group(codes[o]) and (fi is None or org_fund[o] == funds[fi])
+                        for side, rows in (("f", SF), ("t", ST)):
+                            want = sum(n for o, _t, n in rows if keep(o))
+                            n_checked += 1
+                            if abs(want - pos[side]) > 0.005:
+                                fail(f"{name}: positions[{side}] {pos[side]} vs staffing CSV {want:g}")
+                        mi = sum(sum(a["n"].values()) for a in moved if in_group(a["unit"]) and (fi is None or a["fund"] == funds[fi])
+                                 and not (in_group(a["from_unit"]) and (fi is None or a["from_fund"] == funds[fi])))
+                        mo = sum(sum(a["n"].values()) for a in moved if in_group(a["from_unit"]) and (fi is None or a["from_fund"] == funds[fi])
+                                 and not (in_group(a["unit"]) and (fi is None or a["fund"] == funds[fi])))
+                        ms = sum(a["n_other"] * (1 if a["side"] == "from" else -1) for a in missing
+                                 if in_group(a["unit"]) and (fi is None or a["fund"] == funds[fi]))
+                        n_checked += 1
+                        if abs(mi - pos["moved_in"]) > 0.005 or abs(mo - pos["moved_out"]) > 0.005 or abs(ms - pos["missing"]) > 0.005:
+                            fail(f"{name}: moved/missing {pos['moved_in']}/{pos['moved_out']}/{pos['missing']} vs artifacts {mi:g}/{mo:g}/{ms:g}")
+                        if abs((pos["t"] - pos["f"]) - (pos["at"] - pos["af"]) - (mi - mo + ms)) > 0.005:
+                            fail(f"{name}: raw change {pos['t'] - pos['f']:+g} - adjusted {pos['at'] - pos['af']:+g} is not moved and missing {mi - mo + ms:+g}")
+                        miss_orgs = {o for a in missing for o in a["orgs"]}
+                        for nm, tf, tt in s.get("titles", []):
+                            key = re.sub(r"\s+", " ", nm.upper())
+                            k2 = lambda o: keep(o) and o not in miss_orgs
+                            want_t = sum(n for o, t, n in ST if k2(o) and t == key)
+                            want_f = sum(n for o, t, n in SF if k2(o) and t == key)
+                            for a in moved:
+                                org = a["orgs"][0]
+                                dest_in = in_group(a["unit"]) and (fi is None or a["fund"] == funds[fi])
+                                src_in = in_group(a["from_unit"]) and (fi is None or a["from_fund"] == funds[fi])
+                                if dest_in != src_in:
+                                    n = max(0.0, sum(x for o, t, x in SF if o == org and t == key) - sum(x for o, t, x in ST if o == org and t == key))
+                                    want_f += n if dest_in else -n
+                            n_checked += 1
+                            if abs(want_f - tf) > 0.005 or abs(want_t - tt) > 0.005:
+                                fail(f"{name}: title {nm} {tf:g} -> {tt:g} vs staffing CSV {want_f:g} -> {want_t:g}")
+                    for j in s.get("shifts", []):
+                        x = ch["shifts"][j]
+                        n_checked += 1
+                        touches = in_group(x["from"]["unit"]) or (x.get("to") and in_group(x["to"]["unit"]))
+                        if funds[0] not in (x["from_fund"], x["to_fund"]) or not touches:
+                            fail(f"{name}: shift {x['from']['label']} does not touch the General Fund and this group")
+        if cid == ch["default"]:
+            for g, s in sorted(Sm.get("General Fund", {}).get("d", {}).items(), key=lambda kv: int(kv[0])):
+                p = s.get("pos") or {}
+                drv = [f"{acc[c['lines'][i][0]][1]} {((c['lines'][i][4] or 0) - (c['lines'][i][1] or 0)):+,}" for i in s.get("drivers", [])]
+                drv += [f"{cats[ci]} {v:+,}" for ci, v, _d, _p in s.get("cat_drivers", [])]
+                print(f"     {depts[int(g)]['name'][:34]:34s} net {s['net']:>+12,}  positions {p.get('f', '-')} -> {p.get('t', '-')}"
+                      f"  drivers: {'; '.join(drv) or '-'}" + (f"  titles: {', '.join(f'{n} {a:g}->{b:g}' for n, a, b in s['titles'])}" if s.get("titles") else ""))
+    print(f"{'ok  ' if not bad else 'FAIL'} {n_checked} summary figures re-derived from the series and the staffing CSVs")
+    return bad
+
+
 ROUNDING_PER_CELL, ROUNDING_PER_LINE = 5, 0.5
 
 
@@ -552,6 +697,7 @@ def main() -> int:
     failures += check_org(budget)
     failures += check_reserve_draw(budget)
     failures += check_changes(budget)
+    failures += check_summaries(budget)
 
     print(f"\n{failures} series mismatches")
     return 1 if failures else 0

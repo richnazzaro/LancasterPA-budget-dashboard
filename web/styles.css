@@ -382,8 +382,11 @@ details.values summary:hover { color: var(--fg); }
    ========================================================================== */
 .wc-head { margin-bottom: 32px; }
 .wc-lede { margin: 0; font-size: 20px; line-height: 1.5; text-align: left; }
-.wc-lede a.src, .wc-lede-sm a.src { border-bottom-color: var(--border-strong); }
+.wc-lede a.src, .wc-lede-sm a.src, .wc-sum a.src { border-bottom-color: var(--border-strong); }
 .wc-lede-sm { margin: 0 0 12px; font-size: 17px; line-height: 1.5; }
+.wc-sum { margin: 0 0 16px; padding: 0 0 0 20px; font-size: 16px; line-height: 1.5; }
+.wc-sum li { margin: 0 0 8px; }
+.wc-sum li::marker { color: var(--muted); }
 .wc-badge { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px 14px; margin: 16px 0 0; font-size: 14px; }
 .wc-dept .wc-badge { justify-content: flex-start; margin: 0 0 16px; }
 .wc-badge-tag { padding: 2px 10px; border: 1px solid var(--fg); border-radius: 2px; color: var(--fg); }
@@ -597,8 +600,10 @@ details.values summary:hover { color: var(--fg); }
 .fill.cmp { opacity: 1; }
 
 /* Text wrapping: balanced headings, no one-word last lines, amounts never split. */
-h1, h2, h3, .panel-title, .total-label, .dept-name, .wc-lede, .wc-lede-sm { text-wrap: balance; }
-p, li, .hint, .wc-note, .notice, .dept-sub { text-wrap: pretty; }
+h1, h2, h3, .panel-title, .total-label, .dept-name { text-wrap: balance; }
+/* The What changed sentences are paragraphs: they fill the column like body text (balance would split a
+   line and a half into two half-width lines, on department and bureau pages especially). */
+p, li, .hint, .wc-note, .notice, .dept-sub, .wc-lede, .wc-lede-sm { text-wrap: pretty; }
 a.src { white-space: nowrap; }
 
 /* Moved-between-funds cards sit inside a panel: separate them with rules, not nested boxes. */

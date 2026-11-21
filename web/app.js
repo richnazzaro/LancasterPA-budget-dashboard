@@ -1458,6 +1458,71 @@
       <p class="wc-home-more"><a class="btn btn-primary" href="${esc(changesHash())}">See everything that changed →</a></p></section>`;
   }
 
+  /* The short summary under a department's or bureau's headline, from changes.json `summary` (scripts/changes.py
+     summaries()): budgeted positions in the two schedules, the lines (or categories) that add most to the change,
+     and money moved into or out of the General Fund. Facts only; every amount links to its page. */
+  const listWords = (a) => (a.length > 1 ? `${a.slice(0, -1).join(', ')} and ${a[a.length - 1]}` : a[0] || '');
+  function deptSummaryHTML(c, di, ui, fund) {
+    const unitPage = ui != null;
+    const s = c.summary?.[unitPage ? 'all' : (fund || 'all')]?.[unitPage ? 'u' : 'd']?.[String(unitPage ? ui : di)];
+    if (!s) return '';
+    const items = [];
+    const P = c.positions, p = s.pos;
+    if (P && p && (p.f || p.t)) {
+      const fi = fund ? D.funds.indexOf(fund) : null;
+      const rs = P.rows.filter((r) => (fi == null || r[0] === fi) && (unitPage ? r[1] === ui : O.units[r[1]].dept === di));
+      const pg = (i) => { const ps = rs.map((r) => r[i]).filter((x) => x != null); return ps.length ? Math.min(...ps) : null; };
+      const n = (v, doc, page) => (v && page != null ? srcDoc(fmtN(v), doc, page) : fmtN(v));
+      const fy = parseKey(c.from).y, d = p.t - p.f;
+      const cls = p.by_cls || {}, pt = cls.PT && (cls.PT[0] || cls.PT[1]);
+      let t = `<strong>Budgeted positions:</strong> ${d ? `${n(p.f, P.from_doc, pg(7))} in the ${fy} schedule, ${n(p.t, P.to_doc, pg(8))} in the ${esc(seriesLabel(c.to))} schedule (${sgn(d, fmtN)})` : `${n(p.t, P.to_doc, pg(8))} in both the ${fy} and the ${esc(seriesLabel(c.to))} schedules`}${pt ? `, including ${fmtN(cls.PT[1])} part-time` : ''}.`;
+      const why = [];
+      if (p.moved_in) why.push(`${fmtN(p.moved_in)} moved in from other funds with their work`);
+      if (p.moved_out) why.push(`${fmtN(p.moved_out)} moved out to other funds with their work`);
+      if (p.missing > 0) why.push(`${fmtN(p.missing)} are in an office the ${fy} book prints no schedule page for`);
+      if (p.missing < 0) why.push(`${fmtN(-p.missing)} are in an office the ${esc(seriesLabel(c.to))} book prints no schedule page for`);
+      if (why.length) t += ` ${listWords(why)}; without those, the change is ${sgn(p.at - p.af, fmtN) || '0'}.`;
+      if (s.titles) t += ` Titles that changed: ${s.titles.map(([nm, f, to]) => `${esc(nm)} <span class="nb">(${fmtN(f)} → ${fmtN(to)})</span>`).join(', ')}${s.titles_renamed ? '; other titles are worded differently in the two books' : ''}.`;
+      items.push(t);
+    }
+    const up = s.net > 0, dir = up ? 'increases' : 'decreases';
+    if (s.drivers?.length) {
+      const part = s.drivers.map((i) => {
+        const ln = c.lines[i], a = acctOf(ln), grp = unitLabel(unitOfLine(ln), 'expense');
+        // Name the bureau only where the department has bureaus (and, on a bureau page, never).
+        // Two lines with one name in one place also get the book's own group name (e.g. "Parks Maintenance").
+        const showGrp = !unitPage && O.departments[di].bureaus && O.units[unitOfLine(ln)].kind !== 'whole-department';
+        const where = showGrp ? (O.units[unitOfLine(ln)].kind === 'department-wide' ? 'department-wide' : grp) : '';
+        const twin = s.drivers.some((j) => j !== i && acctOf(c.lines[j])[1] === a[1] && unitOfLine(c.lines[j]) === unitOfLine(ln));
+        const tag = [where, twin ? plainName(D.bureaus[a[4]] || '') : ''].filter(Boolean).join(', ');
+        const nm = `${esc(a[1])}${tag ? ` <span class="muted">(${esc(tag)})</span>` : ''}`;
+        if (ln[1] == null) return `${nm}, new at ${lnk(lineT(ln), mny(ln[4]))}`;
+        if (ln[4] == null) return `${nm}, <span class="nb">${lnk(lineF(ln), mny(ln[1]))} → not budgeted</span>`;
+        return `${nm}, <span class="nb">${lnk(lineF(ln), mny(ln[1]))} → ${lnk(lineT(ln), mny(ln[4]))}</span>`;
+      });
+      items.push(`<strong>Largest ${dir}:</strong> ${part.join('; ')}.`);
+    } else if (s.cat_drivers?.length) {
+      items.push(`<strong>Largest ${dir}, by category:</strong> ${s.cat_drivers.map(([ci, v, d, pg]) => `${esc(D.categories[ci])} ${srcDoc(sgn(v, mny), d, pg)}`).join(', ')}.`);
+    }
+    if (s.shifts?.length) {
+      const gf = DEFAULT_FUND || D.funds[0];
+      const sh = s.shifts.map((j) => CH.shifts[j]);
+      const into = sh.filter((x) => x.to_fund === gf), out = sh.filter((x) => x.from_fund === gf);
+      // The amount where it is now (in the newer budget); where the new fund shows no separate lines for it, the amount it had before.
+      const amt = (x, side) => {
+        const now = side === 'to' ? x.to?.values?.[c.to] : null, was = x.from.values[c.from];
+        if (now && vOf(now)) return ` (${lnk(now, mny(vOf(now)))})`;
+        return was && vOf(was) ? ` (${lnk(was, mny(vOf(was)))} in ${esc(seriesLabel(c.from))})` : '';
+      };
+      const byFund = (l, key, side, word) => [...new Set(l.map((x) => x[key]))].map((f) => `${listWords(l.filter((x) => x[key] === f).map((x) => `${esc(x.from.label)}${amt(x, side)}`))} ${word} the ${esc(f)}`);
+      const t = [];
+      if (into.length) t.push(`<strong>Moved into the ${esc(gf)}:</strong> ${listWords(byFund(into, 'from_fund', 'to', 'from'))}`);
+      if (out.length) t.push(`<strong>Moved out of the ${esc(gf)}:</strong> ${listWords(byFund(out, 'to_fund', 'from', 'to'))}`);
+      items.push(`${t.join('. ')}.`);
+    }
+    return items.length ? `<ul class="wc-sum">${items.map((x) => `<li>${x}</li>`).join('')}</ul>` : '';
+  }
+
   /* Compact "What changed" on a department or bureau page: headline, bureaus, positions, largest lines, shifts.
      A bureau page (ui given) covers all of the bureau's funds, like the rest of that page. */
   function deptChangesHTML(di, ui = null) {
@@ -1480,8 +1545,9 @@
     const mine = c.lines.map((ln, i) => i).filter((i) => { const ln = c.lines[i], a = acctOf(ln); return O.units[unitOfLine(ln)].dept === di && (!unitPage || unitOfLine(ln) === ui) && (fi == null || a[2] === fi) && (D.categories[a[5]] === 'Revenue') === (S.k === 'revenue'); })
       .sort((x, y) => Math.abs(lineD(c.lines[y])) - Math.abs(lineD(c.lines[x])));
     const pos = S.k === 'expense' ? positionsHTML(c, { dept: di, unit: ui, compact: true, fund }) : '';
-    return `<section class="panel wc-dept" id="sec-changes" tabindex="-1" aria-labelledby="wc-d"><h2 class="total-label" id="wc-d">What changed</h2>
-      <p class="wc-lede-sm">${lede}</p>${badgeHTML(c)}
+    const summary = S.k === 'expense' ? deptSummaryHTML(c, di, ui, fund) : '';
+    return `<section class="panel wc-dept" id="sec-changes" tabindex="-1" aria-labelledby="wc-d"><h2 class="panel-title" id="wc-d">What changed in ${D.newest_year}</h2>
+      <p class="wc-lede-sm">${lede}</p>${badgeHTML(c)}${summary}
       ${units.length > 1 ? `<details class="values wc-lines-d"><summary>Change by bureau</summary>${divBars(units, c, 'wc-du', { title: 'Bureau' })}</details>` : ''}
       ${pos ? `<details class="values wc-lines-d"><summary>Positions</summary>${pos}</details>` : ''}
       ${mine.length ? `<details class="values wc-lines-d"><summary>Largest line changes (${Math.min(6, mine.length)})</summary>${lineTableHTML(c, mine.slice(0, 6))}</details>` : ''}
