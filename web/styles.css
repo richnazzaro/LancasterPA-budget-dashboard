@@ -754,7 +754,7 @@ a.src { white-space: nowrap; }
 .big-total { font-size: 44px; line-height: 48px; margin: 0 0 14px; }
 .big-total .big-label { display: block; font-family: var(--font); font-size: 13px; line-height: 20px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
 .controls-sum .status { margin: 0 12px 0 0; vertical-align: middle; }
-@media (max-width: 767px) { .deck { font-size: 28px; line-height: 34px; max-width: none; } .big-total { font-size: 36px; line-height: 40px; } }
+@media (max-width: 767px) { .deck { font-size: 26px; line-height: 32px; max-width: none; } .big-total { font-size: 36px; line-height: 40px; } }
 
 .dept-total .figure { font-family: var(--serif); font-weight: 700; color: var(--sel-ink); }
 @media (min-width: 1100px) { .dept-picker { display: none; } }

@@ -158,7 +158,7 @@ A restrained money palette: near-white paper, green-black ink, one green, one re
 
 ### Hierarchy
 - **Display** (700, 56px, 1.04, -0.01em): page headline. Steps to 44px under 1024px and 32px on phones.
-- **Deck** (600, 26px, 32px, ink; 28px on phones; full column width): the home sentence saying what changed, with the direction arrow in ink.
+- **Deck** (600, 26px, 32px, ink; 26px on phones too; full column width): the home sentence saying what changed, with the direction arrow in ink.
 - **Figure** (700, 44px, 48px, banknote green): the home total, demoted below the deck behind a 13px uppercase muted label; 36px on phones. Department pages use a 52px serif name and a 28px total. The What changed lead figure is 52px (40px on home).
 - **Title** (600, 22px, 30px): list-row names such as department and bureau.
 - **Stat** (700, 30-36px serif): tile and compare values.

@@ -193,6 +193,30 @@ def check_reserve_draw(budget: dict) -> int:
         elif shown:
             line += "  (no Reserve Fund page entry for this figure)"
         print(line)
+        # The split the site shows (app.js drawParts): where the Fund Balance Projection prints a committed data center
+        # revenue adjustment and it plus the operating deficit equals the draw, the draw is shown as those two parts.
+        if e and shown:
+            sur = next((ln for ln in e["lines"] if ln["t"] == "surplus"), None)
+            dc = next((ln for ln in e["lines"] if ln["t"] == "adjustment" and "data center" in ln["l"].lower()), None)
+            if sur and dc and sur["v"] < 0 and dc["v"] < 0 and abs(-(sur["v"] + dc["v"]) - shown) <= TOLERANCE:
+                doc = budget["docs"][e["doc"]]
+                fb = ROOT / "data" / "processed" / f"fund_balance_{doc[:-4]}.csv"
+                with fb.open(newline="", encoding="utf-8") as f:
+                    rows = [r for r in csv.DictReader(f) if r["fiscal_year"] == str(s["year"]) and r["scenario"] in (e["sc"], "single")]
+                want = {t: [float(r["amount"]) for r in rows if r["line_type"] == t and (t != "adjustment" or "data center" in r["label"].lower())]
+                        for t in ("surplus_deficit", "adjustment")}
+                parts = {"surplus_deficit": (sur, -sur["v"]), "adjustment": (dc, -dc["v"])}
+                for t, (ln, v) in parts.items():
+                    ok = len(want[t]) == 1 and abs(-want[t][0] - v) < 0.5 and ln["p"] > 0
+                    bad += not ok
+                    name = "drawn from reserves" if t == "surplus_deficit" else "committed data center revenue"
+                    print(f"{'ok  ' if ok else 'FAIL'} {key:16s}   split: {v:>12,.0f} {name} = fund balance CSV {t} {want[t]} (p{ln['p']})")
+                total = parts["surplus_deficit"][1] + parts["adjustment"][1]
+                ok = abs(total - shown) < 0.5
+                bad += not ok
+                print(f"{'ok  ' if ok else 'FAIL'} {key:16s}   split parts add to {total:,.0f}, the draw shown {shown:,.0f}")
+            else:
+                print(f"     {key:16s}   no split (the Fund Balance Projection prints no data center adjustment that, with the deficit, equals the draw)")
     return bad
 
 

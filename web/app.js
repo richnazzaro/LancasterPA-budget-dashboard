@@ -443,13 +443,34 @@
     return v > 0 ? { v, ...firstPage(l) } : null;
   }
   const millions = (n) => `$${(n / 1e6).toFixed(1)}M`;
+  /* Where the draw comes from, as the Fund Balance Projection page prints it (D.reserve, from data/processed/fund_balance_*.csv):
+     when the page has a "Committed data center revenue" adjustment and that plus the operating deficit equals the draw, the
+     draw is two parts, money drawn from reserves and committed data center revenue. Otherwise null: one amount, as before.
+     check_dataset.py checks both parts against the fund balance CSV and that they add up to the draw. */
+  function drawParts(k, drawV) {
+    if (!D.reserve || !drawV) return null;
+    const { y, m } = parseKey(k), e = resFind(y, m);
+    const sur = e?.lines.find((l) => l.t === 'surplus'), dc = e?.lines.find((l) => l.t === 'adjustment' && /data center/i.test(l.l));
+    if (!sur || !dc || sur.v >= 0 || dc.v >= 0 || Math.abs(-(sur.v + dc.v) - drawV) > 5) return null;
+    return { res: { v: -sur.v, d: e.doc, p: sur.p }, dc: { v: -dc.v, d: e.doc, p: dc.p } };
+  }
+  // "$2.8M drawn from reserves and $1.9M from committed data center revenue", each linked to the Fund Balance Projection.
+  const drawSplit = (P, f = millions) => `${srcDoc(f(P.res.v), P.res.d, P.res.p)} drawn from reserves and ${srcDoc(f(P.dc.v), P.dc.d, P.dc.p)} from committed data center revenue`;
+  // Label under a "Fund Balance Reserve" line: which part it is, where its amount matches one.
+  function drawLineLabel(k, v) {
+    const P = drawParts(k, reserveDraw(k, D.funds.indexOf(DEFAULT_FUND))?.v);
+    if (P && Math.abs(v - P.dc.v) < 0.5) return 'Committed data center revenue (Fund Balance Projection)';
+    if (P && Math.abs(v - P.res.v) < 0.5) return 'Money drawn from reserves (Fund Balance Projection)';
+    return 'Money drawn from the reserve';
+  }
   function drawNote(k) {
     if (!D.reserve) return '';
     const gf = D.funds.indexOf(DEFAULT_FUND);
     if (gf < 0 || S.f !== D.funds[gf]) return ''; // the draw sits in the General Fund; shown on that view
     const dr = reserveDraw(k, gf);
     if (!dr) return '';
-    return `<p class="draw-note">Balanced by drawing ${src(millions(dr.v), k, dr.d, dr.p)} from the reserve (the budget's “Fund Balance Reserve” line). <a href="${esc(homeHash({ f: D.reserve.name }))}">See the Reserve Fund</a></p>`;
+    const P = drawParts(k, dr.v);
+    return `<p class="draw-note">${P ? `Balanced by ${src(millions(dr.v), k, dr.d, dr.p)} from the budget's “Fund Balance Reserve” lines: ${drawSplit(P)}, as the Fund Balance Projection shows.` : `Balanced by drawing ${src(millions(dr.v), k, dr.d, dr.p)} from the reserve (the budget's “Fund Balance Reserve” line).`} <a href="${esc(homeHash({ f: D.reserve.name }))}">See the Reserve Fund</a></p>`;
   }
   /* One line tying the Reserve page's "Revenues" to the General Fund's revenue elsewhere on the site. */
   function reserveTie(e) {
@@ -459,7 +480,7 @@
     if (!dr) return '';
     const gfT = totalOf(rows(k).filter((r) => r.fund === gf && isRevenue(r)), k), gfRev = gfT.v;
     const gap = Math.round(rev.v + dr.v - gfRev), ties = Math.abs(gap) <= 5;
-    return `<p class="hint tie-note" style="margin-top:0">This page's revenues of ${srcDoc(money(rev.v), e.doc, rev.p)} plus ${src(money(dr.v), k, dr.d, dr.p)} drawn from the reserve (the “Fund Balance Reserve” revenue line) ${ties ? (gap === 0 ? 'equal' : 'equal, within the city\'s rounding,') : `come to ${money(rev.v + dr.v)}, ${money(Math.abs(gap))} ${gap > 0 ? 'more' : 'less'} than`} the General Fund's ${fig(gfT)} of revenue. <a href="${esc(homeHash({ f: DEFAULT_FUND, k: 'revenue', y: e.year, m: e.measure }))}">See General Fund revenue</a></p>`;
+    return `<p class="hint tie-note" style="margin-top:0">This page's revenues of ${srcDoc(money(rev.v), e.doc, rev.p)} plus ${src(money(dr.v), k, dr.d, dr.p)} ${(() => { const P = drawParts(k, dr.v); return P ? `from the “Fund Balance Reserve” revenue lines (${drawSplit(P, money)}; the part drawn from reserves is this page's operating deficit)` : 'drawn from the reserve (the “Fund Balance Reserve” revenue line)'; })()} ${ties ? (gap === 0 ? 'equal' : 'equal, within the city\'s rounding,') : `come to ${money(rev.v + dr.v)}, ${money(Math.abs(gap))} ${gap > 0 ? 'more' : 'less'} than`} the General Fund's ${fig(gfT)} of revenue. <a href="${esc(homeHash({ f: DEFAULT_FUND, k: 'revenue', y: e.year, m: e.measure }))}">See General Fund revenue</a></p>`;
   }
 
   /* ---------- Reserve Fund (General Fund balance) ---------- */
@@ -650,7 +671,7 @@
       const d = total.v - cmp.v, p = pctOf(d, cmp.v);
       if (!cmp.v || Math.round(d) === 0) return '';
       const gf = D.funds.indexOf(DEFAULT_FUND), dr = D.reserve && gf >= 0 && S.f === D.funds[gf] ? reserveDraw(k, gf) : null;
-      return `<p class="deck"><span class="${d > 0 ? 'up' : 'down'}">${d > 0 ? 'Up' : 'Down'} ${mny(Math.abs(d))} (${fmtPct(Math.abs(p))})<span class="sr-only"> ${d > 0 ? 'higher' : 'lower'}</span></span> from ${esc(seriesLabel(S.c))}${dr ? `, with ${src(millions(dr.v), k, dr.d, dr.p)} drawn from savings. <a class="deck-link" href="${esc(homeHash({ f: D.reserve.name }))}">See the Reserve Fund</a>` : '.'}</p>`;
+      return `<p class="deck"><span class="${d > 0 ? 'up' : 'down'}">${d > 0 ? 'Up' : 'Down'} ${mny(Math.abs(d))} (${fmtPct(Math.abs(p))})<span class="sr-only"> ${d > 0 ? 'higher' : 'lower'}</span></span> from ${esc(seriesLabel(S.c))}${dr ? `, with ${drawParts(k, dr.v) ? drawSplit(drawParts(k, dr.v)) : `${src(millions(dr.v), k, dr.d, dr.p)} drawn from savings`}. <a class="deck-link" href="${esc(homeHash({ f: D.reserve.name }))}">See the Reserve Fund</a>` : '.'}</p>`;
     })();
     return `<header class="page-head"><h1 id="page-h">${esc(scope)} ${kindWord}: ${esc(seriesLabel(k))}</h1>
         ${deck || `${heroDelta(k, total, cmp)}${drawNote(k)}`}
@@ -933,7 +954,7 @@
     const body = list.slice(0, T.shown).map((e) => {
       const d = val(e, 'sel') - val(e, 'cmp');
       const sub = [e.code, showBureau ? bureauName(e.bureau) : ''].filter(Boolean).map(esc).join(' · ');
-      const draw = /^Fund Balance Reserve/i.test(e.name) && /-499000$/.test(e.code) ? '<span class="sub">Money drawn from the reserve</span>' : '';
+      const draw = /^Fund Balance Reserve/i.test(e.name) && /-499000$/.test(e.code) ? `<span class="sub">${esc(drawLineLabel(e.sel ? k : S.c, (e.sel || e.cmp).v))}</span>` : '';
       return `<tr><td>${esc(e.name)}<span class="sub">${sub}</span>${draw}</td><td class="hide-sm">${esc(D.categories[e.cat])}</td>
         ${S.c ? `<td class="num">${e.cmp ? src(money(e.cmp.v), S.c, e.cmp.d, e.cmp.p) : '—'}</td>` : ''}<td class="num">${e.sel ? src(money(e.sel.v), k, e.sel.d, e.sel.p) : '—'}${S.c && d !== 0 ? `<span class="chg-sm ${d > 0 ? 'up' : 'down'}" aria-label="Change from ${esc(seriesLabel(S.c))}: ${money(d)}">${money(d)}</span>` : ''}</td>
         ${S.c ? `<td class="num hide-sm"><span class="${d > 0 ? 'up' : d < 0 ? 'down' : 'flat'}">${d === 0 ? '—' : money(d)}</span></td>` : ''}</tr>`;
@@ -1187,8 +1208,18 @@
       }
     }
     const dr = sc.revenue?.draw;
-    if (dr && vOf(dr.t) > 0) s += ` ${S.f ? 'It\'s' : 'The General Fund is'} balanced by drawing ${lnk(dr.t, mny(vOf(dr.t)))} from the reserve.`;
+    if (dr && vOf(dr.t) > 0) {
+      const P = drawParts(c.to, vOf(dr.t));
+      s += ` ${S.f ? 'It\'s' : 'The General Fund is'} balanced by ${P ? drawSplit(P, mny) : `drawing ${lnk(dr.t, mny(vOf(dr.t)))} from the reserve`}.`;
+    }
     return s;
+  }
+
+  /* The draw's label and its parts in a comparison (see drawParts). */
+  const drawLabel = (c, dr) => (drawParts(c.to, vOf(dr.t)) || drawParts(c.from, vOf(dr.f)) ? 'The “Fund Balance Reserve” lines (reserves and committed data center revenue)' : 'Drawn from the reserve (the “Fund Balance Reserve” line)');
+  function drawSplitNote(c, dr) {
+    const parts = [[c.from, dr.f], [c.to, dr.t]].map(([k, x]) => [k, drawParts(k, vOf(x))]).filter(([, P]) => P);
+    return parts.length ? ` (${parts.map(([k, P]) => `${esc(seriesLabel(k))}: ${drawSplit(P, money)}`).join('; ')})` : '';
   }
 
   function badgeHTML(c) {
@@ -1210,7 +1241,12 @@
       tiles.push(['Spending change', deltaHTML(vOf(tt) - vOf(tf), vOf(tf), mny), `${esc(seriesLabel(c.from))} ${fx(tf, 'expense')} → ${esc(seriesLabel(c.to))} ${fx(tt, 'expense')}`]);
     }
     const dr = sc.revenue?.draw;
-    if (dr) tiles.push(['Drawn from the reserve', `<span>${lnk(dr.t, mny(vOf(dr.t)))}</span>`, `${esc(seriesLabel(c.from))}: ${lnk(dr.f, dr.f ? mny(vOf(dr.f)) : '$0')}. Money taken from savings; the budget's “Fund Balance Reserve” line.`]);
+    if (dr) {
+      const Pt = drawParts(c.to, vOf(dr.t)), Pf = drawParts(c.from, vOf(dr.f));
+      tiles.push([Pt ? 'Reserves and data center revenue' : 'Drawn from the reserve', `<span>${lnk(dr.t, mny(vOf(dr.t)))}</span>`,
+        Pt ? `${drawSplit(Pt, mny)} (Fund Balance Projection). ${esc(seriesLabel(c.from))}: ${lnk(dr.f, dr.f ? mny(vOf(dr.f)) : '$0')}${Pf ? `, ${drawSplit(Pf, mny)}` : ''}. The budget's “Fund Balance Reserve” lines.`
+          : `${esc(seriesLabel(c.from))}: ${lnk(dr.f, dr.f ? mny(vOf(dr.f)) : '$0')}. Money taken from savings; the budget's “Fund Balance Reserve” line.`]);
+    }
     else if (sc.revenue) {
       const rf = wcTotal(c.from, 'revenue'), rt = wcTotal(c.to, 'revenue');
       tiles.push(['Income change', deltaHTML(vOf(rt) - vOf(rf), vOf(rf), mny), `${esc(seriesLabel(c.from))} ${fx(rf, 'revenue')} → ${fx(rt, 'revenue')}`]);
@@ -1288,7 +1324,7 @@
     const body = idx.map((i) => {
       const ln = c.lines[i], a = acctOf(ln), u = unitOfLine(ln), d = lineD(ln);
       const sub = [a[0], unitLabel(u, D.categories[a[5]] === 'Revenue' ? 'revenue' : 'expense'), showFund ? D.funds[a[2]] : ''].filter(Boolean).map(esc).join(' · ');
-      const drawNoteTxt = /^Fund Balance Reserve/i.test(a[1]) && /-499000$/.test(a[0]) ? '<span class="sub">Money drawn from the reserve</span>' : '';
+      const drawNoteTxt = /^Fund Balance Reserve/i.test(a[1]) && /-499000$/.test(a[0]) ? `<span class="sub">${esc(ln[4] != null ? drawLineLabel(c.to, ln[4]) : drawLineLabel(c.from, ln[1]))}</span>` : '';
       return `<tr><td>${esc(a[1])}<span class="sub">${sub}</span>${drawNoteTxt}</td><td class="num hide-sm">${ln[1] == null ? '—' : lnk(lineF(ln))}</td><td class="num">${ln[4] == null ? '—' : lnk(lineT(ln))}<span class="wc-sm">${sgn(d, money)}</span></td><td class="num hide-sm">${deltaHTML(d, ln[1])}</td></tr>`;
     }).join('');
     return `<div class="table-scroll"><table class="table tight wc-lines">${caption ? `<caption>${caption}</caption>` : ''}<thead><tr><th scope="col">Line item</th><th scope="col" class="num hide-sm">${esc(seriesLabel(c.from))}</th><th scope="col" class="num">${esc(seriesLabel(c.to))}</th><th scope="col" class="num hide-sm">Change</th></tr></thead><tbody>${body}</tbody></table></div>`;
@@ -1348,7 +1384,7 @@
     const fact = (label, kind) => { const f = wcTotal(rc.from, kind), t = wcTotal(rc.to, kind); return `<li>${label}: ${f ? fig(f) : '$0'} → ${t ? fig(t) : '$0'}, ${deltaHTML(vOf(t) - vOf(f), vOf(f))}</li>`; };
     if (sc?.expense) parts.push(fact('Spending', 'expense'));
     if (sc?.revenue) parts.push(fact('Income', 'revenue'));
-    if (sc?.revenue?.draw) parts.push(`<li>Drawn from the reserve (the “Fund Balance Reserve” line): ${lnk(sc.revenue.draw.f)} → ${lnk(sc.revenue.draw.t)}</li>`);
+    if (sc?.revenue?.draw) parts.push(`<li>${drawLabel(rc, sc.revenue.draw)}: ${lnk(sc.revenue.draw.f)} → ${lnk(sc.revenue.draw.t)}${drawSplitNote(rc, sc.revenue.draw)}</li>`);
     const P = rc.positions, tk = S.f ? String(D.funds.indexOf(S.f)) : 'all';
     if (P?.totals[tk]) parts.push(`<li>Positions: ${P.classes.map((cls) => { const d = P.totals[tk][cls].t - P.totals[tk][cls].f; return `${nDelta(d)} ${clsWord(cls, Math.abs(d) !== 1)}`; }).join(', ')}</li>`);
     const fi = S.f ? D.funds.indexOf(S.f) : null;
@@ -1436,7 +1472,7 @@
       const dr = rv.draw;
       html += `<section class="panel" aria-labelledby="wc-inc"><h2 class="total-label" id="wc-inc">How it's paid for</h2>
         <ul class="wc-facts">${(() => { const { f, t } = grp('revenue', null), notes = new Map(); return `<li>Income: ${f ? fig(f, { notes, what: wcWhat('revenue') }) : '$0'} → ${t ? fig(t, { notes, what: wcWhat('revenue') }) : '$0'}, ${deltaHTML(vOf(t) - vOf(f), vOf(f))}${gapNotes(notes)}</li>`; })()}
-        ${dr ? `<li>Drawn from the reserve (the “Fund Balance Reserve” line): ${lnk(dr.f, dr.f ? money(vOf(dr.f)) : '$0')} in ${esc(seriesLabel(c.from))} → ${lnk(dr.t, dr.t ? money(vOf(dr.t)) : '$0')} in ${esc(seriesLabel(c.to))}. <a href="${esc(homeHash({ f: D.reserve?.name || '' }))}">See the Reserve Fund</a></li>` : ''}</ul>
+        ${dr ? `<li>${drawLabel(c, dr)}: ${lnk(dr.f, dr.f ? money(vOf(dr.f)) : '$0')} in ${esc(seriesLabel(c.from))} → ${lnk(dr.t, dr.t ? money(vOf(dr.t)) : '$0')} in ${esc(seriesLabel(c.to))}${drawSplitNote(c, dr)}. <a href="${esc(homeHash({ f: D.reserve?.name || '' }))}">See the Reserve Fund</a></li>` : ''}</ul>
         ${divBars(rv.by_group.map(([g]) => ({ label: plainName(D.bureaus[g]), ...grp('revenue', (r) => r.bureau === g) })), c, 'wc-inc-b', { title: 'Income source' })}
         ${lineTableHTML(c, rv.up, { caption: 'Largest increases' })}${lineTableHTML(c, rv.down, { caption: 'Largest decreases' })}
         ${rv.new.n || rv.removed.n ? `<p class="wc-facts-line">${rv.new.n} new income line${rv.new.n === 1 ? '' : 's'} (${mny(rv.new.v)}) · ${rv.removed.n} removed (${mny(rv.removed.v)})</p>
