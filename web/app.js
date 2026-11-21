@@ -1588,7 +1588,9 @@
       <p>These come from errors in the city's documents, not the extraction. A person reviewed each one.</p>
       <details class="values" id="about-issues" tabindex="-1"><summary>Show all ${D.known_issues.length} notes</summary><ul>${issues || '<li>None recorded.</li>'}</ul></details>
       <h2 class="about-h">Get the data</h2>
-      <p><a href="${CFG.paths.data}budget.json">budget.json</a> (every figure shown here), <a href="${CFG.paths.data}staffing.json">staffing.json</a> (budgeted positions), <a href="${CFG.paths.data}conflicts.json">conflicts.json</a>, <a href="${CFG.paths.data}changes.json">changes.json</a> (what changed in ${D.newest_year}, with the fund shifts and position counts). The extraction scripts and tables are in the project repository.</p>`;
+      <p><a href="${CFG.paths.data}budget.json">budget.json</a> (every figure shown here), <a href="${CFG.paths.data}staffing.json">staffing.json</a> (budgeted positions), <a href="${CFG.paths.data}conflicts.json">conflicts.json</a>, <a href="${CFG.paths.data}changes.json">changes.json</a> (what changed in ${D.newest_year}, with the fund shifts and position counts). The extraction scripts and tables are in the project repository.</p>${CFG.contact_email ? `
+      <h2 class="about-h">Contact</h2>
+      <p>Found an error, or have a question about a figure? Email <a href="mailto:${esc(CFG.contact_email)}">${esc(CFG.contact_email)}</a>.</p>` : ''}`;
     // Group each heading with what follows it, so wide screens can lay the sections out as a grid.
     const ab = $('about-body'), secs = [];
     [...ab.childNodes].forEach((n) => {
@@ -1651,6 +1653,7 @@
     document.querySelector('meta[name=description]')?.setAttribute('content', CFG.description);
     $('footer-text').textContent = CFG.footer;
     if (CFG.tagline) $('tagline').textContent = CFG.tagline;
+    if (CFG.contact_email) $('footer-contact').innerHTML = `Questions or corrections: <a href="mailto:${esc(CFG.contact_email)}">${esc(CFG.contact_email)}</a>`;
     wire();
     initJump();
     renderAbout();
