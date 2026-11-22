@@ -2,6 +2,7 @@
 __pycache__/
 .DS_Store
 CLAUDE.md
-AGENTS
+AGENTS.md
 data/ocr_cache/
 EDITING.md
+HANDOFF.md
