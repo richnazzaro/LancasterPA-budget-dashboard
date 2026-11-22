@@ -89,6 +89,9 @@ Funds: General, Stormwater Management, Sewer, Water, Solid Waste & Recycling, Li
 | What | Where | Notes |
 |---|---|---|
 | Source budget books (PDF) | [`Budget PDFs - City/`](Budget%20PDFs%20-%20City/), also published at `<site>/pdfs/` | 2022–2027 books |
+| County budget books and audited annual reports (PDF) | [`Budget PDFs - County/`](Budget%20PDFs%20-%20County/) (books for 2024, 2025 and 2026; `ACFR/` for the 2023–2025 reports), also published at `<site>/pdfs/county/` | Source addresses: [docs/REBUILD.md](docs/REBUILD.md) |
+| County data the site reads | [`web/data/county/`](web/data/county/) | `budget.json` (Budget 2023–2026 with its printed totals, plus the Actual 2023–2025 block), `changes.json`, `conflicts.json`, `fund_balance_gaap.json` (audited year-end balances) |
+| County reviewed files | [`data/county/`](data/county/) | known issues, OCR corrections for the scanned 2024 book, merged accounts, department groups |
 | Data the site reads | [`web/data/budget.json`](web/data/budget.json) | Every figure shown, with its source book and page |
 | Budgeted positions | [`web/data/staffing.json`](web/data/staffing.json) | Per book: each year's own schedule (the newest book's Proposed and Revised). Shown in the Staff section of department and bureau pages, and as position changes on the "What changed" page |
 | Books that disagree | [`web/data/conflicts.json`](web/data/conflicts.json) | Where overlapping books print different values for the same figure |
@@ -143,7 +146,7 @@ data/                      reviewed issues, audited corrections, tax-policy note
 data/processed/            extracted CSVs (committed; the site is built from them)
 scripts/                   extraction, validation and site-data build (see docs/PIPELINE.md)
 web/                       the static site (index.html, app.js, styles.css, config.json, data/ and data/county/; pdfs/ links to the books, pdfs/county/ to the County's)
-docs/PIPELINE.md           how PDFs become data: OCR, validation, corrections, adding a new book
+docs/PIPELINE.md           how PDFs become data (City and County): OCR, validation, corrections, adding a new book
 docs/REBUILD.md            rebuilding everything by hand from a fresh clone, and publishing
 .github/workflows/         pages.yml: builds, checks and publishes the site on every push to main
 PRODUCT.md, DESIGN.md      who the site is for, and its design system (used with the Impeccable design skill)

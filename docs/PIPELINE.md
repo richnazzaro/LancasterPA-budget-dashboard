@@ -5,7 +5,7 @@ How the City of Lancaster's budget books become the CSVs in `data/processed/` an
 Run it by hand, about once a year, when a new budget book is published. Paths below are relative to the repository root. To rebuild everything from a fresh clone, step by step, see [REBUILD.md](REBUILD.md).
 
 ## Setup
-Python 3.9 or newer (tested on 3.9.6; the publish workflow uses 3.12) and, for the one scanned book (2026), Tesseract:
+Python 3.9 or newer (tested on 3.9.6; the publish workflow uses 3.12) and, for the scanned books (the City's 2026 book and the County's 2024 book), Tesseract:
 ```bash
 brew install tesseract            # only needed for OCR
 python3 -m venv .venv
@@ -87,6 +87,16 @@ A page whose header matches no configured layout stops the run.
 
 `scripts/budget_common.py` holds the parts both extractors share.
 
+## Lancaster County
+The County is a second entity with its own folders: books in `Budget PDFs - County/` (and `ACFR/` for the audited reports), configs in `config/county/`, extracted CSVs in `data/processed/county/`, reviewed files in `data/county/`, and site data in `web/data/county/`. Source addresses for every PDF are in [REBUILD.md](REBUILD.md#2-get-the-repository-and-set-up-python).
+
+- **Extraction:** `python scripts/ingest.py --county` runs `scripts/extract_county.py` on each book. The County prints split digits (an amount cut into pieces that touch), so `scripts/county_rows.py` rebuilds each amount by position: pieces under 3 pt apart belong together, and each goes to the column header it sits under. The books print each year as a "BUDGET" column; the 2024 book prints the new year first. Checks: department totals, the General Fund and Other Funds grand totals, the by-department and by-account reports, and every department page line by line (2026 book). Outputs per book: `budget_long_*.csv`, `line_items_*.csv`, `validation_*.csv`, and pair-wise `crosscheck_*.csv`.
+- **The scanned 2024 book:** OCR at 400 DPI with the page cleaned first (the copy shows the back of each sheet through the paper), settings in the `ocr` block of its config. `data/county/ocr_corrections.csv` holds 177 proven fixes (see REBUILD.md); `scripts/county_ocr_corrections.py` proposes new ones from the printed variance and % change for a person to review.
+- **Audited actuals:** `scripts/extract_county_acfr.py` reads the budget-versus-actual schedules and the GAAP fund balances from the annual financial reports. Split amounts are rebuilt by position as above. 677 checks; every tie-out difference with the books is logged in `data/county/known_issues.csv`. The report's own "original budget" column and its variances are never exported, because the original column does not match the adopted budget for 2023 and 2024.
+- **Build and check:** `python3 scripts/build_dataset.py --entity county` (`scripts/build_county.py`) and `python3 scripts/check_dataset.py --entity county` (`scripts/check_county.py`). Same figure rule as the City, with the County's measure called `budget`: each year comes from the newest book that prints it, and every line where two books disagree goes to `conflicts.json`. `account_changes.csv` folds merged accounts into both years for What changed. `org_units.csv` groups departments. `printed` holds every total the books print (department totals, grand totals, the by-account report's account rows and group totals) with its page, shown as printed; a `flags` record appears only where the lines miss a printed total by more than max($5, $0.50 per line) (none today), and a rounding-only gap that `known_issues.csv` explains is linked as a note. The County's `printed` items carry no member lists; the site derives what each covers (kind, fund group, department, account or group), as the build does.
+- **Actuals in `budget.json`:** the `actuals` block (measure `actual`, levels fund total, transfer, revenue source, function) is separate from `series`, because these are not account lines. `fund_balance_gaap.json` holds the audited year-end fund balances (modified accrual basis, not comparable with the budget).
+- **Site:** City and County share `web/app.js`; `web/config.json` `entities` selects names, wording, fund names, data path (`data/county/`) and PDF path (`pdfs/county/`). The County has no staffing data, so no Staff section.
+
 ## Building the site data
 ```bash
 python3 scripts/build_dataset.py   # data/processed/budget_long_*.csv + fund_balance_*.csv -> web/data/*.json
@@ -125,7 +135,7 @@ The build stops if an org code in `budget.json` has no row in `org_structure_202
 
 Each figure keeps its `source_doc` and `source_page`, which the site turns into a link to `pdfs/<book>.pdf#page=N`. `web/pdfs` is a symlink to `Budget PDFs - City/`.
 
-The publish workflow (`.github/workflows/pages.yml`) runs both scripts on every push to `main`, then publishes `web/` with the PDFs copied in.
+The publish workflow (`.github/workflows/pages.yml`) runs the build and check for the City and for the County on every push to `main`, then publishes `web/` with the PDFs copied in.
 
 ## Adding a new budget book
 1. Put the PDF in `Budget PDFs - City/`. Keep it under GitHub's 100 MB file limit (compress it if needed).
