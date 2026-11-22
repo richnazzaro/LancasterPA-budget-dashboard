@@ -114,7 +114,7 @@ components:
 
 The site is the city's budget book, set properly: open sections divided by rules rather than boxes, a contents rail on the left, running section labels, and figures set in a serif the way a ledger prints them. Color is money color: paper, ink, banknote green for the figure you are reading, ledger red only for shortfalls. Nothing floats; nothing is carded.
 
-Density is that of a reference book: hairline-ruled rows, tabular figures, text running the full width of the reading column (the user chose full-width text over a 70ch cap on 2026-11-20; the reading column itself is capped by the page layout). Voice is plain and sober. On the home page a serif deck sentence says what changed, set in ink under the title; the total sits beneath it as evidence, then the charts and tables.
+Density is that of a reference book: hairline-ruled rows, tabular figures, text running the full width of the reading column (the user chose full-width text over a 70ch cap on 2026-11-20; the reading column itself is capped by the page layout). Voice is plain and sober. On the home page the total sits under the title, and a serif deck sentence directly beneath it says what changed (the user's choice, 2026-11-21); then the charts and tables. The Reserve Fund page uses the same order.
 
 The previous look (blue and amber boxed cards matched to another site) is retired; none of its rules carry over.
 
@@ -158,8 +158,8 @@ A restrained money palette: near-white paper, green-black ink, one green, one re
 
 ### Hierarchy
 - **Display** (700, 56px, 1.04, -0.01em): page headline. Steps to 44px under 1024px and 32px on phones.
-- **Deck** (600, 26px, 32px, ink; 28px on phones; full column width): the home sentence saying what changed, with the direction arrow in ink.
-- **Figure** (700, 44px, 48px, banknote green): the home total, demoted below the deck behind a 13px uppercase muted label; 36px on phones. Department pages use a 52px serif name and a 28px total. The What changed lead figure is 52px (40px on home).
+- **Deck** (600, 26px, 32px, ink; 26px on phones too; full column width): the home sentence saying what changed, with the direction arrow in ink, set directly under the total.
+- **Figure** (700, 44px, 48px, banknote green): the home total, directly under the title behind a 13px uppercase muted label, with the deck beneath it; 36px on phones. Department pages use a 52px serif name and a 28px total. The What changed lead figure is 52px (40px on home).
 - **Title** (600, 22px, 30px): list-row names such as department and bureau.
 - **Stat** (700, 30-36px serif): tile and compare values.
 - **Body** (400, 16px, 1.5): prose, full column width.
@@ -168,13 +168,13 @@ A restrained money palette: near-white paper, green-black ink, one green, one re
 
 ### Named Rules
 **The Serif Figures Rule.** Headline numbers are serif and bold; table numbers are sans, tabular, right-aligned.
-**The Balanced Headline Rule.** Headings wrap balanced, paragraphs wrap pretty, and amounts never split across lines.
+**The Balanced Headline Rule.** Headings wrap balanced, paragraphs wrap pretty, and amounts never split across lines. The What changed sentences (`.wc-lede`, `.wc-lede-sm`) are paragraphs, not headings: they wrap pretty and fill the full column, on the home page and on every department and bureau page alike.
 
 ## Layout
 
 On wide screens (1100px and up) the masthead becomes a sticky 300px contents rail on the left (name, disclaimer, Overview / What changed / Reserve Fund / About the data, search, theme) closed by a 3px double ink rule; the main column is at most 1360px with 64px side padding and 48px top. Under the active page only, the rail nests that page's trail and an "On this page" outline. Below 1100px the rail becomes a top bar with the sections as a scrolling row, and on phones the outline becomes a collapsed "On this page" details block under the page heading. From 1750px the page keeps a 1040px reading column and a sticky 260px right-hand "Reading notes" margin (3px double rule, 14px muted); it is hidden on About. Breakpoints: 1100, 1023, 767, 420, 339px.
 
-Rhythm: 8px base; 16px gaps; 24px between grid items; 56px between sections (40px on phones). Home leads with What changed, with Totals by Year beside it in a two-column grid that collapses to one under 1024px. About is its own page (#/about) with readable book names linking to the PDFs; from 1280px its sections sit two to a row in a grid, with the known-problems list and the downloads spanning the full width (a grid, not CSS columns, so opening the list does not reflow the page). Wider than 1750px the main column fills the space beside a 260px Reading notes margin. Department and bureau pages carry a Staff section (budgeted positions and salaries by year) between the bureau list and the category table. Department and bureau lists run as hairline rows, two columns from 1024px. Phones reorder so the verdict comes first, then controls, then charts. Touch targets are 44px on phones, with invisible hit areas grown around quiet amount links.
+Rhythm: 8px base; 16px gaps; 24px between grid items; 56px between sections (40px on phones). Home leads with What changed, with Totals by Year beside it in a two-column grid that collapses to one under 1024px. About is its own page (#/about) with readable book names linking to the PDFs; from 1280px its sections sit two to a row in a grid, with the known-problems list and the downloads spanning the full width (a grid, not CSS columns, so opening the list does not reflow the page). Wider than 1750px the main column fills the space beside a 260px Reading notes margin. Department and bureau pages open What changed with the same 14px uppercase label as home ("What changed in 2027"), the 17px headline sentence, then a short bulleted summary (`.wc-sum`, 16px body, muted markers, a bold run-in label per item: Budgeted positions, Largest increases or decreases, Moved into / out of the General Fund) at full column width; its amounts are quiet dotted links. Notes that explain a figure (the "stands out" note under Totals by Year and on What changed, the Reserve Fund page's note on why General Fund income is higher than its Revenues line, which sits directly under that table) are plain 14–17px paragraphs at full column width with a bold run-in label where they have one: no box, no side stripe. On What changed, the Positions section opens with the budgeted count in body text (bold run-in label) and the explanation in muted 14px notes; "How this is counted" lands there. Department and bureau pages carry a Staff section (budgeted positions and salaries by year) between the bureau list and the category table. Department and bureau lists run as hairline rows, two columns from 1024px. Phones reorder so the verdict comes first, then controls, then charts. Touch targets are 44px on phones, with invisible hit areas grown around quiet amount links.
 
 ## Elevation & Depth
 
@@ -218,7 +218,7 @@ Square. Panels, rows, bars, tiles and swatches have 0 radius; controls, stamps a
 - **Theme toggle:** an outline button with a drawn 18px SVG icon (moon while light, sun while dark) and a Dark/Light word, icon only on phones.
 
 ### Status stamp and notices
-- A 1px ink bordered stamp in uppercase 13px with 0.08em tracking labels the figure status; it sits inside the one-line controls strip beside the summary and its Change button. Notices are 1px ink bordered, 2px radius, muted text.
+- A 1px ink bordered stamp in uppercase 13px with 0.08em tracking labels the figure status; it sits inside the one-line controls strip beside the summary and its Change button, on every page (the Reserve Fund and department pages included; no page prints a second stamp in its header). The controls are one component everywhere (`controlsWrap()`): the strip, a Change view / Close outline button (44px on phones), and the fields below it, closed by default at every width; tab groups come from one helper (`tabField()`) and are named by their visible label. Notices are 1px ink bordered, 2px radius, muted text.
 
 ### Charts (Chart.js)
 - Colors come from the tokens. Selected is green, comparison ink gray and thinner; Actual is a solid line and Projected dashed; Proposed is a hollow diamond and Revised a solid green dot joined to the last Projected point by a dashed line; the line chart's axis starts above zero and says so beneath the chart; bars have 0 radius; diverging change bars are neutral deep ink; tooltips use paper with a hairline. Animation is 300ms and off under reduced motion.

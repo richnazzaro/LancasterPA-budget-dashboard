@@ -36,6 +36,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 POLICY_CSV = ROOT / "data" / "policy_notes.csv"
+LINE_NOTES_CSV = ROOT / "data" / "line_notes.csv"  # what the book says about one line in one year (e.g. 2025 Building Permits)
 TOP_N = 10
 MOVE_RE = re.compile(r"\b(?:moved|transferr(?:ed|ing))\b", re.I)
 DIRECT_BILL_RE = re.compile(r"\bdirect(?:ly)?[ -]?(?:bill|billed|invoice)", re.I)
@@ -539,6 +540,184 @@ def fmt_n(n):
 
 
 # ---------------------------------------------------------------------------------------------
+# Department and bureau summaries
+# ---------------------------------------------------------------------------------------------
+# Position titles are abbreviated and reworded between books ("POL OFF 8HR", "POLICE OFFICER";
+# "EO1", "EO 1"). For naming titles in a summary they are compared by a canonical form: shift lengths
+# and "part time" dropped, letters and digits split, and these printed abbreviations spelled out.
+TITLE_WORDS = {
+    "POL": "POLICE", "OFF": "OFFICER", "SGT": "SERGEANT", "DET": "DETECTIVE", "LT": "LIEUTENANT",
+    "POLSGT": "POLICE SERGEANT", "POLLT": "POLICE LIEUTENANT", "SCH": "SCHOOL", "CROSS": "CROSSING",
+    "MAINT": "MAINTENANCE", "MAIN": "MAINTENANCE", "MGR": "MANAGER", "ASST": "ASSISTANT", "ASSIS": "ASSISTANT",
+    "DEP": "DEPUTY", "DIR": "DIRECTOR", "TEC": "TECH", "PW": "PUBLIC WORKS", "PWENGINEER": "PUBLIC WORKS ENGINEER",
+    "PWENVIRON": "PUBLIC WORKS ENVIRON", "PRKS": "PARKS", "ADMIN": "ADMINISTRATIVE",
+}
+TITLE_DROP = re.compile(r"\b\d+\s*HR\b|\bPART\s*TIME\b")
+SMALL = {"OF", "AND", "THE", "TO", "FOR", "IN"}
+DRIVER_SHARE = 0.15  # a line is a driver when it is at least this share of the net change (the largest always is)
+DRIVER_COVER = 0.5   # below this share of the net change, the summary names categories instead of lines
+TITLE_MIN = 1        # titles are named only when their count changes by at least one position
+
+
+def title_key(t: str) -> str:
+    t = TITLE_DROP.sub(" ", re.sub(r"[^A-Z0-9]+", " ", t.upper()))
+    t = re.sub(r"(?<=[A-Z])(?=\d)|(?<=\d)(?=[A-Z])", " ", t)
+    return " ".join(TITLE_WORDS.get(w, w) for w in t.split())
+
+
+def title_name(key: str) -> str:
+    out = []
+    for i, w in enumerate(key.split()):
+        if w in SMALL and i:
+            out.append(w.lower())
+        elif len(w) <= 2 or re.fullmatch(r"[IVX]+", w):
+            out.append(w)
+        else:
+            out.append(w.capitalize())
+    return " ".join(out)
+
+
+def summaries(budget: dict, comp: dict, shifts: list, frm: dict, to: dict, codes: dict, units: list) -> dict:
+    """Per department ("d") and org-chart bureau ("u"), per fund scope ("all" and each fund; bureaus
+    "all" only, as bureau pages cover all their funds), what a short summary needs beyond the total:
+      net      the change summed from the comparison's changed lines (spending)
+      drivers  up to 3 changed lines, indexes into comp["lines"], that add most to the net change
+      pos      positions in both schedules (all classes): f, t, adjusted af, at, and why they differ:
+               moved_in / moved_out (positions moved between funds with their work) and missing
+               (positions on an org one book has no schedule page for: + when only the newer has it)
+      titles   up to 3 [name, f, t]: titles whose count changed, where the books' titles can be matched
+      shifts   indexes into the shifts list that move money into or out of the General Fund"""
+    acc, cats, funds = budget["accounts"], budget["categories"], budget["funds"]
+    rev_cat = cats.index("Revenue") if "Revenue" in cats else -1
+    P = comp.get("positions")
+    org_fund = {**frm["fund"], **to["fund"]} if frm and to else {}
+    gf = funds[0] if funds else ""
+
+    def line_info(ln):
+        code, _name, fund, _d, _b, cat = acc[ln[0]]
+        u = codes[code.split("-")[0]]
+        return fund, u, cat
+
+    infos = [line_info(ln) for ln in comp["lines"]]
+
+    def titles_of(sched, keep):
+        c = Counter()
+        for (org, _cls), e in sched["orgs"].items():
+            if keep(org):
+                for t, n in e["titles"].items():
+                    c[title_key(t)] += n
+        return c
+
+    def org_titles(sched, org):
+        c = Counter()
+        for (o, _cls), e in sched["orgs"].items():
+            if o == org:
+                for t, n in e["titles"].items():
+                    c[title_key(t)] += n
+        return c
+
+    out = {}
+    scope_names = ["all"] + [s for s in comp["scopes"] if s != "all"]
+    for scope in scope_names:
+        fi = None if scope == "all" else funds.index(scope)
+        groups = [("d", d) for d in range(len(budget["org"]["departments"]))]
+        if scope == "all":
+            groups += [("u", u) for u in range(len(units))]
+        block = {"d": {}, "u": {}}
+        for kind, g in groups:
+            in_group = (lambda u: units[u]["dept"] == g) if kind == "d" else (lambda u: u == g)
+            in_fund = lambda f: fi is None or f == fi
+            idx = [i for i, (f, u, cat) in enumerate(infos) if cat != rev_cat and in_fund(f) and in_group(u)]
+            delta = lambda i: (comp["lines"][i][4] or 0) - (comp["lines"][i][1] or 0)
+            net = clean(sum(delta(i) for i in idx))
+            s = {"net": net}
+            if net:
+                sign = 1 if net > 0 else -1
+                ranked = sorted((i for i in idx if delta(i) * sign > 0), key=lambda i: -delta(i) * sign)
+                s["drivers"] = [i for n, i in enumerate(ranked[:3]) if n == 0 or abs(delta(i)) >= DRIVER_SHARE * abs(net)]
+                # When no few lines explain at least half the change, the categories say it better:
+                # [category, change, d, p of the category's largest changed line in the newer book].
+                if sum(delta(i) for i in s["drivers"]) * sign < DRIVER_COVER * abs(net):
+                    by_cat = defaultdict(list)
+                    for i in idx:
+                        by_cat[infos[i][2]].append(i)
+                    cs = sorted(((c, sum(delta(i) for i in l), l) for c, l in by_cat.items()), key=lambda x: -x[1] * sign)
+                    cs = [x for n, x in enumerate(cs[:3]) if x[1] * sign > 0 and (n == 0 or abs(x[1]) >= DRIVER_SHARE * abs(net))]
+                    s["cat_drivers"] = []
+                    for c, dv, l in cs:
+                        top = max(l, key=lambda i: abs(delta(i)))
+                        ln = comp["lines"][top]
+                        d, p = (ln[5], ln[6]) if ln[5] is not None else (ln[2], ln[3])
+                        s["cat_drivers"].append([c, clean(dv), d, p])
+                    del s["drivers"]
+            # positions
+            if P:
+                rows = [r for r in P["rows"] if (fi is None or r[0] == fi) and in_group(r[1])]
+                if rows:
+                    pos = {k: clean(sum(r[i] for r in rows)) for k, i in (("f", 3), ("t", 4), ("af", 5), ("at", 6))}
+                    pos["by_cls"] = {c: [clean(sum(r[3] for r in rows if r[2] == c)), clean(sum(r[4] for r in rows if r[2] == c))]
+                                     for c in P["classes"] if any(r[2] == c for r in rows)}
+                    mi = mo = miss = 0.0
+                    missing_orgs, moves = set(), []
+                    for a in P["artifacts"]:
+                        if a["kind"] == "moved":
+                            n = sum(a["n"].values())
+                            dest_in = in_group(a["unit"]) and (fi is None or funds[fi] == a["fund"])
+                            src_in = in_group(a["from_unit"]) and (fi is None or funds[fi] == a["from_fund"])
+                            if dest_in and not src_in:
+                                mi += n
+                                moves.append((a["orgs"][0], 1))
+                            elif src_in and not dest_in:
+                                mo += n
+                                moves.append((a["orgs"][0], -1))
+                        elif a["kind"] == "missing_schedule" and in_group(a["unit"]) and (fi is None or funds[fi] == a["fund"]):
+                            miss += a["n_other"] if a["side"] == "from" else -a["n_other"]
+                            missing_orgs.update(a["orgs"])
+                    pos |= {"moved_in": clean(mi), "moved_out": clean(mo), "missing": clean(miss)}
+                    s["pos"] = pos
+                    # titles, on the adjusted basis: moved positions count where they work now; orgs a book has no
+                    # schedule page for are left out of both sides
+                    keep = lambda o: (o in org_fund and o in codes and o not in missing_orgs and in_group(codes[o])
+                                      and (fi is None or org_fund[o] == funds[fi]))
+                    tf, tt = titles_of(frm, keep), titles_of(to, keep)
+                    for org, sg in moves:
+                        moved = org_titles(frm, org) - org_titles(to, org)
+                        for k, n in moved.items():
+                            tf[k] += n * sg
+                    tf = Counter({k: n for k, n in tf.items() if n > 1e-9})
+                    gone = [k for k in tf if k not in tt]
+                    new = [k for k in tt if k not in tf]
+                    clear = [k for k in tf if k in tt and abs(tf[k] - tt[k]) >= TITLE_MIN - 1e-9]
+                    if not (gone and new):  # titles only on one side are named only when nothing could be a rename
+                        clear += [k for k in gone + new if max(tf.get(k, 0), tt.get(k, 0)) >= TITLE_MIN - 1e-9]
+                    # Two titles that start with the same two words and change in opposite directions may be one
+                    # title worded two ways ("Plant Maintenance Mech 3", "Plant Maintenance Mechanic"): name neither.
+                    dt = lambda k: tt.get(k, 0) - tf.get(k, 0)
+                    twin = {k for k in clear for j in clear if j != k and k.split()[:2] == j.split()[:2] and dt(k) * dt(j) < 0}
+                    clear = [k for k in clear if k not in twin]
+                    clear.sort(key=lambda k: (-abs(tt.get(k, 0) - tf.get(k, 0)), k))
+                    if clear:
+                        s["titles"] = [[title_name(k), clean(tf.get(k, 0)), clean(tt.get(k, 0))] for k in clear[:3]]
+                    if gone and new:
+                        s["titles_renamed"] = True
+            # shifts into or out of the General Fund that touch this group
+            if parse_year(comp["from"]) != parse_year(comp["to"]):
+                sh = [j for j, x in enumerate(shifts) if gf in (x["from_fund"], x["to_fund"])
+                      and (fi is None or funds[fi] in (x["from_fund"], x["to_fund"]))
+                      and (in_group(x["from"]["unit"]) or (x.get("to") and in_group(x["to"]["unit"])))]
+                if sh:
+                    s["shifts"] = sh
+            if len(s) > 1 or net:
+                block[kind][str(g)] = s
+        out[scope] = block
+    return out
+
+
+def parse_year(k: str) -> str:
+    return k.split("|")[0]
+
+
+# ---------------------------------------------------------------------------------------------
 # Policy notes
 # ---------------------------------------------------------------------------------------------
 def policy_notes(docs: list) -> list:
@@ -553,6 +732,22 @@ def policy_notes(docs: list) -> list:
             if m.group(1) not in docs:
                 raise SystemExit(f"policy_notes.csv: unknown source document {m.group(1)}")
             e["d"], e["p"] = docs.index(m.group(1)), int(m.group(2))
+        out.append(e)
+    return out
+
+
+def line_notes(docs: list) -> list:
+    """Hand-kept, sourced context for one line in one year (data/line_notes.csv): year, figure, account, text, source.
+    The site shows it beside the generated note for a line far above the years either side of it."""
+    if not LINE_NOTES_CSV.exists():
+        return []
+    out = []
+    for r in read_csv(LINE_NOTES_CSV):
+        e = {"year": int(r["year"]), "figure": r["figure"].strip(), "account": r["account"].strip(), "text": r["text"].strip()}
+        m = re.match(r"(.+\.pdf)#page=(\d+)$", r["source"].strip(), re.I)
+        if not m or m.group(1) not in docs:
+            raise SystemExit(f"line_notes.csv: source must be <budget book pdf>#page=N, got {r['source']!r}")
+        e["d"], e["p"] = docs.index(m.group(1)), int(m.group(2))
         out.append(e)
     return out
 
@@ -611,6 +806,12 @@ def build_changes(budget: dict, processed: Path, designated: dict, newest: int, 
             comp["positions"] = compare_positions(budget, schedules[f], schedules[t], codes, units, known,
                                                   shifts if f.split("|")[0] != t.split("|")[0] else [], ctx)
         comparisons[cid] = comp
+    for cid, comp in comparisons.items():
+        t, f = comp["to"], comp["from"]
+        if comp.get("positions"):
+            comp["summary"] = summaries(budget, comp, shifts, schedules[f], schedules[t], codes, units)
+        else:
+            comp["summary"] = summaries(budget, comp, shifts, {}, {}, codes, units)
     for s in shifts:
         s.setdefault("positions", {})
     return {
@@ -621,4 +822,5 @@ def build_changes(budget: dict, processed: Path, designated: dict, newest: int, 
         "comparisons": comparisons,
         "shifts": shifts,
         "policy": policy_notes(docs),
+        "line_notes": line_notes(docs),
     }

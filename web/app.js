@@ -273,6 +273,9 @@
       + (scope ? '' : extraFundViews().map((f) => opt(f, f, f === S.f)).join(''));
   }
 
+  /* One tab-group field for every controls panel (Figure, Show): square segmented buttons named by their visible label. */
+  const tabField = (name, label, items, cur, extra = '') => `<div class="field field-wide"><span class="field-label" id="lbl-${name}">${label}</span><div class="tabs" role="radiogroup" aria-labelledby="lbl-${name}">${items.map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === cur}" data-tab="${name}" data-v="${v}">${esc(l)}</button>`).join('')}</div>${extra}</div>`;
+
   function reserveFiltersHTML() {
     const ys = [...new Set(D.reserve.entries.map((e) => e.year))].sort((a, b) => b - a);
     const ms = ORDER.filter((m) => resFind(S.y, m));
@@ -281,7 +284,7 @@
         <div class="field"><label class="field-label" for="f-y">Fiscal year</label><select id="f-y" data-sel="y">${ys.map((y) => `<option value="${y}" ${y === S.y ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
         <div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select>${defineFund()}</div>
       </div>
-      ${ms.length > 1 ? `<div class="filters"><div class="field field-wide"><span class="field-label" id="lbl-m">Figure</span><div class="tabs" role="radiogroup" aria-label="m">${ms.map((m) => `<button type="button" role="radio" aria-checked="${m === S.m}" data-tab="m" data-v="${m}">${esc(LABEL[m])}</button>`).join('')}</div>${defineFigures()}</div></div>` : ''}`;
+      ${ms.length > 1 ? `<div class="filters">${tabField('m', 'Figure', ms.map((m) => [m, LABEL[m]]), S.m, defineFigures())}</div>` : ''}`;
   }
 
   /* Short plain definitions beside the controls. A <details> works on touch and with screen readers (no hover or title). */
@@ -294,24 +297,24 @@
   const defineFund = () => (isCounty() ? `<details class="define"><summary>What is a fund?</summary><p>A fund is a separate account the County keeps for a purpose. The General Fund pays for most County services and is paid for mostly by property taxes. The others, such as Children &amp; Youth, Aging, Behavioral Health and Liquid Fuels, take in their own grants and transfers and are not mixed with it. The County prints the fund letters without names; the names here come from the County's audited report.</p></details>`
     : `<details class="define"><summary>What is a fund?</summary><p>A fund is a separate account the city keeps for a purpose. The General Fund pays for most city services and is paid for mostly by taxes; others, such as water, sewer, stormwater and trash, are paid for by their own fees and are not mixed with it. The Reserve Fund is the General Fund's savings balance.</p></details>`);
 
-  /* The controls sit behind a one-line summary and a "Change" button, so content comes first. Open by default
-     on wide screens, closed on phones; the visitor's last choice is remembered (localStorage may be blocked). */
+  /* One controls component for every page (home with any fund, the Reserve Fund, department and bureau pages, What changed):
+     a one-line strip (the year's status stamp, then "Viewing …") with a "Change view" / "Close" button, and the fields
+     below it. Closed by default on every screen size so content comes first; the visitor's last choice is remembered
+     (localStorage may be blocked). */
   let ctlOpen = null;
-  const controlsOpen = (closedFirst = false) => {
+  const controlsOpen = () => {
     if (ctlOpen == null) {
       try { const v = localStorage.getItem('controlsOpen'); if (v === '1' || v === '0') ctlOpen = v === '1'; } catch (e) { /* no storage */ }
     }
-    if (ctlOpen != null) return ctlOpen;
-    // No saved choice: department and bureau pages start closed so the charts come first.
-    return closedFirst ? false : !matchMedia('(max-width: 767px)').matches;
+    return ctlOpen ?? false;
   };
   function setControls(open) {
     ctlOpen = open;
     try { localStorage.setItem('controlsOpen', open ? '1' : '0'); } catch (e) { /* the choice lasts for this visit */ }
   }
-  function controlsWrap(inner, summary, closedFirst = false) {
-    const open = controlsOpen(closedFirst);
-    return `<div class="controls"><div class="controls-bar"><p class="controls-sum" id="controls-sum">${summary}</p>
+  function controlsWrap(inner, summary, stamp = statusHTML()) {
+    const open = controlsOpen();
+    return `<div class="controls"><div class="controls-bar"><p class="controls-sum" id="controls-sum">${stamp}${summary}</p>
         <button type="button" class="btn btn-outline controls-btn" data-toggle-controls aria-expanded="${open}" aria-controls="controls-panel">${open ? 'Close' : 'Change view'}</button></div>
       <div class="controls-panel" id="controls-panel"${open ? '' : ' hidden'}>${inner}</div></div>`;
   }
@@ -323,8 +326,12 @@
     return ks.flatMap((kk) => rows(kk).filter((r) => (scope.dept == null || r.od === scope.dept) && (scope.unit == null || r.unit === scope.unit)));
   }
 
-  function filtersHTML({ fund = true, scope = null, closedFirst = false, lead = '' } = {}) {
-    if (isReserve()) return controlsWrap(reserveFiltersHTML(), `Viewing ${esc(D.reserve.name)} · ${S.y}${S.m ? ' ' + esc(LABEL[S.m]) : ''}`);
+  function filtersHTML({ fund = true, scope = null } = {}) {
+    if (isReserve()) {
+      const e = resFind(S.y, S.m);
+      const stamp = e ? `<span class="status${e.measure === 'proposed' || e.measure === 'revised' ? ' not-adopted' : ''}">${e.year}: ${esc(RES_STATUS[e.measure])}</span>` : '';
+      return controlsWrap(reserveFiltersHTML(), `Viewing ${S.y}${S.m ? ' ' + esc(LABEL[S.m]) : ''} · ${esc(D.reserve.name)}`, stamp);
+    }
     const k = key(S.y, S.m);
     const yrs = years().map((y) => `<option value="${y}" ${y === S.y ? 'selected' : ''}>${y}</option>`).join('');
     const opts = Object.keys(D.series).filter((x) => x !== k)
@@ -335,25 +342,24 @@
     const sr = scope ? scopeRows(scope) : null;
     const present = new Set((sr || rows(k)).map((r) => r.fund));
     const funds = fundOptions(present, scope);
-    const tabs = (name, items, cur) => `<div class="tabs" role="radiogroup" aria-label="${name}">${items.map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === cur}" data-tab="${name}" data-v="${v}">${esc(l)}</button>`).join('')}</div>`;
     // Offer Spending / Income only where the page has both kinds of lines.
     const kinds = sr ? ['expense', 'revenue'].filter((kd) => kd === S.k || sr.some((r) => (kd === 'revenue') === isRevenue(r))) : ['expense', 'revenue'];
     const kindTabs = kinds.length > 1
-      ? `<div class="field field-wide"><span class="field-label" id="lbl-k">Show</span>${tabs('k', [['expense', 'Spending'], ['revenue', 'Income']], S.k)}</div>` : '';
+      ? tabField('k', 'Show', [['expense', 'Spending'], ['revenue', 'Income']], S.k) : '';
     const showFund = fund && (!scope || [...present].length + (S.f && !present.has(D.funds.indexOf(S.f)) ? 1 : 0) > 1 || !S.f);
     const inner = `<div class="filters">
         <div class="field"><label class="field-label" for="f-y">Fiscal year</label><select id="f-y" data-sel="y">${yrs}</select></div>
         <div class="field"><label class="field-label" for="f-c">Compare with</label><select id="f-c" data-sel="c">${cmp}</select>${defineFigures()}</div>
-        ${showFund ? `<div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select>${defineFund()}</div>` : ''}
+        ${showFund ? `<div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f"${scope ? ' aria-describedby="f-f-note"' : ''}>${funds}</select>${scope ? `<p class="field-note" id="f-f-note">Only the funds this ${scope.unit != null ? 'bureau' : 'department'} uses are listed.</p>` : ''}${defineFund()}</div>` : ''}
       </div>
       <div class="filters">
-        ${measuresFor(S.y).length > 1 ? `<div class="field field-wide"><span class="field-label" id="lbl-m">Figure</span>${tabs('m', measuresFor(S.y).map((m) => [m, LABEL[m]]), S.m)}${defineFigures()}</div>` : ''}
+        ${measuresFor(S.y).length > 1 ? tabField('m', 'Figure', measuresFor(S.y).map((m) => [m, LABEL[m]]), S.m, defineFigures()) : ''}
         ${kindTabs}
       </div>`;
     const parts = [`Viewing ${esc(seriesLabel(k))}`, S.c ? `compared with ${esc(seriesLabel(S.c))}` : 'no comparison'];
     if (fund) parts.push(esc(fn(S.f) || 'All funds'));
     parts.push(kindWordPlain());
-    return controlsWrap(inner, `${lead}${lead ? ' ' : ''}${parts.join(' · ')}`, closedFirst);
+    return controlsWrap(inner, parts.join(' · '));
   }
 
   function onFilter(name, v) {
@@ -371,7 +377,10 @@
     } else if (name === 'f') {
       over.f = v;
     }
+    // The page re-renders; keep keyboard focus on the control that was used (a select keeps its id).
+    const id = document.activeElement?.id;
     navigate(currentHash()(over), true);
+    if (id && name !== 'm' && name !== 'k') $(id)?.focus({ preventScroll: true });
   }
 
   function destroyCharts() { charts.forEach((c) => c.destroy()); charts = []; }
@@ -418,7 +427,7 @@
       <p class="panel-note${bare ? ' panel-note-left' : ''}">${kindWordPlain()}${S.f ? ' · ' + esc(fn(S.f)) : ''}. ${isCounty() ? 'Each year shows the County\'s budget.' : 'Each year shows one kind of figure: actual, projected or proposed.'}</p>
       <ul class="trend-legend" aria-hidden="true">${legend}</ul>${revision}
       <div class="chart-box short"><canvas id="trend-chart" role="img" aria-label="Totals by year, ${pts[0].y} to ${pts[pts.length - 1].y}. Solid line: actual. Dashed line: projected. Hollow diamond: proposed. Solid dot: revised. The table below has the values."></canvas></div>
-      <p class="trend-axis" id="trend-axis"></p>
+      <p class="trend-axis" id="trend-axis"></p>${spikeNotes(scope, S.k)}
       <details class="values"><summary>Show values</summary><div class="table-scroll"><table class="table"><thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Total</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>${gapNotes(notes)}</details>`;
     return bare ? inner : `<section class="panel" aria-labelledby="tr-t">${inner}</section>`;
   }
@@ -453,6 +462,57 @@
         plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { label: (c) => (c.datasetIndex === 0 ? `${LABEL[main[c.dataIndex].m]}: ${money(c.raw)}` : `${c.dataset.label}: ${money(c.raw)}`) } } },
         scales: { x: { offset: true, ticks: { color: INK }, grid: { color: th.grid } }, y: { beginAtZero: yMin === 0, min: yMin || undefined, ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid } } } } }));
   }
+  /* ---------- A line far above the years either side of it (e.g. 2025 Building Permits) ----------
+     Along the Actual / Projected line (then the newest year's figure), a line whose amount in one year is at least
+     SPIKE_X times its amount in both the year before and the year after (both printed and above zero), where the jump
+     is at least SPIKE_SHARE of its fund's total of that kind that year. Found from the lines, never typed in; named under
+     Totals by Year and on What changed. check_dataset.py lists the same lines. */
+  const SPIKE_X = 2, SPIKE_SHARE = 0.05;
+  const spikeCache = new Map();
+  const trendKeys = () => years().slice().sort((a, b) => a - b)
+    .map((y) => { const m = ['actual', 'projected'].find((x) => series(key(y, x))) || (y === D.newest_year ? defaultMeasure(y) : null); return m ? key(y, m) : null; })
+    .filter(Boolean);
+  function lineSpikes(kind) {
+    if (spikeCache.has(kind)) return spikeCache.get(kind);
+    const ks = trendKeys();
+    const by = ks.map((k) => {
+      const m = new Map(), tot = new Map();
+      for (const r of rows(k)) {
+        if ((kind === 'revenue') !== isRevenue(r)) continue;
+        tot.set(r.fund, (tot.get(r.fund) || 0) + r.v);
+        const id = `${r.fund}|${r.code}`, g = m.get(id);
+        if (g) g.v += r.v; else m.set(id, { k, v: r.v, d: r.d, p: r.p, r });
+      }
+      return { m, tot };
+    });
+    const out = [];
+    for (let i = 1; i < ks.length - 1; i++) {
+      for (const [id, x] of by[i].m) {
+        const a = by[i - 1].m.get(id), b = by[i + 1].m.get(id);
+        if (!a || !b || a.v <= 0 || b.v <= 0) continue;
+        const nb = Math.max(a.v, b.v);
+        if (x.v >= SPIKE_X * nb && x.v - nb >= SPIKE_SHARE * by[i].tot.get(x.r.fund)) {
+          out.push({ k: x.k, v: x.v, d: x.d, p: x.p, prev: a, next: b, code: x.r.code, name: x.r.name, fund: x.r.fund, unit: x.r.unit, od: x.r.od });
+        }
+      }
+    }
+    spikeCache.set(kind, out);
+    return out;
+  }
+  // The spikes inside a scope (the Fund selector, and a department or bureau). A bureau page covers all its funds.
+  const spikesIn = (kind, scope = {}, k = null) => lineSpikes(kind).filter((s) => (!k || s.k === k)
+    && (scope.unit != null ? s.unit === scope.unit : (!S.f || s.fund === D.funds.indexOf(S.f)) && (scope.dept == null || s.od === scope.dept)));
+  // "Building Permits brought in $9.03M in 2025 Actual, against $1.34M in 2024 Actual and $1.94M in 2026 Projected"
+  function spikeSentence(s, kind) {
+    const at = (x) => `${src(mny(x.v), x.k, x.d, x.p)} in ${esc(seriesLabel(x.k))}`;
+    return `${S.f ? '' : `${esc(D.funds[s.fund])} `}${esc(s.name)} ${kind === 'revenue' ? 'brought in' : 'came to'} ${at(s)}, against ${at(s.prev)} and ${at(s.next)}`;
+  }
+  // What the budget book says about that line in that year, where data/line_notes.csv records it (changes.json line_notes).
+  const spikeContext = (s) => (CH?.line_notes || [])
+    .filter((n) => key(n.year, n.figure) === s.k && n.account === s.code)
+    .map((n) => ` ${esc(n.text)} <span class="wc-srcnote">${srcDoc('Budget book', n.d, n.p)}</span>`).join('');
+  const spikeNotes = (scope, kind) => spikesIn(kind, scope).map((s) => `<p class="trend-spike"><strong>${esc(String(parseKey(s.k).y))} stands out:</strong> ${spikeSentence(s, kind)}.${spikeContext(s)}</p>`).join('');
+
   /* What a scope's total is called in a gap note ("General Fund spending", "Public Safety spending"). */
   function trendWhat(scope) {
     const name = scope.unit != null ? unitLabel(scope.unit) : scope.dept != null ? O.departments[scope.dept].name : fn(S.f) || CFG.entity.short;
@@ -471,23 +531,51 @@
     return v > 0 ? { v, ...firstPage(l) } : null;
   }
   const millions = (n) => `$${(n / 1e6).toFixed(1)}M`;
+  /* Where the draw comes from, as the Fund Balance Projection page prints it (D.reserve, from data/processed/fund_balance_*.csv):
+     when the page has a "Committed data center revenue" adjustment and that plus the operating deficit equals the draw, the
+     draw is shown as its total with the data center part in parentheses. Otherwise null: the total alone, as before.
+     check_dataset.py checks both parts against the fund balance CSV and that they add up to the draw. */
+  function drawParts(k, drawV) {
+    if (!D.reserve || !drawV) return null;
+    const { y, m } = parseKey(k), e = resFind(y, m);
+    const sur = e?.lines.find((l) => l.t === 'surplus'), dc = e?.lines.find((l) => l.t === 'adjustment' && /data center/i.test(l.l));
+    if (!sur || !dc || sur.v >= 0 || dc.v >= 0 || Math.abs(-(sur.v + dc.v) - drawV) > 5) return null;
+    return { res: { v: -sur.v, d: e.doc, p: sur.p }, dc: { v: -dc.v, d: e.doc, p: dc.p } };
+  }
+  // "($1.9M of it from dedicated data center revenue)" and "$4.7M drawn from savings ($1.9M of it from dedicated data center
+  // revenue)": the total first, the data center part in parentheses, both linked to the Fund Balance Projection.
+  const drawDC = (P, f = millions) => `(${srcDoc(f(P.dc.v), P.dc.d, P.dc.p)} of it from dedicated data center revenue)`;
+  const drawSplit = (P, f = millions) => `${srcDoc(f(P.res.v + P.dc.v), P.res.d, P.res.p)} drawn from savings ${drawDC(P, f)}`;
+  // Label under a "Fund Balance Reserve" line: which part it is, where its amount matches one.
+  function drawLineLabel(k, v) {
+    const P = drawParts(k, reserveDraw(k, D.funds.indexOf(DEFAULT_FUND))?.v);
+    if (P && Math.abs(v - P.dc.v) < 0.5) return 'Drawn from savings: dedicated data center revenue (Fund Balance Projection)';
+    if (P && Math.abs(v - P.res.v) < 0.5) return 'Drawn from savings (Fund Balance Projection)';
+    return 'Money drawn from the reserve';
+  }
   function drawNote(k) {
     if (!D.reserve) return '';
     const gf = D.funds.indexOf(DEFAULT_FUND);
     if (gf < 0 || S.f !== D.funds[gf]) return ''; // the draw sits in the General Fund; shown on that view
     const dr = reserveDraw(k, gf);
     if (!dr) return '';
-    return `<p class="draw-note">Balanced by drawing ${src(millions(dr.v), k, dr.d, dr.p)} from the reserve (the budget's “Fund Balance Reserve” line). <a href="${esc(homeHash({ f: D.reserve.name }))}">See the Reserve Fund</a></p>`;
+    const P = drawParts(k, dr.v);
+    return `<p class="draw-note">${P ? `Balanced by ${drawSplit(P)}, as the Fund Balance Projection shows (the budget's “Fund Balance Reserve” lines).` : `Balanced by drawing ${src(millions(dr.v), k, dr.d, dr.p)} from the reserve (the budget's “Fund Balance Reserve” line).`} <a href="${esc(homeHash({ f: D.reserve.name }))}">See the Reserve Fund</a></p>`;
   }
-  /* One line tying the Reserve page's "Revenues" to the General Fund's revenue elsewhere on the site. */
+  /* Under the "How the Balance Changes" table: why the General Fund pages show more income than its Revenues line.
+     The budget books the money drawn from savings as income ("Fund Balance Reserve" lines); the Fund Balance
+     Projection does not. Shown only for a year whose projection prints a Revenues line and whose budget has a draw. */
   function reserveTie(e) {
     const k = key(e.year, e.measure), rev = e.lines.find((l) => l.t === 'revenues');
     if (!rev || !series(k)) return '';
     const gf = D.funds.indexOf(DEFAULT_FUND), dr = reserveDraw(k, gf);
     if (!dr) return '';
-    const gfT = totalOf(rows(k).filter((r) => r.fund === gf && isRevenue(r)), k), gfRev = gfT.v;
-    const gap = Math.round(rev.v + dr.v - gfRev), ties = Math.abs(gap) <= 5;
-    return `<p class="hint tie-note" style="margin-top:0">This page's revenues of ${srcDoc(money(rev.v), e.doc, rev.p)} plus ${src(money(dr.v), k, dr.d, dr.p)} drawn from the reserve (the “Fund Balance Reserve” revenue line) ${ties ? (gap === 0 ? 'equal' : 'equal, within the city\'s rounding,') : `come to ${money(rev.v + dr.v)}, ${money(Math.abs(gap))} ${gap > 0 ? 'more' : 'less'} than`} the General Fund's ${fig(gfT)} of revenue. <a href="${esc(homeHash({ f: DEFAULT_FUND, k: 'revenue', y: e.year, m: e.measure }))}">See General Fund revenue</a></p>`;
+    const gfT = totalOf(rows(k).filter((r) => r.fund === gf && isRevenue(r)), k);
+    const gap = Math.round(rev.v + dr.v - gfT.v), ties = Math.abs(gap) <= 5;
+    const P = drawParts(k, dr.v);
+    const drawn = P ? drawSplit(P) : `${src(millions(dr.v), k, dr.d, dr.p)} drawn from the reserve`;
+    const sum = ties ? '' : ` The two come to ${money(rev.v + dr.v)}, ${money(Math.abs(gap))} ${gap > 0 ? 'more' : 'less'} than the General Fund's income.`;
+    return `<p class="hint tie-note">The ${esc(DEFAULT_FUND)} pages show ${fig(gfT)} of income for ${esc(resLabel(e))}, not the ${srcDoc(money(rev.v), e.doc, rev.p)} on the Revenues line above. The difference is the ${drawn}: the budget counts it as income, on its “Fund Balance Reserve” lines, and this projection does not.${sum} <a href="${esc(homeHash({ f: DEFAULT_FUND, k: 'revenue', y: e.year, m: e.measure }))}">See ${esc(DEFAULT_FUND)} income</a></p>`;
   }
 
   /* ---------- Reserve Fund (General Fund balance) ---------- */
@@ -565,16 +653,15 @@
       ? `<div class="table-scroll"><table class="table"><thead><tr><th scope="col">Line</th><th scope="col" class="num">Amount</th></tr></thead><tbody>${e.lines.map((l) => `<tr><td>${esc(resLineLabel(l, e))}</td><td class="num">${srcDoc(money(l.v), e.doc, l.p)}</td></tr>`).join('')}</tbody></table></div>`
       : `<p class="panel-note" style="margin:0 0 12px">For actual years the city's budget book prints only the closing balance.</p><div class="table-scroll"><table class="table"><tbody><tr><td>${esc(resLineLabel(end, e))}</td><td class="num">${srcDoc(money(end.v), e.doc, end.p)}</td></tr></tbody></table></div>`;
     return `<header class="page-head"><h1 id="page-h" tabindex="-1">${esc(name)}: ${esc(resLabel(e))}</h1>
-        ${ch && ch.p != null ? `<p class="deck"><span class="${ch.d < 0 ? 'down' : ch.d > 0 ? 'up' : 'flat'}">${ch.d < 0 ? 'Down' : ch.d > 0 ? 'Up' : 'No change'} ${mny(Math.abs(ch.d))} (${fmtPct(Math.abs(ch.p))})</span> from ${esc(ch.from)}.</p>` : ''}
         <p class="big-total" aria-live="polite"><span class="big-label">Year-end balance</span> ${srcDoc(money(end.v), e.doc, end.p)}</p>
-        <span class="status${e.measure === 'proposed' || e.measure === 'revised' ? ' not-adopted' : ''}">${e.year}: ${esc(RES_STATUS[e.measure])}</span>
+        ${ch && ch.p != null ? `<p class="deck"><span class="${ch.d < 0 ? 'down' : ch.d > 0 ? 'up' : 'flat'}">${ch.d < 0 ? 'Down' : ch.d > 0 ? 'Up' : 'No change'} ${mny(Math.abs(ch.d))} (${fmtPct(Math.abs(ch.p))})</span> from ${esc(ch.from)}.</p>` : ''}
         ${notices.map((n) => `<div class="notice" role="note">${n}</div>`).join('')}${resGap}</header>
       ${filtersHTML()}
-      <p class="hint" style="margin-top:0">The General Fund's reserve: the cash balance carried from year to year. ${knownLink()}</p>${reserveTie(e)}
+      <p class="hint" style="margin-top:0">The General Fund's reserve: the cash balance carried from year to year. ${knownLink()}</p>
       <section class="panel" aria-labelledby="rb-t"><h2 class="panel-title" id="rb-t">Year-End Balance, ${entries[0].year}–${entries[entries.length - 1].year}</h2>
         <ul class="trend-legend" aria-hidden="true">${colorsLegend}</ul>
         <div class="chart-box"><canvas id="res-chart" role="img" aria-label="Year-end General Fund balance by year: ${esc(entries.map((x) => `${x.year} ${LABEL[x.measure]} ${money(resEnd(x).v)}`).join(', '))}. The table below has the values."></canvas></div>${annot}</section>
-      <section class="panel" aria-labelledby="rd-t"><h2 class="total-label" id="rd-t">${esc(resLabel(e))}: How the Balance Changes</h2>${detail}</section>
+      <section class="panel" aria-labelledby="rd-t"><h2 class="total-label" id="rd-t">${esc(resLabel(e))}: How the Balance Changes</h2>${detail}${reserveTie(e)}</section>
       <section class="panel" aria-labelledby="ry-t"><h2 class="total-label" id="ry-t">Year-End Balance by Year</h2><div class="table-scroll"><table class="table tight">
         <thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Year-end balance</th><th scope="col" class="num">Change</th></tr></thead><tbody>${yrRows}</tbody></table></div></section>`;
   }
@@ -758,19 +845,19 @@
     const ledger = items.length ? ledgerHTML(items, { total, cmpTotal: cmp, k, notes: ledgerNotes }) : '<p class="empty">No lines for this selection.</p>';
     const totalHTML = fig(total, { notes, what });
     const flagNote = gapNotes(notes) + (total.x ? '' : missingNote(k, { fund: S.f }));
-    // The deck says what a resident came to learn: up or down, by how much, and what covers it.
+    // The deck says what a resident came to learn: up or down, by how much, and what covers it. It sits under the total.
     const deck = (() => {
       if (!cmp) return '';
       const d = total.v - cmp.v, p = pctOf(d, cmp.v);
       if (!cmp.v || Math.round(d) === 0) return '';
       const gf = D.funds.indexOf(DEFAULT_FUND), dr = D.reserve && gf >= 0 && S.f === D.funds[gf] ? reserveDraw(k, gf) : null;
       if (isCounty()) return `<p class="deck"><span class="${d > 0 ? 'up' : 'down'}">${fn(S.f) ? `${fn(S.f)} ` : ''}${S.k === 'revenue' ? (fn(S.f) ? 'income' : 'Income') : (fn(S.f) ? 'spending' : 'Spending')} ${d > 0 ? 'up' : 'down'} ${mny(Math.abs(d))} (${fmtPct(Math.abs(p))})<span class="sr-only"> ${d > 0 ? 'higher' : 'lower'}</span></span> from the ${esc(seriesLabel(S.c))}${countyGap(k)}.</p>`;
-      return `<p class="deck"><span class="${d > 0 ? 'up' : 'down'}">${d > 0 ? 'Up' : 'Down'} ${mny(Math.abs(d))} (${fmtPct(Math.abs(p))})<span class="sr-only"> ${d > 0 ? 'higher' : 'lower'}</span></span> from ${esc(seriesLabel(S.c))}${dr ? `, with ${src(millions(dr.v), k, dr.d, dr.p)} drawn from savings. <a class="deck-link" href="${esc(homeHash({ f: D.reserve.name }))}">See the Reserve Fund</a>` : '.'}</p>`;
+      return `<p class="deck"><span class="${d > 0 ? 'up' : 'down'}">${d > 0 ? 'Up' : 'Down'} ${mny(Math.abs(d))} (${fmtPct(Math.abs(p))})<span class="sr-only"> ${d > 0 ? 'higher' : 'lower'}</span></span> from ${esc(seriesLabel(S.c))}${dr ? `, with ${drawParts(k, dr.v) ? drawSplit(drawParts(k, dr.v)) : `${src(millions(dr.v), k, dr.d, dr.p)} drawn from savings`}. <a class="deck-link" href="${esc(homeHash({ f: D.reserve.name }))}">See the Reserve Fund</a>` : '.'}</p>`;
     })();
     return `<header class="page-head"><h1 id="page-h">${esc(scope)} ${kindWord}: ${esc(seriesLabel(k))}</h1>
-        ${deck || `${heroDelta(k, total, cmp)}${drawNote(k)}`}${countyGapNote(k)}
-        <p class="big-total" aria-live="polite"><span class="big-label">${esc(scope)} ${kindWord}</span> ${totalHTML}</p>${flagNote}</header>
-      <div class="home-flow">${filtersHTML({ closedFirst: true, lead: statusHTML() })}
+        <p class="big-total" aria-live="polite"><span class="big-label">${esc(scope)} ${kindWord}</span> ${totalHTML}</p>${flagNote}
+        ${deck || `${heroDelta(k, total, cmp)}${drawNote(k)}`}${countyGapNote(k)}</header>
+      <div class="home-flow">${filtersHTML()}
       ${(() => { const wc = homeChangesHTML(); return `<div class="overview${wc ? '' : ' overview-single'}">${trendHTML({}, 'Totals by Year')}${wc}</div>`; })()}</div>
       <section class="panel" id="sec-departments" tabindex="-1" aria-labelledby="dep-t"><h2 class="panel-title" id="dep-t">${isCounty() ? 'Departments by Group' : 'Departments'}</h2>
         <p class="panel-note">${isCounty() ? 'The County\'s departments are grouped as in its budget book. Select a group to see its departments.' : 'Select a department to see its detailed breakdown.'} Amounts open the source page in the budget book.</p>
@@ -961,7 +1048,7 @@
     let html = crumbsHTML(crumbs);
     if (deptPicker) html += `<div class="field dept-picker"><label class="field-label" for="dept-pick">Department</label>${deptPicker}</div>`;
     html += `<header><h1 class="dept-name" id="page-h" tabindex="-1">${esc(title)}</h1>
-      <p class="dept-total">Total ${kindWord}: <strong class="figure">${totalLink}</strong></p>${headNotes}<p class="dept-sub">${subtitle}</p><p>${statusHTML()}</p></header>${about}`;
+      <p class="dept-total">Total ${kindWord}: <strong class="figure">${totalLink}</strong></p>${headNotes}<p class="dept-sub">${subtitle}</p></header>${about}`;
 
     // One Compare panel holds what used to be five: the two totals, the change, the category bars and the totals by year.
     let compare = '';
@@ -982,7 +1069,7 @@
     const staff = staffHTML(scope);
     const nav = [hasChanges && ['sec-changes', 'What changed'], cats.length && ['sec-compare', 'Compare'], hasBureaus && ['sec-bureaus', isCounty() ? 'Departments' : 'Bureaus'], staff && ['sec-staff', 'Staff'], cats.length && ['sec-categories', 'Categories'], ['sec-lines', 'Line items']].filter(Boolean);
     html += jumpNav(nav);
-    html += `<div class="entity-flow"><div class="dept-filters">${filtersHTML({ fund: !!deptPicker, scope, closedFirst: true })}</div>${changes}${compare}${bureauList}${staff}`;
+    html += `<div class="entity-flow"><div class="dept-filters">${filtersHTML({ fund: !!deptPicker, scope })}</div>${changes}${compare}${bureauList}${staff}`;
     html += categorySection(`${title} ${seriesLabel(k)} ${kindWord} Breakdown`, cats.map(withColor), { k, secId: 'sec-categories' });
     html += `<section class="panel" id="sec-lines" tabindex="-1" aria-labelledby="li-t"><h2 class="total-label" id="li-t">Line Items</h2><div id="li-holder"></div></section></div>`;
     return { html, cats };
@@ -1049,7 +1136,7 @@
     const body = list.slice(0, T.shown).map((e) => {
       const d = val(e, 'sel') - val(e, 'cmp');
       const sub = [e.code, showBureau ? bureauName(e.bureau) : ''].filter(Boolean).map(esc).join(' · ');
-      const draw = /^Fund Balance Reserve/i.test(e.name) && /-499000$/.test(e.code) ? '<span class="sub">Money drawn from the reserve</span>' : '';
+      const draw = /^Fund Balance Reserve/i.test(e.name) && /-499000$/.test(e.code) ? `<span class="sub">${esc(drawLineLabel(e.sel ? k : S.c, (e.sel || e.cmp).v))}</span>` : '';
       return `<tr><td>${esc(e.name)}<span class="sub">${sub}</span>${draw}</td><td class="hide-sm">${esc(D.categories[e.cat])}</td>
         ${S.c ? `<td class="num">${e.cmp ? src(money(e.cmp.v), S.c, e.cmp.d, e.cmp.p) : '—'}</td>` : ''}<td class="num">${e.sel ? src(money(e.sel.v), k, e.sel.d, e.sel.p) : '—'}${S.c && d !== 0 ? `<span class="chg-sm ${d > 0 ? 'up' : 'down'}" aria-label="Change from ${esc(seriesLabel(S.c))}: ${money(d)}">${money(d)}</span>` : ''}</td>
         ${S.c ? `<td class="num hide-sm"><span class="${d > 0 ? 'up' : d < 0 ? 'down' : 'flat'}">${d === 0 ? '—' : money(d)}</span></td>` : ''}</tr>`;
@@ -1250,8 +1337,8 @@
   const bud = (k) => (kindOf(k) === 'budget' ? `${parseKey(k).y} budget` : `${seriesLabel(k)} budget`); // "2026 budget" (the County's figure is already called Budget)
   function fromPhrase(c, spend = true) {
     const { y, m } = parseKey(c.from);
-    if (m === 'projected') return `the city expects to ${spend ? 'spend' : 'take in'} in ${y}`;
-    if (m === 'actual') return `the city ${spend ? 'spent' : 'took in'} in ${y}`;
+    if (m === 'projected') return `the city expects to ${spend ? 'spend' : 'collect'} in ${y}`;
+    if (m === 'actual') return `the city ${spend ? 'spent' : 'collected'} in ${y}`;
     return `the ${bud(c.from)}`;
   }
   const scopeName = () => S.f || 'all';
@@ -1305,14 +1392,55 @@
       }
     }
     const dr = sc.revenue?.draw;
-    if (dr && vOf(dr.t) > 0) s += ` ${S.f ? 'It\'s' : 'The General Fund is'} balanced by drawing ${lnk(dr.t, mny(vOf(dr.t)))} from the reserve.`;
+    if (dr && vOf(dr.t) > 0) {
+      const P = drawParts(c.to, vOf(dr.t));
+      s += ` ${S.f ? 'It\'s' : 'The General Fund is'} balanced by ${P ? drawSplit(P, mny) : `drawing ${lnk(dr.t, mny(vOf(dr.t)))} from the reserve`}.`;
+    }
     return s;
+  }
+
+  /* The Income view's headline: what the newest budget takes in, against the comparison, and the draw inside it. */
+  function incomeSentence(c, sc) {
+    const t = wcTotal(c.to, 'revenue'), f = wcTotal(c.from, 'revenue'), d = vOf(t) - vOf(f), p = vOf(f) ? Math.abs(d / vOf(f)) * 100 : null;
+    let s = `The ${esc(seriesLabel(c.to))} budget takes in ${t ? fig(t, { text: mny(t.v) }) : '$0'} ${S.f ? `in the ${esc(S.f)}` : 'across all funds'}, `
+      + (d === 0 ? `the same as ${fromPhrase(c, false)}.` : `${mny(Math.abs(d))}${p == null ? '' : ` (${p.toFixed(1)}%)`} ${d > 0 ? 'more' : 'less'} than ${fromPhrase(c, false)}.`);
+    const dr = sc.revenue?.draw;
+    if (dr && vOf(dr.t) > 0) {
+      const P = drawParts(c.to, vOf(dr.t));
+      s += ` That includes ${P ? drawSplit(P, mny) : `${lnk(dr.t, mny(vOf(dr.t)))} drawn from the reserve`}.`;
+    }
+    return s;
+  }
+  const ledeFor = (c, sc) => (S.k === 'revenue' && sc.revenue ? incomeSentence(c, sc) : headlineSentence(c, sc));
+
+  /* A line far above the years either side of it (lineSpikes) in either budget being compared: the generated note, and
+     how much of the change it accounts for ("Leaving that line out, income rises $5.7M rather than falling $1.0M"). */
+  function spikeWCNote(c, kind, { brief = false } = {}) {
+    const word = kind === 'revenue' ? 'income' : 'spending';
+    return [c.from, c.to].flatMap((k) => spikesIn(kind, {}, k)).map((s) => {
+      const other = s.k === c.from ? c.to : c.from;
+      const ol = rows(other).filter((r) => r.fund === s.fund && r.code === s.code), ov = sum(ol);
+      const d = vOf(wcTotal(c.to, kind)) - vOf(wcTotal(c.from, kind));
+      const rest = d - (s.k === c.from ? ov - s.v : s.v - ov);
+      const there = ol.length ? `${esc(seriesLabel(other))} has ${src(mny(ov), other, ol[0].d, ol[0].p)}` : `${esc(seriesLabel(other))} has no such line`;
+      const moves = (x, ing) => (Math.round(x) === 0 ? (ing ? 'staying the same' : 'stays the same') : `${x > 0 ? (ing ? 'rising' : 'rises') : (ing ? 'falling' : 'falls')} ${mny(Math.abs(x))}`);
+      // Brief beside Totals by Year (which carries the full note): only what the line does to this comparison.
+      if (brief) return `<p class="wc-spike">Leaving out ${esc(s.name)}, which stands out in ${esc(seriesLabel(s.k))} (${src(mny(s.v), s.k, s.d, s.p)}), ${word} ${moves(rest, false)} rather than ${moves(d, true)}.</p>`;
+      return `<p class="wc-spike"><strong>${esc(String(parseKey(s.k).y))} stands out:</strong> ${spikeSentence(s, kind)}; ${there}. Leaving that line out, ${word} ${moves(rest, false)} rather than ${moves(d, true)}.${spikeContext(s)}</p>`;
+    }).join('');
+  }
+
+  /* The draw's label and its parts in a comparison (see drawParts). */
+  const drawLabel = (c, dr) => (drawParts(c.to, vOf(dr.t)) || drawParts(c.from, vOf(dr.f)) ? 'Drawn from savings (the “Fund Balance Reserve” lines)' : 'Drawn from the reserve (the “Fund Balance Reserve” line)');
+  function drawSplitNote(c, dr) {
+    const parts = [[c.from, dr.f], [c.to, dr.t]].map(([k, x]) => [k, drawParts(k, vOf(x))]).filter(([, P]) => P);
+    return parts.length ? ` (${parts.map(([k, P]) => `${esc(seriesLabel(k))}: ${srcDoc(money(P.dc.v), P.dc.d, P.dc.p)} of it from dedicated data center revenue`).join('; ')})` : '';
   }
 
   function badgeHTML(c) {
     if (c.same_kind) return '';
     const fm = kindOf(c.from);
-    const what = fm === 'projected' ? 'a year-end estimate' : fm === 'actual' ? 'actual spending' : LABEL[fm].toLowerCase();
+    const what = fm === 'projected' ? 'a year-end estimate' : fm === 'actual' ? (isReserve() ? 'an actual year-end balance' : S.k === 'revenue' ? 'actual income' : 'actual spending') : LABEL[fm].toLowerCase();
     const alt = Object.keys(CH.comparisons).filter((x) => x.startsWith(`${c.to}~`) && x !== c.id && crossYear(CH.comparisons[x]));
     const altK = alt.find((x) => kindOf(x.split('~')[1]) === (fm === 'projected' ? 'actual' : 'projected'));
     const sw = altK ? ` <a class="wc-switch" href="${esc(changesHash({ c: altK.split('~')[1] }))}">Compare with ${esc(seriesLabel(altK.split('~')[1]))} instead</a>` : '';
@@ -1323,18 +1451,25 @@
     const tiles = [];
     const ex = sc.expense, notes = new Map();
     const fx = (t, kind) => (t ? fig(t, { notes, what: wcWhat(kind) }) : '$0');
-    if (ex) {
+    if (ex && !(S.k === 'revenue' && sc.revenue)) {
       const tf = wcTotal(c.from, 'expense'), tt = wcTotal(c.to, 'expense');
       tiles.push(['Spending change', deltaHTML(vOf(tt) - vOf(tf), vOf(tf), mny), `${esc(seriesLabel(c.from))} ${fx(tf, 'expense')} → ${esc(seriesLabel(c.to))} ${fx(tt, 'expense')}`]);
     }
     const dr = sc.revenue?.draw;
-    if (dr) tiles.push(['Drawn from the reserve', `<span>${lnk(dr.t, mny(vOf(dr.t)))}</span>`, `${esc(seriesLabel(c.from))}: ${lnk(dr.f, dr.f ? mny(vOf(dr.f)) : '$0')}. Money taken from savings; the budget's “Fund Balance Reserve” line.`]);
-    else if (sc.revenue) {
+    // The Income tile: on the Income view always (first), otherwise only where there is no draw tile.
+    if (sc.revenue && (S.k === 'revenue' || !dr)) {
       const rf = wcTotal(c.from, 'revenue'), rt = wcTotal(c.to, 'revenue');
-      tiles.push(['Income change', deltaHTML(vOf(rt) - vOf(rf), vOf(rf), mny), `${esc(seriesLabel(c.from))} ${fx(rf, 'revenue')} → ${fx(rt, 'revenue')}`]);
+      const t = ['Income change', deltaHTML(vOf(rt) - vOf(rf), vOf(rf), mny), `${esc(seriesLabel(c.from))} ${fx(rf, 'revenue')} → ${esc(seriesLabel(c.to))} ${fx(rt, 'revenue')}`];
+      if (S.k === 'revenue') tiles.unshift(t); else tiles.push(t);
+    }
+    if (dr) {
+      const Pt = drawParts(c.to, vOf(dr.t)), Pf = drawParts(c.from, vOf(dr.f));
+      tiles.push([Pt ? 'Drawn from savings' : 'Drawn from the reserve', `<span>${lnk(dr.t, mny(vOf(dr.t)))}</span>`,
+        Pt ? `Of it, ${srcDoc(mny(Pt.dc.v), Pt.dc.d, Pt.dc.p)} from dedicated data center revenue (Fund Balance Projection). ${esc(seriesLabel(c.from))}: ${lnk(dr.f, dr.f ? mny(vOf(dr.f)) : '$0')}${Pf ? ` ${drawDC(Pf, mny)}` : ''}. The budget's “Fund Balance Reserve” lines.`
+          : `${esc(seriesLabel(c.from))}: ${lnk(dr.f, dr.f ? mny(vOf(dr.f)) : '$0')}. Money taken from savings; the budget's “Fund Balance Reserve” line.`]);
     }
     const P = c.positions;
-    if (P) {
+    if (P && S.k !== 'revenue') {
       const cls = posClass(P), tk = S.f ? String(D.funds.indexOf(S.f)) : 'all', T = P.totals[tk]?.[cls];
       if (T) {
         const mv = movedPositions(P, cls, S.f);
@@ -1343,13 +1478,15 @@
         if (mv.into) parts.push(`${fmtN(mv.into)} moved in from other funds`);
         if (mv.out) parts.push(`${fmtN(mv.out)} moved out`);
         parts.push(`${sgn(T.at - T.af, fmtN)} ${mv.into || mv.out ? 'other change' : 'after corrections'}`);
-        tiles.push([cls === 'FT' ? 'Full-time positions' : 'Positions', nDelta(corrected), `${parts.join(' · ')}. <a href="${esc(changesHash())}" data-scroll="wc-pos">How this is counted</a>`]);
+        // The count itself comes first; the link opens the Positions section of What changed at its explanation.
+        tiles.push([cls === 'FT' ? 'Full-time positions' : 'Positions', nDelta(corrected), `${fmtN(T.t)} budgeted in the ${esc(P.to_label.replace(/ position schedule$/, ''))} schedule · ${parts.join(' · ')}. <a href="${esc(changesHash({ k: 'expense' }))}&amp;s=wc-pos-how" data-scroll="wc-pos-how">How this is counted</a>`]);
       }
     }
     const rc = revisionCmp();
-    if (rc?.scopes[scopeName()]?.expense) {
-      const pf = wcTotal(rc.from, 'expense'), pt = wcTotal(rc.to, 'expense');
-      tiles.push(['Revision vs. proposal', deltaHTML(vOf(pt) - vOf(pf), vOf(pf), mny), `Proposed ${fx(pf, 'expense')} → Revised ${fx(pt, 'expense')}`]);
+    const rk = S.k === 'revenue' && rc?.scopes[scopeName()]?.revenue ? 'revenue' : 'expense';
+    if (rc?.scopes[scopeName()]?.[rk]) {
+      const pf = wcTotal(rc.from, rk), pt = wcTotal(rc.to, rk);
+      tiles.push(['Revision vs. proposal', deltaHTML(vOf(pt) - vOf(pf), vOf(pf), mny), `Proposed ${fx(pf, rk)} → Revised ${fx(pt, rk)}`]);
     }
     return `<ul class="wc-tiles">${tiles.map(([h, big, sub]) => `<li class="wc-tile"><h2 class="wc-tile-h">${h}</h2><p class="wc-tile-v">${big}</p><p class="wc-tile-s">${sub}</p></li>`).join('')}</ul>${foot ? gapNotes(notes) : ''}`;
   }
@@ -1413,7 +1550,7 @@
     const body = idx.map((i) => {
       const ln = c.lines[i], a = acctOf(ln), u = unitOfLine(ln), d = lineD(ln);
       const sub = [a[0], unitLabel(u, D.categories[a[5]] === 'Revenue' ? 'revenue' : 'expense'), showFund ? fn(D.funds[a[2]]) : ''].filter(Boolean).map(esc).join(' · ');
-      const drawNoteTxt = /^Fund Balance Reserve/i.test(a[1]) && /-499000$/.test(a[0]) ? '<span class="sub">Money drawn from the reserve</span>' : '';
+      const drawNoteTxt = /^Fund Balance Reserve/i.test(a[1]) && /-499000$/.test(a[0]) ? `<span class="sub">${esc(ln[4] != null ? drawLineLabel(c.to, ln[4]) : drawLineLabel(c.from, ln[1]))}</span>` : '';
       return `<tr><td>${esc(a[1])}<span class="sub">${sub}</span>${drawNoteTxt}${mergeNote(c, i)}</td><td class="num hide-sm">${ln[1] == null ? '—' : lnk(lineF(ln))}</td><td class="num">${ln[4] == null ? '—' : lnk(lineT(ln))}<span class="wc-sm">${sgn(d, money)}</span></td><td class="num hide-sm">${deltaHTML(d, ln[1])}</td></tr>`;
     }).join('');
     return `<div class="table-scroll"><table class="table tight wc-lines">${caption ? `<caption>${caption}</caption>` : ''}<thead><tr><th scope="col">Line item</th><th scope="col" class="num hide-sm">${esc(seriesLabel(c.from))}</th><th scope="col" class="num">${esc(seriesLabel(c.to))}</th><th scope="col" class="num hide-sm">Change</th></tr></thead><tbody>${body}</tbody></table></div>`;
@@ -1454,8 +1591,21 @@
     }).join('');
     const titles = compact ? [] : P.artifacts.filter((a) => a.kind === 'titles' && (fi == null || a.fund === fund) && (dept == null || O.units[a.unit].dept === dept) && (unit == null || a.unit === unit));
     const titleNote = titles.length ? `<details class="values"><summary>Renamed titles in ${titles.length} bureau${titles.length === 1 ? '' : 's'}</summary><ul class="wc-notes">${titles.map((a) => `<li><strong>${esc(O.units[a.unit].name)}:</strong> ${esc(a.text)}</li>`).join('')}</ul></details>` : '';
-    const explain = `<p class="wc-note">“Schedule change” is the difference between the two books' position schedules, line for line. “Real change” leaves out what is not a real change: positions that moved between funds with their work, positions marked full-time in one book and part-time in the other, and bureaus a book has no schedule page for. Each is listed in the notes.</p>`;
-    return `${compact ? '' : explain}${tables}${notes ? `<ol class="wc-notes">${notes}</ol>` : ''}${titleNote}`;
+    // The page's own explanation (the "How this is counted" link lands here): the count first, then how it is made.
+    let explain = '';
+    if (!compact) {
+      const T = P.totals[fi == null ? 'all' : String(fi)];
+      const pg = (i) => { const ps = rows.map((r) => r[i]).filter((x) => x != null); return ps.length ? Math.min(...ps) : null; };
+      const n = (v, doc, page) => (page != null ? srcDoc(fmtN(v), doc, page) : fmtN(v));
+      const lbl = (l) => esc(l.replace(/ budget book's position schedule$/, ' budget book').replace(/ position schedule$/, ''));
+      const count = (cls) => { const x = T?.[cls]; return x ? `${n(x.t, P.to_doc, pg(8))} in the ${lbl(P.to_label)} schedule, against ${n(x.f, P.from_doc, pg(7))} in the ${lbl(P.from_label)}` : ''; };
+      const main = posClass(P), mv = movedPositions(P, main, fund);
+      const moved = [mv.into && `${fmtN(mv.into)} moved in from other funds with their work`, mv.out && `${fmtN(mv.out)} moved out to other funds`].filter(Boolean);
+      explain = `<p class="wc-pos-count" id="wc-pos-how" tabindex="-1"><strong>${main === 'FT' ? 'Full-time positions' : 'Positions'} budgeted${fund ? `, ${esc(fund)}` : ', all funds'}:</strong> ${count(main)}.${moved.length ? ` Of the change, ${listWords(moved)}.` : ''}${P.classes.includes('PT') && (T?.PT?.t || T?.PT?.f) ? ` Part-time: ${fmtN(T.PT.t)}, against ${fmtN(T.PT.f)}.` : ''}</p>
+        <p class="wc-note"><strong>How positions are counted.</strong> Each budget book has a position schedule: pages listing every job title the budget pays for, office by office. Each line there counts as one position, or as the share of one paid from that office's budget, so a job split between two offices or funds counts as part of a position in each (for example 0.5). Full-time and part-time are as the schedule marks them. These are positions the budget pays for, not a count of people employed.</p>
+        <p class="wc-note">“Schedule change” is the difference between the two schedules, line for line. “Real change” leaves out what is not a real change: positions that moved between funds with their work (counted as moved, not added in one fund and cut in the other), positions marked full-time in one book and part-time in the other, and offices a book has no schedule page for. Each is listed in the notes under the table.</p>`;
+    }
+    return `${explain}${tables}${notes ? `<ol class="wc-notes">${notes}</ol>` : ''}${titleNote}`;
   }
 
   function benefitsLine(c, sc) {
@@ -1473,7 +1623,7 @@
     const fact = (label, kind) => { const f = wcTotal(rc.from, kind), t = wcTotal(rc.to, kind); return `<li>${label}: ${f ? fig(f) : '$0'} → ${t ? fig(t) : '$0'}, ${deltaHTML(vOf(t) - vOf(f), vOf(f))}</li>`; };
     if (sc?.expense) parts.push(fact('Spending', 'expense'));
     if (sc?.revenue) parts.push(fact('Income', 'revenue'));
-    if (sc?.revenue?.draw) parts.push(`<li>Drawn from the reserve (the “Fund Balance Reserve” line): ${lnk(sc.revenue.draw.f)} → ${lnk(sc.revenue.draw.t)}</li>`);
+    if (sc?.revenue?.draw) parts.push(`<li>${drawLabel(rc, sc.revenue.draw)}: ${lnk(sc.revenue.draw.f)} → ${lnk(sc.revenue.draw.t)}${drawSplitNote(rc, sc.revenue.draw)}</li>`);
     const P = rc.positions, tk = S.f ? String(D.funds.indexOf(S.f)) : 'all';
     if (P?.totals[tk]) parts.push(`<li>Positions: ${P.classes.map((cls) => { const d = P.totals[tk][cls].t - P.totals[tk][cls].f; return `${nDelta(d)} ${clsWord(cls, Math.abs(d) !== 1)}`; }).join(', ')}</li>`);
     const fi = S.f ? D.funds.indexOf(S.f) : null;
@@ -1509,20 +1659,63 @@
     return `<div class="wc-policies"><p class="wc-note">Tax rates are not printed in the budget tables. These notes say what the proposal and the revision did to them, next to the revenue line each one affects.</p>${blocks}</div>`;
   }
 
+  /* What changed for the Reserve Fund: the year-end balance in the newest figure against the comparison's, and the lines of
+     the Fund Balance Projection page that move it (beginning balance, revenues, expenditures, the operating deficit, the
+     committed data center revenue, ending balance), side by side where both figures print them. Every amount links to its
+     page; the draw is worded as everywhere else ("$4.7M drawn from savings ($1.9M of it from dedicated data center revenue)"). */
+  function reserveChangesPage(c) {
+    const name = D.reserve.name, to = resFind(D.newest_year, S.m), from = resFind(parseKey(c.from).y, parseKey(c.from).m);
+    document.title = `What changed: ${seriesLabel(c.to)} · ${name} · ${CFG.site_title}`;
+    const h1 = `<h1 id="page-h" tabindex="-1">What changed in ${D.newest_year}</h1>`;
+    if (!to || !from) {
+      return { html: `<header class="page-head wc-head">${h1}<p class="wc-lede">The ${esc(name)} has no Fund Balance Projection figures for ${esc(seriesLabel(to ? c.from : c.to))}, so there is nothing to compare.</p></header>${changesFiltersHTML(c)}` };
+    }
+    const te = resEnd(to), fe = resEnd(from), d = te.v - fe.v, p = fe.v ? Math.abs(d / fe.v) * 100 : null;
+    const endWord = (e) => (e.measure === 'actual' ? `the city ended ${e.year} with` : e.measure === 'projected' ? `the city expects at the end of ${e.year}` : `the ${esc(resLabel(e))} budget leaves`);
+    const gf = D.funds.indexOf(DEFAULT_FUND), dr = reserveDraw(c.to, gf), P = dr ? drawParts(c.to, dr.v) : null;
+    let lede = `The ${esc(seriesLabel(c.to))} budget leaves ${srcDoc(mny(te.v), to.doc, te.p)} in the ${esc(name)} at the end of ${to.year}, `
+      + (Math.round(d) === 0 ? `the same as ${endWord(from)}.` : `${mny(Math.abs(d))}${p == null ? '' : ` (${p.toFixed(1)}%)`} ${d > 0 ? 'more' : 'less'} than the ${srcDoc(mny(fe.v), from.doc, fe.p)} ${endWord(from)}.`);
+    if (dr) lede += ` The ${esc(DEFAULT_FUND)} budget is balanced by ${P ? drawSplit(P, mny) : `${src(mny(dr.v), c.to, dr.d, dr.p)} drawn from savings`}.`;
+    // The newest column's own starting balance can differ from where the comparison ends (the book prints two 12/31/2025 balances).
+    const tb = to.lines.find((l) => l.t === 'beginning');
+    const start = tb && Math.abs(tb.v - fe.v) > 5 && tb.fy === from.year
+      ? `<p class="hint wc-fundnote">The ${esc(resLabel(to))} column starts ${to.year} from ${srcDoc(money(tb.v), to.doc, tb.p)}, not the ${srcDoc(money(fe.v), from.doc, fe.p)} that ${esc(resLabel(from))} ends with: the city's book prints two different balances for the start of the year. ${knownLink()}</p>` : '';
+    // Lines matched by kind (adjustments in the order printed); the label is the newest figure's own.
+    const kinds = ['beginning', 'revenues', 'expenditures', 'surplus'];
+    const pick = (e, t, i = 0) => e.lines.filter((l) => l.t === t)[i];
+    const adjN = Math.max(...[to, from].map((e) => e.lines.filter((l) => l.t === 'adjustment').length));
+    const rowsSpec = [...kinds.map((t) => [t, 0]), ...Array.from({ length: adjN }, (_, i) => ['adjustment', i]), ['ending', 0]];
+    const both = from.lines.length > 1;
+    const amt = (e, l) => (l ? srcDoc(money(l.v), e.doc, l.p) : '—');
+    const body = rowsSpec.map(([t, i]) => {
+      const a = pick(from, t, i), b = pick(to, t, i);
+      if (!a && !b) return '';
+      const lbl = t === 'beginning' ? 'Beginning balance' : t === 'ending' ? 'Ending balance' : resLineLabel(b || a, b ? to : from);
+      return `<tr><td>${esc(lbl)}</td>${both ? `<td class="num">${amt(from, a)}</td>` : ''}<td class="num">${amt(to, b)}</td>${both ? `<td class="num">${a && b ? deltaHTML(b.v - a.v, a.v) : '—'}</td>` : ''}</tr>`;
+    }).join('');
+    const only = both ? '' : `<p class="wc-note">For ${esc(resLabel(from))} the Fund Balance Projection prints only the closing balance (${srcDoc(money(fe.v), from.doc, fe.p)}), so there are no lines to compare. The table shows the ${esc(resLabel(to))} lines.</p>`;
+    const table = `<section class="panel" aria-labelledby="wc-res"><h2 class="total-label" id="wc-res">What moves the balance</h2>${only}
+      <div class="table-scroll"><table class="table tight"><thead><tr><th scope="col">Fund Balance Projection line</th>${both ? `<th scope="col" class="num">${esc(resLabel(from))}</th>` : ''}<th scope="col" class="num">${esc(resLabel(to))}</th>${both ? '<th scope="col" class="num">Effect on the balance</th>' : ''}</tr></thead><tbody>${body}</tbody></table></div>
+      <p class="wc-note wc-after">The ${esc(DEFAULT_FUND)}'s budget lists the money drawn from savings as income (its “Fund Balance Reserve” lines); this page leaves it out of Revenues and shows it as the deficit and the committed data center revenue. <a href="${esc(homeHash({ f: name, y: to.year, m: to.measure }))}">See the ${esc(name)}</a></p></section>`;
+    const tiles = `<ul class="wc-tiles"><li class="wc-tile"><h2 class="wc-tile-h">Balance change</h2><p class="wc-tile-v">${deltaHTML(d, fe.v, mny)}</p><p class="wc-tile-s">${esc(resLabel(from))} ${srcDoc(money(fe.v), from.doc, fe.p)} → ${esc(resLabel(to))} ${srcDoc(money(te.v), to.doc, te.p)}</p></li>${dr ? `<li class="wc-tile"><h2 class="wc-tile-h">Drawn from savings</h2><p class="wc-tile-v"><span>${src(mny(dr.v), c.to, dr.d, dr.p)}</span></p><p class="wc-tile-s">${P ? `Of it, ${srcDoc(mny(P.dc.v), P.dc.d, P.dc.p)} from dedicated data center revenue (Fund Balance Projection).` : 'The budget\'s “Fund Balance Reserve” lines.'}</p></li>` : ''}</ul>`;
+    return { html: `<header class="page-head wc-head">${h1}<p class="wc-lede">${lede}</p>${badgeHTML(c)}${start}</header>${changesFiltersHTML(c)}${tiles}${table}` };
+  }
+
   function changesFiltersHTML(c) {
     const to = key(D.newest_year, S.m);
     const opts = Object.keys(CH.comparisons).filter((x) => x.startsWith(`${to}~`)).map((x) => x.split('~')[1]);
     const ms = measuresFor(D.newest_year);
-    const present = new Set(Object.keys(c.scopes).filter((x) => x !== 'all'));
-    const funds = `<option value="all" ${!S.f ? 'selected' : ''}>All funds</option>` + D.funds.filter((f) => present.has(f) || f === S.f).map((f) => `<option value="${esc(f)}" ${f === S.f ? 'selected' : ''}>${esc(fn(f))}</option>`).join('');
-    const tabs = (name, items, cur) => `<div class="tabs" role="radiogroup" aria-label="${name}">${items.map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === cur}" data-tab="${name}" data-v="${v}">${esc(l)}</button>`).join('')}</div>`;
+    const present = new Set(Object.keys(c.scopes).filter((x) => x !== 'all').map((f) => D.funds.indexOf(f)));
+    const funds = fundOptions(present, null);
+    // Same order as every other page: selects (Compare with, Fund), then the Figure and Spending / Income tabs.
     const inner = `<div class="filters">
-        ${ms.length > 1 ? `<div class="field field-wide"><span class="field-label">Figure (${D.newest_year})</span>${tabs('m', ms.map((m) => [m, LABEL[m]]), S.m)}${defineFigures()}</div>` : ''}
-      </div><div class="filters">
-        <div class="field"><label class="field-label" for="f-c">Compare with</label><select id="f-c" data-sel="c">${opts.map((x) => `<option value="${x}" ${x === c.from ? 'selected' : ''}>${esc(seriesLabel(x))}</option>`).join('')}</select></div>
+        <div class="field"><label class="field-label" for="f-c">Compare with</label><select id="f-c" data-sel="c">${opts.map((x) => `<option value="${x}" ${x === c.from ? 'selected' : ''}>${esc(seriesLabel(x))}</option>`).join('')}</select>${defineFigures()}</div>
         <div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select>${defineFund()}</div>
+      </div><div class="filters">
+        ${ms.length > 1 ? tabField('m', `Figure (${D.newest_year})`, ms.map((m) => [m, LABEL[m]]), S.m) : ''}
+        ${isReserve() ? '' : tabField('k', 'Show first', [['expense', 'Spending'], ['revenue', 'Income']], S.k)}
       </div>`;
-    return controlsWrap(inner, `${esc(seriesLabel(c.to))} · compared with ${esc(seriesLabel(c.from))} · ${esc(fn(S.f) || 'All funds')}`);
+    return controlsWrap(inner, `Viewing ${esc(seriesLabel(c.to))} · compared with ${esc(seriesLabel(c.from))} · ${esc(fn(S.f) || 'All funds')}${isReserve() ? '' : ` · ${kindWordPlain()} first`}`);
   }
 
   function changesPage() {
@@ -1530,57 +1723,132 @@
     const c = changeCmp();
     if (!c) return notFound('Comparison');
     if (c.from !== S.c) S.c = c.from;
+    if (isReserve()) return reserveChangesPage(c);
     const sc = c.scopes[scopeName()];
     document.title = `What changed: ${seriesLabel(c.to)}${S.f ? ' · ' + fn(S.f) : ''} · ${CFG.site_title}`;
     const head = `<header class="page-head wc-head"><h1 id="page-h" tabindex="-1">What changed in ${D.newest_year}</h1>
-      ${sc ? `<p class="wc-lede">${headlineSentence(c, sc)}</p>` : ''}${badgeHTML(c)}</header>`;
-    if (!sc) return { html: `${head}${changesFiltersHTML(c)}<p class="hint">No lines in the ${esc(fn(S.f))} in either figure.</p>` };
+      ${sc ? `<p class="wc-lede">${ledeFor(c, sc)}</p>` : ''}${badgeHTML(c)}</header>`;
+    if (!sc) {
+      // A fund with no lines in either budget being compared (e.g. one the city has since folded into another).
+      const others = D.funds.filter((f) => c.scopes[f]).map((f) => `<a href="${esc(changesHash({ f }))}">${esc(fn(f))}</a>`);
+      return { html: `${head}${changesFiltersHTML(c)}<p class="hint wc-fundnote">The ${esc(fn(S.f))} has no lines in the ${esc(seriesLabel(c.to))} budget or in ${esc(seriesLabel(c.from))}, so there is nothing to compare. What changed covers ${listWords(others)}, or <a href="${esc(changesHash({ f: '' }))}">all funds</a>.</p>` };
+    }
     const k = 'expense', ex = sc.expense, rv = sc.revenue;
     const grp = (kind, test) => ({ f: wcTotal(c.from, kind, S.f, test), t: wcTotal(c.to, kind, S.f, test) });
     const deptRows = (b, kind) => b.by_dept.map(([d]) => ({ label: O.departments[d].name, ...grp(kind, (r) => r.od === d), href: deptHash(d, { k: kind }) }));
     let html = head + changesFiltersHTML(c) + tilesHTML(c, sc) + shiftsHTML(c);
+    let spend = '', income = '';
     if (ex) {
-      html += `<section class="panel" aria-labelledby="wc-cat"><h2 class="total-label" id="wc-cat">Spending by category</h2>
+      spend += `<section class="panel" aria-labelledby="wc-cat"><h2 class="total-label" id="wc-cat">Spending by category</h2>${spikeWCNote(c, 'expense')}
         ${divBars(ex.by_cat.map(([i]) => ({ label: D.categories[i], ...grp('expense', (r) => r.cat === i) })), c, 'wc-cat-b', { title: 'Category' })}</section>
         <section class="panel" aria-labelledby="wc-dep"><h2 class="total-label" id="wc-dep">Spending by ${isCounty() ? 'group' : 'department'}</h2>
         ${divBars(deptRows(ex, k), c, 'wc-dep-b', { title: isCounty() ? 'Group' : 'Department', note: isCounty() ? 'Select a group to see its departments and lines.' : 'Select a department to see its bureaus and lines.' })}</section>`;
     }
     const pos = positionsHTML(c);
-    if (pos || (ex && (c.positions || ST))) html += `<section class="panel" aria-labelledby="wc-pos"><h2 class="total-label" id="wc-pos">Positions</h2>${pos || '<p class="wc-note">No position schedule for this comparison.</p>'}${benefitsLine(c, sc)}</section>`;
+    if (pos || (ex && (c.positions || ST))) spend += `<section class="panel" aria-labelledby="wc-pos"><h2 class="total-label" id="wc-pos">Positions</h2>${pos || '<p class="wc-note">No position schedule for this comparison.</p>'}${benefitsLine(c, sc)}</section>`;
     if (ex) {
-      html += `<section class="panel" aria-labelledby="wc-top"><h2 class="total-label" id="wc-top">Largest line-item changes</h2>
+      spend += `<section class="panel" aria-labelledby="wc-top"><h2 class="total-label" id="wc-top">Largest line-item changes</h2>
         <p class="wc-note">Lines in both budgets. New and removed lines are listed below.</p>
         ${lineTableHTML(c, ex.up, { caption: 'Increases', empty: '<p class="wc-note">No increases.</p>' })}${lineTableHTML(c, ex.down, { caption: 'Decreases', empty: '<p class="wc-note">No decreases.</p>' })}</section>`;
       const nw = ex.new, rm = ex.removed;
-      html += `<section class="panel" aria-labelledby="wc-new"><h2 class="total-label" id="wc-new">New and removed lines</h2>
+      spend += `<section class="panel" aria-labelledby="wc-new"><h2 class="total-label" id="wc-new">New and removed lines</h2>
         <p class="wc-facts-line"><strong>${nw.n}</strong> new line${nw.n === 1 ? '' : 's'} (${mny(nw.v)}) · <strong>${rm.n}</strong> removed (${mny(rm.v)})</p>
         ${nw.n ? `<details class="values"><summary>New lines</summary>${lineTableHTML(c, nw.i)}</details>` : ''}
         ${rm.n ? `<details class="values"><summary>Removed lines</summary>${lineTableHTML(c, rm.i)}</details>` : ''}</section>`;
     }
     if (rv) {
       const dr = rv.draw;
-      html += `<section class="panel" aria-labelledby="wc-inc"><h2 class="total-label" id="wc-inc">How it's paid for</h2>
+      income += `<section class="panel" aria-labelledby="wc-inc"><h2 class="total-label" id="wc-inc">How it's paid for</h2>
         <ul class="wc-facts">${(() => { const { f, t } = grp('revenue', null), notes = new Map(); return `<li>Income: ${f ? fig(f, { notes, what: wcWhat('revenue') }) : '$0'} → ${t ? fig(t, { notes, what: wcWhat('revenue') }) : '$0'}, ${deltaHTML(vOf(t) - vOf(f), vOf(f))}${gapNotes(notes)}</li>`; })()}
-        ${dr ? `<li>Drawn from the reserve (the “Fund Balance Reserve” line): ${lnk(dr.f, dr.f ? money(vOf(dr.f)) : '$0')} in ${esc(seriesLabel(c.from))} → ${lnk(dr.t, dr.t ? money(vOf(dr.t)) : '$0')} in ${esc(seriesLabel(c.to))}. <a href="${esc(homeHash({ f: D.reserve?.name || '' }))}">See the Reserve Fund</a></li>` : ''}</ul>
+        ${dr ? `<li>${drawLabel(c, dr)}: ${lnk(dr.f, dr.f ? money(vOf(dr.f)) : '$0')} in ${esc(seriesLabel(c.from))} → ${lnk(dr.t, dr.t ? money(vOf(dr.t)) : '$0')} in ${esc(seriesLabel(c.to))}${drawSplitNote(c, dr)}. <a href="${esc(homeHash({ f: D.reserve?.name || '' }))}">See the Reserve Fund</a></li>` : ''}</ul>
+        ${spikeWCNote(c, 'revenue')}
         ${divBars(rv.by_group.map(([g]) => ({ label: plainName(D.bureaus[g]), ...grp('revenue', (r) => r.bureau === g) })), c, 'wc-inc-b', { title: 'Income source' })}
         ${lineTableHTML(c, rv.up, { caption: 'Largest increases' })}${lineTableHTML(c, rv.down, { caption: 'Largest decreases' })}
         ${rv.new.n || rv.removed.n ? `<p class="wc-facts-line">${rv.new.n} new income line${rv.new.n === 1 ? '' : 's'} (${mny(rv.new.v)}) · ${rv.removed.n} removed (${mny(rv.removed.v)})</p>
         ${rv.new.n ? `<details class="values"><summary>New income lines</summary>${lineTableHTML(c, rv.new.i)}</details>` : ''}${rv.removed.n ? `<details class="values"><summary>Removed income lines</summary>${lineTableHTML(c, rv.removed.i)}</details>` : ''}` : ''}</section>`;
     }
+    html += S.k === 'revenue' ? income + spend : spend + income; // "Show first": the chosen side leads
     if (crossYear(c)) html += revisionHTML(c);
     return { html };
   }
 
   /* "What changed" summary at the top of the home page, beside Totals by Year: the headline sentence and the
-     key numbers for the newest year, linking to the full page. Spending view of the newest year only. */
+     key numbers for the newest year, linking to the full page. Newest year only; the Income view leads with income
+     and links to "How it's paid for". */
   function homeChangesHTML() {
-    if (!CH || S.y !== D.newest_year || S.k !== 'expense') return '';
+    if (!CH || S.y !== D.newest_year) return '';
     const c = changeCmp();
     const sc = c?.scopes[scopeName()];
-    if (!sc?.expense) return '';
+    const inc = S.k === 'revenue';
+    if (!(inc ? sc?.revenue : sc?.expense)) return '';
     return `<section class="panel wc-home" aria-labelledby="wch-t"><h2 class="panel-title" id="wch-t">What changed in ${D.newest_year}</h2>
-      <p class="wc-lede-sm">${headlineSentence(c, sc)}</p>${badgeHTML(c)}${tilesHTML(c, sc, { foot: false })}
-      <p class="wc-home-more"><a class="btn btn-primary" href="${esc(changesHash())}">See everything that changed →</a></p></section>`;
+      <p class="wc-lede-sm">${ledeFor(c, sc)}</p>${badgeHTML(c)}${tilesHTML(c, sc, { foot: false })}${inc ? spikeWCNote(c, 'revenue', { brief: true }) : ''}
+      <p class="wc-home-more"><a class="btn btn-primary" href="${esc(changesHash())}${inc ? '&amp;s=wc-inc' : ''}">See everything that changed →</a></p></section>`;
+  }
+
+  /* The short summary under a department's or bureau's headline, from changes.json `summary` (scripts/changes.py
+     summaries()): budgeted positions in the two schedules, the lines (or categories) that add most to the change,
+     and money moved into or out of the General Fund. Facts only; every amount links to its page. */
+  const listWords = (a) => (a.length > 1 ? `${a.slice(0, -1).join(', ')} and ${a[a.length - 1]}` : a[0] || '');
+  function deptSummaryHTML(c, di, ui, fund) {
+    const unitPage = ui != null;
+    const s = c.summary?.[unitPage ? 'all' : (fund || 'all')]?.[unitPage ? 'u' : 'd']?.[String(unitPage ? ui : di)];
+    if (!s) return '';
+    const items = [];
+    const P = c.positions, p = s.pos;
+    if (P && p && (p.f || p.t)) {
+      const fi = fund ? D.funds.indexOf(fund) : null;
+      const rs = P.rows.filter((r) => (fi == null || r[0] === fi) && (unitPage ? r[1] === ui : O.units[r[1]].dept === di));
+      const pg = (i) => { const ps = rs.map((r) => r[i]).filter((x) => x != null); return ps.length ? Math.min(...ps) : null; };
+      const n = (v, doc, page) => (v && page != null ? srcDoc(fmtN(v), doc, page) : fmtN(v));
+      const fy = parseKey(c.from).y, d = p.t - p.f;
+      const cls = p.by_cls || {}, pt = cls.PT && (cls.PT[0] || cls.PT[1]);
+      let t = `<strong>Budgeted positions:</strong> ${d ? `${n(p.f, P.from_doc, pg(7))} in the ${fy} schedule, ${n(p.t, P.to_doc, pg(8))} in the ${esc(seriesLabel(c.to))} schedule (${sgn(d, fmtN)})` : `${n(p.t, P.to_doc, pg(8))} in both the ${fy} and the ${esc(seriesLabel(c.to))} schedules`}${pt ? `, including ${fmtN(cls.PT[1])} part-time` : ''}.`;
+      const why = [];
+      if (p.moved_in) why.push(`${fmtN(p.moved_in)} moved in from other funds with their work`);
+      if (p.moved_out) why.push(`${fmtN(p.moved_out)} moved out to other funds with their work`);
+      if (p.missing > 0) why.push(`${fmtN(p.missing)} are in an office the ${fy} book prints no schedule page for`);
+      if (p.missing < 0) why.push(`${fmtN(-p.missing)} are in an office the ${esc(seriesLabel(c.to))} book prints no schedule page for`);
+      if (why.length) t += ` ${listWords(why)}; without those, the change is ${sgn(p.at - p.af, fmtN) || '0'}.`;
+      if (s.titles) t += ` Titles that changed: ${s.titles.map(([nm, f, to]) => `${esc(nm)} <span class="nb">(${fmtN(f)} → ${fmtN(to)})</span>`).join(', ')}${s.titles_renamed ? '; other titles are worded differently in the two books' : ''}.`;
+      items.push(t);
+    }
+    const up = s.net > 0, dir = up ? 'increases' : 'decreases';
+    if (s.drivers?.length) {
+      const part = s.drivers.map((i) => {
+        const ln = c.lines[i], a = acctOf(ln), grp = unitLabel(unitOfLine(ln), 'expense');
+        // Name the bureau only where the department has bureaus (and, on a bureau page, never).
+        // Two lines with one name in one place also get the book's own group name (e.g. "Parks Maintenance").
+        const showGrp = !unitPage && O.departments[di].bureaus && O.units[unitOfLine(ln)].kind !== 'whole-department';
+        const where = showGrp ? (O.units[unitOfLine(ln)].kind === 'department-wide' ? 'department-wide' : grp) : '';
+        const twin = s.drivers.some((j) => j !== i && acctOf(c.lines[j])[1] === a[1] && unitOfLine(c.lines[j]) === unitOfLine(ln));
+        const tag = [where, twin ? plainName(D.bureaus[a[4]] || '') : ''].filter(Boolean).join(', ');
+        const nm = `${esc(a[1])}${tag ? ` <span class="muted">(${esc(tag)})</span>` : ''}`;
+        if (ln[1] == null) return `${nm}, new at ${lnk(lineT(ln), mny(ln[4]))}`;
+        if (ln[4] == null) return `${nm}, <span class="nb">${lnk(lineF(ln), mny(ln[1]))} → not budgeted</span>`;
+        return `${nm}, <span class="nb">${lnk(lineF(ln), mny(ln[1]))} → ${lnk(lineT(ln), mny(ln[4]))}</span>`;
+      });
+      items.push(`<strong>Largest ${dir}:</strong> ${part.join('; ')}.`);
+    } else if (s.cat_drivers?.length) {
+      items.push(`<strong>Largest ${dir}, by category:</strong> ${s.cat_drivers.map(([ci, v, d, pg]) => `${esc(D.categories[ci])} ${srcDoc(sgn(v, mny), d, pg)}`).join(', ')}.`);
+    }
+    if (s.shifts?.length) {
+      const gf = DEFAULT_FUND || D.funds[0];
+      const sh = s.shifts.map((j) => CH.shifts[j]);
+      const into = sh.filter((x) => x.to_fund === gf), out = sh.filter((x) => x.from_fund === gf);
+      // The amount where it is now (in the newer budget); where the new fund shows no separate lines for it, the amount it had before.
+      const amt = (x, side) => {
+        const now = side === 'to' ? x.to?.values?.[c.to] : null, was = x.from.values[c.from];
+        if (now && vOf(now)) return ` (${lnk(now, mny(vOf(now)))})`;
+        return was && vOf(was) ? ` (${lnk(was, mny(vOf(was)))} in ${esc(seriesLabel(c.from))})` : '';
+      };
+      const byFund = (l, key, side, word) => [...new Set(l.map((x) => x[key]))].map((f) => `${listWords(l.filter((x) => x[key] === f).map((x) => `${esc(x.from.label)}${amt(x, side)}`))} ${word} the ${esc(f)}`);
+      const t = [];
+      if (into.length) t.push(`<strong>Moved into the ${esc(gf)}:</strong> ${listWords(byFund(into, 'from_fund', 'to', 'from'))}`);
+      if (out.length) t.push(`<strong>Moved out of the ${esc(gf)}:</strong> ${listWords(byFund(out, 'to_fund', 'from', 'to'))}`);
+      items.push(`${t.join('. ')}.`);
+    }
+    return items.length ? `<ul class="wc-sum">${items.map((x) => `<li>${x}</li>`).join('')}</ul>` : '';
   }
 
   /* Compact "What changed" on a department or bureau page: headline, bureaus, positions, largest lines, shifts.
@@ -1605,8 +1873,9 @@
     const mine = c.lines.map((ln, i) => i).filter((i) => { const ln = c.lines[i], a = acctOf(ln); return O.units[unitOfLine(ln)].dept === di && (!unitPage || unitOfLine(ln) === ui) && (fi == null || a[2] === fi) && (D.categories[a[5]] === 'Revenue') === (S.k === 'revenue'); })
       .sort((x, y) => Math.abs(lineD(c.lines[y])) - Math.abs(lineD(c.lines[x])));
     const pos = S.k === 'expense' ? positionsHTML(c, { dept: di, unit: ui, compact: true, fund }) : '';
-    return `<section class="panel wc-dept" id="sec-changes" tabindex="-1" aria-labelledby="wc-d"><h2 class="total-label" id="wc-d">What changed</h2>
-      <p class="wc-lede-sm">${lede}</p>${badgeHTML(c)}
+    const summary = S.k === 'expense' ? deptSummaryHTML(c, di, ui, fund) : '';
+    return `<section class="panel wc-dept" id="sec-changes" tabindex="-1" aria-labelledby="wc-d"><h2 class="panel-title" id="wc-d">What changed in ${D.newest_year}</h2>
+      <p class="wc-lede-sm">${lede}</p>${badgeHTML(c)}${summary}
       ${units.length > 1 ? `<details class="values wc-lines-d"><summary>Change by ${isCounty() ? 'department' : 'bureau'}</summary>${divBars(units, c, 'wc-du', { title: isCounty() ? 'Department' : 'Bureau' })}</details>` : ''}
       ${pos ? `<details class="values wc-lines-d"><summary>Positions</summary>${pos}</details>` : ''}
       ${mine.length ? `<details class="values wc-lines-d"><summary>Largest line changes (${Math.min(6, mine.length)})</summary>${lineTableHTML(c, mine.slice(0, 6))}</details>` : ''}
@@ -1677,7 +1946,7 @@
     route = r;
     if (scroll) aboutOpen = false;
     if (q.get('c') === 'none') { applyQuery(q); S.c = ''; } else applyQuery(q);
-    if (route.name !== 'home' && isReserve()) S.f = DEFAULT_FUND; // the reserve has no departments or bureaus
+    if (route.name !== 'home' && route.name !== 'changes' && isReserve()) S.f = DEFAULT_FUND; // the reserve has no departments or bureaus
     if (route.name === 'changes' && S.y !== D.newest_year) { S.y = D.newest_year; S.m = defaultMeasure(S.y); S.c = defaultCompare(S.y, S.m); }
     T.sort = 'sel'; T.dir = -1; T.q = route.name === 'dept' || route.name === 'bureau' ? (q.get('q') || '') : ''; T.shown = PAGE_SIZE;
     destroyCharts();
@@ -1701,8 +1970,18 @@
     renderRail(here, onUnit);
     renderSwitch();
     renderMargin();
-    // Header link to "What changed": keeps the fund; marks the page while it is open.
-    if (scroll) {
+    // The rail's "What changed" link keeps the fund (the Reserve Fund included: that page says it shows the General Fund),
+    // the figure and the comparison, and Spending / Income; from an earlier year it opens the newest year's defaults.
+    const wcLink = document.querySelector('#site-nav a[data-nav="changes"]');
+    if (wcLink && route.name !== 'changes') {
+      const nm = defaultMeasure(D.newest_year);
+      wcLink.setAttribute('href', changesHash(S.y === D.newest_year ? {} : { y: D.newest_year, m: nm, c: defaultCompare(D.newest_year, nm) }));
+    }
+    const jumpTo = route.name === 'changes' && q.get('s') ? $(q.get('s')) : null; // e.g. "How this is counted" from the Overview
+    if (scroll && jumpTo) {
+      jumpTo.scrollIntoView();
+      jumpTo.focus({ preventScroll: true });
+    } else if (scroll) {
       window.scrollTo({ top: 0 });
       $('page-h')?.focus({ preventScroll: true });
       if (T.q && $('sec-lines')) $('sec-lines').scrollIntoView(); // arrived from "Jump to…" with a line item: show the table
