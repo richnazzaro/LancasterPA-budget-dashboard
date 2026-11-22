@@ -811,3 +811,9 @@ a.src { white-space: nowrap; }
 .wc-pos-count:focus { outline: none; }
 .wc-pos-count:focus-visible { outline: 2px solid var(--focus, currentColor); outline-offset: 4px; }
 .wc-fundnote { margin: 12px 0 0; }
+
+/* Under the Fund list on department and bureau pages: why it is shorter than on home (no Reserve Fund, only funds with lines). */
+.field-note { margin: 6px 0 0; font-size: 14px; line-height: 20px; color: var(--muted); }
+/* Sentences that lead a page or panel always wrap inside their column (amount links stay whole). */
+.page-head, .wc-lede, .wc-lede-sm, .deck { min-width: 0; max-width: 100%; overflow-wrap: break-word; }
+.wc-after { margin-top: 12px; }

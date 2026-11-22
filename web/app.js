@@ -323,7 +323,7 @@
     const inner = `<div class="filters">
         <div class="field"><label class="field-label" for="f-y">Fiscal year</label><select id="f-y" data-sel="y">${yrs}</select></div>
         <div class="field"><label class="field-label" for="f-c">Compare with</label><select id="f-c" data-sel="c">${cmp}</select>${defineFigures()}</div>
-        ${showFund ? `<div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select>${defineFund()}</div>` : ''}
+        ${showFund ? `<div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f"${scope ? ' aria-describedby="f-f-note"' : ''}>${funds}</select>${scope ? `<p class="field-note" id="f-f-note">Only the funds this ${scope.unit != null ? 'bureau' : 'department'} uses are listed.</p>` : ''}${defineFund()}</div>` : ''}
       </div>
       <div class="filters">
         ${measuresFor(S.y).length > 1 ? tabField('m', 'Figure', measuresFor(S.y).map((m) => [m, LABEL[m]]), S.m, defineFigures()) : ''}
@@ -1322,7 +1322,7 @@
   function badgeHTML(c) {
     if (c.same_kind) return '';
     const fm = kindOf(c.from);
-    const what = fm === 'projected' ? 'a year-end estimate' : fm === 'actual' ? (S.k === 'revenue' ? 'actual income' : 'actual spending') : LABEL[fm].toLowerCase();
+    const what = fm === 'projected' ? 'a year-end estimate' : fm === 'actual' ? (isReserve() ? 'an actual year-end balance' : S.k === 'revenue' ? 'actual income' : 'actual spending') : LABEL[fm].toLowerCase();
     const alt = Object.keys(CH.comparisons).filter((x) => x.startsWith(`${c.to}~`) && x !== c.id && crossYear(CH.comparisons[x]));
     const altK = alt.find((x) => kindOf(x.split('~')[1]) === (fm === 'projected' ? 'actual' : 'projected'));
     const sw = altK ? ` <a class="wc-switch" href="${esc(changesHash({ c: altK.split('~')[1] }))}">Compare with ${esc(seriesLabel(altK.split('~')[1]))} instead</a>` : '';
@@ -1534,21 +1534,63 @@
     return `<div class="wc-policies"><p class="wc-note">Tax rates are not printed in the budget tables. These notes say what the proposal and the revision did to them, next to the revenue line each one affects.</p>${blocks}</div>`;
   }
 
+  /* What changed for the Reserve Fund: the year-end balance in the newest figure against the comparison's, and the lines of
+     the Fund Balance Projection page that move it (beginning balance, revenues, expenditures, the operating deficit, the
+     committed data center revenue, ending balance), side by side where both figures print them. Every amount links to its
+     page; the draw is worded as everywhere else ("$4.7M drawn from savings ($1.9M of it from dedicated data center revenue)"). */
+  function reserveChangesPage(c) {
+    const name = D.reserve.name, to = resFind(D.newest_year, S.m), from = resFind(parseKey(c.from).y, parseKey(c.from).m);
+    document.title = `What changed: ${seriesLabel(c.to)} · ${name} · ${CFG.site_title}`;
+    const h1 = `<h1 id="page-h" tabindex="-1">What changed in ${D.newest_year}</h1>`;
+    if (!to || !from) {
+      return { html: `<header class="page-head wc-head">${h1}<p class="wc-lede">The ${esc(name)} has no Fund Balance Projection figures for ${esc(seriesLabel(to ? c.from : c.to))}, so there is nothing to compare.</p></header>${changesFiltersHTML(c)}` };
+    }
+    const te = resEnd(to), fe = resEnd(from), d = te.v - fe.v, p = fe.v ? Math.abs(d / fe.v) * 100 : null;
+    const endWord = (e) => (e.measure === 'actual' ? `the city ended ${e.year} with` : e.measure === 'projected' ? `the city expects at the end of ${e.year}` : `the ${esc(resLabel(e))} budget leaves`);
+    const gf = D.funds.indexOf(DEFAULT_FUND), dr = reserveDraw(c.to, gf), P = dr ? drawParts(c.to, dr.v) : null;
+    let lede = `The ${esc(seriesLabel(c.to))} budget leaves ${srcDoc(mny(te.v), to.doc, te.p)} in the ${esc(name)} at the end of ${to.year}, `
+      + (Math.round(d) === 0 ? `the same as ${endWord(from)}.` : `${mny(Math.abs(d))}${p == null ? '' : ` (${p.toFixed(1)}%)`} ${d > 0 ? 'more' : 'less'} than the ${srcDoc(mny(fe.v), from.doc, fe.p)} ${endWord(from)}.`);
+    if (dr) lede += ` The ${esc(DEFAULT_FUND)} budget is balanced by ${P ? drawSplit(P, mny) : `${src(mny(dr.v), c.to, dr.d, dr.p)} drawn from savings`}.`;
+    // The newest column's own starting balance can differ from where the comparison ends (the book prints two 12/31/2025 balances).
+    const tb = to.lines.find((l) => l.t === 'beginning');
+    const start = tb && Math.abs(tb.v - fe.v) > 5 && tb.fy === from.year
+      ? `<p class="hint wc-fundnote">The ${esc(resLabel(to))} column starts ${to.year} from ${srcDoc(money(tb.v), to.doc, tb.p)}, not the ${srcDoc(money(fe.v), from.doc, fe.p)} that ${esc(resLabel(from))} ends with: the city's book prints two different balances for the start of the year. ${knownLink()}</p>` : '';
+    // Lines matched by kind (adjustments in the order printed); the label is the newest figure's own.
+    const kinds = ['beginning', 'revenues', 'expenditures', 'surplus'];
+    const pick = (e, t, i = 0) => e.lines.filter((l) => l.t === t)[i];
+    const adjN = Math.max(...[to, from].map((e) => e.lines.filter((l) => l.t === 'adjustment').length));
+    const rowsSpec = [...kinds.map((t) => [t, 0]), ...Array.from({ length: adjN }, (_, i) => ['adjustment', i]), ['ending', 0]];
+    const both = from.lines.length > 1;
+    const amt = (e, l) => (l ? srcDoc(money(l.v), e.doc, l.p) : '—');
+    const body = rowsSpec.map(([t, i]) => {
+      const a = pick(from, t, i), b = pick(to, t, i);
+      if (!a && !b) return '';
+      const lbl = t === 'beginning' ? 'Beginning balance' : t === 'ending' ? 'Ending balance' : resLineLabel(b || a, b ? to : from);
+      return `<tr><td>${esc(lbl)}</td>${both ? `<td class="num">${amt(from, a)}</td>` : ''}<td class="num">${amt(to, b)}</td>${both ? `<td class="num">${a && b ? deltaHTML(b.v - a.v, a.v) : '—'}</td>` : ''}</tr>`;
+    }).join('');
+    const only = both ? '' : `<p class="wc-note">For ${esc(resLabel(from))} the Fund Balance Projection prints only the closing balance (${srcDoc(money(fe.v), from.doc, fe.p)}), so there are no lines to compare. The table shows the ${esc(resLabel(to))} lines.</p>`;
+    const table = `<section class="panel" aria-labelledby="wc-res"><h2 class="total-label" id="wc-res">What moves the balance</h2>${only}
+      <div class="table-scroll"><table class="table tight"><thead><tr><th scope="col">Fund Balance Projection line</th>${both ? `<th scope="col" class="num">${esc(resLabel(from))}</th>` : ''}<th scope="col" class="num">${esc(resLabel(to))}</th>${both ? '<th scope="col" class="num">Effect on the balance</th>' : ''}</tr></thead><tbody>${body}</tbody></table></div>
+      <p class="wc-note wc-after">The ${esc(DEFAULT_FUND)}'s budget lists the money drawn from savings as income (its “Fund Balance Reserve” lines); this page leaves it out of Revenues and shows it as the deficit and the committed data center revenue. <a href="${esc(homeHash({ f: name, y: to.year, m: to.measure }))}">See the ${esc(name)}</a></p></section>`;
+    const tiles = `<ul class="wc-tiles"><li class="wc-tile"><h2 class="wc-tile-h">Balance change</h2><p class="wc-tile-v">${deltaHTML(d, fe.v, mny)}</p><p class="wc-tile-s">${esc(resLabel(from))} ${srcDoc(money(fe.v), from.doc, fe.p)} → ${esc(resLabel(to))} ${srcDoc(money(te.v), to.doc, te.p)}</p></li>${dr ? `<li class="wc-tile"><h2 class="wc-tile-h">Drawn from savings</h2><p class="wc-tile-v"><span>${src(mny(dr.v), c.to, dr.d, dr.p)}</span></p><p class="wc-tile-s">${P ? `Of it, ${srcDoc(mny(P.dc.v), P.dc.d, P.dc.p)} from dedicated data center revenue (Fund Balance Projection).` : 'The budget\'s “Fund Balance Reserve” lines.'}</p></li>` : ''}</ul>`;
+    return { html: `<header class="page-head wc-head">${h1}<p class="wc-lede">${lede}</p>${badgeHTML(c)}${start}</header>${changesFiltersHTML(c)}${tiles}${table}` };
+  }
+
   function changesFiltersHTML(c) {
     const to = key(D.newest_year, S.m);
     const opts = Object.keys(CH.comparisons).filter((x) => x.startsWith(`${to}~`)).map((x) => x.split('~')[1]);
     const ms = measuresFor(D.newest_year);
-    const present = new Set(Object.keys(c.scopes).filter((x) => x !== 'all'));
-    const funds = `<option value="all" ${!S.f ? 'selected' : ''}>All funds</option>` + D.funds.filter((f) => present.has(f) || f === S.f).map((f) => `<option value="${esc(f)}" ${f === S.f ? 'selected' : ''}>${esc(f)}</option>`).join('');
+    const present = new Set(Object.keys(c.scopes).filter((x) => x !== 'all').map((f) => D.funds.indexOf(f)));
+    const funds = fundOptions(present, null);
     // Same order as every other page: selects (Compare with, Fund), then the Figure and Spending / Income tabs.
     const inner = `<div class="filters">
         <div class="field"><label class="field-label" for="f-c">Compare with</label><select id="f-c" data-sel="c">${opts.map((x) => `<option value="${x}" ${x === c.from ? 'selected' : ''}>${esc(seriesLabel(x))}</option>`).join('')}</select>${defineFigures()}</div>
         <div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select>${defineFund()}</div>
       </div><div class="filters">
         ${ms.length > 1 ? tabField('m', `Figure (${D.newest_year})`, ms.map((m) => [m, LABEL[m]]), S.m) : ''}
-        ${tabField('k', 'Show first', [['expense', 'Spending'], ['revenue', 'Income']], S.k)}
+        ${isReserve() ? '' : tabField('k', 'Show first', [['expense', 'Spending'], ['revenue', 'Income']], S.k)}
       </div>`;
-    return controlsWrap(inner, `Viewing ${esc(seriesLabel(c.to))} · compared with ${esc(seriesLabel(c.from))} · ${esc(S.f || 'All funds')} · ${kindWordPlain()} first`);
+    return controlsWrap(inner, `Viewing ${esc(seriesLabel(c.to))} · compared with ${esc(seriesLabel(c.from))} · ${esc(S.f || 'All funds')}${isReserve() ? '' : ` · ${kindWordPlain()} first`}`);
   }
 
   function changesPage() {
@@ -1556,13 +1598,11 @@
     const c = changeCmp();
     if (!c) return notFound('Comparison');
     if (c.from !== S.c) S.c = c.from;
+    if (isReserve()) return reserveChangesPage(c);
     const sc = c.scopes[scopeName()];
     document.title = `What changed: ${seriesLabel(c.to)}${S.f ? ' · ' + S.f : ''} · ${CFG.site_title}`;
-    // Arrived from the Reserve Fund (onRoute shows its General Fund): say so instead of switching silently.
-    const fromReserve = D.reserve && parseHash().q.get('f') === D.reserve.name;
-    const reserveNote = fromReserve ? `<p class="hint wc-fundnote">The ${esc(D.reserve.name)} is the ${esc(DEFAULT_FUND)}'s savings and has no budget lines of its own, so this shows the ${esc(DEFAULT_FUND)}. Money drawn from savings is under <a href="${esc(changesHash({ k: 'revenue' }))}&amp;s=wc-inc" data-scroll="wc-inc">How it's paid for</a>.</p>` : '';
     const head = `<header class="page-head wc-head"><h1 id="page-h" tabindex="-1">What changed in ${D.newest_year}</h1>
-      ${sc ? `<p class="wc-lede">${ledeFor(c, sc)}</p>` : ''}${badgeHTML(c)}${reserveNote}</header>`;
+      ${sc ? `<p class="wc-lede">${ledeFor(c, sc)}</p>` : ''}${badgeHTML(c)}</header>`;
     if (!sc) {
       // A fund with no lines in either budget being compared (e.g. one the city has since folded into another).
       const others = D.funds.filter((f) => c.scopes[f]).map((f) => `<a href="${esc(changesHash({ f }))}">${esc(f)}</a>`);
@@ -1780,7 +1820,7 @@
     route = r;
     if (scroll) aboutOpen = false;
     if (q.get('c') === 'none') { applyQuery(q); S.c = ''; } else applyQuery(q);
-    if (route.name !== 'home' && isReserve()) S.f = DEFAULT_FUND; // the reserve has no departments or bureaus
+    if (route.name !== 'home' && route.name !== 'changes' && isReserve()) S.f = DEFAULT_FUND; // the reserve has no departments or bureaus
     if (route.name === 'changes' && S.y !== D.newest_year) { S.y = D.newest_year; S.m = defaultMeasure(S.y); S.c = defaultCompare(S.y, S.m); }
     T.sort = 'sel'; T.dir = -1; T.q = route.name === 'dept' || route.name === 'bureau' ? (q.get('q') || '') : ''; T.shown = PAGE_SIZE;
     destroyCharts();
