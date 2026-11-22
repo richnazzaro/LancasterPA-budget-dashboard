@@ -359,7 +359,7 @@ def flag_printed(printed: list, fig_book: dict, known: list, docs) -> None:
                 names = [r["account_name"] if "account" in item else r["category"] for r in fig_book[fy]["rows"]
                          if r["doc_type"] == MEASURE and members(item, r)]
                 if names and "name" not in item:
-                    item["name"] = max(set(names), key=names.count)
+                    item["name"] = max(sorted(set(names)), key=names.count)  # sorted: a tie must not depend on the hash seed
             gap = round(pv - total, 2)
             allowance = max(ROUNDING_CELL, ROUNDING_PER_LINE * n)
             if abs(gap) > allowance:

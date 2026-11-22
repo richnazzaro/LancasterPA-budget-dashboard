@@ -9,7 +9,7 @@ Commands run from the repository root on macOS (Linux works the same way with it
 | Tool | Used for | How to get it |
 |---|---|---|
 | git | the repository | Xcode command-line tools (`xcode-select --install`) or git-scm.com |
-| Python 3.9 or newer | the pipeline (tested on 3.9.6; the publish workflow uses 3.12) | python.org, or the system `python3` |
+| Python 3.9 to 3.12 | the pipeline (tested on 3.9.6, the macOS system Python, `/usr/bin/python3`; the publish workflow uses 3.12). **Not 3.13 or newer:** the packages pinned in `requirements.txt` do not install there, so if your `python3` is newer, create the venv with `/usr/bin/python3 -m venv .venv` or another 3.9 to 3.12 | python.org, or the system `python3` |
 | Tesseract | OCR of the two scanned books (the City's 2026 book and the County's 2024 book) | `brew install tesseract` |
 | A web browser | the local preview | any |
 | A GitHub account | publishing (optional) | github.com |
@@ -21,7 +21,7 @@ Commands run from the repository root on macOS (Linux works the same way with it
 ```bash
 git clone https://github.com/<owner>/<repo>.git
 cd <repo>
-python3 -m venv .venv
+python3 -m venv .venv      # or /usr/bin/python3 -m venv .venv (see step 1: Python 3.9 to 3.12)
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
@@ -58,6 +58,8 @@ Each budget book has a layout file in `config/` (City) or `config/county/` (Coun
 ```bash
 python scripts/ingest.py --all
 ```
+
+(`--all` is the City only; the County is step 3's next section.)
 
 For each budget book this detects text or scan, runs OCR where needed, extracts every line item, staffing row and the Fund Balance page, checks every printed total, and cross-checks the book against its neighbours. It prints one short report per book.
 
@@ -134,7 +136,7 @@ git status --short
 git diff --stat
 ```
 
-On a clean rebuild of an unchanged repository, `data/processed/` comes out identical. In `web/data/`, `budget.json` differs only in its `"generated"` timestamp, and `changes.json` may list some keys in a different order with identical content. To throw those away: `git checkout -- web/data/`. (This was tested on 2026-11-20 from a fresh clone with no OCR cache: all six books passed and the check reported 0 mismatches.)
+On a clean rebuild of an unchanged repository, `data/processed/` (City and `county/`) comes out identical. In `web/data/` and `web/data/county/`, `budget.json` differs only in its `"generated"` timestamp, and `changes.json` may list some keys in a different order with identical content. To throw those away: `git checkout -- web/data/`. (Tested on 2026-11-22 from a fresh clone with no OCR cache: all six City books and all three County books passed, the audited reports passed, both entities' checks reported 0 mismatches, and every JSON file matched what is committed apart from the timestamps.)
 
 ## 5. Preview locally
 
