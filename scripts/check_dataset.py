@@ -29,7 +29,10 @@
 7. Department and bureau summaries (changes.json `summary`): every number a summary uses is re-derived from
    the series and the staffing CSVs: the net change, the driver lines and categories, position counts and why
    raw and adjusted differ, named titles' counts, and the fund shifts named.
-Exits 1 on any failure of checks 1, 2, 3, 4, 6, 7 and the CSV part of 5. Standard library only.
+8. Lines far above the years either side of them (the site's "stands out" notes, app.js lineSpikes()): listed with
+   the same rule (SPIKE_X, SPIKE_SHARE); every row of data/line_notes.csv names a line printed in that year and
+   figure (FAIL otherwise), and is reported as matching a listed line or not.
+Exits 1 on any failure of checks 1, 2, 3, 4, 6, 7, 8 and the CSV part of 5. Standard library only.
 """
 from __future__ import annotations
 
@@ -651,6 +654,56 @@ def budget_stem(doc: str) -> str:
     return doc[:-4] if doc.lower().endswith(".pdf") else doc
 
 
+SPIKE_X, SPIKE_SHARE = 2, 0.05  # keep equal to app.js
+
+
+def check_spikes(budget: dict) -> int:
+    """The same rule as app.js lineSpikes(): along the Actual / Projected line (then the newest year's Revised, else
+    Proposed), a line at least SPIKE_X times both neighbours (both above zero) whose jump is at least SPIKE_SHARE of its
+    fund's total of that kind that year."""
+    acc, funds, cats = budget["accounts"], budget["funds"], budget["categories"]
+    ser = budget["series"]
+    keys = []
+    for y in sorted({s["year"] for s in ser.values()}):
+        m = next((x for x in ("actual", "projected") if f"{y}|{x}" in ser), None)
+        if m is None and y == budget["newest_year"]:
+            m = "revised" if f"{y}|revised" in ser else "proposed" if f"{y}|proposed" in ser else None
+        if m:
+            keys.append(f"{y}|{m}")
+
+    def lines(k):
+        by, tot = defaultdict(float), defaultdict(float)
+        for a, v in zip(ser[k]["a"], ser[k]["v"]):
+            kind = "revenue" if cats[acc[a][5]] == "Revenue" else "expense"
+            by[(kind, acc[a][2], acc[a][0])] += v
+            tot[(kind, acc[a][2])] += v
+        return by, tot
+
+    L = [lines(k) for k in keys]
+    spikes = set()
+    print("\nLines far above the years either side (site notes under Totals by Year and on What changed):")
+    for i in range(1, len(keys) - 1):
+        (a, _), (x, tot), (b, _) = L[i - 1], L[i], L[i + 1]
+        for idk, v in sorted(x.items()):
+            pa, pb = a.get(idk, 0), b.get(idk, 0)
+            if pa <= 0 or pb <= 0:
+                continue
+            nb = max(pa, pb)
+            if v >= SPIKE_X * nb and v - nb >= SPIKE_SHARE * tot[idk[:2]]:
+                spikes.add((keys[i], idk[2]))
+                print(f"     {keys[i]:16s} {funds[idk[1]]:28s} {idk[0]:8s} {idk[2]:16s} {v:>12,.0f}  (before {pa:,.0f}, after {pb:,.0f}; {(v - nb) / tot[idk[:2]]:.1%} of the fund)")
+    bad = 0
+    ch = json.loads((ROOT / "web" / "data" / "changes.json").read_text())
+    print("Line notes (data/line_notes.csv):")
+    for n in ch.get("line_notes", []):
+        k = f"{n['year']}|{n['figure']}"
+        found = k in ser and any(acc[a][0] == n["account"] for a in ser[k]["a"])
+        bad += not found
+        print(f"{'ok  ' if found else 'FAIL'} {k:16s} {n['account']:16s} {'matches a listed line' if (k, n['account']) in spikes else 'no listed line (shown only if one appears)'}"
+              + ("" if found else "  (no such line in that series)"))
+    return bad
+
+
 def main() -> int:
     budget = json.loads((ROOT / "web" / "data" / "budget.json").read_text())
     acc = budget["accounts"]
@@ -722,6 +775,7 @@ def main() -> int:
     failures += check_reserve_draw(budget)
     failures += check_changes(budget)
     failures += check_summaries(budget)
+    failures += check_spikes(budget)
 
     print(f"\n{failures} series mismatches")
     return 1 if failures else 0

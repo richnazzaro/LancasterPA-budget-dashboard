@@ -390,7 +390,7 @@
       <p class="panel-note${bare ? ' panel-note-left' : ''}">${kindWordPlain()}${S.f ? ' · ' + esc(S.f) : ''}. Each year shows one kind of figure: actual, projected or proposed.</p>
       <ul class="trend-legend" aria-hidden="true">${legend}</ul>${revision}
       <div class="chart-box short"><canvas id="trend-chart" role="img" aria-label="Totals by year, ${pts[0].y} to ${pts[pts.length - 1].y}. Solid line: actual. Dashed line: projected. Hollow diamond: proposed. Solid dot: revised. The table below has the values."></canvas></div>
-      <p class="trend-axis" id="trend-axis"></p>
+      <p class="trend-axis" id="trend-axis"></p>${spikeNotes(scope, S.k)}
       <details class="values"><summary>Show values</summary><div class="table-scroll"><table class="table"><thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Total</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>${gapNotes(notes)}</details>`;
     return bare ? inner : `<section class="panel" aria-labelledby="tr-t">${inner}</section>`;
   }
@@ -425,6 +425,57 @@
         plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { label: (c) => (c.datasetIndex === 0 ? `${LABEL[main[c.dataIndex].m]}: ${money(c.raw)}` : `${c.dataset.label}: ${money(c.raw)}`) } } },
         scales: { x: { offset: true, ticks: { color: INK }, grid: { color: th.grid } }, y: { beginAtZero: yMin === 0, min: yMin || undefined, ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid } } } } }));
   }
+  /* ---------- A line far above the years either side of it (e.g. 2025 Building Permits) ----------
+     Along the Actual / Projected line (then the newest year's figure), a line whose amount in one year is at least
+     SPIKE_X times its amount in both the year before and the year after (both printed and above zero), where the jump
+     is at least SPIKE_SHARE of its fund's total of that kind that year. Found from the lines, never typed in; named under
+     Totals by Year and on What changed. check_dataset.py lists the same lines. */
+  const SPIKE_X = 2, SPIKE_SHARE = 0.05;
+  const spikeCache = new Map();
+  const trendKeys = () => years().slice().sort((a, b) => a - b)
+    .map((y) => { const m = ['actual', 'projected'].find((x) => series(key(y, x))) || (y === D.newest_year ? defaultMeasure(y) : null); return m ? key(y, m) : null; })
+    .filter(Boolean);
+  function lineSpikes(kind) {
+    if (spikeCache.has(kind)) return spikeCache.get(kind);
+    const ks = trendKeys();
+    const by = ks.map((k) => {
+      const m = new Map(), tot = new Map();
+      for (const r of rows(k)) {
+        if ((kind === 'revenue') !== isRevenue(r)) continue;
+        tot.set(r.fund, (tot.get(r.fund) || 0) + r.v);
+        const id = `${r.fund}|${r.code}`, g = m.get(id);
+        if (g) g.v += r.v; else m.set(id, { k, v: r.v, d: r.d, p: r.p, r });
+      }
+      return { m, tot };
+    });
+    const out = [];
+    for (let i = 1; i < ks.length - 1; i++) {
+      for (const [id, x] of by[i].m) {
+        const a = by[i - 1].m.get(id), b = by[i + 1].m.get(id);
+        if (!a || !b || a.v <= 0 || b.v <= 0) continue;
+        const nb = Math.max(a.v, b.v);
+        if (x.v >= SPIKE_X * nb && x.v - nb >= SPIKE_SHARE * by[i].tot.get(x.r.fund)) {
+          out.push({ k: x.k, v: x.v, d: x.d, p: x.p, prev: a, next: b, code: x.r.code, name: x.r.name, fund: x.r.fund, unit: x.r.unit, od: x.r.od });
+        }
+      }
+    }
+    spikeCache.set(kind, out);
+    return out;
+  }
+  // The spikes inside a scope (the Fund selector, and a department or bureau). A bureau page covers all its funds.
+  const spikesIn = (kind, scope = {}, k = null) => lineSpikes(kind).filter((s) => (!k || s.k === k)
+    && (scope.unit != null ? s.unit === scope.unit : (!S.f || s.fund === D.funds.indexOf(S.f)) && (scope.dept == null || s.od === scope.dept)));
+  // "Building Permits brought in $9.03M in 2025 Actual, against $1.34M in 2024 Actual and $1.94M in 2026 Projected"
+  function spikeSentence(s, kind) {
+    const at = (x) => `${src(mny(x.v), x.k, x.d, x.p)} in ${esc(seriesLabel(x.k))}`;
+    return `${S.f ? '' : `${esc(D.funds[s.fund])} `}${esc(s.name)} ${kind === 'revenue' ? 'brought in' : 'came to'} ${at(s)}, against ${at(s.prev)} and ${at(s.next)}`;
+  }
+  // What the budget book says about that line in that year, where data/line_notes.csv records it (changes.json line_notes).
+  const spikeContext = (s) => (CH?.line_notes || [])
+    .filter((n) => key(n.year, n.figure) === s.k && n.account === s.code)
+    .map((n) => ` ${esc(n.text)} <span class="wc-srcnote">${srcDoc('Budget book', n.d, n.p)}</span>`).join('');
+  const spikeNotes = (scope, kind) => spikesIn(kind, scope).map((s) => `<p class="trend-spike"><strong>${esc(String(parseKey(s.k).y))} stands out:</strong> ${spikeSentence(s, kind)}.${spikeContext(s)}</p>`).join('');
+
   /* What a scope's total is called in a gap note ("General Fund spending", "Public Safety spending"). */
   function trendWhat(scope) {
     const name = scope.unit != null ? unitLabel(scope.unit) : scope.dept != null ? O.departments[scope.dept].name : S.f || CFG.entity.short;
@@ -474,15 +525,20 @@
     const P = drawParts(k, dr.v);
     return `<p class="draw-note">${P ? `Balanced by ${drawSplit(P)}, as the Fund Balance Projection shows (the budget's “Fund Balance Reserve” lines).` : `Balanced by drawing ${src(millions(dr.v), k, dr.d, dr.p)} from the reserve (the budget's “Fund Balance Reserve” line).`} <a href="${esc(homeHash({ f: D.reserve.name }))}">See the Reserve Fund</a></p>`;
   }
-  /* One line tying the Reserve page's "Revenues" to the General Fund's revenue elsewhere on the site. */
+  /* Under the "How the Balance Changes" table: why the General Fund pages show more income than its Revenues line.
+     The budget books the money drawn from savings as income ("Fund Balance Reserve" lines); the Fund Balance
+     Projection does not. Shown only for a year whose projection prints a Revenues line and whose budget has a draw. */
   function reserveTie(e) {
     const k = key(e.year, e.measure), rev = e.lines.find((l) => l.t === 'revenues');
     if (!rev || !series(k)) return '';
     const gf = D.funds.indexOf(DEFAULT_FUND), dr = reserveDraw(k, gf);
     if (!dr) return '';
-    const gfT = totalOf(rows(k).filter((r) => r.fund === gf && isRevenue(r)), k), gfRev = gfT.v;
-    const gap = Math.round(rev.v + dr.v - gfRev), ties = Math.abs(gap) <= 5;
-    return `<p class="hint tie-note" style="margin-top:0">This page's revenues of ${srcDoc(money(rev.v), e.doc, rev.p)} plus ${src(money(dr.v), k, dr.d, dr.p)} ${(() => { const P = drawParts(k, dr.v); return P ? `drawn from savings ${drawDC(P, money)}, the “Fund Balance Reserve” revenue lines,` : 'drawn from the reserve (the “Fund Balance Reserve” revenue line)'; })()} ${ties ? (gap === 0 ? 'equal' : 'equal, within the city\'s rounding,') : `come to ${money(rev.v + dr.v)}, ${money(Math.abs(gap))} ${gap > 0 ? 'more' : 'less'} than`} the General Fund's ${fig(gfT)} of revenue. <a href="${esc(homeHash({ f: DEFAULT_FUND, k: 'revenue', y: e.year, m: e.measure }))}">See General Fund revenue</a></p>`;
+    const gfT = totalOf(rows(k).filter((r) => r.fund === gf && isRevenue(r)), k);
+    const gap = Math.round(rev.v + dr.v - gfT.v), ties = Math.abs(gap) <= 5;
+    const P = drawParts(k, dr.v);
+    const drawn = P ? drawSplit(P) : `${src(millions(dr.v), k, dr.d, dr.p)} drawn from the reserve`;
+    const sum = ties ? '' : ` The two come to ${money(rev.v + dr.v)}, ${money(Math.abs(gap))} ${gap > 0 ? 'more' : 'less'} than the General Fund's income.`;
+    return `<p class="hint tie-note">The ${esc(DEFAULT_FUND)} pages show ${fig(gfT)} of income for ${esc(resLabel(e))}, not the ${srcDoc(money(rev.v), e.doc, rev.p)} on the Revenues line above. The difference is the ${drawn}: the budget counts it as income, on its “Fund Balance Reserve” lines, and this projection does not.${sum} <a href="${esc(homeHash({ f: DEFAULT_FUND, k: 'revenue', y: e.year, m: e.measure }))}">See ${esc(DEFAULT_FUND)} income</a></p>`;
   }
 
   /* ---------- Reserve Fund (General Fund balance) ---------- */
@@ -565,11 +621,11 @@
         <span class="status${e.measure === 'proposed' || e.measure === 'revised' ? ' not-adopted' : ''}">${e.year}: ${esc(RES_STATUS[e.measure])}</span>
         ${notices.map((n) => `<div class="notice" role="note">${n}</div>`).join('')}${resGap}</header>
       ${filtersHTML()}
-      <p class="hint" style="margin-top:0">The General Fund's reserve: the cash balance carried from year to year. ${knownLink()}</p>${reserveTie(e)}
+      <p class="hint" style="margin-top:0">The General Fund's reserve: the cash balance carried from year to year. ${knownLink()}</p>
       <section class="panel" aria-labelledby="rb-t"><h2 class="panel-title" id="rb-t">Year-End Balance, ${entries[0].year}–${entries[entries.length - 1].year}</h2>
         <ul class="trend-legend" aria-hidden="true">${colorsLegend}</ul>
         <div class="chart-box"><canvas id="res-chart" role="img" aria-label="Year-end General Fund balance by year: ${esc(entries.map((x) => `${x.year} ${LABEL[x.measure]} ${money(resEnd(x).v)}`).join(', '))}. The table below has the values."></canvas></div>${annot}</section>
-      <section class="panel" aria-labelledby="rd-t"><h2 class="total-label" id="rd-t">${esc(resLabel(e))}: How the Balance Changes</h2>${detail}</section>
+      <section class="panel" aria-labelledby="rd-t"><h2 class="total-label" id="rd-t">${esc(resLabel(e))}: How the Balance Changes</h2>${detail}${reserveTie(e)}</section>
       <section class="panel" aria-labelledby="ry-t"><h2 class="total-label" id="ry-t">Year-End Balance by Year</h2><div class="table-scroll"><table class="table tight">
         <thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Year-end balance</th><th scope="col" class="num">Change</th></tr></thead><tbody>${yrRows}</tbody></table></div></section>`;
   }
@@ -1155,8 +1211,8 @@
   const crossYear = (c) => parseKey(c.from).y !== parseKey(c.to).y;
   function fromPhrase(c, spend = true) {
     const { y, m } = parseKey(c.from);
-    if (m === 'projected') return `the city expects to ${spend ? 'spend' : 'take in'} in ${y}`;
-    if (m === 'actual') return `the city ${spend ? 'spent' : 'took in'} in ${y}`;
+    if (m === 'projected') return `the city expects to ${spend ? 'spend' : 'collect'} in ${y}`;
+    if (m === 'actual') return `the city ${spend ? 'spent' : 'collected'} in ${y}`;
     return `the ${seriesLabel(c.from)} budget`;
   }
   const scopeName = () => S.f || 'all';
@@ -1217,6 +1273,37 @@
     return s;
   }
 
+  /* The Income view's headline: what the newest budget takes in, against the comparison, and the draw inside it. */
+  function incomeSentence(c, sc) {
+    const t = wcTotal(c.to, 'revenue'), f = wcTotal(c.from, 'revenue'), d = vOf(t) - vOf(f), p = vOf(f) ? Math.abs(d / vOf(f)) * 100 : null;
+    let s = `The ${esc(seriesLabel(c.to))} budget takes in ${t ? fig(t, { text: mny(t.v) }) : '$0'} ${S.f ? `in the ${esc(S.f)}` : 'across all funds'}, `
+      + (d === 0 ? `the same as ${fromPhrase(c, false)}.` : `${mny(Math.abs(d))}${p == null ? '' : ` (${p.toFixed(1)}%)`} ${d > 0 ? 'more' : 'less'} than ${fromPhrase(c, false)}.`);
+    const dr = sc.revenue?.draw;
+    if (dr && vOf(dr.t) > 0) {
+      const P = drawParts(c.to, vOf(dr.t));
+      s += ` That includes ${P ? drawSplit(P, mny) : `${lnk(dr.t, mny(vOf(dr.t)))} drawn from the reserve`}.`;
+    }
+    return s;
+  }
+  const ledeFor = (c, sc) => (S.k === 'revenue' && sc.revenue ? incomeSentence(c, sc) : headlineSentence(c, sc));
+
+  /* A line far above the years either side of it (lineSpikes) in either budget being compared: the generated note, and
+     how much of the change it accounts for ("Leaving that line out, income rises $5.7M rather than falling $1.0M"). */
+  function spikeWCNote(c, kind, { brief = false } = {}) {
+    const word = kind === 'revenue' ? 'income' : 'spending';
+    return [c.from, c.to].flatMap((k) => spikesIn(kind, {}, k)).map((s) => {
+      const other = s.k === c.from ? c.to : c.from;
+      const ol = rows(other).filter((r) => r.fund === s.fund && r.code === s.code), ov = sum(ol);
+      const d = vOf(wcTotal(c.to, kind)) - vOf(wcTotal(c.from, kind));
+      const rest = d - (s.k === c.from ? ov - s.v : s.v - ov);
+      const there = ol.length ? `${esc(seriesLabel(other))} has ${src(mny(ov), other, ol[0].d, ol[0].p)}` : `${esc(seriesLabel(other))} has no such line`;
+      const moves = (x, ing) => (Math.round(x) === 0 ? (ing ? 'staying the same' : 'stays the same') : `${x > 0 ? (ing ? 'rising' : 'rises') : (ing ? 'falling' : 'falls')} ${mny(Math.abs(x))}`);
+      // Brief beside Totals by Year (which carries the full note): only what the line does to this comparison.
+      if (brief) return `<p class="wc-spike">Leaving out ${esc(s.name)}, which stands out in ${esc(seriesLabel(s.k))} (${src(mny(s.v), s.k, s.d, s.p)}), ${word} ${moves(rest, false)} rather than ${moves(d, true)}.</p>`;
+      return `<p class="wc-spike"><strong>${esc(String(parseKey(s.k).y))} stands out:</strong> ${spikeSentence(s, kind)}; ${there}. Leaving that line out, ${word} ${moves(rest, false)} rather than ${moves(d, true)}.${spikeContext(s)}</p>`;
+    }).join('');
+  }
+
   /* The draw's label and its parts in a comparison (see drawParts). */
   const drawLabel = (c, dr) => (drawParts(c.to, vOf(dr.t)) || drawParts(c.from, vOf(dr.f)) ? 'Drawn from savings (the “Fund Balance Reserve” lines)' : 'Drawn from the reserve (the “Fund Balance Reserve” line)');
   function drawSplitNote(c, dr) {
@@ -1227,7 +1314,7 @@
   function badgeHTML(c) {
     if (c.same_kind) return '';
     const fm = kindOf(c.from);
-    const what = fm === 'projected' ? 'a year-end estimate' : fm === 'actual' ? 'actual spending' : LABEL[fm].toLowerCase();
+    const what = fm === 'projected' ? 'a year-end estimate' : fm === 'actual' ? (S.k === 'revenue' ? 'actual income' : 'actual spending') : LABEL[fm].toLowerCase();
     const alt = Object.keys(CH.comparisons).filter((x) => x.startsWith(`${c.to}~`) && x !== c.id && crossYear(CH.comparisons[x]));
     const altK = alt.find((x) => kindOf(x.split('~')[1]) === (fm === 'projected' ? 'actual' : 'projected'));
     const sw = altK ? ` <a class="wc-switch" href="${esc(changesHash({ c: altK.split('~')[1] }))}">Compare with ${esc(seriesLabel(altK.split('~')[1]))} instead</a>` : '';
@@ -1238,23 +1325,25 @@
     const tiles = [];
     const ex = sc.expense, notes = new Map();
     const fx = (t, kind) => (t ? fig(t, { notes, what: wcWhat(kind) }) : '$0');
-    if (ex) {
+    if (ex && !(S.k === 'revenue' && sc.revenue)) {
       const tf = wcTotal(c.from, 'expense'), tt = wcTotal(c.to, 'expense');
       tiles.push(['Spending change', deltaHTML(vOf(tt) - vOf(tf), vOf(tf), mny), `${esc(seriesLabel(c.from))} ${fx(tf, 'expense')} → ${esc(seriesLabel(c.to))} ${fx(tt, 'expense')}`]);
     }
     const dr = sc.revenue?.draw;
+    // The Income tile: on the Income view always (first), otherwise only where there is no draw tile.
+    if (sc.revenue && (S.k === 'revenue' || !dr)) {
+      const rf = wcTotal(c.from, 'revenue'), rt = wcTotal(c.to, 'revenue');
+      const t = ['Income change', deltaHTML(vOf(rt) - vOf(rf), vOf(rf), mny), `${esc(seriesLabel(c.from))} ${fx(rf, 'revenue')} → ${esc(seriesLabel(c.to))} ${fx(rt, 'revenue')}`];
+      if (S.k === 'revenue') tiles.unshift(t); else tiles.push(t);
+    }
     if (dr) {
       const Pt = drawParts(c.to, vOf(dr.t)), Pf = drawParts(c.from, vOf(dr.f));
       tiles.push([Pt ? 'Drawn from savings' : 'Drawn from the reserve', `<span>${lnk(dr.t, mny(vOf(dr.t)))}</span>`,
         Pt ? `Of it, ${srcDoc(mny(Pt.dc.v), Pt.dc.d, Pt.dc.p)} from dedicated data center revenue (Fund Balance Projection). ${esc(seriesLabel(c.from))}: ${lnk(dr.f, dr.f ? mny(vOf(dr.f)) : '$0')}${Pf ? ` ${drawDC(Pf, mny)}` : ''}. The budget's “Fund Balance Reserve” lines.`
           : `${esc(seriesLabel(c.from))}: ${lnk(dr.f, dr.f ? mny(vOf(dr.f)) : '$0')}. Money taken from savings; the budget's “Fund Balance Reserve” line.`]);
     }
-    else if (sc.revenue) {
-      const rf = wcTotal(c.from, 'revenue'), rt = wcTotal(c.to, 'revenue');
-      tiles.push(['Income change', deltaHTML(vOf(rt) - vOf(rf), vOf(rf), mny), `${esc(seriesLabel(c.from))} ${fx(rf, 'revenue')} → ${fx(rt, 'revenue')}`]);
-    }
     const P = c.positions;
-    if (P) {
+    if (P && S.k !== 'revenue') {
       const cls = posClass(P), tk = S.f ? String(D.funds.indexOf(S.f)) : 'all', T = P.totals[tk]?.[cls];
       if (T) {
         const mv = movedPositions(P, cls, S.f);
@@ -1263,13 +1352,15 @@
         if (mv.into) parts.push(`${fmtN(mv.into)} moved in from other funds`);
         if (mv.out) parts.push(`${fmtN(mv.out)} moved out`);
         parts.push(`${sgn(T.at - T.af, fmtN)} ${mv.into || mv.out ? 'other change' : 'after corrections'}`);
-        tiles.push([cls === 'FT' ? 'Full-time positions' : 'Positions', nDelta(corrected), `${parts.join(' · ')}. <a href="${esc(changesHash())}" data-scroll="wc-pos">How this is counted</a>`]);
+        // The count itself comes first; the link opens the Positions section of What changed at its explanation.
+        tiles.push([cls === 'FT' ? 'Full-time positions' : 'Positions', nDelta(corrected), `${fmtN(T.t)} budgeted in the ${esc(P.to_label.replace(/ position schedule$/, ''))} schedule · ${parts.join(' · ')}. <a href="${esc(changesHash({ k: 'expense' }))}&amp;s=wc-pos-how" data-scroll="wc-pos-how">How this is counted</a>`]);
       }
     }
     const rc = revisionCmp();
-    if (rc?.scopes[scopeName()]?.expense) {
-      const pf = wcTotal(rc.from, 'expense'), pt = wcTotal(rc.to, 'expense');
-      tiles.push(['Revision vs. proposal', deltaHTML(vOf(pt) - vOf(pf), vOf(pf), mny), `Proposed ${fx(pf, 'expense')} → Revised ${fx(pt, 'expense')}`]);
+    const rk = S.k === 'revenue' && rc?.scopes[scopeName()]?.revenue ? 'revenue' : 'expense';
+    if (rc?.scopes[scopeName()]?.[rk]) {
+      const pf = wcTotal(rc.from, rk), pt = wcTotal(rc.to, rk);
+      tiles.push(['Revision vs. proposal', deltaHTML(vOf(pt) - vOf(pf), vOf(pf), mny), `Proposed ${fx(pf, rk)} → Revised ${fx(pt, rk)}`]);
     }
     return `<ul class="wc-tiles">${tiles.map(([h, big, sub]) => `<li class="wc-tile"><h2 class="wc-tile-h">${h}</h2><p class="wc-tile-v">${big}</p><p class="wc-tile-s">${sub}</p></li>`).join('')}</ul>${foot ? gapNotes(notes) : ''}`;
   }
@@ -1367,8 +1458,21 @@
     }).join('');
     const titles = compact ? [] : P.artifacts.filter((a) => a.kind === 'titles' && (fi == null || a.fund === fund) && (dept == null || O.units[a.unit].dept === dept) && (unit == null || a.unit === unit));
     const titleNote = titles.length ? `<details class="values"><summary>Renamed titles in ${titles.length} bureau${titles.length === 1 ? '' : 's'}</summary><ul class="wc-notes">${titles.map((a) => `<li><strong>${esc(O.units[a.unit].name)}:</strong> ${esc(a.text)}</li>`).join('')}</ul></details>` : '';
-    const explain = `<p class="wc-note">“Schedule change” is the difference between the two books' position schedules, line for line. “Real change” leaves out what is not a real change: positions that moved between funds with their work, positions marked full-time in one book and part-time in the other, and bureaus a book has no schedule page for. Each is listed in the notes.</p>`;
-    return `${compact ? '' : explain}${tables}${notes ? `<ol class="wc-notes">${notes}</ol>` : ''}${titleNote}`;
+    // The page's own explanation (the "How this is counted" link lands here): the count first, then how it is made.
+    let explain = '';
+    if (!compact) {
+      const T = P.totals[fi == null ? 'all' : String(fi)];
+      const pg = (i) => { const ps = rows.map((r) => r[i]).filter((x) => x != null); return ps.length ? Math.min(...ps) : null; };
+      const n = (v, doc, page) => (page != null ? srcDoc(fmtN(v), doc, page) : fmtN(v));
+      const lbl = (l) => esc(l.replace(/ budget book's position schedule$/, ' budget book').replace(/ position schedule$/, ''));
+      const count = (cls) => { const x = T?.[cls]; return x ? `${n(x.t, P.to_doc, pg(8))} in the ${lbl(P.to_label)} schedule, against ${n(x.f, P.from_doc, pg(7))} in the ${lbl(P.from_label)}` : ''; };
+      const main = posClass(P), mv = movedPositions(P, main, fund);
+      const moved = [mv.into && `${fmtN(mv.into)} moved in from other funds with their work`, mv.out && `${fmtN(mv.out)} moved out to other funds`].filter(Boolean);
+      explain = `<p class="wc-pos-count" id="wc-pos-how" tabindex="-1"><strong>${main === 'FT' ? 'Full-time positions' : 'Positions'} budgeted${fund ? `, ${esc(fund)}` : ', all funds'}:</strong> ${count(main)}.${moved.length ? ` Of the change, ${listWords(moved)}.` : ''}${P.classes.includes('PT') && (T?.PT?.t || T?.PT?.f) ? ` Part-time: ${fmtN(T.PT.t)}, against ${fmtN(T.PT.f)}.` : ''}</p>
+        <p class="wc-note"><strong>How positions are counted.</strong> Each budget book has a position schedule: pages listing every job title the budget pays for, office by office. Each line there counts as one position, or as the share of one paid from that office's budget, so a job split between two offices or funds counts as part of a position in each (for example 0.5). Full-time and part-time are as the schedule marks them. These are positions the budget pays for, not a count of people employed.</p>
+        <p class="wc-note">“Schedule change” is the difference between the two schedules, line for line. “Real change” leaves out what is not a real change: positions that moved between funds with their work (counted as moved, not added in one fund and cut in the other), positions marked full-time in one book and part-time in the other, and offices a book has no schedule page for. Each is listed in the notes under the table.</p>`;
+    }
+    return `${explain}${tables}${notes ? `<ol class="wc-notes">${notes}</ol>` : ''}${titleNote}`;
   }
 
   function benefitsLine(c, sc) {
@@ -1434,8 +1538,10 @@
       </div><div class="filters">
         <div class="field"><label class="field-label" for="f-c">Compare with</label><select id="f-c" data-sel="c">${opts.map((x) => `<option value="${x}" ${x === c.from ? 'selected' : ''}>${esc(seriesLabel(x))}</option>`).join('')}</select></div>
         <div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select>${defineFund()}</div>
+      </div><div class="filters">
+        <div class="field field-wide"><span class="field-label">Show first</span>${tabs('k', [['expense', 'Spending'], ['revenue', 'Income']], S.k)}</div>
       </div>`;
-    return controlsWrap(inner, `${esc(seriesLabel(c.to))} · compared with ${esc(seriesLabel(c.from))} · ${esc(S.f || 'All funds')}`);
+    return controlsWrap(inner, `${esc(seriesLabel(c.to))} · compared with ${esc(seriesLabel(c.from))} · ${esc(S.f || 'All funds')} · ${kindWordPlain()} first`);
   }
 
   function changesPage() {
@@ -1445,55 +1551,67 @@
     if (c.from !== S.c) S.c = c.from;
     const sc = c.scopes[scopeName()];
     document.title = `What changed: ${seriesLabel(c.to)}${S.f ? ' · ' + S.f : ''} · ${CFG.site_title}`;
+    // Arrived from the Reserve Fund (onRoute shows its General Fund): say so instead of switching silently.
+    const fromReserve = D.reserve && parseHash().q.get('f') === D.reserve.name;
+    const reserveNote = fromReserve ? `<p class="hint wc-fundnote">The ${esc(D.reserve.name)} is the ${esc(DEFAULT_FUND)}'s savings and has no budget lines of its own, so this shows the ${esc(DEFAULT_FUND)}. Money drawn from savings is under <a href="${esc(changesHash({ k: 'revenue' }))}&amp;s=wc-inc" data-scroll="wc-inc">How it's paid for</a>.</p>` : '';
     const head = `<header class="page-head wc-head"><h1 id="page-h" tabindex="-1">What changed in ${D.newest_year}</h1>
-      ${sc ? `<p class="wc-lede">${headlineSentence(c, sc)}</p>` : ''}${badgeHTML(c)}</header>`;
-    if (!sc) return { html: `${head}${changesFiltersHTML(c)}<p class="hint">No lines in the ${esc(S.f)} in either figure.</p>` };
+      ${sc ? `<p class="wc-lede">${ledeFor(c, sc)}</p>` : ''}${badgeHTML(c)}${reserveNote}</header>`;
+    if (!sc) {
+      // A fund with no lines in either budget being compared (e.g. one the city has since folded into another).
+      const others = D.funds.filter((f) => c.scopes[f]).map((f) => `<a href="${esc(changesHash({ f }))}">${esc(f)}</a>`);
+      return { html: `${head}${changesFiltersHTML(c)}<p class="hint wc-fundnote">The ${esc(S.f)} has no lines in the ${esc(seriesLabel(c.to))} budget or in ${esc(seriesLabel(c.from))}, so there is nothing to compare. What changed covers ${listWords(others)}, or <a href="${esc(changesHash({ f: '' }))}">all funds</a>.</p>` };
+    }
     const k = 'expense', ex = sc.expense, rv = sc.revenue;
     const grp = (kind, test) => ({ f: wcTotal(c.from, kind, S.f, test), t: wcTotal(c.to, kind, S.f, test) });
     const deptRows = (b, kind) => b.by_dept.map(([d]) => ({ label: O.departments[d].name, ...grp(kind, (r) => r.od === d), href: deptHash(d, { k: kind }) }));
     let html = head + changesFiltersHTML(c) + tilesHTML(c, sc) + shiftsHTML(c);
+    let spend = '', income = '';
     if (ex) {
-      html += `<section class="panel" aria-labelledby="wc-cat"><h2 class="total-label" id="wc-cat">Spending by category</h2>
+      spend += `<section class="panel" aria-labelledby="wc-cat"><h2 class="total-label" id="wc-cat">Spending by category</h2>${spikeWCNote(c, 'expense')}
         ${divBars(ex.by_cat.map(([i]) => ({ label: D.categories[i], ...grp('expense', (r) => r.cat === i) })), c, 'wc-cat-b', { title: 'Category' })}</section>
         <section class="panel" aria-labelledby="wc-dep"><h2 class="total-label" id="wc-dep">Spending by department</h2>
         ${divBars(deptRows(ex, k), c, 'wc-dep-b', { title: 'Department', note: 'Select a department to see its bureaus and lines.' })}</section>`;
     }
     const pos = positionsHTML(c);
-    if (pos || ex) html += `<section class="panel" aria-labelledby="wc-pos"><h2 class="total-label" id="wc-pos">Positions</h2>${pos || '<p class="wc-note">No position schedule for this comparison.</p>'}${benefitsLine(c, sc)}</section>`;
+    if (pos || ex) spend += `<section class="panel" aria-labelledby="wc-pos"><h2 class="total-label" id="wc-pos">Positions</h2>${pos || '<p class="wc-note">No position schedule for this comparison.</p>'}${benefitsLine(c, sc)}</section>`;
     if (ex) {
-      html += `<section class="panel" aria-labelledby="wc-top"><h2 class="total-label" id="wc-top">Largest line-item changes</h2>
+      spend += `<section class="panel" aria-labelledby="wc-top"><h2 class="total-label" id="wc-top">Largest line-item changes</h2>
         <p class="wc-note">Lines in both budgets. New and removed lines are listed below.</p>
         ${lineTableHTML(c, ex.up, { caption: 'Increases', empty: '<p class="wc-note">No increases.</p>' })}${lineTableHTML(c, ex.down, { caption: 'Decreases', empty: '<p class="wc-note">No decreases.</p>' })}</section>`;
       const nw = ex.new, rm = ex.removed;
-      html += `<section class="panel" aria-labelledby="wc-new"><h2 class="total-label" id="wc-new">New and removed lines</h2>
+      spend += `<section class="panel" aria-labelledby="wc-new"><h2 class="total-label" id="wc-new">New and removed lines</h2>
         <p class="wc-facts-line"><strong>${nw.n}</strong> new line${nw.n === 1 ? '' : 's'} (${mny(nw.v)}) · <strong>${rm.n}</strong> removed (${mny(rm.v)})</p>
         ${nw.n ? `<details class="values"><summary>New lines</summary>${lineTableHTML(c, nw.i)}</details>` : ''}
         ${rm.n ? `<details class="values"><summary>Removed lines</summary>${lineTableHTML(c, rm.i)}</details>` : ''}</section>`;
     }
     if (rv) {
       const dr = rv.draw;
-      html += `<section class="panel" aria-labelledby="wc-inc"><h2 class="total-label" id="wc-inc">How it's paid for</h2>
+      income += `<section class="panel" aria-labelledby="wc-inc"><h2 class="total-label" id="wc-inc">How it's paid for</h2>
         <ul class="wc-facts">${(() => { const { f, t } = grp('revenue', null), notes = new Map(); return `<li>Income: ${f ? fig(f, { notes, what: wcWhat('revenue') }) : '$0'} → ${t ? fig(t, { notes, what: wcWhat('revenue') }) : '$0'}, ${deltaHTML(vOf(t) - vOf(f), vOf(f))}${gapNotes(notes)}</li>`; })()}
         ${dr ? `<li>${drawLabel(c, dr)}: ${lnk(dr.f, dr.f ? money(vOf(dr.f)) : '$0')} in ${esc(seriesLabel(c.from))} → ${lnk(dr.t, dr.t ? money(vOf(dr.t)) : '$0')} in ${esc(seriesLabel(c.to))}${drawSplitNote(c, dr)}. <a href="${esc(homeHash({ f: D.reserve?.name || '' }))}">See the Reserve Fund</a></li>` : ''}</ul>
+        ${spikeWCNote(c, 'revenue')}
         ${divBars(rv.by_group.map(([g]) => ({ label: plainName(D.bureaus[g]), ...grp('revenue', (r) => r.bureau === g) })), c, 'wc-inc-b', { title: 'Income source' })}
         ${lineTableHTML(c, rv.up, { caption: 'Largest increases' })}${lineTableHTML(c, rv.down, { caption: 'Largest decreases' })}
         ${rv.new.n || rv.removed.n ? `<p class="wc-facts-line">${rv.new.n} new income line${rv.new.n === 1 ? '' : 's'} (${mny(rv.new.v)}) · ${rv.removed.n} removed (${mny(rv.removed.v)})</p>
         ${rv.new.n ? `<details class="values"><summary>New income lines</summary>${lineTableHTML(c, rv.new.i)}</details>` : ''}${rv.removed.n ? `<details class="values"><summary>Removed income lines</summary>${lineTableHTML(c, rv.removed.i)}</details>` : ''}` : ''}</section>`;
     }
+    html += S.k === 'revenue' ? income + spend : spend + income; // "Show first": the chosen side leads
     if (crossYear(c)) html += revisionHTML(c);
     return { html };
   }
 
   /* "What changed" summary at the top of the home page, beside Totals by Year: the headline sentence and the
-     key numbers for the newest year, linking to the full page. Spending view of the newest year only. */
+     key numbers for the newest year, linking to the full page. Newest year only; the Income view leads with income
+     and links to "How it's paid for". */
   function homeChangesHTML() {
-    if (!CH || S.y !== D.newest_year || S.k !== 'expense') return '';
+    if (!CH || S.y !== D.newest_year) return '';
     const c = changeCmp();
     const sc = c?.scopes[scopeName()];
-    if (!sc?.expense) return '';
+    const inc = S.k === 'revenue';
+    if (!(inc ? sc?.revenue : sc?.expense)) return '';
     return `<section class="panel wc-home" aria-labelledby="wch-t"><h2 class="panel-title" id="wch-t">What changed in ${D.newest_year}</h2>
-      <p class="wc-lede-sm">${headlineSentence(c, sc)}</p>${badgeHTML(c)}${tilesHTML(c, sc, { foot: false })}
-      <p class="wc-home-more"><a class="btn btn-primary" href="${esc(changesHash())}">See everything that changed →</a></p></section>`;
+      <p class="wc-lede-sm">${ledeFor(c, sc)}</p>${badgeHTML(c)}${tilesHTML(c, sc, { foot: false })}${inc ? spikeWCNote(c, 'revenue', { brief: true }) : ''}
+      <p class="wc-home-more"><a class="btn btn-primary" href="${esc(changesHash())}${inc ? '&amp;s=wc-inc' : ''}">See everything that changed →</a></p></section>`;
   }
 
   /* The short summary under a department's or bureau's headline, from changes.json `summary` (scripts/changes.py
@@ -1678,8 +1796,18 @@
     document.querySelectorAll('#site-nav a').forEach((a) => { if (a.dataset.nav === here && !onUnit) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     renderRail(here, onUnit);
     renderMargin();
-    // Header link to "What changed": keeps the fund; marks the page while it is open.
-    if (scroll) {
+    // The rail's "What changed" link keeps the fund (the Reserve Fund included: that page says it shows the General Fund),
+    // the figure and the comparison, and Spending / Income; from an earlier year it opens the newest year's defaults.
+    const wcLink = document.querySelector('#site-nav a[data-nav="changes"]');
+    if (wcLink && route.name !== 'changes') {
+      const nm = defaultMeasure(D.newest_year);
+      wcLink.setAttribute('href', changesHash(S.y === D.newest_year ? {} : { y: D.newest_year, m: nm, c: defaultCompare(D.newest_year, nm) }));
+    }
+    const jumpTo = route.name === 'changes' && q.get('s') ? $(q.get('s')) : null; // e.g. "How this is counted" from the Overview
+    if (scroll && jumpTo) {
+      jumpTo.scrollIntoView();
+      jumpTo.focus({ preventScroll: true });
+    } else if (scroll) {
       window.scrollTo({ top: 0 });
       $('page-h')?.focus({ preventScroll: true });
       if (T.q && $('sec-lines')) $('sec-lines').scrollIntoView(); // arrived from "Jump to…" with a line item: show the table

@@ -36,6 +36,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 POLICY_CSV = ROOT / "data" / "policy_notes.csv"
+LINE_NOTES_CSV = ROOT / "data" / "line_notes.csv"  # what the book says about one line in one year (e.g. 2025 Building Permits)
 TOP_N = 10
 MOVE_RE = re.compile(r"\b(?:moved|transferr(?:ed|ing))\b", re.I)
 DIRECT_BILL_RE = re.compile(r"\bdirect(?:ly)?[ -]?(?:bill|billed|invoice)", re.I)
@@ -735,6 +736,22 @@ def policy_notes(docs: list) -> list:
     return out
 
 
+def line_notes(docs: list) -> list:
+    """Hand-kept, sourced context for one line in one year (data/line_notes.csv): year, figure, account, text, source.
+    The site shows it beside the generated note for a line far above the years either side of it."""
+    if not LINE_NOTES_CSV.exists():
+        return []
+    out = []
+    for r in read_csv(LINE_NOTES_CSV):
+        e = {"year": int(r["year"]), "figure": r["figure"].strip(), "account": r["account"].strip(), "text": r["text"].strip()}
+        m = re.match(r"(.+\.pdf)#page=(\d+)$", r["source"].strip(), re.I)
+        if not m or m.group(1) not in docs:
+            raise SystemExit(f"line_notes.csv: source must be <budget book pdf>#page=N, got {r['source']!r}")
+        e["d"], e["p"] = docs.index(m.group(1)), int(m.group(2))
+        out.append(e)
+    return out
+
+
 # ---------------------------------------------------------------------------------------------
 def build_changes(budget: dict, processed: Path, designated: dict, newest: int, aliases: dict) -> dict:
     docs = budget["docs"]
@@ -805,4 +822,5 @@ def build_changes(budget: dict, processed: Path, designated: dict, newest: int, 
         "comparisons": comparisons,
         "shifts": shifts,
         "policy": policy_notes(docs),
+        "line_notes": line_notes(docs),
     }
