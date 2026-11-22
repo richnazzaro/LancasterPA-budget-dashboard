@@ -494,15 +494,6 @@ details.values summary:hover { color: var(--fg); }
 .wc-home .wc-tile-v { font-size: 24px; line-height: 30px; }
 .wc-home-more { margin: auto 0 0; }
 @media (max-width: 1023px) { .overview { grid-template-columns: minmax(0, 1fr); } }
-@media (min-width: 768px) {
-  /* Wide screens show the controls outright on home; department and bureau pages keep the one-line summary
-     and Change view button so the charts come first. */
-  .controls-bar { display: none; }
-  .controls-panel, .controls-panel[hidden] { display: block; margin-top: 0; }
-  .dept-filters .controls-bar { display: flex; }
-  .dept-filters .controls-panel { margin-top: 16px; }
-  .dept-filters .controls-panel[hidden] { display: none; }
-}
 
 /* ---------------------------------------------------------------------------------------------------------
    Department and bureau pages: breadcrumbs, in-page links, one Compare panel.
@@ -701,13 +692,9 @@ a.src { white-space: nowrap; }
 /* Proposed marker is a diamond, Revised a ring: the two stay apart even where their values nearly coincide. */
 .trend-legend .dot.diamond { border-radius: 0; width: 9px; height: 9px; transform: rotate(45deg); }
 
-/* Home: What changed leads, with Totals by Year beside it; the controls are a one-line strip. */
+/* Home: What changed leads, with Totals by Year beside it. The controls are the same one-line strip on every page
+   and screen size (.controls above). */
 .overview > .wc-home { order: -1; }
-@media (min-width: 768px) {
-  .home-flow .controls-bar { display: flex; }
-  .home-flow .controls-panel[hidden] { display: none; }
-  .home-flow .controls-panel { margin-top: 16px; }
-}
 
 /* Contents rail: the page's own outline under the page you are on */
 .rail-sub { margin: 0; padding: 0 0 6px 15px; list-style: none; border-left: 1px solid var(--border); margin-left: 4px; }

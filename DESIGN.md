@@ -217,7 +217,7 @@ Square. Panels, rows, bars, tiles and swatches have 0 radius; controls, stamps a
 - **Theme toggle:** an outline button with a drawn 18px SVG icon (moon while light, sun while dark) and a Dark/Light word, icon only on phones.
 
 ### Status stamp and notices
-- A 1px ink bordered stamp in uppercase 13px with 0.08em tracking labels the figure status; it sits inside the one-line controls strip beside the summary and its Change button. Notices are 1px ink bordered, 2px radius, muted text.
+- A 1px ink bordered stamp in uppercase 13px with 0.08em tracking labels the figure status; it sits inside the one-line controls strip beside the summary and its Change button, on every page (the Reserve Fund and department pages included; no page prints a second stamp in its header). The controls are one component everywhere (`controlsWrap()`): the strip, a Change view / Close outline button (44px on phones), and the fields below it, closed by default at every width; tab groups come from one helper (`tabField()`) and are named by their visible label. Notices are 1px ink bordered, 2px radius, muted text.
 
 ### Charts (Chart.js)
 - Colors come from the tokens. Selected is green, comparison ink gray and thinner; Actual is a solid line and Projected dashed; Proposed is a hollow diamond and Revised a solid green dot joined to the last Projected point by a dashed line; the line chart's axis starts above zero and says so beneath the chart; bars have 0 radius; diverging change bars are neutral deep ink; tooltips use paper with a hairline. Animation is 300ms and off under reduced motion.

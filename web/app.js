@@ -250,6 +250,9 @@
       + (scope ? '' : extraFundViews().map((f) => opt(f, f, f === S.f)).join(''));
   }
 
+  /* One tab-group field for every controls panel (Figure, Show): square segmented buttons named by their visible label. */
+  const tabField = (name, label, items, cur, extra = '') => `<div class="field field-wide"><span class="field-label" id="lbl-${name}">${label}</span><div class="tabs" role="radiogroup" aria-labelledby="lbl-${name}">${items.map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === cur}" data-tab="${name}" data-v="${v}">${esc(l)}</button>`).join('')}</div>${extra}</div>`;
+
   function reserveFiltersHTML() {
     const ys = [...new Set(D.reserve.entries.map((e) => e.year))].sort((a, b) => b - a);
     const ms = ORDER.filter((m) => resFind(S.y, m));
@@ -258,7 +261,7 @@
         <div class="field"><label class="field-label" for="f-y">Fiscal year</label><select id="f-y" data-sel="y">${ys.map((y) => `<option value="${y}" ${y === S.y ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
         <div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select>${defineFund()}</div>
       </div>
-      ${ms.length > 1 ? `<div class="filters"><div class="field field-wide"><span class="field-label" id="lbl-m">Figure</span><div class="tabs" role="radiogroup" aria-label="m">${ms.map((m) => `<button type="button" role="radio" aria-checked="${m === S.m}" data-tab="m" data-v="${m}">${esc(LABEL[m])}</button>`).join('')}</div>${defineFigures()}</div></div>` : ''}`;
+      ${ms.length > 1 ? `<div class="filters">${tabField('m', 'Figure', ms.map((m) => [m, LABEL[m]]), S.m, defineFigures())}</div>` : ''}`;
   }
 
   /* Short plain definitions beside the controls. A <details> works on touch and with screen readers (no hover or title). */
@@ -267,24 +270,24 @@
   const defineFigures = () => `<details class="define"><summary>What do these mean?</summary><ul>${DEFINE_FIGURES.map(([a, b]) => (b ? `<li><strong>${a}:</strong> ${b}</li>` : `<li class="aside">${a}</li>`)).join('')}</ul></details>`;
   const defineFund = () => `<details class="define"><summary>What is a fund?</summary><p>A fund is a separate account the city keeps for a purpose. The General Fund pays for most city services and is paid for mostly by taxes; others, such as water, sewer, stormwater and trash, are paid for by their own fees and are not mixed with it. The Reserve Fund is the General Fund's savings balance.</p></details>`;
 
-  /* The controls sit behind a one-line summary and a "Change" button, so content comes first. Open by default
-     on wide screens, closed on phones; the visitor's last choice is remembered (localStorage may be blocked). */
+  /* One controls component for every page (home with any fund, the Reserve Fund, department and bureau pages, What changed):
+     a one-line strip (the year's status stamp, then "Viewing …") with a "Change view" / "Close" button, and the fields
+     below it. Closed by default on every screen size so content comes first; the visitor's last choice is remembered
+     (localStorage may be blocked). */
   let ctlOpen = null;
-  const controlsOpen = (closedFirst = false) => {
+  const controlsOpen = () => {
     if (ctlOpen == null) {
       try { const v = localStorage.getItem('controlsOpen'); if (v === '1' || v === '0') ctlOpen = v === '1'; } catch (e) { /* no storage */ }
     }
-    if (ctlOpen != null) return ctlOpen;
-    // No saved choice: department and bureau pages start closed so the charts come first.
-    return closedFirst ? false : !matchMedia('(max-width: 767px)').matches;
+    return ctlOpen ?? false;
   };
   function setControls(open) {
     ctlOpen = open;
     try { localStorage.setItem('controlsOpen', open ? '1' : '0'); } catch (e) { /* the choice lasts for this visit */ }
   }
-  function controlsWrap(inner, summary, closedFirst = false) {
-    const open = controlsOpen(closedFirst);
-    return `<div class="controls"><div class="controls-bar"><p class="controls-sum" id="controls-sum">${summary}</p>
+  function controlsWrap(inner, summary, stamp = statusHTML()) {
+    const open = controlsOpen();
+    return `<div class="controls"><div class="controls-bar"><p class="controls-sum" id="controls-sum">${stamp}${summary}</p>
         <button type="button" class="btn btn-outline controls-btn" data-toggle-controls aria-expanded="${open}" aria-controls="controls-panel">${open ? 'Close' : 'Change view'}</button></div>
       <div class="controls-panel" id="controls-panel"${open ? '' : ' hidden'}>${inner}</div></div>`;
   }
@@ -296,8 +299,12 @@
     return ks.flatMap((kk) => rows(kk).filter((r) => (scope.dept == null || r.od === scope.dept) && (scope.unit == null || r.unit === scope.unit)));
   }
 
-  function filtersHTML({ fund = true, scope = null, closedFirst = false, lead = '' } = {}) {
-    if (isReserve()) return controlsWrap(reserveFiltersHTML(), `Viewing ${esc(D.reserve.name)} · ${S.y}${S.m ? ' ' + esc(LABEL[S.m]) : ''}`);
+  function filtersHTML({ fund = true, scope = null } = {}) {
+    if (isReserve()) {
+      const e = resFind(S.y, S.m);
+      const stamp = e ? `<span class="status${e.measure === 'proposed' || e.measure === 'revised' ? ' not-adopted' : ''}">${e.year}: ${esc(RES_STATUS[e.measure])}</span>` : '';
+      return controlsWrap(reserveFiltersHTML(), `Viewing ${S.y}${S.m ? ' ' + esc(LABEL[S.m]) : ''} · ${esc(D.reserve.name)}`, stamp);
+    }
     const k = key(S.y, S.m);
     const yrs = years().map((y) => `<option value="${y}" ${y === S.y ? 'selected' : ''}>${y}</option>`).join('');
     const opts = Object.keys(D.series).filter((x) => x !== k)
@@ -308,11 +315,10 @@
     const sr = scope ? scopeRows(scope) : null;
     const present = new Set((sr || rows(k)).map((r) => r.fund));
     const funds = fundOptions(present, scope);
-    const tabs = (name, items, cur) => `<div class="tabs" role="radiogroup" aria-label="${name}">${items.map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === cur}" data-tab="${name}" data-v="${v}">${esc(l)}</button>`).join('')}</div>`;
     // Offer Spending / Income only where the page has both kinds of lines.
     const kinds = sr ? ['expense', 'revenue'].filter((kd) => kd === S.k || sr.some((r) => (kd === 'revenue') === isRevenue(r))) : ['expense', 'revenue'];
     const kindTabs = kinds.length > 1
-      ? `<div class="field field-wide"><span class="field-label" id="lbl-k">Show</span>${tabs('k', [['expense', 'Spending'], ['revenue', 'Income']], S.k)}</div>` : '';
+      ? tabField('k', 'Show', [['expense', 'Spending'], ['revenue', 'Income']], S.k) : '';
     const showFund = fund && (!scope || [...present].length + (S.f && !present.has(D.funds.indexOf(S.f)) ? 1 : 0) > 1 || !S.f);
     const inner = `<div class="filters">
         <div class="field"><label class="field-label" for="f-y">Fiscal year</label><select id="f-y" data-sel="y">${yrs}</select></div>
@@ -320,13 +326,13 @@
         ${showFund ? `<div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select>${defineFund()}</div>` : ''}
       </div>
       <div class="filters">
-        ${measuresFor(S.y).length > 1 ? `<div class="field field-wide"><span class="field-label" id="lbl-m">Figure</span>${tabs('m', measuresFor(S.y).map((m) => [m, LABEL[m]]), S.m)}${defineFigures()}</div>` : ''}
+        ${measuresFor(S.y).length > 1 ? tabField('m', 'Figure', measuresFor(S.y).map((m) => [m, LABEL[m]]), S.m, defineFigures()) : ''}
         ${kindTabs}
       </div>`;
     const parts = [`Viewing ${esc(seriesLabel(k))}`, S.c ? `compared with ${esc(seriesLabel(S.c))}` : 'no comparison'];
     if (fund) parts.push(esc(S.f || 'All funds'));
     parts.push(kindWordPlain());
-    return controlsWrap(inner, `${lead}${lead ? ' ' : ''}${parts.join(' · ')}`, closedFirst);
+    return controlsWrap(inner, parts.join(' · '));
   }
 
   function onFilter(name, v) {
@@ -344,7 +350,10 @@
     } else if (name === 'f') {
       over.f = v;
     }
+    // The page re-renders; keep keyboard focus on the control that was used (a select keeps its id).
+    const id = document.activeElement?.id;
     navigate(currentHash()(over), true);
+    if (id && name !== 'm' && name !== 'k') $(id)?.focus({ preventScroll: true });
   }
 
   function destroyCharts() { charts.forEach((c) => c.destroy()); charts = []; }
@@ -618,7 +627,6 @@
     return `<header class="page-head"><h1 id="page-h" tabindex="-1">${esc(name)}: ${esc(resLabel(e))}</h1>
         <p class="big-total" aria-live="polite"><span class="big-label">Year-end balance</span> ${srcDoc(money(end.v), e.doc, end.p)}</p>
         ${ch && ch.p != null ? `<p class="deck"><span class="${ch.d < 0 ? 'down' : ch.d > 0 ? 'up' : 'flat'}">${ch.d < 0 ? 'Down' : ch.d > 0 ? 'Up' : 'No change'} ${mny(Math.abs(ch.d))} (${fmtPct(Math.abs(ch.p))})</span> from ${esc(ch.from)}.</p>` : ''}
-        <span class="status${e.measure === 'proposed' || e.measure === 'revised' ? ' not-adopted' : ''}">${e.year}: ${esc(RES_STATUS[e.measure])}</span>
         ${notices.map((n) => `<div class="notice" role="note">${n}</div>`).join('')}${resGap}</header>
       ${filtersHTML()}
       <p class="hint" style="margin-top:0">The General Fund's reserve: the cash balance carried from year to year. ${knownLink()}</p>
@@ -734,7 +742,7 @@
     return `<header class="page-head"><h1 id="page-h">${esc(scope)} ${kindWord}: ${esc(seriesLabel(k))}</h1>
         <p class="big-total" aria-live="polite"><span class="big-label">${esc(scope)} ${kindWord}</span> ${totalHTML}</p>${flagNote}
         ${deck || `${heroDelta(k, total, cmp)}${drawNote(k)}`}</header>
-      <div class="home-flow">${filtersHTML({ closedFirst: true, lead: statusHTML() })}
+      <div class="home-flow">${filtersHTML()}
       ${(() => { const wc = homeChangesHTML(); return `<div class="overview${wc ? '' : ' overview-single'}">${trendHTML({}, 'Totals by Year')}${wc}</div>`; })()}</div>
       <section class="panel" id="sec-departments" tabindex="-1" aria-labelledby="dep-t"><h2 class="panel-title" id="dep-t">Departments</h2>
         <p class="panel-note">Select a department to see its detailed breakdown. Amounts open the source page in the budget book.</p>
@@ -924,7 +932,7 @@
     let html = crumbsHTML(crumbs);
     if (deptPicker) html += `<div class="field dept-picker"><label class="field-label" for="dept-pick">Department</label>${deptPicker}</div>`;
     html += `<header><h1 class="dept-name" id="page-h" tabindex="-1">${esc(title)}</h1>
-      <p class="dept-total">Total ${kindWord}: <strong class="figure">${totalLink}</strong></p>${headNotes}<p class="dept-sub">${subtitle}</p><p>${statusHTML()}</p></header>${about}`;
+      <p class="dept-total">Total ${kindWord}: <strong class="figure">${totalLink}</strong></p>${headNotes}<p class="dept-sub">${subtitle}</p></header>${about}`;
 
     // One Compare panel holds what used to be five: the two totals, the change, the category bars and the totals by year.
     let compare = '';
@@ -945,7 +953,7 @@
     const staff = staffHTML(scope);
     const nav = [hasChanges && ['sec-changes', 'What changed'], cats.length && ['sec-compare', 'Compare'], hasBureaus && ['sec-bureaus', 'Bureaus'], staff && ['sec-staff', 'Staff'], cats.length && ['sec-categories', 'Categories'], ['sec-lines', 'Line items']].filter(Boolean);
     html += jumpNav(nav);
-    html += `<div class="entity-flow"><div class="dept-filters">${filtersHTML({ fund: !!deptPicker, scope, closedFirst: true })}</div>${changes}${compare}${bureauList}${staff}`;
+    html += `<div class="entity-flow"><div class="dept-filters">${filtersHTML({ fund: !!deptPicker, scope })}</div>${changes}${compare}${bureauList}${staff}`;
     html += categorySection(`${title} ${seriesLabel(k)} ${kindWord} Breakdown`, cats.map(withColor), { k, secId: 'sec-categories' });
     html += `<section class="panel" id="sec-lines" tabindex="-1" aria-labelledby="li-t"><h2 class="total-label" id="li-t">Line Items</h2><div id="li-holder"></div></section></div>`;
     return { html, cats };
@@ -1532,16 +1540,15 @@
     const ms = measuresFor(D.newest_year);
     const present = new Set(Object.keys(c.scopes).filter((x) => x !== 'all'));
     const funds = `<option value="all" ${!S.f ? 'selected' : ''}>All funds</option>` + D.funds.filter((f) => present.has(f) || f === S.f).map((f) => `<option value="${esc(f)}" ${f === S.f ? 'selected' : ''}>${esc(f)}</option>`).join('');
-    const tabs = (name, items, cur) => `<div class="tabs" role="radiogroup" aria-label="${name}">${items.map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === cur}" data-tab="${name}" data-v="${v}">${esc(l)}</button>`).join('')}</div>`;
+    // Same order as every other page: selects (Compare with, Fund), then the Figure and Spending / Income tabs.
     const inner = `<div class="filters">
-        ${ms.length > 1 ? `<div class="field field-wide"><span class="field-label">Figure (${D.newest_year})</span>${tabs('m', ms.map((m) => [m, LABEL[m]]), S.m)}${defineFigures()}</div>` : ''}
-      </div><div class="filters">
-        <div class="field"><label class="field-label" for="f-c">Compare with</label><select id="f-c" data-sel="c">${opts.map((x) => `<option value="${x}" ${x === c.from ? 'selected' : ''}>${esc(seriesLabel(x))}</option>`).join('')}</select></div>
+        <div class="field"><label class="field-label" for="f-c">Compare with</label><select id="f-c" data-sel="c">${opts.map((x) => `<option value="${x}" ${x === c.from ? 'selected' : ''}>${esc(seriesLabel(x))}</option>`).join('')}</select>${defineFigures()}</div>
         <div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select>${defineFund()}</div>
       </div><div class="filters">
-        <div class="field field-wide"><span class="field-label">Show first</span>${tabs('k', [['expense', 'Spending'], ['revenue', 'Income']], S.k)}</div>
+        ${ms.length > 1 ? tabField('m', `Figure (${D.newest_year})`, ms.map((m) => [m, LABEL[m]]), S.m) : ''}
+        ${tabField('k', 'Show first', [['expense', 'Spending'], ['revenue', 'Income']], S.k)}
       </div>`;
-    return controlsWrap(inner, `${esc(seriesLabel(c.to))} · compared with ${esc(seriesLabel(c.from))} · ${esc(S.f || 'All funds')} · ${kindWordPlain()} first`);
+    return controlsWrap(inner, `Viewing ${esc(seriesLabel(c.to))} · compared with ${esc(seriesLabel(c.from))} · ${esc(S.f || 'All funds')} · ${kindWordPlain()} first`);
   }
 
   function changesPage() {
