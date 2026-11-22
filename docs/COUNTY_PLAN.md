@@ -329,3 +329,7 @@ Steps 1–3 can be checked without touching the site. Step 2 can run alongside s
 - **Result:** the County gets main's single Change view / Close strip and Fund-list rules through the shared code. City checks: 0 series mismatches; County: 0 series mismatches.
 - **Review:** see the notes in the commit message and DESIGN.md.
 
+
+**Step 6, docs and rebuild test (2026-11-22).** README, PIPELINE and REBUILD now cover the County: where the books and audited reports live (all tracked, 99 MB, with a source address for each), `ingest.py --county`, the 2024 book's OCR and corrections, `extract_county_acfr.py`, both builds and checks, the hand files in `data/county/`, Budget and Actual labelling, the printed-totals rule, the City / County switch, and a yearly County update.
+- **Rebuild from a fresh clone, following REBUILD.md:** City and County ingest passed (County 2024: 2,795 checks; 2025: 2,901; 2026: 8,262; audited reports 677 checks); both checks report 0 series mismatches; every `web/data` JSON matched the committed one except timestamps.
+- **Found and fixed:** (1) the docs did not say the pinned packages do not install on Python 3.13+ (the system `python3` here was 3.15); they now say to use 3.9 to 3.12. (2) The County `printed` account-group names depended on the hash seed when OCR variants tied, so two builds differed; `build_county.py` now sorts before choosing, and the County JSON was regenerated.
