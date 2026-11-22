@@ -323,3 +323,9 @@ Steps 1–3 can be checked without touching the site. Step 2 can run alongside s
 6. **Checks:** City and County builds and checks both report 0 series mismatches. Impeccable detect: 66 advisory findings, none non-advisory and none on the new rules (all existing).
 
 **Still open:** a Balances page for the County's printed balance pages; Budget-side figures by revenue source and function (the books and the ACFR classify them differently); screenshots with `impeccable shot` and the finish review; refreshing `.impeccable/design.json`.
+
+**Merge and design review (2026-11-22).** The pages branch and `origin/main` (9902a05) are merged into `feature/county` (not pushed).
+- **Conflicts in `web/app.js`:** eight, in the deck and header order, `fromPhrase`, the What changed line table, the What changed controls (kept main's `fundOptions` and `tabField`), the not-found fund note, the Positions panel and the department What changed block. In each, main's version was kept and the County additions (`isCounty()`, `fn()` fund names, `bud()`, `mergeNote()`, `countyGapNote()`) were re-applied on top. The other conflicts were the `check_dataset.py` docstring and the surface brief.
+- **Result:** the County gets main's single Change view / Close strip and Fund-list rules through the shared code. City checks: 0 series mismatches; County: 0 series mismatches.
+- **Review:** see the notes in the commit message and DESIGN.md.
+

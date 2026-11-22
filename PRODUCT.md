@@ -29,7 +29,7 @@ Data comes from the city's budget PDFs, extracted and validated by a pipeline wi
 
 ## Capabilities and Constraints
 
-- Views: Home (Totals by Year, What changed, departments, funds), department and bureau pages with line items and a Staff section (budgeted positions and salaries by year), What changed, Reserve Fund, About the data.
+- Views: Home (Totals by Year, What changed, departments, funds), department and bureau pages with line items and a Staff section (budgeted positions and salaries by year), What changed, Reserve Fund, About the data. County: the same pages without Staff or Reserve Fund, plus a Budget and Actual section (audited actuals beside the Budget at fund level) and the audited General Fund balance on About.
 - One kind of figure per year: historic years Actual, the prior budget year Projected, the new year Proposed and Revised. Adopted and Amended are never shown.
 - Links from numbers to PDF pages (`#page=N`) stay, quiet and without "p. N" text.
 - County figures are labelled "Budget" (never Adopted or Proposed on screen; the newest year's status line cites Resolution 79 of 2025), and audited figures "Actual". The County has no Staff section and no Reserve Fund page.

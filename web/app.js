@@ -290,7 +290,7 @@
   /* Short plain definitions beside the controls. A <details> works on touch and with screen readers (no hover or title). */
   const DEFINE_CITY = [['Proposed', 'the administration\'s first budget proposal.'], ['Revised', 'the revised proposal.'], ['Neither is adopted.', ''],
     ['Projected', 'the city\'s year-end estimate.'], ['Actual', 'what was spent, reported in the budget book two years later.']];
-  const DEFINE_COUNTY = [['Budget', 'the County\'s budget for the year, from its own budget books. The newest year is the adopted budget; earlier years are as the next book prints them.'],
+  const DEFINE_COUNTY = [['Budget', 'the County\'s budget for the year, from its own budget books. The newest year is the budget the County passed for it; earlier years are as the next book prints them.'],
     ['Actual', 'what the County\'s audited annual report says it received and spent. Shown only for 2023 to 2025, by fund, revenue source and function.']];
   const defineList = () => (isCounty() ? DEFINE_COUNTY : DEFINE_CITY);
   const defineFigures = () => `<details class="define"><summary>What do these mean?</summary><ul>${defineList().map(([a, b]) => (b ? `<li><strong>${a}:</strong> ${b}</li>` : `<li class="aside">${a}</li>`)).join('')}</ul></details>`;
@@ -759,8 +759,15 @@
     if (!g) return '';
     const bal = GB && GB.rows.filter((r) => r.group === 'General Fund' && r.line === 'Total general fund').sort((a, b) => b.year - a.year)[0];
     const balTxt = bal ? ` The audited General Fund balance was ${gbLink(money(bal.v), bal)} at the end of ${bal.year} (<a href="${esc(eh('about?s=about-balance'))}">about this figure</a>).` : '';
-    return `<p class="draw-note">${esc(seriesLabel(k))}: spending of ${fig(g.ex)} against income of ${fig(g.rv)}, a gap of ${money(g.gap)} <span class="calc-tag">calculated</span>. The budget book prints no General Fund balance page, so it does not say how the gap is met.${balTxt}</p>`;
+    return `<p class="draw-note">${esc(seriesLabel(k))}: spending of ${fig(g.ex)} against income of ${fig(g.rv)}, a gap of ${money(g.gap)} <span class="calc-tag">calculated</span>. The budget book prints no General Fund balance page, so it does not say how the gap is met.</p>${balTxt ? `<p class="draw-note">${balTxt.trim()}</p>` : ''}`;
   }
+  /* County notes as shown: no page numbers, file names as plain words, "Budget" in place of "adopted budget", no
+     Actual-versus-Budget percentage, and nothing about the audit report's own Original column (it is not used). */
+  const cleanNote = (t) => t
+    .replace(/County-ACFR-(\d{4})\.pdf/g, 'the $1 audited report').replace(/County-(\d{4})-Budget-Book\.pdf/g, 'the $1 budget book')
+    .replace(/Actual revenue ran [^.]*\.\s*/g, '').replace(/adopted budget/gi, 'Budget').replace(/was adopted/g, 'was passed')
+    .replace(/\s*\bpp?\.?\s*\d+(?:\s*[-–]\s*\d+)?/g, '').replace(/\(\s*\)/g, '').replace(/\s+([,.;)])/g, '$1').replace(/\s{2,}/g, ' ').trim();
+  const noOriginal = (t) => /original/i.test(t);
   const gbHref = (r) => `${CFG.paths.pdfs}ACFR/${encodeURIComponent(r.doc)}#page=${r.p}`;
   const gbLink = (text, r) => `<a class="src" href="${gbHref(r)}" target="_blank" rel="noopener" title="View in the County's audited report" aria-label="${esc(text)}: open source page in the ${r.year} audited annual report">${text}</a>`;
 
@@ -775,7 +782,7 @@
     for (const f of a.flags || []) {
       if (seen.has(f.known_issue)) continue;
       seen.add(f.known_issue);
-      out.push(`<p class="gap-note"><span class="gap-mark" aria-hidden="true">${GAP_SIGN}</span> <strong>${esc(what)}, ${a.year} Actual:</strong> ${esc(D.known_issues[f.known_issue].note)} ${knownLink()}</p>`);
+      out.push(`<p class="gap-note"><span class="gap-mark" aria-hidden="true">${GAP_SIGN}</span> <strong>${esc(what)}, ${a.year} Actual:</strong> ${esc(cleanNote(D.known_issues[f.known_issue].note))} ${knownLink()}</p>`);
     }
     return out.join('');
   };
@@ -805,8 +812,8 @@
     const head = af ? 'Year' : `Fund, ${allY}`;
     const combined = af && af.book_funds.length > 1 ? `<p class="panel-note">${esc(fn(af.fund))} are reported together in the County's audited report, so the Budget figures here add the three funds' printed totals <span class="calc-tag">calculated</span>.</p>` : '';
     let html = `<section class="panel" id="sec-actual" tabindex="-1" aria-labelledby="ac-t"><h2 class="panel-title" id="ac-t">Budget and Actual${af ? `: ${esc(fn(af.fund))}` : ' by Fund'}</h2>
-      <p class="panel-note">${esc(A.years[0])} to ${esc(A.years[A.years.length - 1])} Actual is set beside the Budget only where both exist at the same level: the fund's income and spending. ${esc(D.actuals_note[0])} No difference is calculated, because the two are not on the same footing.</p>
-      <details class="values"><summary>About the Actual figures</summary><ul>${D.actuals_note.slice(1).map((t) => `<li>${esc(t)}</li>`).join('')}</ul></details>${combined}
+      <p class="panel-note">${esc(A.years[0])} to ${esc(A.years[A.years.length - 1])} Actual is set beside the Budget only where both exist at the same level: the fund's income and spending. ${esc(cleanNote(D.actuals_note[0]))} No difference is calculated, because the two are not on the same footing.</p>
+      <details class="values"><summary>About the Actual figures</summary><ul>${D.actuals_note.slice(1).map((t) => cleanNote(t)).filter(Boolean).map((t) => `<li>${esc(t)}</li>`).join('')}</ul></details>${combined}
       <div class="table-scroll"><table class="table ledger" aria-label="Budget and Actual by ${af ? 'year' : 'fund'}"><thead><tr><th scope="col">${esc(head)}</th><th scope="col" class="num">Income: Budget</th><th scope="col" class="num">Income: Actual</th><th scope="col" class="num">Spending: Budget</th><th scope="col" class="num">Spending: Actual</th></tr></thead><tbody>${body}</tbody></table></div>
       <p class="panel-note" style="margin-top:12px">The Budget's spending includes transfers to other funds (the County match); the audited report counts transfers separately, so they are listed below and not added to the Actual spending.</p>
       <h3 class="wc-h3">Transfers and net change, Actual</h3>
@@ -1453,7 +1460,7 @@
     const fx = (t, kind) => (t ? fig(t, { notes, what: wcWhat(kind) }) : '$0');
     if (ex && !(S.k === 'revenue' && sc.revenue)) {
       const tf = wcTotal(c.from, 'expense'), tt = wcTotal(c.to, 'expense');
-      tiles.push(['Spending change', deltaHTML(vOf(tt) - vOf(tf), vOf(tf), mny), `${esc(seriesLabel(c.from))} ${fx(tf, 'expense')} → ${esc(seriesLabel(c.to))} ${fx(tt, 'expense')}`]);
+      tiles.push(['Spending change', deltaHTML(vOf(tt) - vOf(tf), vOf(tf), mny), `<span class="nb">${esc(seriesLabel(c.from))}</span> ${fx(tf, 'expense')} → <span class="nb">${esc(seriesLabel(c.to))}</span> ${fx(tt, 'expense')}`]);
     }
     const dr = sc.revenue?.draw;
     // The Income tile: on the Income view always (first), otherwise only where there is no draw tile.
@@ -2165,7 +2172,8 @@
     const nameOf = Object.fromEntries([...D.books.map((b) => [b.doc, `${b.year} Budget Book`]), ...A.sources.map((x) => [x.file, `${x.year} audited annual report`])]);
     const books = D.books.filter((b) => b.used).map((b) => `<li><a href="${pdf(b.doc)}" target="_blank" rel="noopener">${esc(nameOf[b.doc])}</a> (<a href="${pdf(b.doc)}" download>download PDF</a>): supplies ${b.figures.map((y) => `${y} Budget`).join(' and ')}.</li>`).join('');
     const acfrs = A.sources.map((x) => `<li><a href="${pdf(`ACFR/${x.file}`)}" target="_blank" rel="noopener">${esc(nameOf[x.file])}</a> (<a href="${pdf(`ACFR/${x.file}`)}" download>download PDF</a>; <a href="${esc(x.url)}" target="_blank" rel="noopener">County archive page</a>).</li>`).join('');
-    const issues = D.known_issues.map((i) => `<li>${esc(nameOf[i.source_doc] || i.source_doc.replace(/\.pdf$/i, ''))}: ${esc(i.note)}</li>`).join('');
+    const shownIssues = D.known_issues.filter((i) => !noOriginal(i.note)), nOrig = D.known_issues.length - shownIssues.length;
+    const issues = shownIssues.map((i) => `<li>${esc(nameOf[i.source_doc] || i.source_doc.replace(/\.pdf$/i, ''))}: ${esc(cleanNote(i.note))}</li>`).join('') + (nOrig ? `<li>${nOrig} further notes compare the audited report's own “original budget” column with the budget books. That column is not used on this site, so they are kept in the project repository and not listed here.</li>` : '');
     const groups = O.departments.map((g) => `${esc(g.name)} (${g.letter})`).join(', ');
     const fundList = Object.entries(CFG.fund_names || {}).filter(([k]) => D.funds.includes(k)).map(([k, v]) => `<li>${esc(v)}</li>`).join('');
     const gbYears = GB ? [...new Set(GB.rows.map((r) => r.year))].sort((a, b) => a - b) : [];
@@ -2177,13 +2185,13 @@
       <p>Every Budget figure comes from the County of Lancaster's published budget books. Each book reports two or three years side by side; this site shows <strong>one Budget figure per year</strong>, from the newest book that prints that year, and labels it simply “Budget”.</p>
       <ul>
         <li><strong>${D.newest_year}: Budget</strong>${ac ? `, ${esc(ac.text)}` : ''}.</li>
-        <li><strong>${years().filter((y) => y < D.newest_year).sort((a, b) => a - b).join(', ')}: Budget</strong>, as the next year's book prints them. The books do not call these figures adopted or amended, so the site does not either.</li>
+        <li><strong>${years().filter((y) => y < D.newest_year).sort((a, b) => a - b).join(', ')}: Budget</strong>, as the next year's book prints them. The books do not say whether these are the original or an amended budget, so the site calls them Budget.</li>
       </ul>
       <p>Books in use:</p><ul>${books}</ul>
       <p>Years appear as soon as the books that report them have been processed.</p>
       <h2 class="about-h">Actual figures</h2>
       <p>Actual figures for ${A.years[0]} to ${A.years[A.years.length - 1]} come from the County's audited annual reports, in the budget-versus-actual schedules.</p>
-      <ul>${D.actuals_note.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
+      <ul>${D.actuals_note.map((t) => cleanNote(t)).filter(Boolean).map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
       <p>Audited reports in use:</p><ul>${acfrs}</ul>
       <h2 class="about-h">Departments and funds</h2>
       <p>Departments are grouped as the County's <a href="${pdf(O.chart_doc)}#page=${O.chart_page}" target="_blank" rel="noopener">${D.newest_year} budget book</a> groups them: ${groups}. Each budget line belongs to a department by its account number, with the department's name as the book prints it. The County does not publish staffing schedules, so there is no Staff section.</p>
@@ -2203,7 +2211,7 @@
       <p>Where the book prints no total for exactly what you are looking at, the figure is this site's own sum of the line items, labelled <span class="calc-tag">calculated</span>.</p>
       <h2 class="about-h">Known problems in the source books</h2>
       <p>These come from errors or differences in the County's documents, not the extraction. A person reviewed each one.</p>
-      <details class="values" id="about-issues" tabindex="-1"><summary>Show all ${D.known_issues.length} notes</summary><ul>${issues || '<li>None recorded.</li>'}</ul></details>
+      <details class="values" id="about-issues" tabindex="-1"><summary>Show all ${shownIssues.length + (nOrig ? 1 : 0)} notes</summary><ul>${issues || '<li>None recorded.</li>'}</ul></details>
       <h2 class="about-h">Get the data</h2>
       <p><a href="${CFG.paths.data}budget.json">budget.json</a> (every figure shown here, including the Actual figures), <a href="${CFG.paths.data}changes.json">changes.json</a> (what changed in ${D.newest_year}), <a href="${CFG.paths.data}conflicts.json">conflicts.json</a> and <a href="${CFG.paths.data}fund_balance_gaap.json">fund_balance_gaap.json</a> (audited year-end balances). The extraction scripts and tables are in the project repository.</p>${CFG.contact_email ? `
       <h2 class="about-h">Contact</h2>

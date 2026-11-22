@@ -196,6 +196,7 @@ Square. Panels, rows, bars, tiles and swatches have 0 radius; controls, stamps a
 
 ### Tabs and segmented controls
 - **Style:** 40px tall, 1px ink border, buttons separated by 1px ink rules. Selected tab inverts to ink fill with paper text; hover is the green wash.
+- **County pages (reviewed 2026-11-22):** the same components with County wording: "Group" and "Department" in place of the City's "Department" and "Bureau", fund names in the Fund list, a status stamp that cites the adopting resolution, and a **Budget and Actual** section made of the ordinary ruled tables (fund totals, then General Fund income by source and spending by function as separate small tables). Audited Actual figures are links like any amount and carry the ≠ mark only where a reviewed known issue says the printed figure is wrong; no variance is drawn. The County adds no color, no card and no new component.
 - **Entity switch (City / County):** two square tabs under the site name at the top of the rail, the same 40px (46px on phones) 1px-ink buttons as above, inverted when selected. They are links (`#/` and `#/county/`), not radio buttons, and have no color of their own: the County is told apart by its name, the tagline, the tabs and the running status line, never by a second accent.
 - **Section tabs (Compare panel) and Jump links:** underline style: muted text, selected is ink with a 3px green underline.
 
