@@ -25,7 +25,7 @@
       "label": "County",
       "title_suffix": ": County",
       "entity": {
-        "name": "Lancaster County, PA",
+        "name": "County of Lancaster, PA",
         "short": "Lancaster County",
         "kind": "county",
         "possessive": "the County of Lancaster's"
