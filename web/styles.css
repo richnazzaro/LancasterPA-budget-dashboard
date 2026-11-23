@@ -877,3 +877,6 @@ a.status:hover { text-decoration: underline; text-underline-offset: 3px; }
   .terms-table th[scope="row"] { font-size: 17px; }
   .terms-table td:nth-child(2)::before { content: "Paid for by: "; font-weight: 400; color: var(--muted); }
 }
+
+/* Which budget this page is about, above every page heading. */
+.eyebrow { margin: 0 0 10px; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--sel-ink); }

@@ -51,6 +51,8 @@
   const T = { sort: 'sel', dir: -1, q: '', shown: PAGE_SIZE };
 
   const $ = (id) => document.getElementById(id);
+  /* The document title always names the entity first, so a tab or a search result says City or County. */
+  const pageTitle = (t) => `${CFG.entity.short} · ${t} · ${SITE}`;
   const esc = (s) => String(s).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
   const MINUS = '\u2212'; // one minus sign everywhere (not the hyphen)
   const money = (n) => (Math.round(n) < 0 ? `${MINUS}$` : '$') + Math.abs(Math.round(n)).toLocaleString('en-US');
@@ -711,7 +713,7 @@
     const e = resFind(S.y, S.m) || resFind(S.y, ORDER.find((m) => resFind(S.y, m)));
     if (!e) return `<header class="page-head"><h1 id="page-h" tabindex="-1">${esc(D.reserve.name)}</h1><p class="muted">No reserve figures for ${S.y}.</p></header>${filtersHTML()}`;
     const end = resEnd(e), ch = resChange(e), name = D.reserve.name;
-    document.title = `${name} ${resLabel(e)} · ${CFG.site_title}`;
+    document.title = pageTitle(`${name} ${resLabel(e)}`);
     const notices = [];
     if (e.alt) {
       const alts = e.alt.map((a) => `${money(a.v)} (${a.sc} column)`).join(' and ');
@@ -826,7 +828,7 @@
   function countyBalanceView() {
     const name = D.reserve.name, ys = cbYears(), y = ys.includes(S.y) ? S.y : ys[ys.length - 1];
     const b = cbFind(y, 'budget'), a = cbFind(y, 'actual'), bEnd = cbLine(b, 'ending'), aEnd = cbLine(a, 'ending');
-    document.title = `${name} ${y} · ${CFG.site_title}`;
+    document.title = pageTitle(`${name} ${y}`);
     const big = b ? `<p class="big-total" aria-live="polite"><span class="big-label">Budget: planned balance at ${usDate(bEnd.as_of)}</span> ${srcDoc(money(bEnd.v), b.doc, bEnd.p)}</p>`
       : aEnd ? `<p class="big-total" aria-live="polite"><span class="big-label">Actual: audited balance at ${usDate(aEnd.as_of)}</span> ${srcDoc(money(aEnd.v), a.doc, aEnd.p)}</p>` : '';
     let deck = '';
@@ -1027,7 +1029,7 @@
     const total = totalOf(list, k), cmp = S.c && series(S.c) ? totalOf(scoped(S.c), S.c) : null;
     const kindWord = kindWordPlain();
     const scope = S.f ? fn(S.f) : CFG.entity.short;
-    document.title = `${scope} ${kindWord}: ${seriesLabel(k)} · ${CFG.site_title}`;
+    document.title = pageTitle(`${scope} ${kindWord}: ${seriesLabel(k)}`);
 
     const notes = new Map(), what = `${scope} ${kindWord.toLowerCase()}`;
     const selMap = groupTotals(list, (r) => r.od, k), cmpMap = cmp ? groupTotals(scoped(S.c), (r) => r.od, S.c) : new Map();
@@ -1449,7 +1451,7 @@
     paint(false);
   }
 
-  const notFound = (what) => ({ html: `<p class="back-link"><a href="${esc(homeHash())}">‹ All departments</a></p><header class="page-head"><h1 id="page-h" tabindex="-1">${esc(what)} not found</h1><p class="muted">That link doesn't match anything in the current data.</p></header>` });
+  const notFound = (what) => (document.title = pageTitle(`${what} not found`), { html: `<p class="back-link"><a href="${esc(homeHash())}">‹ All departments</a></p><header class="page-head"><h1 id="page-h" tabindex="-1">${esc(what)} not found</h1><p class="muted">That link doesn't match anything in the current data.</p></header>` });
 
   /* ---------- org chart: departments, bureaus and "what does it do" text ---------- */
   const findDept = (sl) => O.departments.findIndex((d) => d.slug === sl || d.aliases.includes(sl));
@@ -1520,7 +1522,7 @@
           <ul class="cards" aria-labelledby="bl-t">${cardList(items, { total: totalOf(selRows, k).v, k, shareOf: `${name} ${S.k === 'revenue' ? 'revenue' : 'spending'}`, level: 3, notes: cardNotes })}</ul>${gapNotes(cardNotes)}</section>`;
       }
     }
-    document.title = `${name} ${seriesLabel(k)} · ${CFG.site_title}`;
+    document.title = pageTitle(`${name} ${seriesLabel(k)}`);
     const about = aboutHTML('What does this department do?', dept.desc);
     const v = entityView({ title: name, subtitle, selRows, cmpRows, crumbs: [{ label: 'Home', href: homeHash() }, { label: name }], bureauList, changes: deptChangesHTML(di), deptPicker: picker, scope: { dept: di }, about });
     return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats); mountLines(selRows, cmpRows, true); } };
@@ -1549,7 +1551,7 @@
     const selRows = scoped(k, { unit: ui }), cmpRows = S.c ? scoped(S.c, { unit: ui }) : [];
     const scope = { unit: ui };
     const funds = [...new Set([...selRows, ...cmpRows].map((r) => r.fund))].map((f) => esc(fn(D.funds[f])));
-    document.title = `${name} ${seriesLabel(k)} · ${CFG.site_title}`;
+    document.title = pageTitle(`${name} ${seriesLabel(k)}`);
     const sub = [esc(O.departments[di].name), unit.division ? (isCounty() ? esc(unit.division) : `${esc(unit.division)} Division`) : '', ...funds, lineCountText(selRows, cmpRows)].filter(Boolean).join(' · ');
     let about;
     if (unit.kind === 'department-wide') {
@@ -1927,7 +1929,7 @@
      page; the draw is worded as everywhere else ("$4.7M drawn from savings ($1.9M of it from dedicated data center revenue)"). */
   function reserveChangesPage(c) {
     const name = D.reserve.name, to = resFind(D.newest_year, S.m), from = resFind(parseKey(c.from).y, parseKey(c.from).m);
-    document.title = `What changed: ${seriesLabel(c.to)} · ${name} · ${CFG.site_title}`;
+    document.title = pageTitle(`What changed: ${seriesLabel(c.to)} · ${name}`);
     const h1 = `<h1 id="page-h" tabindex="-1">What changed in ${D.newest_year}</h1>`;
     if (!to || !from) {
       return { html: `<header class="page-head wc-head">${h1}<p class="wc-lede">The ${esc(name)} has no Fund Balance Projection figures for ${esc(seriesLabel(to ? c.from : c.to))}, so there is nothing to compare.</p></header>${changesFiltersHTML(c)}` };
@@ -1987,7 +1989,7 @@
     if (c.from !== S.c) S.c = c.from;
     if (isReserve()) return reserveChangesPage(c);
     const sc = c.scopes[scopeName()];
-    document.title = `What changed: ${seriesLabel(c.to)}${S.f ? ' · ' + fn(S.f) : ''} · ${CFG.site_title}`;
+    document.title = pageTitle(`What changed: ${seriesLabel(c.to)}${S.f ? ' · ' + fn(S.f) : ''}`);
     const head = `<header class="page-head wc-head"><h1 id="page-h" tabindex="-1">What changed in ${D.newest_year}</h1>
       ${sc ? `<p class="wc-lede">${ledeFor(c, sc)}</p>` : ''}${badgeHTML(c)}</header>`;
     if (!sc) {
@@ -2222,7 +2224,10 @@
     else if (route.name === 'missing') page = notFound('Page');
     else page = bureauPage();
     if (page.redirect) { navigate(page.redirect, true); return; }
+    if (route.name === 'about') document.title = pageTitle('About the data');
+    else if (route.name === 'missing') document.title = pageTitle('Page not found');
     $('view').innerHTML = page.html;
+    addEyebrow();
     $('about').hidden = route.name !== 'about';
     document.body.classList.toggle('about-page', route.name === 'about');
     document.body.classList.toggle('terms-page', route.name === 'terms');
@@ -2250,6 +2255,14 @@
       $('page-h')?.focus({ preventScroll: true });
       if (T.q && $('sec-lines')) $('sec-lines').scrollIntoView(); // arrived from "Jump to…" with a line item: show the table
     }
+  }
+
+  /* Every page heading says which budget the page is about: a quiet eyebrow above the h1 with the entity's name from
+     config.json (`entities.<id>.entity.short`). The h1 is described by it, so a screen reader announces both. */
+  function addEyebrow() {
+    const h = $('page-h'); if (!h || h.previousElementSibling?.id === 'page-eyebrow') return;
+    const p = document.createElement('p'); p.className = 'eyebrow'; p.id = 'page-eyebrow'; p.textContent = CFG.entity.short;
+    h.before(p); h.setAttribute('aria-describedby', 'page-eyebrow');
   }
 
   /* Compare panel: switch between "this year vs. comparison" and "over time" without re-rendering. */
@@ -2571,8 +2584,8 @@
   const fundYears = (i) => rangeText([...new Set(Object.values(D.series).filter((x) => x.funds.includes(i)).map((x) => x.year))].sort((a, b) => a - b));
   const termDl = (items) => `<dl class="terms-dl">${items.map(([id, t, d]) => `<dt id="term-${id}" tabindex="-1">${t}</dt><dd>${d}</dd>`).join('')}</dl>`;
   function termsPage(q) {
-    const info = FUND_INFO[ENT], nm = CFG.entity.short, other = isCounty() ? 'city' : 'county';
-    document.title = `${nm} · Funds and terms · ${SITE}`;
+    const info = FUND_INFO[ENT], other = isCounty() ? 'city' : 'county';
+    document.title = pageTitle('Funds and terms');
     const yrsOf = (m) => Object.values(D.series).filter((x) => x.measure === m).map((x) => x.year).sort((a, b) => a - b);
     const yr = (m) => (yrsOf(m).length ? rangeText(yrsOf(m)) : '');
     const fundRows = D.funds.map((f, i) => {
@@ -2676,7 +2689,7 @@
   /* The name, disclaimer, footer and contents links follow the entity. */
   function applyChrome() {
     document.documentElement.setAttribute('data-entity', ENT);
-    document.title = CFG.site_title;
+    document.title = pageTitle('Overview');
     $('wordmark').textContent = SITE; $('wordmark').setAttribute('href', eh(''));
     document.querySelector('meta[name=description]')?.setAttribute('content', CFG.description);
     $('footer-text').textContent = CFG.footer;
