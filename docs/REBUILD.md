@@ -9,7 +9,7 @@ Commands run from the repository root on macOS (Linux works the same way with it
 | Tool | Used for | How to get it |
 |---|---|---|
 | git | the repository | Xcode command-line tools (`xcode-select --install`) or git-scm.com |
-| Python 3.9 or newer | the pipeline (tested on 3.9.6; the publish workflow uses 3.12) | python.org, or the system `python3` |
+| Python 3.12 | the pipeline and the publish workflow (older Pythons cannot install the pinned, security-patched packages) | `brew install python@3.12`, or python.org; the macOS system `python3` is 3.9 and is too old |
 | Tesseract | OCR of the one scanned book (2026) | `brew install tesseract` |
 | A web browser | the local preview | any |
 | A GitHub account | publishing (optional) | github.com |
@@ -21,7 +21,7 @@ Commands run from the repository root on macOS (Linux works the same way with it
 ```bash
 git clone https://github.com/<owner>/<repo>.git
 cd <repo>
-python3 -m venv .venv
+python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```

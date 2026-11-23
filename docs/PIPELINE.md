@@ -5,7 +5,7 @@ How the City of Lancaster's budget books become the CSVs in `data/processed/` an
 Run it by hand, about once a year, when a new budget book is published. Paths below are relative to the repository root. To rebuild everything from a fresh clone, step by step, see [REBUILD.md](REBUILD.md).
 
 ## Setup
-Python 3.9 or newer (tested on 3.9.6; the publish workflow uses 3.12) and, for the one scanned book (2026), Tesseract:
+Python 3.12 (also what the publish workflow uses) and, for the one scanned book (2026), Tesseract:
 ```bash
 brew install tesseract            # only needed for OCR
 python3 -m venv .venv
