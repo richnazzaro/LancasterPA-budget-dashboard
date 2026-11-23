@@ -51,6 +51,9 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
+import income_rules
+from changes import counts_as_income
+
 ROOT = Path(__file__).resolve().parent.parent
 TOLERANCE = 5
 
@@ -241,6 +244,7 @@ def check_changes(budget: dict) -> int:
     acc, cats, funds = budget["accounts"], budget["categories"], budget["funds"]
     codes, units = budget["org"]["codes"], budget["org"]["units"]
     bad = 0
+    classify = income_rules.classifier()
 
     def entries(key):
         s = budget["series"][key]
@@ -251,7 +255,8 @@ def check_changes(budget: dict) -> int:
             u = codes[code.split("-")[0]]
             out.append({"a": a, "v": v, "p": p, "d": d, "fund": acc[a][2], "cat": acc[a][5], "bureau": acc[a][4],
                         "unit": u, "dept": units[u]["dept"], "rev": cats[acc[a][5]] == "Revenue",
-                        "draw": code.endswith("-499000") and acc[a][1].lower().startswith("fund balance reserve")})
+                        "draw": code.endswith("-499000") and acc[a][1].lower().startswith("fund balance reserve"),
+                        "cls": classify(code, funds[acc[a][2]]) if cats[acc[a][5]] == "Revenue" else ""})
         return out
 
     val = lambda x: (x or {}).get("v", 0) if isinstance(x, dict) or x is None else x
@@ -261,7 +266,8 @@ def check_changes(budget: dict) -> int:
         for scope, kinds in c["scopes"].items():
             fi = None if scope == "all" else funds.index(scope)
             for kind, b in kinds.items():
-                sel = {side: [e for e in E[side] if (fi is None or e["fund"] == fi) and e["rev"] == (kind == "revenue")] for side in "ft"}
+                sel = {side: [e for e in E[side] if (fi is None or e["fund"] == fi) and e["rev"] == (kind == "revenue")
+                              and counts_as_income(e, scope)] for side in "ft"}
                 for side in "ft":
                     want = sum(e["v"] for e in sel[side])
                     got = val(b["total"][side])
@@ -285,13 +291,14 @@ def check_changes(budget: dict) -> int:
                             bad += 1
                             print(f"FAIL {cid} {scope} {kind} {gname}[{side}] groups add to {sum(shown.values()):,}, total {got:,}")
                     if "draw" in b:
-                        want = sum(e["v"] for e in sel[side] if e["draw"])
+                        want = sum(e["v"] for e in E[side] if (fi is None or e["fund"] == fi) and e["rev"] and e["draw"])
                         if abs(val(b["draw"][side]) - want) >= 0.5:
                             bad += 1
                             print(f"FAIL {cid} {scope} draw[{side}] {val(b['draw'][side]):,} vs series {want:,}")
                 # changed lines add up to the change in the total
                 idx = set(b["up"]) | set(b["down"]) | set(b["new"]["i"]) | set(b["removed"]["i"])
-                in_scope = [ln for ln in c["lines"] if (fi is None or acc[ln[0]][2] == fi) and (cats[acc[ln[0]][5]] == "Revenue") == (kind == "revenue")]
+                in_scope = [ln for ln in c["lines"] if (fi is None or acc[ln[0]][2] == fi) and (cats[acc[ln[0]][5]] == "Revenue") == (kind == "revenue")
+                            and counts_as_income({"rev": cats[acc[ln[0]][5]] == "Revenue", "cls": classify(acc[ln[0]][0], funds[acc[ln[0]][2]])}, scope)]
                 diff = sum((ln[4] or 0) - (ln[1] or 0) for ln in in_scope)
                 if abs(diff - (val(b["total"]["t"]) - val(b["total"]["f"]))) >= 0.5:
                     bad += 1
@@ -813,6 +820,8 @@ def check_spikes(budget: dict) -> int:
         by, tot = defaultdict(float), defaultdict(float)
         for a, v in zip(ser[k]["a"], ser[k]["v"]):
             kind = "revenue" if cats[acc[a][5]] == "Revenue" else "expense"
+            if kind == "revenue" and budget["not_income"].get(str(a)) in ("draw", "transfer"):
+                continue  # not income (app.js lineSpikes leaves them out the same way)
             by[(kind, acc[a][2], acc[a][0])] += v
             tot[(kind, acc[a][2])] += v
         return by, tot
@@ -918,6 +927,7 @@ def main() -> int:
     failures += check_reserve(budget)
     failures += check_org(budget)
     failures += check_reserve_draw(budget)
+    failures += income_rules.check(budget)
     failures += check_changes(budget)
     failures += check_summaries(budget)
     failures += check_spikes(budget)

@@ -51,6 +51,9 @@ import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
+import income_rules
+from changes import counts_as_income
+
 ROOT = Path(__file__).resolve().parent.parent
 PROCESSED = ROOT / "data" / "processed" / "county"
 DATA = ROOT / "data" / "county"
@@ -236,6 +239,7 @@ def main() -> int:
     failures += check_actuals(budget, rows_by_doc, want_book)
     failures += check_fund_balance(budget)
     failures += check_context(budget)
+    failures += income_rules.check(budget)
 
     print(f"\n{failures} series mismatches")
     return 1 if failures else 0
@@ -410,6 +414,7 @@ def check_context(budget) -> int:
 
 def check_changes(budget, changes, csv_rows, want_book, book_year, newest) -> int:
     print("\nWhat changed (changes.json), recomputed from the CSVs with account merges:")
+    classify = income_rules.classifier()
     acc, funds, cats, depts, bureaus = (budget[k] for k in ("accounts", "funds", "categories", "departments", "bureaus"))
     org = budget["org"]
     prior = newest - 1
@@ -452,7 +457,8 @@ def check_changes(budget, changes, csv_rows, want_book, book_year, newest) -> in
                 continue
             code, moved = target(r["account_code"])
             e = out.setdefault((r["fund"], code), {"v": 0.0, "pages": [], "kind": "revenue" if r["side"] == "revenue" else "expense",
-                                                    "cat": r["category"], "rcat": r["category"], "dept": code.split("-")[0], "merged": False})
+                                                    "cat": r["category"], "rcat": r["category"], "dept": code.split("-")[0], "merged": False,
+                                                    "cls": classify(code, r["fund"]) if r["side"] == "revenue" else ""})
             e["v"] += v
             e["pages"].append(int(r["source_page"]))
             e["merged"] |= moved
@@ -516,7 +522,8 @@ def check_changes(budget, changes, csv_rows, want_book, book_year, newest) -> in
     for scope, kinds in comp["scopes"].items():
         for kind, block in kinds.items():
             def pick(v):
-                return {k: e for k, e in v.items() if e["kind"] == kind and (scope == "all" or k[0] == scope)}
+                return {k: e for k, e in v.items() if e["kind"] == kind and (scope == "all" or k[0] == scope)
+                        and counts_as_income({"rev": e["kind"] == "revenue", "cls": e["cls"]}, scope)}
             fv, tv = pick(f_view), pick(t_view)
             for side, vw in (("f", fv), ("t", tv)):
                 got = (block["total"][side] or {"v": 0})["v"]
@@ -546,7 +553,8 @@ def check_changes(budget, changes, csv_rows, want_book, book_year, newest) -> in
                         print(f"FAIL {scope} {kind} {name} {side}: groups do not add up to the total")
             # changed lines add up to the change in the total
             idx = [i for i, ln in enumerate(comp["lines"]) if (scope == "all" or funds[acc[ln[0]][2]] == scope)
-                   and (cats[acc[ln[0]][5]] == "Revenue") == (kind == "revenue")]
+                   and (cats[acc[ln[0]][5]] == "Revenue") == (kind == "revenue")
+                   and counts_as_income({"rev": cats[acc[ln[0]][5]] == "Revenue", "cls": classify(acc[ln[0]][0], funds[acc[ln[0]][2]])}, scope)]
             delta = sum((comp["lines"][i][4] or 0) - (comp["lines"][i][1] or 0) for i in idx)
             tdelta = (block["total"]["t"] or {"v": 0})["v"] - (block["total"]["f"] or {"v": 0})["v"]
             if abs(delta - tdelta) >= 0.5:

@@ -77,6 +77,7 @@ from pathlib import Path
 
 from build_dataset import Interner, parse_amount, read_csv, write_json
 from changes import compare
+import income_rules
 from org_structure import slug
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -686,6 +687,8 @@ def build(processed: Path = PROCESSED, out: Path = OUT) -> dict:
         "categories": cats.items,
         # [account_code, account_name, fund, department, bureau, category]
         "accounts": [list(a) for a in accounts.items],
+        # Revenue accounts that are not income: {account index: draw | transfer | charge} (data/income_rules.csv).
+        "not_income": income_rules.not_income(accounts.items, funds.items, cats.items, REVENUE),
         "series": dict(sorted(series.items())),
         "printed": printed,
         "known_issues": known,

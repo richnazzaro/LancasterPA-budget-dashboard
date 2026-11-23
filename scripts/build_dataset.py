@@ -54,6 +54,8 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
+import income_rules
+
 from changes import build_changes
 from org_structure import build_org
 
@@ -282,6 +284,8 @@ def build(processed: Path, out: Path) -> dict:
         "categories": cats.items,
         # [account_code, account_name, fund, department, bureau, category]
         "accounts": [list(a) for a in accounts.items],
+        # Revenue accounts that are not income: {account index: draw | transfer | charge} (data/income_rules.csv).
+        "not_income": income_rules.not_income(accounts.items, funds.items, cats.items),
         "series": out_series,
         "printed": printed,
         "known_issues": known_issues,
