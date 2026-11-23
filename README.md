@@ -20,6 +20,9 @@ Each budget book prints several years side by side. The site shows **one kind of
 | Historic years (2020–2025) | **Actual** | The book published two years later |
 | Prior budget year (2026) | **Projected** (year-end estimate) | The newest book. The revised projection is used when one is printed. |
 | New budget year (2027) | **Proposed** and **Revised** | The newest book. You can switch between the two. Neither is an adopted budget. |
+| Later years (2028–2029) | **Projection** | The city's `2028-2029-Budget-Projections.pdf`, made with the 2027 budget. Shown only at the end of the multi-year charts and tables; never a year you can pick. |
+
+**Projections** are the city's own estimates for the two years after the newest budget. They extend **Totals by Year** (home, every fund, department and bureau pages) and the Staff **Salaries and wages** table: a gray dotted line with hollow points continuing from the 2027 Revised point, over a lightly shaded band labelled "Projection", with muted year labels, and muted italic rows or columns marked "Projection" in the tables. A note under the chart says they are projections, gives the city's assumptions (no water, sewer, stormwater or trash rate increases; 3% salary increases; and the rest, behind "The city's assumptions", linked to the assumptions page), the fund's printed surplus or deficit when one fund is in view, and, for the General Fund, that the 2027 income counts money drawn from savings while the projections count none. The year picker, the headline total, the change sentence and What changed stay on the newest year. The projections book has no Fund Balance Projection page, so the Reserve Fund ends at 2027.
 
 **Adopted** and **Amended** budgets, year-to-date columns, and an older book's own-year proposal are **not shown**. They stay in the raw extractions in `data/processed/`. When a new book arrives, the year labels move forward automatically: the new year becomes Proposed/Revised, the year before becomes Projected, and older years become Actual.
 
@@ -44,7 +47,7 @@ Clicking a dollar amount opens the budget-book PDF **at the page it came from**.
   - a **bureau list**: one card per bureau or office on the org chart (name, share of the department, selected-vs-comparison bars, the whole card is a link; two columns on wide screens), with several budget groups combined where the chart has one bureau. Budget groups that are not a bureau (for example Administrative Services' city-wide Insurance, Fringe Benefits, Debt Service and Community Involvement budgets, or a department's fee revenue) form one card labelled "Department-wide costs (not a bureau)" or "Department revenue (not a bureau)". Departments with no bureaus on the chart (Legislative, City Controller, and General Revenue, which is not on the chart) have no bureau list and no bureau pages;
   - **Staff**: two tables by bureau and year (on a bureau page, that bureau alone):
     - **Budgeted positions**, 2022–2027 (2027 as Proposed and Revised), from each year's staffing schedule. The city publishes budgeted positions only, never actual headcount, so these years are labelled by year rather than Actual. Counts are as printed (fractions are shared positions); full-time and part-time are not split, because the 2023–2025 books don't mark them. Each count opens its schedule page;
-    - **Salaries and wages**: the "Salaries & Wages" budget lines (salaries, overtime, temporary wages; benefits are separate), under the usual one-figure rule (Actual 2020–2025, Projected 2026, Proposed and Revised 2027);
+    - **Salaries and wages**: the "Salaries & Wages" budget lines (salaries, overtime, temporary wages; benefits are separate), under the usual one-figure rule (Actual 2020–2025, Projected 2026, Proposed and Revised 2027), then the city's 2028 and 2029 projections in muted italic columns;
     - on a bureau page, a list of every position title in the newest schedule with its count and salary;
   - a **category table**: each spending category with its amount and a share bar;
   - a searchable, sortable line-item table (20 rows at a time) with the account code under each name and **Export this view (CSV)**, which downloads every row matching the search, with figure, comparison, change and the source book and page, built in the browser.
@@ -66,7 +69,7 @@ Clicking a dollar amount opens the budget-book PDF **at the page it came from**.
 - **Lines that stand out:** under **Totals by Year** (home, department and bureau pages), a note names any line whose amount in one year is at least twice its amount in both the year before and the year after (both printed and above zero) and whose jump is at least 5% of its fund's total that year (`SPIKE_X`, `SPIKE_SHARE` in `app.js` `lineSpikes()`; `check_dataset.py` lists the same lines with the same rule). It is found from the lines, never typed in. Today that is four lines: the 2025 General Fund **Building Permits** ($9,032,578 in 2025 Actual, 2027 book p. 42, against $1,339,520 in 2024 and $1,936,328 projected for 2026), the 2021 Sewer and Water OPEB contributions, and 2023 Stormwater professional services. Where `data/line_notes.csv` records what the book says about that line, the note adds it with a link: for Building Permits, that the city used data center building permit revenue to pay $4,162,525 of General Fund debt in 2026 (2027 book p. 7); the book does not break the 2025 figure down.
 - **Reading notes:** on wide screens a margin beside the page explains the figure names (Proposed, Revised, Projected, Actual) and other terms.
 - **About the data** (`#/about`, linked in the header):
-  - which book supplies each year;
+  - which book supplies each year, including the projections book and its assumptions;
   - how the figures were validated;
   - every known error in the city's source books, each reviewed by a person;
   - download links.
@@ -77,14 +80,14 @@ Funds: General, Stormwater Management, Sewer, Water, Solid Waste & Recycling, Li
 
 | What | Where | Notes |
 |---|---|---|
-| Source budget books (PDF) | [`Budget PDFs - City/`](Budget%20PDFs%20-%20City/), also published at `<site>/pdfs/` | 2022–2027 books |
-| Data the site reads | [`web/data/budget.json`](web/data/budget.json) | Every figure shown, with its source book and page |
+| Source budget books (PDF) | [`Budget PDFs - City/`](Budget%20PDFs%20-%20City/), also published at `<site>/pdfs/` | 2022–2027 books, and `2028-2029-Budget-Projections.pdf` |
+| Data the site reads | [`web/data/budget.json`](web/data/budget.json) | Every figure shown, with its source book and page. The projections are in its `projection` block (series, printed totals, printed Surplus/(Deficit), assumptions), not in `series`. |
 | Budgeted positions | [`web/data/staffing.json`](web/data/staffing.json) | Per book: each year's own schedule (the newest book's Proposed and Revised). Shown in the Staff section of department and bureau pages, and as position changes on the "What changed" page |
 | Books that disagree | [`web/data/conflicts.json`](web/data/conflicts.json) | Where overlapping books print different values for the same figure |
 | What changed | [`web/data/changes.json`](web/data/changes.json) | Newest year compared with the prior year's Projected, the latest Actual, and the Proposal: totals by fund, category, department and bureau, changed lines, shifts between funds, position counts per bureau (raw and adjusted, with artifacts), and per department and bureau the summary facts (net change, driver lines or categories, positions, named titles, General Fund shifts) |
 | Tax-policy notes | [`data/policy_notes.csv`](data/policy_notes.csv) | Hand-entered facts not in the budget tables (tax rates), each with a source |
 | Line notes | [`data/line_notes.csv`](data/line_notes.csv) | What the budget book says about one line in one year (year, figure, account, text, `<pdf>#page=N`), shown beside the generated "stands out" note for that line; copied into changes.json `line_notes` |
-| Tidy per-book tables (CSV) | [`data/processed/`](data/processed/) | `budget_long_*.csv` is the main table: one row per account, year and figure type, with `source_page`. Also: `line_items_*`, `staffing_*`, `fund_balance_*`, `validation_*`, `crosscheck_*` |
+| Tidy per-book tables (CSV) | [`data/processed/`](data/processed/) | `budget_long_*.csv` is the main table: one row per account, year and figure type, with `source_page` (the projections book's rows have `doc_type` `projection`). Also: `line_items_*`, `staffing_*`, `fund_balance_*`, `validation_*`, `crosscheck_*`, `projection_assumptions_*` |
 | Org chart and descriptions (PDF) | `Budget PDFs - City/2027 Org Chart.pdf`, `Org Descriptions 2027.pdf` | Not budget books; the pipeline skips them |
 | Org structure | [`data/org_units_2027.csv`](data/org_units_2027.csv), [`data/org_structure_2027.csv`](data/org_structure_2027.csv), [`data/org_descriptions_2027.csv`](data/org_descriptions_2027.csv) | Departments and bureaus; org code → bureau, with notes; description text with its PDF page. Built into the `org` block of `budget.json` |
 | Reviewed source errors | [`data/known_issues.csv`](data/known_issues.csv) | Shown on the site under "Known problems in the source books" |
@@ -126,7 +129,7 @@ The JSON files can also be downloaded from the live site: `<site>/data/budget.js
 
 ## Repository layout
 ```
-Budget PDFs - City/        source budget books (2022–2027), the 2027 org chart and unit descriptions
+Budget PDFs - City/        source budget books (2022–2027), the 2028–2029 projections, the 2027 org chart and unit descriptions
 config/                    per-book layout settings for the extractor
 data/                      reviewed issues, audited corrections, tax-policy notes, 2027 org structure and descriptions
 data/processed/            extracted CSVs (committed; the site is built from them)

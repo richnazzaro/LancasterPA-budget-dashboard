@@ -1,0 +1,977 @@
+status,fund,bureau,account_code,account_name,account_name_book,name_differs,proposed_revised_2027,projection_2028,projection_2029,change_2028,source_page,source_page_book
+both,General Fund,Tax Revenue,1000001-400000,City Real Estate Taxes,City Real Estate Taxes,False,32983798,33016782.0,33049799.0,32984.0,1.0,37
+both,General Fund,Tax Revenue,1000001-400200,Real Estate Transfer,Real Estate Transfer,False,1442414,1508765.0,1578168.0,66351.0,1.0,37
+both,General Fund,Tax Revenue,1000001-400300,Earned Income Tax,Earned Income Tax,False,22550578,24061467.0,25673585.0,1510889.0,1.0,37
+both,General Fund,Tax Revenue,1000001-400400,Local Services Tax,Local Services Tax,False,1653649,1645381.0,1637154.0,-8268.0,1.0,37
+both,General Fund,Tax Revenue,1000001-400500,Penalty Current Tax,Penalty Current Tax,False,122144,125930.0,129834.0,3786.0,1.0,37
+both,General Fund,Tax Revenue,1000001-400900,Lien Interest & Costs,Lien Interest & Costs,False,1500,1385.0,1278.0,-115.0,1.0,37
+both,General Fund,Tax Revenue,1000001-401000,Payment in Lieu of Taxes,Payment in Lieu of Taxes,False,2300000,2311500.0,2323058.0,11500.0,1.0,37
+both,General Fund,Tax Revenue,1000001-401100,Utility Tax Refund,Utility Tax Refund,False,44000,44440.0,44884.0,440.0,1.0,37
+both,General Fund,Tax Revenue,1000001-401200,Real Estate Tax Lien Proc,Real Estate Tax Lien Proc,False,781036,774788.0,768590.0,-6248.0,1.0,37
+both,General Fund,Regulatory License Fee,1000002-401400,Franchise Fee,Franchise Fee,False,350658,350658.0,350658.0,0.0,1.0,39
+both,General Fund,Regulatory License Fee,1000002-401500,Beverage License,Beverage License,False,31029,31029.0,31029.0,0.0,1.0,39
+both,General Fund,Other Income,1000004-405500,Administrative Sundry,Administrative Sundry,False,6000,6312.0,6640.0,312.0,2.0,45
+both,General Fund,Other Income,1000004-405700,Sale of City Property/Svc,Sale of City Property/Svc,False,170000,178840.0,188140.0,8840.0,2.0,45
+both,General Fund,Other Income,1000004-405800,Police Sundry,Police Sundry,False,49797,52386.0,55110.0,2589.0,2.0,45
+both,General Fund,Other Income,1000004-405900,Fire Sundry,Fire Sundry,False,86611,91114.0,95852.0,4503.0,2.0,45
+both,General Fund,Other Income,1000004-406000,CPED Sundry,CPED Sundry,False,50000,52600.0,55335.0,2600.0,2.0,45
+both,General Fund,Other Income,1000004-406100,Public Works Sundry,Public Works Sundry,False,10000,10520.0,11067.0,520.0,2.0,45
+both,General Fund,Other Income,1000004-406300,Interest on Investment,Interest on Investment,False,569963,599601.0,630780.0,29638.0,2.0,45
+both,General Fund,Other Income,1000004-406600,Federal Reimb-Salaries,Federal Reimb-Salaries,False,786320,827209.0,870224.0,40889.0,2.0,45
+both,General Fund,Other Income,1000004-406601,Lead Reimb - Salaries,Lead Reimb - Salaries,False,400852,421696.0,443625.0,20844.0,2.0,45
+both,General Fund,Other Income,1000004-406700,Federal Reimb-Fringes,Federal Reimb-Fringes,False,398146,418849.0,440630.0,20703.0,2.0,46
+both,General Fund,Other Income,1000004-406701,Lead Reimb - Fringes,Lead Reimb - Fringes,False,210046,220969.0,232459.0,10923.0,2.0,46
+both,General Fund,Other Income,1000004-406900,Fed.Reimb-Indirect Costs,Fed.Reimb-Indirect Costs,False,44500,46814.0,49248.0,2314.0,2.0,46
+both,General Fund,Other Income,1000004-407100,Pension State Fund,Pension State Fund,False,4364690,4591654.0,4830420.0,226964.0,2.0,46
+both,General Fund,Other Income,1000004-407500,Liquid Fuels Reimb.,Liquid Fuels Reimb.,False,72100,75849.0,79793.0,3749.0,2.0,46
+both,General Fund,Other Income,1000004-415100,Anti-Auto Theft grant,Anti-Auto Theft grant,False,0,0.0,0.0,0.0,2.0,46
+both,General Fund,Other Income,1000004-415500,Misc Grants & Gifts,Misc Grants & Gifts,False,7558,7951.0,8365.0,393.0,2.0,46
+both,General Fund,Other Income,1000004-415501,ARPA Revenue Replacement,ARPA Revenue Replacement,False,0,0.0,0.0,0.0,2.0,46
+both,General Fund,Other Income,1000004-418100,Tax Certification Fees,Tax Certification Fees,False,80000,84160.0,88536.0,4160.0,2.0,46
+both,General Fund,Other Income,1000004-419600,Marketing,Marketing,False,15000,15780.0,16601.0,780.0,2.0,46
+both,General Fund,Other Income,1000004-419900,Merchandise Sales,Merchandise Sales,False,10000,10520.0,11067.0,520.0,2.0,47
+both,General Fund,Other Income,1000004-430000,Treasury Allocation,Treasury Allocation,False,1896738,1995368.0,2099128.0,98630.0,2.0,47
+both,General Fund,Other Income,1000004-430400,IT Allocation,IT Allocation,False,609040,640710.0,674027.0,31670.0,2.0,47
+both,General Fund,Other Income,1000004-499000,Fund Balance Reserve,Fund Balance Reserve,False,1934343,,,,2.0,47
+both,General Fund,Other Income,1000004-499000,Fund Balance Reserve,Fund Balance Reserve,False,2800745,,,,2.0,47
+both,General Fund,Mayor's Office Exp,1101000-610500,Elected Official,Elected Official,False,108705,111966.0,115325.0,3261.0,2.0,48
+both,General Fund,Mayor's Office Exp,1101000-611500,Salaried Personnel,Salaried Personnel,False,410628,422947.0,435635.0,12319.0,2.0,48
+both,General Fund,Mayor's Office Exp,1101000-618500,Overtime,Overtime,False,0,0.0,0.0,0.0,2.0,48
+both,General Fund,Mayor's Office Exp,1101000-732000,Dues & Subscriptions,Dues & Subscriptions,False,0,0.0,0.0,0.0,2.0,48
+both,General Fund,Mayor's Office Exp,1101000-734000,Postage,Postage,False,500,457.0,418.0,-43.0,2.0,48
+both,General Fund,Mayor's Office Exp,1101000-735000,Printing,Printing,False,1500,1371.0,1253.0,-129.0,2.0,48
+both,General Fund,Mayor's Office Exp,1101000-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,2.0,48
+both,General Fund,Mayor's Office Exp,1101000-737000,Travel,Travel,False,0,0.0,0.0,0.0,2.0,48
+both,General Fund,Mayor's Office Exp,1101000-741000,Professional Services,Professional Services,False,7500,6855.0,6266.0,-645.0,2.0,48
+both,General Fund,Mayor's Office Exp,1101000-744500,Training & School,Training & School,False,3000,2742.0,2506.0,-258.0,2.0,48
+both,General Fund,Mayor's Office Exp,1101000-760300,Office Supplies,Office Supplies,False,750,686.0,627.0,-64.0,2.0,48
+both,General Fund,City Solicitor Exp,1102000-610900,Salary - Director,Salary - Director,False,149256,153734.0,158346.0,4478.0,2.0,50
+both,General Fund,City Solicitor Exp,1102000-611500,Salary - Personnel,Salary - Personnel,False,324681,334422.0,344454.0,9741.0,3.0,50
+both,General Fund,City Solicitor Exp,1102000-731000,Advertising,Advertising,False,2000,1951.0,1902.0,-49.0,3.0,50
+both,General Fund,City Solicitor Exp,1102000-732000,Dues & Subscriptions,Dues & Subscriptions,False,2250,2194.0,2140.0,-56.0,3.0,50
+both,General Fund,City Solicitor Exp,1102000-734000,Postage,Postage,False,250,244.0,238.0,-6.0,3.0,50
+both,General Fund,City Solicitor Exp,1102000-735000,Printing,Printing,False,1500,1463.0,1427.0,-37.0,3.0,50
+both,General Fund,City Solicitor Exp,1102000-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,3.0,50
+both,General Fund,City Solicitor Exp,1102000-737000,Travel,Travel,False,500,488.0,476.0,-12.0,3.0,50
+both,General Fund,City Solicitor Exp,1102000-741000,Professional Services,Professional Services,False,160000,156041.0,152181.0,-3959.0,3.0,50
+both,General Fund,City Solicitor Exp,1102000-744000,Contract Services,Contract Services,False,8500,8290.0,8085.0,-210.0,3.0,50
+both,General Fund,City Solicitor Exp,1102000-744500,Training/Education,Training/Education,False,6000,5852.0,5707.0,-148.0,3.0,50
+both,General Fund,City Solicitor Exp,1102000-760300,Office Supplies,Office Supplies,False,1000,975.0,951.0,-25.0,3.0,50
+both,General Fund,City Solicitor Exp,1102000-820000,Minor Equipment,Minor Equipment,False,0,0.0,0.0,0.0,3.0,50
+both,General Fund,City Council Exp,1201000-610500,Elected Official,Elected Official,False,56500,51660.0,47235.0,-4840.0,3.0,55
+both,General Fund,City Council Exp,1201000-737000,Travel,Travel,False,0,0.0,0.0,0.0,3.0,55
+both,General Fund,City Council Exp,1201000-738000,Miscellaneous Expenses,Miscellaneous Expenses,False,7500,6858.0,6270.0,-642.0,3.0,55
+both,General Fund,City Council Exp,1201000-744500,Training,Training,False,0,0.0,0.0,0.0,3.0,55
+both,General Fund,City Clerk Exp,1202000-611500,Salaried Personnel,Salaried Personnel,False,73477,75681.0,77952.0,2204.0,3.0,57
+both,General Fund,City Clerk Exp,1202000-612000,Salary Temporary,Salary Temporary,False,0,0.0,0.0,0.0,3.0,57
+both,General Fund,City Clerk Exp,1202000-731000,Advertising,Advertising,False,6000,5795.0,5597.0,-205.0,3.0,57
+both,General Fund,City Clerk Exp,1202000-734000,Postage,Postage,False,50,48.0,47.0,-2.0,3.0,57
+both,General Fund,City Clerk Exp,1202000-735000,Printing,Printing,False,1500,1449.0,1399.0,-51.0,3.0,57
+both,General Fund,City Clerk Exp,1202000-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,4.0,57
+both,General Fund,City Clerk Exp,1202000-737000,Travel,Travel,False,1000,966.0,933.0,-34.0,4.0,57
+both,General Fund,City Clerk Exp,1202000-738000,Miscellaneous Expenses,Miscellaneous Expenses,False,500,483.0,466.0,-17.0,4.0,57
+both,General Fund,City Clerk Exp,1202000-742500,Ordinance Codification,Ordinance Codification,False,6000,5795.0,5597.0,-205.0,4.0,57
+both,General Fund,City Clerk Exp,1202000-744000,Contract Services,Contract Services,False,7500,7244.0,6996.0,-256.0,4.0,57
+both,General Fund,City Clerk Exp,1202000-744500,Training/Education,Training/Education,False,600,579.0,560.0,-21.0,4.0,57
+both,General Fund,City Clerk Exp,1202000-760300,Office Supplies,Office Supplies,False,150,145.0,140.0,-5.0,4.0,57
+both,General Fund,Neighborhood Engagement Exp,1300000-610900,Salary - Director,Salary - Director,False,87000,89610.0,92298.0,2610.0,4.0,61
+both,General Fund,Neighborhood Engagement Exp,1300000-611500,Salary - Personnel,Salary - Personnel,False,0,0.0,0.0,0.0,4.0,61
+both,General Fund,Neighborhood Engagement Exp,1300000-612000,Salary Temporary,Salary Temporary,False,5000,5150.0,5305.0,150.0,4.0,61
+both,General Fund,Neighborhood Engagement Exp,1300000-618500,Overtime,Overtime,False,0,0.0,0.0,0.0,4.0,61
+both,General Fund,Neighborhood Engagement Exp,1300000-731000,Advertising,Advertising,False,2000,2060.0,2122.0,60.0,4.0,61
+both,General Fund,Neighborhood Engagement Exp,1300000-732000,Dues & Subscriptions,Dues & Subscriptions,False,3500,3605.0,3713.0,105.0,4.0,61
+both,General Fund,Neighborhood Engagement Exp,1300000-734000,Postage,Postage,False,50,52.0,53.0,2.0,4.0,61
+both,General Fund,Neighborhood Engagement Exp,1300000-735000,Printing,Printing,False,1000,1030.0,1061.0,30.0,4.0,61
+both,General Fund,Neighborhood Engagement Exp,1300000-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,4.0,61
+both,General Fund,Neighborhood Engagement Exp,1300000-737000,Travel,Travel,False,3000,3090.0,3183.0,90.0,4.0,61
+both,General Fund,Neighborhood Engagement Exp,1300000-741000,Professional Services,Professional Services,False,42000,43260.0,44558.0,1260.0,4.0,61
+both,General Fund,Neighborhood Engagement Exp,1300000-741006,Language Access Services,Language Access Services,False,0,0.0,0.0,0.0,4.0,61
+both,General Fund,Neighborhood Engagement Exp,1300000-744000,Contract Services,Contract Services,False,5000,5150.0,5305.0,150.0,4.0,62
+both,General Fund,Neighborhood Engagement Exp,1300000-744500,Training/Education,Training/Education,False,1250,1288.0,1326.0,38.0,4.0,62
+both,General Fund,Neighborhood Engagement Exp,1300000-760300,Office Supplies,Office Supplies,False,500,515.0,530.0,15.0,4.0,62
+both,General Fund,Neighborhood Engagement Exp,1300000-820000,Minor Equipment,Minor Equipment,False,675,695.0,716.0,20.0,4.0,62
+both,General Fund,Neighborhood Engagement Exp,1300000-853800,Marketing,Marketing,False,5000,5150.0,5305.0,150.0,4.0,62
+both,General Fund,Tourism & Promotions Exp,1301000-611000,Salary - Bureau Chief,Salary - Bureau Chief,False,103000,106090.0,109273.0,3090.0,4.0,64
+both,General Fund,Tourism & Promotions Exp,1301000-611500,Salary - Personnel,Salary - Personnel,False,292359,301130.0,310164.0,8771.0,4.0,64
+both,General Fund,Tourism & Promotions Exp,1301000-612000,Salary Temporary,Salary Temporary,False,15000,15450.0,15914.0,450.0,4.0,64
+both,General Fund,Tourism & Promotions Exp,1301000-618500,Overtime,Overtime,False,2500,2575.0,2652.0,75.0,4.0,64
+both,General Fund,Tourism & Promotions Exp,1301000-716000,Rental of Parking Lot,Rental of Parking Lot,False,6000,6180.0,6365.0,180.0,4.0,64
+both,General Fund,Tourism & Promotions Exp,1301000-722000,Maint. - Communications,Maint. - Communications,False,2100,2163.0,2228.0,63.0,4.0,64
+both,General Fund,Tourism & Promotions Exp,1301000-732000,Dues & Subscriptions,Dues & Subscriptions,False,30000,30900.0,31827.0,900.0,4.0,64
+both,General Fund,Tourism & Promotions Exp,1301000-734000,Postage,Postage,False,500,515.0,530.0,15.0,4.0,64
+both,General Fund,Tourism & Promotions Exp,1301000-735000,Printing,Printing,False,500,515.0,530.0,15.0,4.0,64
+both,General Fund,Tourism & Promotions Exp,1301000-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,4.0,64
+both,General Fund,Tourism & Promotions Exp,1301000-741000,Professional Services,Professional Services,False,2000,2060.0,2122.0,60.0,4.0,65
+both,General Fund,Tourism & Promotions Exp,1301000-744000,Contract Services,Contract Services,False,16000,16480.0,16974.0,480.0,4.0,65
+both,General Fund,Tourism & Promotions Exp,1301000-744500,Training/Education,Training/Education,False,5000,5150.0,5305.0,150.0,4.0,65
+both,General Fund,Tourism & Promotions Exp,1301000-760300,Office Supplies,Office Supplies,False,2000,2060.0,2122.0,60.0,5.0,65
+both,General Fund,Tourism & Promotions Exp,1301000-820000,Minor Equipment,Minor Equipment,False,2000,2060.0,2122.0,60.0,5.0,65
+both,General Fund,Tourism & Promotions Exp,1301000-853800,Marketing,Marketing,False,90000,92700.0,95481.0,2700.0,5.0,65
+both,General Fund,Tourism & Promotions Exp,1301000-854000,Merchandise Purchases,Merchandise Purchases,False,25000,25750.0,26523.0,750.0,5.0,65
+both,General Fund,Civic Engagement Exp,1302000-611000,Salary - Bureau Chief,Salary - Bureau Chief,False,87550,90177.0,92882.0,2627.0,5.0,67
+both,General Fund,Civic Engagement Exp,1302000-611500,Salary - Personnel,Salary - Personnel,False,192072,197834.0,203769.0,5762.0,5.0,67
+both,General Fund,Civic Engagement Exp,1302000-612000,Salary Temporary,Salary Temporary,False,10000,10300.0,10609.0,300.0,5.0,67
+both,General Fund,Civic Engagement Exp,1302000-618500,Overtime,Overtime,False,6000,6180.0,6365.0,180.0,5.0,67
+both,General Fund,Civic Engagement Exp,1302000-731000,Advertising,Advertising,False,2000,2060.0,2122.0,60.0,5.0,67
+both,General Fund,Civic Engagement Exp,1302000-732000,Dues & Subscriptions,Dues & Subscriptions,False,2000,2060.0,2122.0,60.0,5.0,67
+both,General Fund,Civic Engagement Exp,1302000-734000,Postage,Postage,False,100,103.0,106.0,3.0,5.0,67
+both,General Fund,Civic Engagement Exp,1302000-735000,Printing,Printing,False,1000,1030.0,1061.0,30.0,5.0,67
+both,General Fund,Civic Engagement Exp,1302000-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,5.0,67
+both,General Fund,Civic Engagement Exp,1302000-737000,Travel,Travel,False,1000,1030.0,1061.0,30.0,5.0,67
+both,General Fund,Civic Engagement Exp,1302000-741000,Engagement Programming,Engagement Programming,False,20000,20600.0,21218.0,600.0,5.0,67
+both,General Fund,Civic Engagement Exp,1302000-741006,Language Access Services,Language Access Services,False,55000,56650.0,58350.0,1650.0,5.0,67
+both,General Fund,Civic Engagement Exp,1302000-744000,Contract Services,Contract Services,False,5000,5150.0,5305.0,150.0,5.0,67
+both,General Fund,Civic Engagement Exp,1302000-744500,Training/Education,Training/Education,False,2000,2060.0,2122.0,60.0,5.0,67
+both,General Fund,Civic Engagement Exp,1302000-760300,Office Supplies,Office Supplies,False,900,927.0,955.0,27.0,5.0,68
+both,General Fund,Civic Engagement Exp,1302000-820000,Minor Equipment,Minor Equipment,False,1000,1030.0,1061.0,30.0,5.0,68
+both,General Fund,Civic Engagement Exp,1302000-853800,Marketing,Marketing,False,6000,6180.0,6365.0,180.0,5.0,68
+both,General Fund,Director Admin Svc Exp,1400000-610900,Salary - Director,Salary - Director,False,148000,152440.0,157013.0,4440.0,5.0,70
+both,General Fund,Director Admin Svc Exp,1400000-611500,Salaried Personnel,Salaried Personnel,False,306108,315291.0,324750.0,9183.0,5.0,70
+both,General Fund,Director Admin Svc Exp,1400000-732000,Dues & Subscriptions,Dues & Subscriptions,False,7500,7629.0,7760.0,129.0,5.0,70
+both,General Fund,Director Admin Svc Exp,1400000-734000,Postage,Postage,False,100,102.0,103.0,2.0,5.0,70
+both,General Fund,Director Admin Svc Exp,1400000-735000,Printing,Printing,False,1000,1017.0,1035.0,17.0,5.0,70
+both,General Fund,Director Admin Svc Exp,1400000-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,5.0,70
+both,General Fund,Director Admin Svc Exp,1400000-737000,Travel,Travel,False,1000,1017.0,1035.0,17.0,5.0,70
+both,General Fund,Director Admin Svc Exp,1400000-741000,Professional Services,Professional Services,False,110000,111894.0,107842.0,1894.0,5.0,70
+both,General Fund,Director Admin Svc Exp,1400000-744500,Training & School,Training & School,False,2000,2034.0,2069.0,34.0,5.0,70
+both,General Fund,Director Admin Svc Exp,1400000-760300,Office Supplies,Office Supplies,False,500,509.0,517.0,9.0,5.0,70
+both,General Fund,Accounting Exp,1401000-611000,Salary - Bureau Chief,Salary - Bureau Chief,False,125000,128750.0,132613.0,3750.0,5.0,72
+both,General Fund,Accounting Exp,1401000-611500,Salaried Personnel,Salaried Personnel,False,536316,552405.0,568978.0,16089.0,5.0,72
+both,General Fund,Accounting Exp,1401000-612000,Salary Temporary,Salary Temporary,False,7500,7597.0,7695.0,97.0,5.0,72
+both,General Fund,Accounting Exp,1401000-732000,Dues & Subscriptions,Dues & Subscriptions,False,2000,2026.0,2052.0,26.0,5.0,72
+both,General Fund,Accounting Exp,1401000-734000,Postage,Postage,False,3500,3545.0,3591.0,45.0,5.0,72
+both,General Fund,Accounting Exp,1401000-735000,Printing,Printing,False,1200,1215.0,1231.0,15.0,5.0,72
+both,General Fund,Accounting Exp,1401000-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,5.0,72
+both,General Fund,Accounting Exp,1401000-737000,Travel,Travel,False,1000,1013.0,1026.0,13.0,6.0,72
+both,General Fund,Accounting Exp,1401000-741000,Professional Services,Professional Services,False,35000,34321.0,34764.0,-679.0,6.0,72
+both,General Fund,Accounting Exp,1401000-741100,Audit Expense,Audit Expense,False,81500,82551.0,83616.0,1051.0,6.0,72
+both,General Fund,Accounting Exp,1401000-743000,Bank Service Charges,Bank Service Charges,False,32000,22233.0,10869.0,-9767.0,6.0,72
+both,General Fund,Accounting Exp,1401000-743100,Credit Card Fees,Credit Card Fees,False,6000,6077.0,6156.0,77.0,6.0,72
+both,General Fund,Accounting Exp,1401000-744500,Training & School,Training & School,False,3000,3039.0,3078.0,39.0,6.0,72
+both,General Fund,Accounting Exp,1401000-760300,Office Supplies,Office Supplies,False,1500,1519.0,1539.0,19.0,6.0,72
+both,General Fund,Treasury Exp,1402000-611000,Salary - Bureau Chief,Salary - Bureau Chief,False,125000,128750.0,132613.0,3750.0,6.0,74
+both,General Fund,Treasury Exp,1402000-611500,Salaried Personnel,Salaried Personnel,False,1118478,1152032.0,1186593.0,33554.0,6.0,74
+both,General Fund,Treasury Exp,1402000-612000,Salary Temporary,Salary Temporary,False,0,0.0,0.0,0.0,6.0,74
+both,General Fund,Treasury Exp,1402000-618500,Overtime,Overtime,False,1000,1083.0,1173.0,83.0,6.0,74
+both,General Fund,Treasury Exp,1402000-718000,Rental of Uniforms,Rental of Uniforms,False,4600,4981.0,5394.0,381.0,6.0,74
+both,General Fund,Treasury Exp,1402000-723000,Maint. - Equipment,Maint. - Equipment,False,2400,2599.0,2814.0,199.0,6.0,74
+both,General Fund,Treasury Exp,1402000-729000,Maint. - Vehicles,Maint. - Vehicles,False,600,650.0,704.0,50.0,6.0,74
+both,General Fund,Treasury Exp,1402000-731000,Advertising,Advertising,False,0,0.0,0.0,0.0,6.0,74
+both,General Fund,Treasury Exp,1402000-732000,Dues & Subscriptions,Dues & Subscriptions,False,650,704.0,762.0,54.0,6.0,74
+both,General Fund,Treasury Exp,1402000-734000,Postage,Postage,False,560000,639331.0,726226.0,79331.0,6.0,74
+both,General Fund,Treasury Exp,1402000-735000,Printing,Printing,False,20000,21658.0,23454.0,1658.0,6.0,74
+both,General Fund,Treasury Exp,1402000-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,6.0,74
+both,General Fund,Treasury Exp,1402000-737000,Travel,Travel,False,500,541.0,586.0,41.0,6.0,74
+both,General Fund,Treasury Exp,1402000-738000,Miscellaneous Expenses,Miscellaneous Expenses,False,2000,2166.0,2345.0,166.0,6.0,74
+both,General Fund,Treasury Exp,1402000-744000,Contract Services,Contract Services,False,153985,199651.0,250090.0,45666.0,6.0,75
+both,General Fund,Treasury Exp,1402000-744500,Training & School,Training & School,False,3000,3249.0,3518.0,249.0,6.0,75
+both,General Fund,Treasury Exp,1402000-760300,Office Supplies,Office Supplies,False,6000,6497.0,7036.0,497.0,6.0,75
+both,General Fund,Treasury Exp,1402000-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,1500,1624.0,1759.0,124.0,6.0,75
+both,General Fund,Treasury Exp,1402000-820000,Minor Equipment,Minor Equipment,False,0,0.0,0.0,0.0,6.0,75
+both,General Fund,Treasury Exp,1402000-827100,Vehicle Lease Purchase,Vehicle Lease Purchase,False,5086,5508.0,5964.0,422.0,6.0,75
+both,General Fund,Controller Exp,1403000-610500,Elected Official,Elected Official,False,8500,8500.0,8500.0,0.0,4.0,59
+both,General Fund,Information Services Exp,1404000-611000,Salary - Bureau Chief,Salary - Bureau Chief,False,112553,115930.0,119408.0,3377.0,6.0,77
+both,General Fund,Information Services Exp,1404000-611500,Salaried Personnel,Salaried Personnel,False,642868,662154.0,682019.0,19286.0,6.0,77
+both,General Fund,Information Services Exp,1404000-612000,Salary Temporary,Salary Temporary,False,0,0.0,0.0,0.0,6.0,77
+both,General Fund,Information Services Exp,1404000-722000,Maint. - Communications,Maint. - Communications,False,25000,27697.0,30686.0,2697.0,6.0,77
+both,General Fund,Information Services Exp,1404000-723000,Maint. - Equipment,Maint. - Equipment,False,110000,121868.0,135017.0,11868.0,6.0,77
+both,General Fund,Information Services Exp,1404000-734000,Postage,Postage,False,100,111.0,123.0,11.0,6.0,77
+both,General Fund,Information Services Exp,1404000-735000,Printing,Printing,False,50,55.0,61.0,5.0,6.0,77
+both,General Fund,Information Services Exp,1404000-736000,Telephone,Telephone,False,175000,193881.0,214799.0,18881.0,6.0,77
+both,General Fund,Information Services Exp,1404000-737000,Travel,Travel,False,1000,1108.0,1227.0,108.0,6.0,77
+both,General Fund,Information Services Exp,1404000-741000,Professional Services,Professional Services,False,200000,250999.0,308382.0,50999.0,6.0,77
+both,General Fund,Information Services Exp,1404000-744000,Contract Services,Contract Services,False,1800000,2023625.0,1941957.0,223625.0,6.0,77
+both,General Fund,Information Services Exp,1404000-744500,Training & School,Training & School,False,3000,3324.0,3682.0,324.0,6.0,78
+both,General Fund,Information Services Exp,1404000-760300,Office Supplies,Office Supplies,False,500,554.0,614.0,54.0,6.0,78
+both,General Fund,Information Services Exp,1404000-760600,Operating Supplies,Operating Supplies,False,4000,4432.0,4910.0,432.0,6.0,78
+both,General Fund,Information Services Exp,1404000-820000,Minor Equipment,Minor Equipment,False,5000,5539.0,6137.0,539.0,7.0,78
+both,General Fund,Information Services Exp,1404000-820500,MIS Projects,MIS Projects,False,75000,83092.0,92057.0,8092.0,7.0,78
+both,General Fund,Information Services Exp,1404000-930000,GIS Projects,GIS Projects,False,10000,11079.0,12274.0,1079.0,7.0,78
+both,General Fund,Human Resources Exp,1405000-611000,Salary - Bureau Chief,Salary - Bureau Chief,False,128750,132613.0,136591.0,3863.0,3.0,52
+both,General Fund,Human Resources Exp,1405000-611500,Salaried Personnel,Salaried Personnel,False,624536,643272.0,662571.0,18736.0,3.0,52
+both,General Fund,Human Resources Exp,1405000-612000,Salary Temporary,Salary Temporary,False,3000,3114.0,3232.0,114.0,3.0,52
+both,General Fund,Human Resources Exp,1405000-618500,Overtime,Overtime,False,0,0.0,0.0,0.0,3.0,52
+both,General Fund,Human Resources Exp,1405000-622000,Employee Recognition,Employee Recognition,False,22000,22834.0,23700.0,834.0,3.0,52
+both,General Fund,Human Resources Exp,1405000-731000,Advertising,Advertising,False,0,0.0,0.0,0.0,3.0,52
+both,General Fund,Human Resources Exp,1405000-732000,Dues & Subscriptions,Dues & Subscriptions,False,3000,3114.0,3232.0,114.0,3.0,52
+both,General Fund,Human Resources Exp,1405000-734000,Postage,Postage,False,100,104.0,108.0,4.0,3.0,52
+both,General Fund,Human Resources Exp,1405000-735000,Printing,Printing,False,1000,1038.0,1077.0,38.0,3.0,52
+both,General Fund,Human Resources Exp,1405000-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,3.0,52
+both,General Fund,Human Resources Exp,1405000-737000,Travel,Travel,False,1000,1038.0,1077.0,38.0,3.0,52
+both,General Fund,Human Resources Exp,1405000-741000,Professional Services,Professional Services,False,160000,172022.0,184679.0,12022.0,3.0,52
+both,General Fund,Human Resources Exp,1405000-743500,Labor Relations Expense,Labor Relations Expense,False,20000,20758.0,21545.0,758.0,3.0,52
+both,General Fund,Human Resources Exp,1405000-744000,Contract Services,Contract Services,False,30000,31137.0,32318.0,1137.0,3.0,53
+both,General Fund,Human Resources Exp,1405000-744500,Training & School,Training & School,False,10000,10379.0,10773.0,379.0,3.0,53
+both,General Fund,Human Resources Exp,1405000-760300,Office Supplies,Office Supplies,False,1000,1038.0,1077.0,38.0,3.0,53
+both,General Fund,Human Resources Exp,1405000-760600,Operating Supplies,Operating Supplies,False,0,0.0,0.0,0.0,3.0,53
+both,General Fund,Community Involvement Exp,1406000-812000,Contributions,Contributions,False,150000,147329.0,144706.0,-2671.0,7.0,80
+both,General Fund,Community Involvement Exp,1406000-812500,Intermunicipal Committee,Intermunicipal Committee,False,1300,1277.0,1254.0,-23.0,7.0,80
+both,General Fund,Community Involvement Exp,1406000-813500,PA Municipal League,PA Municipal League,False,0,0.0,0.0,0.0,7.0,80
+both,General Fund,Community Involvement Exp,1406000-814000,Public Library,Public Library,False,110000,108041.0,106117.0,-1959.0,7.0,80
+both,General Fund,Community Involvement Exp,1406000-814300,Community Communications,Community Communications,False,355000,348679.0,342470.0,-6321.0,7.0,80
+both,General Fund,Community Involvement Exp,1406000-814500,Recreation Commission,Recreation Commission,False,305656,300213.0,294868.0,-5443.0,7.0,80
+both,General Fund,Community Involvement Exp,1406000-814600,Ethics Commission,Ethics Commission,False,10000,9822.0,9647.0,-178.0,7.0,80
+both,General Fund,Community Involvement Exp,1406000-814700,Low-income Assistance,Low-income Assistance,False,150000,147329.0,144706.0,-2671.0,7.0,80
+both,General Fund,Community Involvement Exp,1406000-817500,Human Relation Commission,Human Relation Commission,False,2500,2455.0,2412.0,-45.0,7.0,80
+both,General Fund,Community Involvement Exp,1406000-851300,LOOP,LOOP,False,0,0.0,0.0,0.0,7.0,80
+both,General Fund,Insurance Package Exp,1407000-772000,Insurance Package,Insurance Package,False,940000,982989.0,1027943.0,42989.0,7.0,81
+both,General Fund,Insurance Package Exp,1407000-774000,Public Officials Bond,Public Officials Bond,False,650,680.0,711.0,30.0,7.0,81
+both,General Fund,Fringe Benefits Exp,1408000-620200,Medical Insurance,Medical Insurance,False,1154271,1170585.0,1187129.0,16314.0,7.0,82
+both,General Fund,Fringe Benefits Exp,1408000-620300,Dental/Vision,Dental/Vision,False,24273,24616.0,24964.0,343.0,7.0,82
+both,General Fund,Fringe Benefits Exp,1408000-620800,Social Security,Social Security,False,1350777,1369869.0,1389229.0,19092.0,7.0,82
+both,General Fund,Fringe Benefits Exp,1408000-620900,Life Insurance,Life Insurance,False,77950,79052.0,80169.0,1102.0,7.0,82
+both,General Fund,Fringe Benefits Exp,1408000-623000,Pension Contribution,Pension Contribution,False,1728804,1753238.0,1778017.0,24434.0,7.0,82
+both,General Fund,Fringe Benefits Exp,1408000-624000,Unemployment Compensation,Unemployment Compensation,False,60000,60848.0,61708.0,848.0,7.0,82
+both,General Fund,Fringe Benefits Exp,1408000-625000,Workers Compensation,Workers Compensation,False,650000,659187.0,668503.0,9187.0,7.0,82
+both,General Fund,Fringe Benefits Exp,1408000-716000,Rental of Parking Lot,Rental of Parking Lot,False,91000,92286.0,93590.0,1286.0,7.0,82
+both,General Fund,Debt Service Exp,1409000-923000,Paying Agent Fees,Paying Agent Fees,False,2247,,,,7.0,83
+both,General Fund,Debt Service Exp,1409000-924000,Debt Service - Interest,Debt Service - Interest,False,3228657,3555000.0,5280000.0,326343.0,7.0,83
+both,General Fund,Debt Service Exp,1409000-926000,Debt Service - Principal,Debt Service - Principal,False,2820000,3329671.0,3137544.0,509671.0,7.0,83
+both,General Fund,Public Safety - Police Fees,1501000-402600,District Judge Fines,District Judge Fines,False,259726,262323.0,264946.0,2597.0,1.0,40
+both,General Fund,Public Safety - Police Fees,1501000-402700,Parking Violations,Parking Violations,False,1187866,1199744.0,1211742.0,11878.0,1.0,40
+both,General Fund,Public Safety - Police Fees,1501000-402800,Reproducing Police Report,Reproducing Police Report,False,26898,27167.0,27439.0,269.0,1.0,40
+both,General Fund,Public Safety - Police Fees,1501000-402900,Burglar Alarm Svc Fee,Burglar Alarm Svc Fee,False,12000,12120.0,12241.0,120.0,1.0,40
+both,General Fund,Public Safety - Police Fees,1501000-403100,Police - School District,Police - School District,False,65151,65803.0,66461.0,652.0,1.0,40
+both,General Fund,Public Safety - Police Fees,1501000-403300,Drug Task Force Reimb.,Drug Task Force Reimb.,False,0,0.0,0.0,0.0,1.0,40
+both,General Fund,Public Safety - Police Fees,1501000-403400,Drug Task Force - O/T,Drug Task Force - O/T,False,0,0.0,0.0,0.0,1.0,40
+both,General Fund,Public Safety - Police Fees,1501000-403500,Pa Reimb Police Recruits,Pa Reimb Police Recruits,False,27139,27411.0,27685.0,272.0,1.0,40
+both,General Fund,Public Safety - Police Fees,1501000-403800,Warrant Squad Services,Warrant Squad Services,False,4532,4578.0,4624.0,46.0,1.0,40
+both,General Fund,Public Safety - Police Fees,1501000-404100,Police-Special Events OT,Police-Special Events OT,False,144986,146436.0,147900.0,1450.0,1.0,40
+both,General Fund,Public Safety - Police Fees,1501000-416700,Police - SDL - SRO,Police - SDL - SRO,False,991863,1001782.0,1011800.0,9919.0,1.0,41
+both,General Fund,Police Bureau Exp,1501001-611000,Salary - Bureau Chief,Salary - Bureau Chief,False,185571,191138.0,196872.0,5567.0,7.0,84
+both,General Fund,Police Bureau Exp,1501001-611500,Salaried Personnel,Salaried Personnel,False,1000389,1030401.0,1061313.0,30012.0,7.0,84
+both,General Fund,Police Bureau Exp,1501001-613100,Police Captains,Police Captains,False,481924,496382.0,511273.0,14458.0,7.0,84
+both,General Fund,Police Bureau Exp,1501001-613200,Police Lieutenants,Police Lieutenants,False,1246773,1284176.0,1322701.0,37403.0,7.0,84
+both,General Fund,Police Bureau Exp,1501001-613300,Police Sergeants,Police Sergeants,False,3941056,4059288.0,4181066.0,118232.0,7.0,84
+both,General Fund,Police Bureau Exp,1501001-614000,Patrolmen,Patrolmen,False,6374308,6565537.0,6762503.0,191229.0,7.0,84
+both,General Fund,Police Bureau Exp,1501001-615000,School Crossing Guards,School Crossing Guards,False,401995,414055.0,426476.0,12060.0,8.0,84
+both,General Fund,Police Bureau Exp,1501001-615200,Community Service Aides,Community Service Aides,False,911650,939000.0,967169.0,27350.0,8.0,84
+both,General Fund,Police Bureau Exp,1501001-618000,Police Acting Officers,Police Acting Officers,False,40835,39945.0,39074.0,-890.0,8.0,84
+both,General Fund,Police Bureau Exp,1501001-618200,On Call Det/Cap Pay,On Call Det/Cap Pay,False,98000,95864.0,93774.0,-2136.0,8.0,84
+both,General Fund,Police Bureau Exp,1501001-618500,Police Overtime,Police Overtime,False,954810,695841.0,417122.0,-258969.0,8.0,84
+both,General Fund,Police Bureau Exp,1501001-618800,Police Cadet Training Program,Police Cadet Training Program,False,91590,89593.0,87640.0,-1997.0,8.0,84
+both,General Fund,Police Bureau Exp,1501001-619000,Police Sick Bonus,Police Sick Bonus,False,27000,26411.0,25836.0,-589.0,8.0,84
+both,General Fund,Police Bureau Exp,1501001-620100,Educational Incentive,Educational Incentive,False,0,0.0,0.0,0.0,8.0,84
+both,General Fund,Police Bureau Exp,1501001-620200,Medical Insurance,Medical Insurance,False,3753544,3671717.0,3591674.0,-81827.0,8.0,85
+both,General Fund,Police Bureau Exp,1501001-620201,Medical Ins - Retirees,Medical Ins - Retirees,False,2144694,2097940.0,2052205.0,-46754.0,8.0,85
+both,General Fund,Police Bureau Exp,1501001-620300,Dental/Vision,Dental/Vision,False,165337,161733.0,158207.0,-3604.0,8.0,85
+both,General Fund,Police Bureau Exp,1501001-621000,Uniform Maintenance Allow,Uniform Maintenance Allow,False,80600,78843.0,77124.0,-1757.0,8.0,85
+both,General Fund,Police Bureau Exp,1501001-623000,Pension Contribution,Pension Contribution,False,5479515,5360062.0,5243213.0,-119453.0,8.0,85
+both,General Fund,Police Bureau Exp,1501001-716000,Rental of Parking Lot,Rental of Parking Lot,False,90000,88038.0,86119.0,-1962.0,8.0,85
+both,General Fund,Police Bureau Exp,1501001-722000,Maint. - Communications,Maint. - Communications,False,180000,176076.0,172238.0,-3924.0,8.0,85
+both,General Fund,Police Bureau Exp,1501001-723000,Maint. - Equipment,Maint. - Equipment,False,40000,39128.0,38275.0,-872.0,8.0,85
+both,General Fund,Police Bureau Exp,1501001-729000,Maint. - Vehicles,Maint. - Vehicles,False,106090,103777.0,101515.0,-2313.0,8.0,86
+both,General Fund,Police Bureau Exp,1501001-732000,Dues & Subscriptions,Dues & Subscriptions,False,367033,359032.0,351205.0,-8001.0,8.0,86
+both,General Fund,Police Bureau Exp,1501001-734000,Postage,Postage,False,6700,6554.0,6411.0,-146.0,8.0,86
+both,General Fund,Police Bureau Exp,1501001-735000,Printing,Printing,False,43000,42063.0,41146.0,-937.0,8.0,86
+both,General Fund,Police Bureau Exp,1501001-736000,Telephone,Telephone,False,105000,102711.0,100472.0,-2289.0,8.0,86
+both,General Fund,Police Bureau Exp,1501001-737000,Travel,Travel,False,30000,29346.0,28706.0,-654.0,8.0,86
+both,General Fund,Police Bureau Exp,1501001-738000,Miscellaneous Expenses,Miscellaneous Expenses,False,8000,7826.0,7655.0,-174.0,8.0,86
+both,General Fund,Police Bureau Exp,1501001-738001,Misc - Police Athletic League,Misc - Police Athletic League,False,5000,4891.0,4784.0,-109.0,8.0,87
+both,General Fund,Police Bureau Exp,1501001-741000,Professional Services,Professional Services,False,140000,136948.0,133963.0,-3052.0,8.0,87
+both,General Fund,Police Bureau Exp,1501001-741005,Prof Serv Community Engagement,Prof Serv Community Engagement,False,10000,9782.0,9569.0,-218.0,8.0,87
+both,General Fund,Police Bureau Exp,1501001-743500,Labor Relations Expense,Labor Relations Expense,False,25000,24455.0,23922.0,-545.0,8.0,87
+both,General Fund,Police Bureau Exp,1501001-743700,Laboratory Tests,Laboratory Tests,False,5000,4891.0,4784.0,-109.0,8.0,87
+both,General Fund,Police Bureau Exp,1501001-744500,Training & School,Training & School,False,175000,171185.0,167453.0,-3815.0,8.0,87
+both,General Fund,Police Bureau Exp,1501001-747200,K-9 Patrol,K-9 Patrol,False,5000,4891.0,4784.0,-109.0,8.0,87
+both,General Fund,Police Bureau Exp,1501001-749000,Civil Service Board,Civil Service Board,False,1000,978.0,957.0,-22.0,8.0,88
+both,General Fund,Police Bureau Exp,1501001-760300,Office Supplies,Office Supplies,False,10000,9782.0,9569.0,-218.0,8.0,88
+both,General Fund,Police Bureau Exp,1501001-760600,Operating Supplies,Operating Supplies,False,55000,53801.0,52628.0,-1199.0,8.0,88
+both,General Fund,Police Bureau Exp,1501001-761200,Uniforms,Uniforms,False,120000,117384.0,114825.0,-2616.0,8.0,88
+both,General Fund,Police Bureau Exp,1501001-762700,Evidence Supplies,Evidence Supplies,False,10000,9782.0,9569.0,-218.0,8.0,88
+both,General Fund,Police Bureau Exp,1501001-763000,Ammunition,Ammunition,False,44290,43324.0,42380.0,-966.0,8.0,88
+both,General Fund,Police Bureau Exp,1501001-763300,Less Lethal Equip,Less Lethal Equip,False,5150,5038.0,4928.0,-112.0,8.0,88
+both,General Fund,Police Bureau Exp,1501001-763400,Weapons,Weapons,False,22600,22107.0,21625.0,-493.0,8.0,88
+both,General Fund,Police Bureau Exp,1501001-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,125000,122275.0,119609.0,-2725.0,8.0,88
+both,General Fund,Police Bureau Exp,1501001-772000,Insurance Package,Insurance Package,False,445000,435299.0,425810.0,-9701.0,8.0,88
+both,General Fund,Police Bureau Exp,1501001-815000,Shelter Expense,Shelter Expense,False,2500,2446.0,2392.0,-54.0,8.0,89
+both,General Fund,Police Bureau Exp,1501001-816000,Drug Task Force Assmnt,Drug Task Force Assmnt,False,58039,56774.0,55536.0,-1265.0,8.0,89
+both,General Fund,Police Bureau Exp,1501001-816100,Community Safety Coalitio,Community Safety Coalitio,False,337500,330143.0,322945.0,-7357.0,8.0,89
+both,General Fund,Police Bureau Exp,1501001-820000,Minor Equipment,Minor Equipment,False,395000,386389.0,377966.0,-8611.0,8.0,89
+both,General Fund,Police Bureau Exp,1501001-820100,Bicycles & Accessories,Bicycles & Accessories,False,2500,2446.0,2392.0,-54.0,8.0,89
+both,General Fund,Police Bureau Exp,1501001-827000,Vehicles,Vehicles,False,185500,181456.0,177500.0,-4044.0,8.0,89
+both,General Fund,Police Bureau Exp,1501001-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,False,441501,431876.0,422461.0,-9625.0,8.0,89
+both,General Fund,Police Bureau Exp,1501001-924000,Debt Service - Interest,Debt Service - Interest,False,133297,130391.0,127548.0,-2906.0,9.0,89
+both,General Fund,Police Bureau Exp,1501001-926000,Debt Service - Principal,Debt Service - Principal,False,348541,340942.0,333510.0,-7599.0,9.0,90
+both,General Fund,Public Safety - Police Fees,1502000-404200,Fire Inspection,Fire Inspection,False,227215,229487.0,231782.0,2272.0,1.0,41
+both,General Fund,Fire Bureau Exp,1502001-611000,Salary - Bureau Chief,Salary - Bureau Chief,False,149555,154042.0,158663.0,4487.0,9.0,95
+both,General Fund,Fire Bureau Exp,1502001-611500,Salaried Personnel,Salaried Personnel,False,75819,78094.0,80437.0,2275.0,9.0,95
+both,General Fund,Fire Bureau Exp,1502001-613000,Fire Deputy Chiefs,Fire Deputy Chiefs,False,133938,132151.0,130388.0,-1787.0,9.0,95
+both,General Fund,Fire Bureau Exp,1502001-613100,Fire Captains,Fire Captains,False,1057474,1043366.0,1029447.0,-14108.0,9.0,95
+both,General Fund,Fire Bureau Exp,1502001-613200,Fire Lieutenants,Fire Lieutenants,False,1558909,1538111.0,1517591.0,-20798.0,9.0,95
+both,General Fund,Fire Bureau Exp,1502001-614100,Firefighters,Firefighters,False,3998195,3944855.0,3892226.0,-53340.0,9.0,95
+both,General Fund,Fire Bureau Exp,1502001-618000,Fire Acting Officers,Fire Acting Officers,False,120000,118399.0,116819.0,-1601.0,9.0,95
+both,General Fund,Fire Bureau Exp,1502001-618500,Fire Overtime,Fire Overtime,False,550000,542662.0,535423.0,-7338.0,9.0,95
+both,General Fund,Fire Bureau Exp,1502001-619000,Fire Sick Bonus,Fire Sick Bonus,False,2700,2664.0,2628.0,-36.0,9.0,95
+both,General Fund,Fire Bureau Exp,1502001-620100,Educational Incentive,Educational Incentive,False,47500,46866.0,46241.0,-634.0,9.0,95
+both,General Fund,Fire Bureau Exp,1502001-620200,Medical Insurance,Medical Insurance,False,1930959,1905198.0,1879780.0,-25761.0,9.0,96
+both,General Fund,Fire Bureau Exp,1502001-620201,Medical Ins - Retirees,Medical Ins - Retirees,False,1621303,1589905.0,1558633.0,-31398.0,9.0,96
+both,General Fund,Fire Bureau Exp,1502001-620300,Dental/Vision,Dental/Vision,False,136509,134688.0,132891.0,-1821.0,9.0,96
+both,General Fund,Fire Bureau Exp,1502001-621000,Uniform Maintenance Allow,Uniform Maintenance Allow,False,36000,35520.0,35046.0,-480.0,9.0,96
+both,General Fund,Fire Bureau Exp,1502001-623000,Pension Contribution,Pension Contribution,False,2375315,2343626.0,2312359.0,-31689.0,9.0,96
+both,General Fund,Fire Bureau Exp,1502001-722000,Maint. - Communications,Maint. - Communications,False,45000,44400.0,43807.0,-600.0,9.0,96
+both,General Fund,Fire Bureau Exp,1502001-723000,Maint. - Equipment,Maint. - Equipment,False,20000,19733.0,19470.0,-267.0,9.0,96
+both,General Fund,Fire Bureau Exp,1502001-729000,Maint. - Vehicles,Maint. - Vehicles,False,70000,69066.0,68145.0,-934.0,9.0,96
+both,General Fund,Fire Bureau Exp,1502001-734000,Postage,Postage,False,1800,1776.0,1752.0,-24.0,9.0,97
+both,General Fund,Fire Bureau Exp,1502001-735000,Printing,Printing,False,1000,987.0,973.0,-13.0,9.0,97
+both,General Fund,Fire Bureau Exp,1502001-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,9.0,97
+both,General Fund,Fire Bureau Exp,1502001-737000,Travel,Travel,False,10000,9867.0,9735.0,-133.0,9.0,97
+both,General Fund,Fire Bureau Exp,1502001-738000,Miscellaneous Expenses,Miscellaneous Expenses,False,10000,9867.0,9735.0,-133.0,9.0,97
+both,General Fund,Fire Bureau Exp,1502001-741000,Professional Services,Professional Services,False,5000,4933.0,4867.0,-67.0,9.0,97
+both,General Fund,Fire Bureau Exp,1502001-743500,Labor Relations Expense,Labor Relations Expense,False,20000,19733.0,19470.0,-267.0,9.0,97
+both,General Fund,Fire Bureau Exp,1502001-744500,Training & School,Training & School,False,50000,49333.0,48675.0,-667.0,9.0,97
+both,General Fund,Fire Bureau Exp,1502001-749000,Civil Service Board,Civil Service Board,False,6000,5920.0,5841.0,-80.0,9.0,97
+both,General Fund,Fire Bureau Exp,1502001-760300,Office Supplies,Office Supplies,False,1000,987.0,973.0,-13.0,9.0,97
+both,General Fund,Fire Bureau Exp,1502001-760600,Operating Supplies,Operating Supplies,False,8000,7893.0,7788.0,-107.0,9.0,97
+both,General Fund,Fire Bureau Exp,1502001-761200,Uniforms,Uniforms,False,35000,34533.0,34072.0,-467.0,9.0,97
+both,General Fund,Fire Bureau Exp,1502001-764200,Fire Prevention Supplies,Fire Prevention Supplies,False,5000,4933.0,4867.0,-67.0,9.0,98
+both,General Fund,Fire Bureau Exp,1502001-764500,Protective Clothing,Protective Clothing,False,88000,86826.0,85668.0,-1174.0,9.0,98
+both,General Fund,Fire Bureau Exp,1502001-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,42500,41933.0,41374.0,-567.0,9.0,98
+both,General Fund,Fire Bureau Exp,1502001-767200,Misc. Vehicle Parts,Misc. Vehicle Parts,False,25000,24666.0,24337.0,-334.0,9.0,98
+both,General Fund,Fire Bureau Exp,1502001-820000,Minor Equipment,Minor Equipment,False,70000,69066.0,68145.0,-934.0,9.0,98
+both,General Fund,Fire Bureau Exp,1502001-820200,Safety Equipment,Safety Equipment,False,5500,5427.0,5354.0,-73.0,9.0,98
+both,General Fund,Fire Bureau Exp,1502001-822000,Communication Equipment,Communication Equipment,False,32500,32066.0,31639.0,-434.0,9.0,98
+both,General Fund,Fire Bureau Exp,1502001-823000,Furniture & Equipment,Furniture & Equipment,False,3000,2960.0,2920.0,-40.0,9.0,98
+both,General Fund,Fire Bureau Exp,1502001-827000,Vehicles,Vehicles,False,13400,13221.0,13045.0,-179.0,9.0,98
+both,General Fund,Fire Bureau Exp,1502001-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,False,444509,438579.0,432727.0,-5930.0,9.0,98
+both,General Fund,Fire Bureau Exp,1502001-924000,Debt Service - Interest,Debt Service - Interest,False,98081,96772.0,95481.0,-1309.0,9.0,99
+both,General Fund,Fire Bureau Exp,1502001-926000,Debt Service - Principal,Debt Service - Principal,False,256460,253038.0,249662.0,-3422.0,9.0,99
+both,General Fund,Fire Bureau Exp,1502001-940000,Grants Match,Grants Match,False,10000,9867.0,9735.0,-133.0,10.0,99
+both,General Fund,CPED Exp,1601000-610900,Salary - Director,Salary - Director,False,175280,180539.0,185955.0,5259.0,10.0,102
+both,General Fund,CPED Exp,1601000-611000,Salary - Bureau Chief,Salary - Deputy Director,True,144873,149219.0,153695.0,4346.0,10.0,102
+both,General Fund,CPED Exp,1601000-611500,Salaried Personnel,Salaried Personnel,False,211167,209082.0,207018.0,-2085.0,10.0,102
+both,General Fund,CPED Exp,1601000-620200,Medical Insurance,Medical Insurance,False,1239311,1214311.0,1189175.0,-25000.0,10.0,102
+both,General Fund,CPED Exp,1601000-620300,Dental/Vision,Dental/Vision,False,30633,30330.0,30031.0,-303.0,10.0,102
+both,General Fund,CPED Exp,1601000-731000,Advertising,Advertising,False,500,495.0,490.0,-5.0,10.0,102
+both,General Fund,CPED Exp,1601000-732000,Dues & Subscriptions,Dues & Subscriptions,False,1000,990.0,980.0,-10.0,10.0,102
+both,General Fund,CPED Exp,1601000-734000,Postage,Postage,False,300,297.0,294.0,-3.0,10.0,103
+both,General Fund,CPED Exp,1601000-735000,Printing,Printing,False,2000,1980.0,1961.0,-20.0,10.0,103
+both,General Fund,CPED Exp,1601000-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,10.0,103
+both,General Fund,CPED Exp,1601000-737000,Travel,Travel,False,1000,990.0,980.0,-10.0,10.0,103
+both,General Fund,CPED Exp,1601000-741000,Professional Services,Professional Services,False,50000,49506.0,49018.0,-494.0,10.0,103
+both,General Fund,CPED Exp,1601000-744500,Training & School,Training & School,False,4000,3961.0,3921.0,-39.0,10.0,103
+both,General Fund,CPED Exp,1601000-760300,Office Supplies,Office Supplies,False,1000,990.0,980.0,-10.0,10.0,103
+both,General Fund,CPED Exp,1601000-760600,Operating Supplies,Operating Supplies,False,500,495.0,490.0,-5.0,10.0,103
+both,General Fund,CPED Exp,1601000-811000,Contributions to Econ Dev,Contributions to Econ Dev,False,55000,54457.0,53919.0,-543.0,10.0,103
+both,General Fund,License & Permit Fees,1601001-401700,Building Permits,Building Permits,False,2284658,2581664.0,2917280.0,297006.0,1.0,42
+both,General Fund,License & Permit Fees,1601001-401900,Plumbing Licenses,Plumbing Licenses,False,20000,16860.0,14213.0,-3140.0,1.0,42
+both,General Fund,License & Permit Fees,1601001-402200,Housing License Multi-Fam,Housing License Multi-Fam,False,1530000,1572840.0,1616880.0,42840.0,1.0,42
+both,General Fund,License & Permit Fees,1601001-402400,Zoning Permits,Zoning Permits,False,40000,41440.0,42932.0,1440.0,1.0,42
+both,General Fund,License & Permit Fees,1601001-402500,Health Licenses & Permits,Health Licenses & Permits,False,220000,232320.0,245330.0,12320.0,1.0,42
+both,General Fund,Planning Exp,1602000-611000,Salary - Bureau Chief,Salary - Bureau Chief,False,114737,118179.0,121724.0,3442.0,10.0,106
+both,General Fund,Planning Exp,1602000-611500,Salaried Personnel,Salaried Personnel,False,437333,450453.0,463966.0,13120.0,10.0,106
+both,General Fund,Planning Exp,1602000-723000,Maint. - Equipment,Maint. - Equipment,False,500,511.0,522.0,11.0,10.0,106
+both,General Fund,Planning Exp,1602000-731000,Advertising,Advertising,False,20000,20432.0,20873.0,432.0,10.0,106
+both,General Fund,Planning Exp,1602000-732000,Dues & Subscriptions,Dues & Subscriptions,False,6000,6129.0,6262.0,129.0,10.0,106
+both,General Fund,Planning Exp,1602000-733000,Map Reproduction,Map Reproduction,False,250,255.0,261.0,5.0,10.0,106
+both,General Fund,Planning Exp,1602000-734000,Postage,Postage,False,1500,1532.0,1565.0,32.0,10.0,106
+both,General Fund,Planning Exp,1602000-735000,Printing,Printing,False,6000,6129.0,6262.0,129.0,10.0,107
+both,General Fund,Planning Exp,1602000-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,10.0,107
+both,General Fund,Planning Exp,1602000-737000,Travel,Travel,False,3000,3065.0,3131.0,65.0,10.0,107
+both,General Fund,Planning Exp,1602000-741000,Professional Services,Professional Services,False,100000,102158.0,99576.0,2158.0,10.0,107
+both,General Fund,Planning Exp,1602000-744500,Training & School,Training & School,False,4000,4086.0,4175.0,86.0,10.0,107
+both,General Fund,Planning Exp,1602000-760300,Office Supplies,Office Supplies,False,1000,1022.0,1044.0,22.0,10.0,107
+both,General Fund,Planning Exp,1602000-760600,Operating Supplies,Operating Supplies,False,500,511.0,522.0,11.0,10.0,107
+both,General Fund,Planning Exp,1602000-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,100,102.0,104.0,2.0,10.0,107
+both,General Fund,Planning Exp,1602000-820000,Minor Equipment,Minor Equipment,False,1500,1532.0,1565.0,32.0,10.0,107
+both,General Fund,Building Code Admin Exp,1603000-611000,Salary - Bureau Chief,Salary - Bureau Chief,False,122004,125664.0,129434.0,3660.0,10.0,110
+both,General Fund,Building Code Admin Exp,1603000-611500,Salaried Personnel,Salaried Personnel,False,828077,852919.0,878507.0,24842.0,10.0,110
+both,General Fund,Building Code Admin Exp,1603000-612000,Salary Temporary,Salary Temporary,False,38500,11599.0,11313.0,-26901.0,10.0,110
+both,General Fund,Building Code Admin Exp,1603000-620100,Educational Incentive,Educational Incentive,False,0,0.0,0.0,0.0,10.0,110
+both,General Fund,Building Code Admin Exp,1603000-723000,Maint. - Equipment,Maint. - Equipment,False,500,488.0,476.0,-12.0,10.0,110
+both,General Fund,Building Code Admin Exp,1603000-731000,Advertising,Advertising,False,1000,975.0,951.0,-25.0,11.0,110
+both,General Fund,Building Code Admin Exp,1603000-732000,Dues & Subscriptions,Dues & Subscriptions,False,1000,975.0,951.0,-25.0,11.0,110
+both,General Fund,Building Code Admin Exp,1603000-734000,Postage,Postage,False,1000,975.0,951.0,-25.0,11.0,110
+both,General Fund,Building Code Admin Exp,1603000-735000,Printing,Printing,False,4000,3901.0,3805.0,-99.0,11.0,110
+both,General Fund,Building Code Admin Exp,1603000-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,11.0,110
+both,General Fund,Building Code Admin Exp,1603000-737000,Travel,Travel,False,2000,1951.0,1903.0,-49.0,11.0,110
+both,General Fund,Building Code Admin Exp,1603000-740500,Abatement of Nuisances,Abatement of Nuisances,False,0,0.0,0.0,0.0,11.0,111
+both,General Fund,Building Code Admin Exp,1603000-741000,Professional Services,Professional Services,False,90000,87783.0,85621.0,-2217.0,11.0,111
+both,General Fund,Building Code Admin Exp,1603000-744000,Contract Services,Contract Services,False,1600,1561.0,1522.0,-39.0,11.0,111
+both,General Fund,Building Code Admin Exp,1603000-744500,Training & School,Training & School,False,11000,10729.0,10465.0,-271.0,11.0,111
+both,General Fund,Building Code Admin Exp,1603000-748500,Plumbing Board,Plumbing Board,False,0,0.0,0.0,0.0,11.0,111
+both,General Fund,Building Code Admin Exp,1603000-760300,Office Supplies,Office Supplies,False,2500,2438.0,2378.0,-62.0,11.0,111
+both,General Fund,Building Code Admin Exp,1603000-760600,Operating Supplies,Operating Supplies,False,3000,2926.0,2854.0,-74.0,11.0,111
+both,General Fund,Building Code Admin Exp,1603000-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,0,0.0,0.0,0.0,11.0,111
+both,General Fund,Building Code Admin Exp,1603000-820000,Minor Equipment,Minor Equipment,False,0,0.0,0.0,0.0,11.0,111
+both,General Fund,Building Code Admin Exp,1603000-827100,Vehicle Lease Purchase,Vehicle Lease Purchase,False,0,0.0,0.0,0.0,11.0,111
+both,General Fund,Property Maintenance Exp,1604000-611000,Salary - Bureau Chief,Salary - Bureau Chief,False,106311,109501.0,112786.0,3190.0,11.0,113
+both,General Fund,Property Maintenance Exp,1604000-611500,Salary - Personnel,Salary - Personnel,False,922457,950131.0,978635.0,27674.0,11.0,113
+both,General Fund,Property Maintenance Exp,1604000-618500,Overtime,Overtime,False,1000,1010.0,1020.0,10.0,11.0,113
+both,General Fund,Property Maintenance Exp,1604000-620100,Educational Incentive,Educational Incentive,False,25500,25753.0,26008.0,253.0,11.0,113
+both,General Fund,Property Maintenance Exp,1604000-723000,Maint. - Equipment,Maint. - Equipment,False,4500,4545.0,4590.0,45.0,11.0,113
+both,General Fund,Property Maintenance Exp,1604000-731000,Advertising,Advertising,False,2000,2020.0,2040.0,20.0,11.0,113
+both,General Fund,Property Maintenance Exp,1604000-732000,Dues & Subscriptions,Dues & Subscriptions,False,2000,2020.0,2040.0,20.0,11.0,113
+both,General Fund,Property Maintenance Exp,1604000-734000,Postage,Postage,False,12000,12119.0,12239.0,119.0,11.0,113
+both,General Fund,Property Maintenance Exp,1604000-735000,Printing,Printing,False,10000,10099.0,10199.0,99.0,11.0,114
+both,General Fund,Property Maintenance Exp,1604000-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,11.0,114
+both,General Fund,Property Maintenance Exp,1604000-737000,Travel,Travel,False,1000,1010.0,1020.0,10.0,11.0,114
+both,General Fund,Property Maintenance Exp,1604000-740500,Abatement of Nuisances,Abatement of Nuisances,False,5000,5050.0,5100.0,50.0,11.0,114
+both,General Fund,Property Maintenance Exp,1604000-741000,Professional Services,Professional Services,False,40000,40397.0,40797.0,397.0,11.0,114
+both,General Fund,Property Maintenance Exp,1604000-744500,Training/Education,Training/Education,False,6000,6059.0,6120.0,59.0,11.0,114
+both,General Fund,Property Maintenance Exp,1604000-760300,Office Supplies,Office Supplies,False,3000,3030.0,3060.0,30.0,11.0,115
+both,General Fund,Property Maintenance Exp,1604000-760600,Operating Supplies,Operating Supplies,False,7500,7574.0,7649.0,74.0,11.0,115
+both,General Fund,Property Maintenance Exp,1604000-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,0,0.0,0.0,0.0,11.0,115
+both,General Fund,Property Maintenance Exp,1604000-820000,Minor Equipment,Minor Equipment,False,2000,2020.0,2040.0,20.0,11.0,115
+both,General Fund,Bureau of Health Exp,1607000-611000,Salary - Bureau Chief,Salary - Bureau Chief,False,113568,116975.0,120484.0,3407.0,11.0,117
+both,General Fund,Bureau of Health Exp,1607000-611500,Salary - Personnel,Salary - Personnel,False,744652,766992.0,790001.0,22340.0,11.0,117
+both,General Fund,Bureau of Health Exp,1607000-612000,Salary Temporary,Salary Temporary,False,20000,17866.0,15960.0,-2134.0,11.0,117
+both,General Fund,Bureau of Health Exp,1607000-618500,Overtime,Overtime,False,300,268.0,239.0,-32.0,11.0,117
+both,General Fund,Bureau of Health Exp,1607000-723000,Maint. - Equipment,Maint. - Equipment,False,1000,893.0,798.0,-107.0,11.0,117
+both,General Fund,Bureau of Health Exp,1607000-729000,Maint. - Vehicles,Maint. - Vehicles,False,0,0.0,0.0,0.0,11.0,117
+both,General Fund,Bureau of Health Exp,1607000-731000,Advertising,Advertising,False,1500,1340.0,1197.0,-160.0,11.0,117
+both,General Fund,Bureau of Health Exp,1607000-732000,Dues & Subscriptions,Dues & Subscriptions,False,1140,1018.0,910.0,-122.0,12.0,117
+both,General Fund,Bureau of Health Exp,1607000-734000,Postage,Postage,False,4500,4020.0,3591.0,-480.0,12.0,117
+both,General Fund,Bureau of Health Exp,1607000-735000,Printing,Printing,False,3500,3127.0,2793.0,-373.0,12.0,117
+both,General Fund,Bureau of Health Exp,1607000-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,12.0,117
+both,General Fund,Bureau of Health Exp,1607000-737000,Travel,Travel,False,2500,2233.0,1995.0,-267.0,12.0,117
+both,General Fund,Bureau of Health Exp,1607000-740500,Abatement of Nuisances,Abatement of Nuisances,False,5000,4466.0,3990.0,-534.0,12.0,118
+both,General Fund,Bureau of Health Exp,1607000-741000,Professional Services,Professional Services,False,500,447.0,399.0,-53.0,12.0,118
+both,General Fund,Bureau of Health Exp,1607000-744000,Contract Services,Contract Services,False,5000,4466.0,3990.0,-534.0,12.0,118
+both,General Fund,Bureau of Health Exp,1607000-744500,Training/Education,Training/Education,False,3000,2680.0,2394.0,-320.0,12.0,118
+both,General Fund,Bureau of Health Exp,1607000-760300,Office Supplies,Office Supplies,False,2000,1787.0,1596.0,-213.0,12.0,118
+both,General Fund,Bureau of Health Exp,1607000-760600,Operating Supplies,Operating Supplies,False,3500,3127.0,2793.0,-373.0,12.0,118
+both,General Fund,Bureau of Health Exp,1607000-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,0,0.0,0.0,0.0,12.0,118
+both,General Fund,Bureau of Health Exp,1607000-820000,Minor Equipment,Minor Equipment,False,3500,3127.0,2793.0,-373.0,12.0,118
+both,General Fund,Bureau of Health Exp,1607000-843800,Critical Housing Repairs,Critical Housing Repairs,False,300000,0.0,0.0,-300000.0,12.0,118
+both,General Fund,Bureau of Health Exp,1607000-TBD,Energy Efficiency Pilot Program,Energy Efficiency Pilot Program,False,175000,0.0,0.0,-175000.0,12.0,118
+both,General Fund,Director Public Works Exp,1810000-610900,Salary - Director,Salary - Director,False,182193,187658.0,193288.0,5465.0,12.0,120
+both,General Fund,Director Public Works Exp,1810000-611000,Salary - Bureau Chiefs,Salary - Bureau Chiefs,False,268567,276624.0,284923.0,8057.0,12.0,120
+both,General Fund,Director Public Works Exp,1810000-611500,Salaried Personnel,Salaried Personnel,False,60147,61951.0,63810.0,1804.0,12.0,120
+both,General Fund,Director Public Works Exp,1810000-620200,Medical Insurance,Medical Insurance,False,1022071,988753.0,923580.0,-33318.0,12.0,120
+both,General Fund,Director Public Works Exp,1810000-620300,Dental/Vision,Dental/Vision,False,39643,38351.0,37100.0,-1292.0,12.0,120
+both,General Fund,Director Public Works Exp,1810000-731000,Advertising,Advertising,False,9000,8707.0,8423.0,-293.0,12.0,120
+both,General Fund,Director Public Works Exp,1810000-732000,Dues & Subscriptions,Dues & Subscriptions,False,500,484.0,468.0,-16.0,12.0,120
+both,General Fund,Director Public Works Exp,1810000-734000,Postage,Postage,False,250,242.0,234.0,-8.0,12.0,120
+both,General Fund,Director Public Works Exp,1810000-735000,Printing,Printing,False,1800,1741.0,1685.0,-59.0,12.0,120
+both,General Fund,Director Public Works Exp,1810000-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,12.0,120
+both,General Fund,Director Public Works Exp,1810000-737000,Travel,Travel,False,1000,967.0,936.0,-33.0,12.0,120
+both,General Fund,Director Public Works Exp,1810000-738000,Miscellaneous Expenses,Miscellaneous Expenses,False,1500,1451.0,1404.0,-49.0,12.0,121
+both,General Fund,Director Public Works Exp,1810000-741000,Professional Services,Professional Services,False,20000,19348.0,18717.0,-652.0,12.0,121
+both,General Fund,Director Public Works Exp,1810000-744500,Training & School,Training & School,False,1000,967.0,936.0,-33.0,12.0,121
+both,General Fund,Director Public Works Exp,1810000-760300,Office Supplies,Office Supplies,False,600,580.0,562.0,-20.0,12.0,121
+both,General Fund,Public Works Fees,1810001-404300,Tsfr'd From Utility Funds,Tsfr'd From Utility Funds,False,0,,,,1.0,43
+both,General Fund,Public Works Fees,1810001-404400,Rent of City Property,Rent of City Property,False,100000,73700.0,54317.0,-26300.0,1.0,43
+both,General Fund,Public Works Fees,1810001-404500,SF - Admin Indirect Costs,SF - Admin Indirect Costs,False,1052132,1117364.0,1186641.0,65232.0,1.0,43
+both,General Fund,Public Works Fees,1810001-404600,WF - Admin Indirect Costs,WF - Admin Indirect Costs,False,1347161,1347161.0,1347161.0,0.0,1.0,43
+both,General Fund,Public Works Fees,1810001-404800,Right of Way Permit Fees,Right of Way Permit Fees,False,300000,285000.0,270750.0,-15000.0,1.0,43
+both,General Fund,Public Works Fees,1810001-405000,Sewer Vehicle Maintenance,Sewer Vehicle Maintenance,False,20000,19720.0,19444.0,-280.0,1.0,43
+both,General Fund,Public Works Fees,1810001-405100,Water Vehicle Maintenance,Water Vehicle Maintenance,False,25000,25475.0,25959.0,475.0,1.0,43
+both,General Fund,Public Works Fees,1810001-417900,TF - Admin Indirect Costs,TF - Admin Indirect Costs,False,182061,175507.0,169189.0,-6554.0,1.0,43
+both,General Fund,Public Works Fees,1810001-420000,Sewer Direct Costs,Sewer Direct Costs,False,38400,32371.0,27289.0,-6029.0,1.0,43
+both,General Fund,Public Works Fees,1810001-420200,SWMF Admin Indirect Costs,SWMF Admin Indirect Costs,False,597913,624819.0,652936.0,26906.0,2.0,44
+both,General Fund,Public Works Fees,1810001-422000,WaterGrnds Exp Reimb,WaterGrnds Exp Reimb,False,180582,180582.0,180582.0,0.0,2.0,43
+both,General Fund,Engineering Exp,1820000-611000,Salary - Bureau Chief,Salary - Bureau Chief,False,109803,113097.0,116490.0,3294.0,12.0,123
+both,General Fund,Engineering Exp,1820000-611500,Salaried Personnel,Salaried Personnel,False,432199,445164.0,458519.0,12965.0,12.0,123
+both,General Fund,Engineering Exp,1820000-612000,Salary Temporary,Salary Temporary,False,20000,19440.0,18896.0,-560.0,12.0,123
+both,General Fund,Engineering Exp,1820000-618500,Overtime,Overtime,False,2800,2722.0,2645.0,-78.0,12.0,123
+both,General Fund,Engineering Exp,1820000-718000,Rental of Uniforms,Rental of Uniforms,False,1500,1458.0,1417.0,-42.0,12.0,123
+both,General Fund,Engineering Exp,1820000-729000,Maint. - Vehicles,Maint. - Vehicles,False,1800,1750.0,1701.0,-50.0,12.0,123
+both,General Fund,Engineering Exp,1820000-732000,Dues & Subscriptions,Dues & Subscriptions,False,5500,5346.0,5196.0,-154.0,12.0,123
+both,General Fund,Engineering Exp,1820000-734000,Postage,Postage,False,4000,3888.0,3779.0,-112.0,12.0,123
+both,General Fund,Engineering Exp,1820000-735000,Printing,Printing,False,6000,5832.0,5669.0,-168.0,12.0,123
+both,General Fund,Engineering Exp,1820000-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,12.0,123
+both,General Fund,Engineering Exp,1820000-737000,Travel,Travel,False,1500,1458.0,1417.0,-42.0,12.0,123
+both,General Fund,Engineering Exp,1820000-741000,Professional Services,Professional Services,False,300000,291600.0,251056.0,-8400.0,13.0,124
+both,General Fund,Engineering Exp,1820000-744000,Contract Services,Contract Services,False,20000,19440.0,18896.0,-560.0,13.0,124
+both,General Fund,Engineering Exp,1820000-744500,Training & School,Training & School,False,5000,4860.0,4724.0,-140.0,13.0,124
+both,General Fund,Engineering Exp,1820000-760300,Office Supplies,Office Supplies,False,1500,1458.0,1417.0,-42.0,13.0,124
+both,General Fund,Engineering Exp,1820000-760600,Operating Supplies,Operating Supplies,False,5000,4860.0,4724.0,-140.0,13.0,124
+both,General Fund,Engineering Exp,1820000-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,1000,972.0,945.0,-28.0,13.0,124
+both,General Fund,Engineering Exp,1820000-820000,Minor Equipment,Minor Equipment,False,3000,2916.0,2834.0,-84.0,13.0,124
+both,General Fund,Engineering Exp,1820000-820200,Safety Equipment,Safety Equipment,False,1500,1458.0,1417.0,-42.0,13.0,124
+both,General Fund,Traffic Exp,1830000-611500,Salaried Personnel,Salaried Personnel,False,333181,343177.0,353472.0,9996.0,13.0,126
+both,General Fund,Traffic Exp,1830000-618500,Overtime,Overtime,False,15000,14570.0,14152.0,-430.0,13.0,126
+both,General Fund,Traffic Exp,1830000-618600,On Call Stipen,On Call Stipen,False,9100,8839.0,8585.0,-261.0,13.0,126
+both,General Fund,Traffic Exp,1830000-718000,Rental of Uniforms,Rental of Uniforms,False,3450,3351.0,3255.0,-99.0,13.0,126
+both,General Fund,Traffic Exp,1830000-723000,Maint. - Equipment,Maint. - Equipment,False,1500,1457.0,1415.0,-43.0,13.0,126
+both,General Fund,Traffic Exp,1830000-729000,Maint. - Vehicles,Maint. - Vehicles,False,8000,7770.0,7548.0,-230.0,13.0,126
+both,General Fund,Traffic Exp,1830000-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,13.0,126
+both,General Fund,Traffic Exp,1830000-737000,Travel,Travel,False,850,826.0,802.0,-24.0,13.0,126
+both,General Fund,Traffic Exp,1830000-741000,Professional Services,Professional Services,False,18500,17969.0,17454.0,-531.0,13.0,126
+both,General Fund,Traffic Exp,1830000-744000,Contract Services,Contract Services,False,46500,45166.0,43870.0,-1334.0,13.0,127
+both,General Fund,Traffic Exp,1830000-744500,Training & School,Training & School,False,1800,1748.0,1698.0,-52.0,13.0,127
+both,General Fund,Traffic Exp,1830000-754000,Street Lighting,Street Lighting,False,335000,325389.0,295913.0,-9611.0,13.0,127
+both,General Fund,Traffic Exp,1830000-754500,Traffic Signals,Traffic Signals,False,40000,38852.0,37738.0,-1148.0,13.0,127
+both,General Fund,Traffic Exp,1830000-760300,Office Supplies,Office Supplies,False,1000,971.0,943.0,-29.0,13.0,127
+both,General Fund,Traffic Exp,1830000-760600,Operating Supplies,Operating Supplies,False,5500,5342.0,5189.0,-158.0,13.0,127
+both,General Fund,Traffic Exp,1830000-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,8000,7770.0,7548.0,-230.0,13.0,127
+both,General Fund,Traffic Exp,1830000-767800,Sign Materials,Sign Materials,False,70000,67992.0,66041.0,-2008.0,13.0,127
+both,General Fund,Traffic Exp,1830000-768100,Marking Materials,Marking Materials,False,120000,116557.0,113213.0,-3443.0,13.0,128
+both,General Fund,Traffic Exp,1830000-768700,Traffic Signal Parts,Traffic Signal Parts,False,35000,33996.0,33021.0,-1004.0,13.0,128
+both,General Fund,Traffic Exp,1830000-820000,Minor Equipment,Minor Equipment,False,25000,24283.0,23586.0,-717.0,13.0,128
+both,General Fund,Traffic Exp,1830000-824500,Street Light Standards,Street Light Standards,False,5000,4857.0,4717.0,-143.0,13.0,128
+both,General Fund,Traffic Exp,1830000-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,False,51418,49943.0,48510.0,-1475.0,13.0,128
+both,General Fund,Streets Admin Exp,1841000-620100,Educational Incentive,Educational Incentive,False,12000,11847.0,11696.0,-153.0,13.0,130
+both,General Fund,Streets Admin Exp,1841000-718000,Rental of Uniforms,Rental of Uniforms,False,7590,7493.0,7398.0,-97.0,13.0,130
+both,General Fund,Streets Admin Exp,1841000-723000,Maint. - Equipment,Maint. - Equipment,False,500,494.0,487.0,-6.0,13.0,130
+both,General Fund,Streets Admin Exp,1841000-729000,Maint. - Vehicles,Maint. - Vehicles,False,105000,103661.0,102339.0,-1339.0,13.0,130
+both,General Fund,Streets Admin Exp,1841000-735000,Printing,Printing,False,4000,3949.0,3899.0,-51.0,13.0,130
+both,General Fund,Streets Admin Exp,1841000-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,13.0,130
+both,General Fund,Streets Admin Exp,1841000-737000,Travel,Travel,False,2500,2468.0,2437.0,-32.0,13.0,130
+both,General Fund,Streets Admin Exp,1841000-741000,Professional Services,Professional Services,False,0,0.0,0.0,0.0,13.0,130
+both,General Fund,Streets Admin Exp,1841000-744000,Contract Services,Contract Services,False,5000,4936.0,4873.0,-64.0,13.0,130
+both,General Fund,Streets Admin Exp,1841000-744500,Training & School,Training & School,False,8000,7898.0,7797.0,-102.0,13.0,130
+both,General Fund,Streets Admin Exp,1841000-760300,Office Supplies,Office Supplies,False,1250,1234.0,1218.0,-16.0,13.0,130
+both,General Fund,Streets Admin Exp,1841000-760600,Operating Supplies,Operating Supplies,False,4500,4443.0,4386.0,-57.0,14.0,130
+both,General Fund,Streets Admin Exp,1841000-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,55000,54298.0,53606.0,-702.0,14.0,131
+both,General Fund,Streets Admin Exp,1841000-820000,Minor Equipment,Minor Equipment,False,5000,4936.0,4873.0,-64.0,14.0,131
+both,General Fund,Streets Admin Exp,1841000-820200,Safety Equipment,Safety Equipment,False,2500,2468.0,2437.0,-32.0,14.0,131
+both,General Fund,Street Cleaning Exp,1842000-611000,Salary - Bureau Chief,Salary - Bureau Chief,False,0,0.0,0.0,0.0,14.0,132
+both,General Fund,Street Cleaning Exp,1842000-611500,Salary - Personnel,Salary - Personnel,False,338901,349068.0,359540.0,10167.0,14.0,132
+both,General Fund,Street Cleaning Exp,1842000-618500,Overtime,Overtime,False,20000,20600.0,21218.0,600.0,14.0,132
+both,General Fund,Street Cleaning Exp,1842000-618600,On Call Stipen,On Call Stipen,False,9100,9373.0,9654.0,273.0,14.0,132
+both,General Fund,Street Cleaning Exp,1842000-718000,Rental of Uniforms,Rental of Uniforms,False,7205,7421.0,7644.0,216.0,14.0,132
+both,General Fund,Street Cleaning Exp,1842000-729000,Maint. - Vehicles,Maint. - Vehicles,False,95000,97850.0,100786.0,2850.0,14.0,132
+both,General Fund,Street Cleaning Exp,1842000-745000,Solid Waste Disposal,Solid Waste Disposal,False,65000,66950.0,68959.0,1950.0,14.0,132
+both,General Fund,Street Cleaning Exp,1842000-760600,Operating Supplies,Operating Supplies,False,3000,3090.0,3183.0,90.0,14.0,132
+both,General Fund,Street Cleaning Exp,1842000-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,35000,36050.0,37132.0,1050.0,14.0,132
+both,General Fund,Street Cleaning Exp,1842000-825600,Mach/Equip Lease Purch,Mach/Equip Lease Purch,False,268000,276040.0,284321.0,8040.0,14.0,132
+both,General Fund,Street Maintenance Exp,1843000-611500,Salaried Personnel,Salaried Personnel,False,858830,884595.0,911133.0,25765.0,14.0,134
+both,General Fund,Street Maintenance Exp,1843000-618500,Overtime,Overtime,False,40000,40837.0,41692.0,837.0,14.0,134
+both,General Fund,Street Maintenance Exp,1843000-760600,Operating Supplies,Operating Supplies,False,15000,15314.0,15634.0,314.0,14.0,134
+both,General Fund,Street Maintenance Exp,1843000-768400,Road Paving Materials,Road Paving Materials,False,25000,25523.0,26057.0,523.0,14.0,134
+both,General Fund,Street Maintenance Exp,1843000-769000,Construction Material,Construction Material,False,5000,5105.0,5211.0,105.0,14.0,134
+both,General Fund,Street Maintenance Exp,1843000-820000,Minor Equipment,Minor Equipment,False,20000,20419.0,20846.0,419.0,14.0,134
+both,General Fund,Street Maintenance Exp,1843000-826000,Construction/Resurfacing,Construction/Resurfacing,False,30000,30628.0,31269.0,628.0,14.0,134
+both,General Fund,Street Maintenance Exp,1843000-827000,Vehicles,Vehicles,False,30000,30628.0,31269.0,628.0,14.0,134
+both,General Fund,Street Maintenance Exp,1843000-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,False,423789,424869.0,425738.0,1080.0,14.0,134
+both,General Fund,Motor Vehicles Exp,1850000-611500,Salaried Personnel,Salaried Personnel,False,434252,447280.0,460698.0,13028.0,14.0,136
+both,General Fund,Motor Vehicles Exp,1850000-618500,Overtime,Overtime,False,15000,15757.0,16552.0,757.0,14.0,136
+both,General Fund,Motor Vehicles Exp,1850000-620100,Educational Incentive,Educational Incentive,False,6500,6828.0,7173.0,328.0,14.0,136
+both,General Fund,Motor Vehicles Exp,1850000-718000,Rental of Uniforms,Rental of Uniforms,False,3275,3440.0,3614.0,165.0,14.0,136
+both,General Fund,Motor Vehicles Exp,1850000-723000,Maint. - Equipment,Maint. - Equipment,False,450,473.0,497.0,23.0,14.0,136
+both,General Fund,Motor Vehicles Exp,1850000-729000,Maint. - Vehicles,Maint. - Vehicles,False,27000,28363.0,29794.0,1363.0,14.0,136
+both,General Fund,Motor Vehicles Exp,1850000-732000,Dues & Subscriptions,Dues & Subscriptions,False,0,0.0,0.0,0.0,14.0,136
+both,General Fund,Motor Vehicles Exp,1850000-735000,Printing,Printing,False,450,473.0,497.0,23.0,14.0,136
+both,General Fund,Motor Vehicles Exp,1850000-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,14.0,136
+both,General Fund,Motor Vehicles Exp,1850000-744500,Training & School,Training & School,False,750,788.0,828.0,38.0,14.0,136
+both,General Fund,Motor Vehicles Exp,1850000-760300,Office Supplies,Office Supplies,False,650,683.0,717.0,33.0,14.0,136
+both,General Fund,Motor Vehicles Exp,1850000-760600,Operating Supplies,Operating Supplies,False,9000,9454.0,9931.0,454.0,14.0,136
+both,General Fund,Motor Vehicles Exp,1850000-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,10000,10505.0,11035.0,505.0,14.0,136
+both,General Fund,Motor Vehicles Exp,1850000-766300,Tires & Batteries,Tires & Batteries,False,1600,1681.0,1766.0,81.0,14.0,136
+both,General Fund,Motor Vehicles Exp,1850000-767200,Misc. Vehicle Parts,Misc. Vehicle Parts,False,45000,47271.0,49657.0,2271.0,14.0,137
+both,General Fund,Motor Vehicles Exp,1850000-820000,Minor Equipment,Minor Equipment,False,72000,75634.0,79451.0,3634.0,15.0,137
+both,General Fund,Motor Vehicles Exp,1850000-827000,Vehicles,Vehicles,False,151250,167773.0,185396.0,16523.0,15.0,137
+both,General Fund,Parks Administration Exp,1860000-620100,Educational Incentive,Educational Incentive,False,19200,19400.0,19601.0,200.0,15.0,139
+both,General Fund,Parks Administration Exp,1860000-718000,Rental of Uniforms,Rental of Uniforms,False,22080,22310.0,22542.0,230.0,15.0,139
+both,General Fund,Parks Administration Exp,1860000-729000,Maint. - Vehicles,Maint. - Vehicles,False,38610,39011.0,39417.0,401.0,15.0,139
+both,General Fund,Parks Administration Exp,1860000-731000,Advertising,Advertising,False,1000,1010.0,1021.0,10.0,15.0,139
+both,General Fund,Parks Administration Exp,1860000-734000,Postage,Postage,False,500,505.0,510.0,5.0,15.0,139
+both,General Fund,Parks Administration Exp,1860000-735000,Printing,Printing,False,500,505.0,510.0,5.0,15.0,139
+both,General Fund,Parks Administration Exp,1860000-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,15.0,139
+both,General Fund,Parks Administration Exp,1860000-737000,Travel,Travel,False,600,606.0,613.0,6.0,15.0,139
+both,General Fund,Parks Administration Exp,1860000-744000,Contract Services,Contract Services,False,253380,256015.0,258677.0,2635.0,15.0,139
+both,General Fund,Parks Administration Exp,1860000-744500,Training & School,Training & School,False,2800,2829.0,2859.0,29.0,15.0,140
+both,General Fund,Parks Administration Exp,1860000-745000,Solid Waste Disposal,Solid Waste Disposal,False,30000,30312.0,30627.0,312.0,15.0,140
+both,General Fund,Parks Administration Exp,1860000-760300,Office Supplies,Office Supplies,False,1000,1010.0,1021.0,10.0,15.0,140
+both,General Fund,Parks Administration Exp,1860000-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,53050,53602.0,54159.0,552.0,15.0,140
+both,General Fund,Parks Administration Exp,1860000-820000,Minor Equipment,Minor Equipment,False,23100,23340.0,23583.0,240.0,15.0,140
+both,General Fund,Parks - Building Exp,1861000-611500,Salaried Personnel,Salaried Personnel,False,902642,929721.0,957613.0,27079.0,15.0,141
+both,General Fund,Parks - Building Exp,1861000-618500,Overtime,Overtime,False,10000,10110.0,10220.0,110.0,15.0,141
+both,General Fund,Parks - Building Exp,1861000-721000,Maint. - Buildings,Maint. - Buildings,False,77000,77844.0,78697.0,844.0,15.0,141
+both,General Fund,Parks - Building Exp,1861000-723000,Maint. - Equipment,Maint. - Equipment,False,60500,61163.0,61833.0,663.0,15.0,141
+both,General Fund,Parks - Building Exp,1861000-736000,Telephone,Telephone,False,3000,3033.0,3066.0,33.0,15.0,141
+both,General Fund,Parks - Building Exp,1861000-744000,Contract Services,Contract Services,False,232250,234795.0,237367.0,2545.0,15.0,141
+both,General Fund,Parks - Building Exp,1861000-744500,Training & School,Training & School,False,1000,1011.0,1022.0,11.0,15.0,141
+both,General Fund,Parks - Building Exp,1861000-752000,Power Electric,Power Electric,False,422870,427503.0,414482.0,4633.0,15.0,141
+both,General Fund,Parks - Building Exp,1861000-760600,Operating Supplies,Operating Supplies,False,90000,90986.0,91983.0,986.0,15.0,141
+both,General Fund,Parks - Building Exp,1861000-760700,Custodial Supplies,Custodial Supplies,False,45000,45493.0,45991.0,493.0,15.0,142
+both,General Fund,Parks - Building Exp,1861000-766000,Heating Oil,Heating Oil,False,138200,139714.0,141245.0,1514.0,15.0,142
+both,General Fund,Parks - Building Exp,1861000-820000,Minor Equipment,Minor Equipment,False,35000,35383.0,35771.0,383.0,15.0,142
+both,General Fund,Parks - Building Exp,1861000-827000,Vehicles,Vehicles,False,109631,110832.0,112046.0,1201.0,15.0,142
+both,General Fund,Parks - Building Exp,1861000-829000,Capital Outlay,Capital Outlay,False,30000,30329.0,30661.0,329.0,15.0,142
+both,General Fund,Parks - Parks Exp,1862000-611500,Salaried Personnel,Salaried Personnel,False,1015829,1095463.0,1128327.0,79634.0,15.0,144
+both,General Fund,Parks - Parks Exp,1862000-612000,Salary Temporary,Salary Temporary,False,32400,32379.0,32358.0,-21.0,15.0,144
+both,General Fund,Parks - Parks Exp,1862000-618500,Overtime,Overtime,False,30000,29981.0,29961.0,-19.0,15.0,144
+both,General Fund,Parks - Parks Exp,1862000-723000,Maint-Equipment,Maint-Equipment,False,17000,16989.0,16978.0,-11.0,15.0,144
+both,General Fund,Parks - Parks Exp,1862000-727000,Maint-Parks,Maint-Parks,False,78000,61653.0,53221.0,-16347.0,15.0,144
+both,General Fund,Parks - Parks Exp,1862000-727500,Maint-Pools,Maint-Pools,False,35000,34977.0,26562.0,-23.0,15.0,144
+both,General Fund,Parks - Parks Exp,1862000-744500,Training & School,Training & School,False,900,899.0,899.0,-1.0,15.0,144
+both,General Fund,Parks - Parks Exp,1862000-752000,Power Electric,Power Electric,False,32000,31979.0,31959.0,-21.0,15.0,144
+both,General Fund,Parks - Parks Exp,1862000-760600,Operating Supplies,Operating Supplies,False,65000,64958.0,64916.0,-42.0,16.0,144
+both,General Fund,Parks - Parks Exp,1862000-760700,Custodial Supplies,Custodial Supplies,False,7200,7195.0,7191.0,-5.0,16.0,145
+both,General Fund,Parks - Parks Exp,1862000-820000,Minor Equipment,Minor Equipment,False,6000,5996.0,5992.0,-4.0,16.0,145
+both,General Fund,Parks - Parks Exp,1862000-827000,Vehicles,Vehicles,False,22220,22206.0,22191.0,-14.0,16.0,145
+both,General Fund,Parks - Parks Exp,1862000-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,False,164551,164444.0,147553.0,-107.0,16.0,145
+both,General Fund,Parks - Parks Exp,1862000-829000,Capital Outlay,Capital Outlay,False,70000,69955.0,69910.0,-45.0,16.0,145
+both,General Fund,Trees Exp,1863000-611000,Salary - Bureau Chief,Salary - Bureau Chief,False,0,0.0,0.0,0.0,16.0,147
+both,General Fund,Trees Exp,1863000-611500,Salaried Personnel,Salaried Personnel,False,251377,258918.0,266686.0,7541.0,16.0,147
+both,General Fund,Trees Exp,1863000-618500,Overtime,Overtime,False,7000,7210.0,7426.0,210.0,16.0,147
+both,General Fund,Trees Exp,1863000-723000,Maint. - Equipment,Maint. - Equipment,False,2000,2060.0,2122.0,60.0,16.0,147
+both,General Fund,Trees Exp,1863000-732000,Dues & Subscriptions,Dues & Subscriptions,False,850,876.0,902.0,26.0,16.0,147
+both,General Fund,Trees Exp,1863000-744000,Contract Services,Contract Services,False,5000,5150.0,5305.0,150.0,16.0,147
+both,General Fund,Trees Exp,1863000-744500,Training & School,Training & School,False,3000,3090.0,3183.0,90.0,16.0,147
+both,General Fund,Trees Exp,1863000-760600,Operating Supplies,Operating Supplies,False,12500,12875.0,13261.0,375.0,16.0,147
+both,General Fund,Trees Exp,1863000-820000,Minor Equipment,Minor Equipment,False,3200,3296.0,3395.0,96.0,16.0,147
+both,General Fund,Trees Exp,1863000-822500,Landscaping Trees etc,Landscaping Trees etc,False,25000,25750.0,26523.0,750.0,16.0,147
+both,General Fund,Trees Exp,1863000-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,False,95815,98689.0,101650.0,2874.0,16.0,147
+both,Stormwater Management Fund,Revenue,56000000-406300,Interest on Investment,Interest on Investment,False,45505,46871.0,48277.0,1366.0,17.0,153
+both,Stormwater Management Fund,Revenue,56000000-407100,Pension State Fund,Pension State Fund,False,82452,84926.0,87474.0,2474.0,17.0,153
+both,Stormwater Management Fund,Revenue,56000000-408000,Miscellaneous Revenue,Miscellaneous Revenue,False,10977,11306.0,11645.0,329.0,17.0,153
+both,Stormwater Management Fund,Revenue,56000000-408101,Stormwater Mgmt Fee,Stormwater Mgmt Fee,False,5104465,5104465.0,5104465.0,0.0,17.0,153
+both,Stormwater Management Fund,Revenue,56000000-420000,Swr Grnds Exp Reimb,Swr Grnds Exp Reimb,False,0,0.0,0.0,0.0,17.0,153
+only_2027,Stormwater Management Fund,Street Cleaning Expense,56084200-611000,Salary - Bureau Chief,Salary - Bureau Chief,False,0,,,,,162
+only_2027,Stormwater Management Fund,Street Cleaning Expense,56084200-611500,Salaried Personnel,Salaried Personnel,False,0,,,,,162
+only_2027,Stormwater Management Fund,Street Cleaning Expense,56084200-618500,Overtime,Overtime,False,0,,,,,162
+only_2027,Stormwater Management Fund,Street Cleaning Expense,56084200-618600,On Call Stipen,On Call Stipen,False,0,,,,,162
+only_2027,Stormwater Management Fund,Street Cleaning Expense,56084200-718000,Rental of Uniforms,Rental of Uniforms,False,0,,,,,162
+only_2027,Stormwater Management Fund,Street Cleaning Expense,56084200-729000,Maint. - Vehicles,Maint. - Vehicles,False,0,,,,,162
+only_2027,Stormwater Management Fund,Street Cleaning Expense,56084200-745000,Solid Waste Disposal,Solid Waste Disposal,False,0,,,,,162
+only_2027,Stormwater Management Fund,Street Cleaning Expense,56084200-760600,Operating Supplies,Operating Supplies,False,0,,,,,162
+only_2027,Stormwater Management Fund,Street Cleaning Expense,56084200-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,0,,,,,162
+only_2027,Stormwater Management Fund,Street Cleaning Expense,56084200-825600,Mach/Equip Lease Purch,Mach/Equip Lease Purch,False,0,,,,,162
+both,Stormwater Management Fund,Admin Exp,56088600-611000,Salary - Bureau Chiefs,Salary - Bureau Chiefs,False,191639,197388.0,203310.0,5749.0,17.0,154
+both,Stormwater Management Fund,Admin Exp,56088600-611500,Salaried Personnel,Salaried Personnel,False,529892,545789.0,562162.0,15897.0,17.0,154
+both,Stormwater Management Fund,Admin Exp,56088600-612000,Salary Temporary,Salary Temporary,False,0,0.0,0.0,0.0,17.0,154
+both,Stormwater Management Fund,Admin Exp,56088600-618500,Overtime,Overtime,False,0,0.0,0.0,0.0,17.0,154
+both,Stormwater Management Fund,Admin Exp,56088600-620100,Educational Incentive,Educational Incentive,False,0,0.0,0.0,0.0,17.0,154
+both,Stormwater Management Fund,Admin Exp,56088600-620200,Medical Insurance,Medical Insurance,False,875172,918931.0,964877.0,43759.0,17.0,154
+both,Stormwater Management Fund,Admin Exp,56088600-620300,Dental/Vision,Dental/Vision,False,15903,16221.0,16546.0,318.0,17.0,154
+both,Stormwater Management Fund,Admin Exp,56088600-620800,Social Security,Social Security,False,108612,110784.0,113000.0,2172.0,17.0,154
+both,Stormwater Management Fund,Admin Exp,56088600-620900,Life Insurance,Life Insurance,False,3439,3508.0,3578.0,69.0,17.0,154
+both,Stormwater Management Fund,Admin Exp,56088600-623000,Pension Contribution,Pension Contribution,False,227933,232492.0,237142.0,4559.0,17.0,154
+both,Stormwater Management Fund,Admin Exp,56088600-624000,Unemployment Compensation,Unemployment Compensation,False,2500,2550.0,2601.0,50.0,17.0,154
+both,Stormwater Management Fund,Admin Exp,56088600-625000,Workers Compensation,Workers Compensation,False,51310,52337.0,53383.0,1027.0,17.0,154
+both,Stormwater Management Fund,Admin Exp,56088600-716000,Rental of Parking Lot,Rental of Parking Lot,False,12000,12240.0,12485.0,240.0,17.0,155
+both,Stormwater Management Fund,Admin Exp,56088600-718000,Rental of Uniforms,Rental of Uniforms,False,1000,1020.0,1040.0,20.0,17.0,155
+both,Stormwater Management Fund,Admin Exp,56088600-723000,Maint. - Equipment,Maint. - Equipment,False,10000,10200.0,10404.0,200.0,17.0,155
+both,Stormwater Management Fund,Admin Exp,56088600-729000,Maint. - Vehicles,Maint. - Vehicles,False,500,510.0,520.0,10.0,17.0,155
+both,Stormwater Management Fund,Admin Exp,56088600-731000,Advertising,Advertising,False,8000,8160.0,8323.0,160.0,17.0,155
+both,Stormwater Management Fund,Admin Exp,56088600-732000,Dues & Subscriptions,Dues & Subscriptions,False,15000,15300.0,15606.0,300.0,17.0,155
+both,Stormwater Management Fund,Admin Exp,56088600-734000,Postage,Postage,False,10000,10200.0,10404.0,200.0,17.0,155
+both,Stormwater Management Fund,Admin Exp,56088600-735000,Printing,Printing,False,4000,4080.0,4162.0,80.0,17.0,155
+both,Stormwater Management Fund,Admin Exp,56088600-736000,Telephone,Telephone,False,0,0.0,0.0,0.0,17.0,155
+both,Stormwater Management Fund,Admin Exp,56088600-737000,Travel,Travel,False,10000,10200.0,10404.0,200.0,17.0,155
+both,Stormwater Management Fund,Admin Exp,56088600-740900,Bad Debt Expense,Bad Debt Expense,False,255223,260328.0,265534.0,5105.0,17.0,155
+both,Stormwater Management Fund,Admin Exp,56088600-741000,Professional Services,Professional Services,False,400000,408000.0,416160.0,8000.0,17.0,155
+both,Stormwater Management Fund,Admin Exp,56088600-741003,Prof. Services-Consent Decree,Prof. Services-Consent Decree,False,25000,25500.0,26010.0,500.0,17.0,156
+both,Stormwater Management Fund,Admin Exp,56088600-743100,Credit Card Fees,Credit Card Fees,False,9000,9180.0,9364.0,180.0,17.0,156
+both,Stormwater Management Fund,Admin Exp,56088600-744000,Contract Services,Contract Services,False,40000,40800.0,41616.0,800.0,17.0,156
+both,Stormwater Management Fund,Admin Exp,56088600-744500,Training & School,Training & School,False,6000,6120.0,6242.0,120.0,17.0,156
+both,Stormwater Management Fund,Admin Exp,56088600-746300,Collection System Expense,Collection System Expense,False,10000,10200.0,10404.0,200.0,17.0,156
+both,Stormwater Management Fund,Admin Exp,56088600-760300,Office Supplies,Office Supplies,False,2000,2040.0,2081.0,40.0,17.0,156
+both,Stormwater Management Fund,Admin Exp,56088600-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,400,408.0,416.0,8.0,17.0,156
+both,Stormwater Management Fund,Admin Exp,56088600-772000,Insurance Package,Insurance Package,False,25000,25500.0,26010.0,500.0,17.0,156
+both,Stormwater Management Fund,Admin Exp,56088600-820000,Minor Equipment,Minor Equipment,False,1000,1020.0,1040.0,20.0,17.0,156
+both,Stormwater Management Fund,Admin Exp,56088600-820200,Safety Equipment,Safety Equipment,False,500,510.0,520.0,10.0,17.0,156
+both,Stormwater Management Fund,Admin Exp,56088600-825000,Computer Equip/Software,Computer Equip/Software,False,20000,20400.0,20808.0,400.0,17.0,156
+both,Stormwater Management Fund,Admin Exp,56088600-827100,Vehicle Lease Purchase,Vehicle Lease Purchase,False,1500,1530.0,1561.0,30.0,17.0,157
+both,Stormwater Management Fund,Admin Exp,56088600-911000,Indirect Costs,Indirect Costs,False,597913,609871.0,622069.0,11958.0,18.0,157
+both,Stormwater Management Fund,Admin Exp,56088600-912000,Treasury Allocaiton,Treasury Allocaiton,False,200278,204284.0,208370.0,4006.0,18.0,157
+both,Stormwater Management Fund,Admin Exp,56088600-913000,IT Allocaiton,IT Allocaiton,False,75456,76965.0,78504.0,1509.0,18.0,157
+both,Stormwater Management Fund,Admin Exp,56088600-923000,Paying Agent Fees,Paying Agent Fees,False,0,0.0,0.0,0.0,18.0,157
+both,Stormwater Management Fund,Admin Exp,56088600-924000,Debt Service - Interest,Debt Service - Interest,False,941992,909191.0,874921.0,-32801.0,18.0,157
+both,Stormwater Management Fund,Admin Exp,56088600-926000,Debt Service - Principal,Debt Service - Principal,False,752904,785205.0,822725.0,32301.0,18.0,157
+both,Stormwater Management Fund,Admin Exp,56088600-940100,Private Property Grant,Private Property Grant,False,2000,2040.0,2081.0,40.0,18.0,157
+both,Stormwater Management Fund,Grounds Maint Exp,56088700-611000,Salary - Bureau Chief,Salary - Bureau Chief,False,11642,11992.0,12351.0,350.0,18.0,159
+both,Stormwater Management Fund,Grounds Maint Exp,56088700-611500,Salaried Personnel,Salaried Personnel,False,249344,256824.0,264529.0,7480.0,18.0,159
+both,Stormwater Management Fund,Grounds Maint Exp,56088700-612000,Salary Temporary,Salary Temporary,False,7800,7956.0,8115.0,156.0,18.0,159
+both,Stormwater Management Fund,Grounds Maint Exp,56088700-618500,Overtime,Overtime,False,3000,3060.0,3121.0,60.0,18.0,159
+both,Stormwater Management Fund,Grounds Maint Exp,56088700-718000,Rental of Uniforms,Rental of Uniforms,False,6210,6334.0,6461.0,124.0,18.0,159
+both,Stormwater Management Fund,Grounds Maint Exp,56088700-723000,Maint. - Equipment,Maint. - Equipment,False,3000,3060.0,3121.0,60.0,18.0,159
+both,Stormwater Management Fund,Grounds Maint Exp,56088700-729000,Maint. - Vehicles,Maint. - Vehicles,False,5000,5100.0,5202.0,100.0,18.0,159
+both,Stormwater Management Fund,Grounds Maint Exp,56088700-744000,Contract Services,Contract Services,False,25000,25500.0,26010.0,500.0,18.0,159
+both,Stormwater Management Fund,Grounds Maint Exp,56088700-760600,Operating Supplies,Operating Supplies,False,22400,22848.0,23305.0,448.0,18.0,159
+both,Stormwater Management Fund,Grounds Maint Exp,56088700-820000,Minor Equipment,Minor Equipment,False,3000,3060.0,3121.0,60.0,18.0,159
+both,Stormwater Management Fund,Grounds Maint Exp,56088700-822500,Landscaping Trees etc,Landscaping Trees etc,False,15000,15300.0,15606.0,300.0,18.0,160
+both,Stormwater Management Fund,Grounds Maint Exp,56088700-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,False,83753,85428.0,87137.0,1675.0,18.0,160
+only_2027,Stormwater Management Fund,Trees Expense,560888000-611000,Salary - Bureau Chief,Salary - Bureau Chief,False,0,,,,,163
+only_2027,Stormwater Management Fund,Trees Expense,560888000-611500,salary - Personnel,salary - Personnel,False,0,,,,,163
+only_2027,Stormwater Management Fund,Trees Expense,560888000-618500,Overtime,Overtime,False,0,,,,,163
+only_2027,Stormwater Management Fund,Trees Expense,560888000-723000,Maint. - Equipment,Maint. - Equipment,False,0,,,,,163
+only_2027,Stormwater Management Fund,Trees Expense,560888000-732000,Dues & Subscriptions,Dues & Subscriptions,False,0,,,,,163
+only_2027,Stormwater Management Fund,Trees Expense,560888000-744000,Contract Services,Contract Services,False,0,,,,,163
+only_2027,Stormwater Management Fund,Trees Expense,560888000-744500,Training/Education,Training/Education,False,0,,,,,163
+only_2027,Stormwater Management Fund,Trees Expense,560888000-760600,Operating Supplies,Operating Supplies,False,0,,,,,163
+only_2027,Stormwater Management Fund,Trees Expense,560888000-820000,Minor Equipment,Minor Equipment,False,0,,,,,163
+only_2027,Stormwater Management Fund,Trees Expense,560888000-822500,Landscaping Trees etc,Landscaping Trees etc,False,0,,,,,163
+only_2027,Stormwater Management Fund,Trees Expense,560888000-827100,Vehicle Lease Purchase,Vehicle Lease Purchase,False,0,,,,,163
+both,Sewer Fund,Revenue,56100000-404400,Rent of City Property,Rent of City Property,False,76998,84097.0,91851.0,7099.0,19.0,167
+both,Sewer Fund,Revenue,56100000-405700,Sale of City Property/Svc,Sale of City Property/Svc,False,0,0.0,0.0,0.0,19.0,167
+both,Sewer Fund,Revenue,56100000-406300,Interest on Investment,Interest on Investment,False,94000,96820.0,99725.0,2820.0,19.0,167
+both,Sewer Fund,Revenue,56100000-407100,Pension State Fund,Pension State Fund,False,296287,322805.0,351696.0,26518.0,19.0,167
+both,Sewer Fund,Revenue,56100000-408000,Miscellaneous Revenue,Miscellaneous Revenue,False,10000,10835.0,11740.0,835.0,19.0,167
+both,Sewer Fund,Revenue,56100000-408100,Sewage Treatment,Sewage Treatment,False,17724775,17724775.0,17724775.0,0.0,19.0,167
+both,Sewer Fund,Revenue,56100000-408200,Industrial Waste Surchg,Industrial Waste Surchg,False,525000,540750.0,556973.0,15750.0,19.0,167
+both,Sewer Fund,Revenue,56100000-408300,Bulk Sewage Treatment,Bulk Sewage Treatment,False,5629291,5629291.0,5629291.0,0.0,19.0,167
+both,Sewer Fund,Revenue,56100000-408400,SLSA Operating Charges,SLSA Operating Charges,False,218927,226765.0,234883.0,7838.0,19.0,167
+both,Sewer Fund,Revenue,56100000-408600,Industrial Waste Permits,Industrial Waste Permits,False,12940,13604.0,14302.0,664.0,19.0,167
+both,Sewer Fund,Revenue,56100000-408700,Industrial Waste Penalty,Industrial Waste Penalty,False,2500,2575.0,2652.0,75.0,19.0,168
+both,Sewer Fund,Revenue,56100000-408800,"Fats, Oils and Grease Permits","Fats, Oils and Grease Permits",False,1141,1176.0,1211.0,35.0,19.0,168
+both,Sewer Fund,Revenue,56100000-408801,"Fats, Oils and Grease Penalty","Fats, Oils and Grease Penalty",False,1000,1030.0,1061.0,30.0,19.0,168
+both,Sewer Fund,Administration Expense,56188000-611000,Salary - Bureau Chiefs,Salary - Bureau Chiefs,False,142507,146782.0,151186.0,4275.0,19.0,169
+both,Sewer Fund,Administration Expense,56188000-611500,Salaried Personnel,Salaried Personnel,False,202153,208218.0,214464.0,6065.0,19.0,169
+both,Sewer Fund,Administration Expense,56188000-612000,Salary Temporary,Salary Temporary,False,15840,16157.0,16480.0,317.0,19.0,169
+both,Sewer Fund,Administration Expense,56188000-618500,Overtime,Overtime,False,1000,1020.0,1040.0,20.0,19.0,169
+both,Sewer Fund,Administration Expense,56188000-619200,OPEB Contribution,OPEB Contribution,False,132000,134640.0,137333.0,2640.0,19.0,169
+both,Sewer Fund,Administration Expense,56188000-620100,Educational Incentive,Educational Incentive,False,47000,47940.0,48899.0,940.0,19.0,169
+both,Sewer Fund,Administration Expense,56188000-620200,Medical Insurance,Medical Insurance,False,1222319,1283435.0,1347607.0,61116.0,19.0,169
+both,Sewer Fund,Administration Expense,56188000-620300,Dental/Vision,Dental/Vision,False,41475,42304.0,43150.0,829.0,19.0,169
+both,Sewer Fund,Administration Expense,56188000-620800,Social Security,Social Security,False,300511,306521.0,312652.0,6010.0,19.0,169
+both,Sewer Fund,Administration Expense,56188000-620900,Life Insurance,Life Insurance,False,9500,9690.0,9884.0,190.0,19.0,169
+both,Sewer Fund,Administration Expense,56188000-623000,Pension Contribution,Pension Contribution,False,441475,450305.0,459311.0,8830.0,19.0,170
+both,Sewer Fund,Administration Expense,56188000-624000,Unemployment Compensation,Unemployment Compensation,False,15000,15300.0,15606.0,300.0,19.0,170
+both,Sewer Fund,Administration Expense,56188000-625000,Workers Compensation,Workers Compensation,False,165000,168300.0,171666.0,3300.0,19.0,170
+both,Sewer Fund,Administration Expense,56188000-714100,PC Lease,PC Lease,False,25000,25500.0,26010.0,500.0,19.0,170
+both,Sewer Fund,Administration Expense,56188000-716000,Rental of Parking Lot,Rental of Parking Lot,False,5000,5100.0,5202.0,100.0,19.0,170
+both,Sewer Fund,Administration Expense,56188000-718000,Rental of Uniforms,Rental of Uniforms,False,30340,30947.0,31566.0,607.0,19.0,170
+both,Sewer Fund,Administration Expense,56188000-723000,Maint. - Equipment,Maint. - Equipment,False,13000,13260.0,13525.0,260.0,19.0,170
+both,Sewer Fund,Administration Expense,56188000-731000,Advertising,Advertising,False,5000,5100.0,5202.0,100.0,19.0,170
+both,Sewer Fund,Administration Expense,56188000-734000,Postage,Postage,False,25000,25500.0,26010.0,500.0,19.0,170
+both,Sewer Fund,Administration Expense,56188000-735000,Printing,Printing,False,5000,5100.0,5202.0,100.0,19.0,170
+both,Sewer Fund,Administration Expense,56188000-736000,Telephone,Telephone,False,76650,78183.0,79747.0,1533.0,19.0,170
+both,Sewer Fund,Administration Expense,56188000-737000,Travel,Travel,False,8000,8160.0,8323.0,160.0,19.0,170
+both,Sewer Fund,Administration Expense,56188000-740000,Utility Assistance Program,Utility Assistance Program,False,30000,30600.0,31212.0,600.0,19.0,171
+both,Sewer Fund,Administration Expense,56188000-740100,Nutrient Credit Purchase,Nutrient Credit Purchase,False,200000,204000.0,208080.0,4000.0,19.0,171
+both,Sewer Fund,Administration Expense,56188000-740900,Bad Debt Expense,Bad Debt Expense,False,177248,180793.0,184409.0,3545.0,19.0,171
+both,Sewer Fund,Administration Expense,56188000-741000,Professional Services,Professional Services,False,1702000,1736040.0,1770761.0,34040.0,19.0,171
+both,Sewer Fund,Administration Expense,56188000-743000,Bank Service Charges,Bank Service Charges,False,18000,18360.0,18727.0,360.0,19.0,171
+both,Sewer Fund,Administration Expense,56188000-743100,Credit Card Fees,Credit Card Fees,False,14000,14280.0,14566.0,280.0,19.0,171
+both,Sewer Fund,Administration Expense,56188000-744000,Contract Services,Contract Services,False,141000,143820.0,146696.0,2820.0,20.0,171
+both,Sewer Fund,Administration Expense,56188000-744500,Training & School,Training & School,False,40000,40800.0,41616.0,800.0,20.0,172
+both,Sewer Fund,Administration Expense,56188000-760300,Office Supplies,Office Supplies,False,5000,5100.0,5202.0,100.0,20.0,172
+both,Sewer Fund,Administration Expense,56188000-772000,Insurance Package,Insurance Package,False,333900,340578.0,347390.0,6678.0,20.0,172
+both,Sewer Fund,Administration Expense,56188000-820000,Minor Equipment,Minor Equipment,False,8500,8670.0,8843.0,170.0,20.0,172
+both,Sewer Fund,Administration Expense,56188000-820200,Safety Equipment,Safety Equipment,False,30000,30600.0,31212.0,600.0,20.0,172
+both,Sewer Fund,Administration Expense,56188000-825000,Computer Equip/Software,Computer Equip/Software,False,20000,20400.0,20808.0,400.0,20.0,172
+both,Sewer Fund,Administration Expense,56188000-827100,Vehicle Lease Purchase,Vehicle Lease Purchase,False,4800,4896.0,4994.0,96.0,20.0,172
+both,Sewer Fund,Administration Expense,56188000-911000,Indirect Costs,Indirect Costs,False,1052132,1073175.0,1094638.0,21043.0,20.0,172
+both,Sewer Fund,Administration Expense,56188000-912000,Treasury Allocaiton,Treasury Allocaiton,False,246790,251726.0,256760.0,4936.0,20.0,172
+both,Sewer Fund,Administration Expense,56188000-913000,IT Allocaiton,IT Allocaiton,False,184216,187901.0,191659.0,3685.0,20.0,172
+both,Sewer Fund,Administration Expense,56188000-923000,Paying Agent Fees,Paying Agent Fees,False,1000,1020.0,1040.0,20.0,20.0,173
+both,Sewer Fund,Administration Expense,56188000-924000,Debt Service - Interest,Debt Service - Interest,False,2242340,2203943.0,2839732.0,-38397.0,20.0,173
+both,Sewer Fund,Administration Expense,56188000-926000,Debt Service - Principal,Debt Service - Principal,False,2590104,2677539.0,2114786.0,87435.0,20.0,173
+both,Sewer Fund,Collections Expense,56188100-611500,Salaried Personnel,Salaried Personnel,False,1450919,1494447.0,1539280.0,43528.0,20.0,175
+both,Sewer Fund,Collections Expense,56188100-618500,Overtime,Overtime,False,20000,20400.0,20808.0,400.0,20.0,175
+both,Sewer Fund,Collections Expense,56188100-618600,On Call Stipen,On Call Stipen,False,27300,27846.0,28403.0,546.0,20.0,175
+both,Sewer Fund,Collections Expense,56188100-729000,Maint. - Vehicles,Maint. - Vehicles,False,150000,153000.0,156060.0,3000.0,20.0,175
+both,Sewer Fund,Collections Expense,56188100-744000,Contract Services,Contract Services,False,80000,81600.0,83232.0,1600.0,20.0,175
+both,Sewer Fund,Collections Expense,56188100-747000,Trench Paving,Trench Paving,False,300000,306000.0,312120.0,6000.0,20.0,175
+both,Sewer Fund,Collections Expense,56188100-752000,Power Electric,Power Electric,False,1500,1530.0,1561.0,30.0,20.0,175
+both,Sewer Fund,Collections Expense,56188100-760300,Office Supplies,Office Supplies,False,2500,2550.0,2601.0,50.0,20.0,175
+both,Sewer Fund,Collections Expense,56188100-760600,Operating Supplies,Operating Supplies,False,580000,591600.0,603432.0,11600.0,20.0,175
+both,Sewer Fund,Collections Expense,56188100-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,80000,81600.0,83232.0,1600.0,20.0,176
+both,Sewer Fund,Collections Expense,56188100-820000,Minor Equipment,Minor Equipment,False,10000,10200.0,10404.0,200.0,20.0,176
+both,Sewer Fund,Collections Expense,56188100-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,False,417917,426275.0,434801.0,8358.0,20.0,176
+both,Sewer Fund,Pumping Stations Exp,56188200-611500,Salaried Personnel,Salaried Personnel,False,1173661,1208871.0,1245137.0,35210.0,20.0,178
+both,Sewer Fund,Pumping Stations Exp,56188200-618500,Overtime,Overtime,False,46520,47450.0,48399.0,930.0,20.0,178
+both,Sewer Fund,Pumping Stations Exp,56188200-618600,On Call Stipen,On Call Stipen,False,27300,27846.0,28403.0,546.0,20.0,178
+both,Sewer Fund,Pumping Stations Exp,56188200-721000,Maint. - Buildings,Maint. - Buildings,False,45000,45900.0,46818.0,900.0,20.0,178
+both,Sewer Fund,Pumping Stations Exp,56188200-723000,Maint. - Equipment,Maint. - Equipment,False,445000,453900.0,462978.0,8900.0,20.0,178
+both,Sewer Fund,Pumping Stations Exp,56188200-752000,Power Electric,Power Electric,False,600000,612000.0,624240.0,12000.0,20.0,178
+both,Sewer Fund,Pumping Stations Exp,56188200-760600,Operating Supplies,Operating Supplies,False,2400,2448.0,2497.0,48.0,20.0,178
+both,Sewer Fund,Pumping Stations Exp,56188200-766000,Heating Oil,Heating Oil,False,40000,40800.0,41616.0,800.0,20.0,178
+both,Sewer Fund,Pumping Stations Exp,56188200-820000,Minor Equipment,Minor Equipment,False,5000,5100.0,5202.0,100.0,20.0,179
+both,Sewer Fund,Pumping Stations Exp,56188200-827000,Vehicles,Vehicles,False,40629,41442.0,42270.0,813.0,20.0,179
+both,Sewer Fund,Pumping Stations Exp,56188200-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,False,107957,110116.0,112318.0,2159.0,20.0,179
+both,Sewer Fund,Pumping Stations Exp,56188200-829000,Capital Outlay,Capital Outlay,False,180000,183600.0,187272.0,3600.0,20.0,179
+both,Sewer Fund,Treatment Exp,56188300-611500,Salaried Personnel,Salaried Personnel,False,1377071,1418383.0,1460935.0,41312.0,21.0,181
+both,Sewer Fund,Treatment Exp,56188300-618500,Overtime,Overtime,False,107800,109956.0,112155.0,2156.0,21.0,181
+both,Sewer Fund,Treatment Exp,56188300-721000,Maint. - Buildings,Maint. - Buildings,False,168000,171360.0,174787.0,3360.0,21.0,181
+both,Sewer Fund,Treatment Exp,56188300-722000,Maint. - Communications,Maint. - Communications,False,45000,45900.0,46818.0,900.0,21.0,181
+both,Sewer Fund,Treatment Exp,56188300-723000,Maint. - Equipment,Maint. - Equipment,False,872000,889440.0,907229.0,17440.0,21.0,181
+both,Sewer Fund,Treatment Exp,56188300-729000,Maint. - Vehicles,Maint. - Vehicles,False,30000,30600.0,31212.0,600.0,21.0,181
+both,Sewer Fund,Treatment Exp,56188300-746000,Meter Expense,Meter Expense,False,507285,517431.0,527780.0,10146.0,21.0,181
+both,Sewer Fund,Treatment Exp,56188300-746500,Water Utility Expense,Water Utility Expense,False,165000,168300.0,171666.0,3300.0,21.0,181
+both,Sewer Fund,Treatment Exp,56188300-748000,Sludge,Sludge,False,3178000,3241560.0,3306391.0,63560.0,21.0,182
+both,Sewer Fund,Treatment Exp,56188300-752000,Power Electric,Power Electric,False,1200000,1224000.0,1248480.0,24000.0,21.0,182
+both,Sewer Fund,Treatment Exp,56188300-760600,Operating Supplies,Operating Supplies,False,50000,51000.0,52020.0,1000.0,21.0,182
+both,Sewer Fund,Treatment Exp,56188300-761500,Laboratory Supplies,Laboratory Supplies,False,150000,153000.0,156060.0,3000.0,21.0,182
+both,Sewer Fund,Treatment Exp,56188300-761800,Chemicals,Chemicals,False,1306000,1332120.0,1358762.0,26120.0,21.0,182
+both,Sewer Fund,Treatment Exp,56188300-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,25000,25500.0,26010.0,500.0,21.0,182
+both,Sewer Fund,Treatment Exp,56188300-766000,Heating Oil,Heating Oil,False,88260,90025.0,91826.0,1765.0,21.0,182
+both,Sewer Fund,Treatment Exp,56188300-820000,Minor Equipment,Minor Equipment,False,25000,25500.0,26010.0,500.0,21.0,183
+both,Sewer Fund,Treatment Exp,56188300-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,False,29368,29955.0,30554.0,587.0,21.0,183
+both,Sewer Fund,Treatment Exp,56188300-829000,Capital Outlay,Capital Outlay,False,190000,193800.0,197676.0,3800.0,21.0,183
+both,Sewer Fund,Grounds Maintenance Exp,56188400-611501,Salary - Direct Invoice,Salary - Direct Invoice,False,12000,12240.0,12485.0,240.0,21.0,185
+both,Sewer Fund,Grounds Maintenance Exp,56188400-629901,Fringe - Direct Invoice,Fringe - Direct Invoice,False,8400,8568.0,8739.0,168.0,21.0,185
+both,Sewer Fund,Grounds Maintenance Exp,56188400-760601,Equip/Op Supplies Direct Invoi,Equip/Op Supplies Direct Invoi,False,18000,18360.0,18727.0,360.0,21.0,185
+both,Water Fund,Revenue,56200000-404400,Rent of City Property,Rent of City Property,False,203297,194718.0,186501.0,-8579.0,22.0,189
+both,Water Fund,Revenue,56200000-406300,Interest on Investment,Interest on Investment,False,95000,97850.0,100786.0,2850.0,22.0,189
+both,Water Fund,Revenue,56200000-407100,Pension State Fund,Pension State Fund,False,391874,416249.0,442139.0,24375.0,22.0,189
+both,Water Fund,Revenue,56200000-407700,Water Rents,Water Rents,False,38734894,38734894.0,38734894.0,0.0,22.0,189
+both,Water Fund,Revenue,56200000-407900,Reimb. - Meter Labor,Reimb. - Meter Labor,False,507285,515199.0,523236.0,7914.0,22.0,189
+both,Water Fund,Revenue,56200000-408000,Miscellaneous Revenue,Miscellaneous Revenue,False,299380,253814.0,215184.0,-45566.0,22.0,189
+both,Water Fund,Revenue,56200000-420000,Swr Grnds Exp Reimb,Swr Grnds Exp Reimb,False,0,0.0,0.0,0.0,22.0,189
+both,Water Fund,Water Administration Exp,56289000-611000,Salary - Bureau Chiefs,Salary - Bureau Chiefs,False,142507,146782.0,151186.0,4275.0,22.0,190
+both,Water Fund,Water Administration Exp,56289000-611500,Salaried Personnel,Salaried Personnel,False,457620,471349.0,485489.0,13729.0,22.0,190
+both,Water Fund,Water Administration Exp,56289000-612000,Salary Temporary,Salary Temporary,False,102100,104142.0,106225.0,2042.0,22.0,190
+both,Water Fund,Water Administration Exp,56289000-618500,Overtime,Overtime,False,2000,2040.0,2081.0,40.0,22.0,190
+both,Water Fund,Water Administration Exp,56289000-619200,OPEB Contribution,OPEB Contribution,False,450000,459000.0,468180.0,9000.0,22.0,190
+both,Water Fund,Water Administration Exp,56289000-620100,Educational Incentive,Educational Incentive,False,36000,36720.0,37454.0,720.0,22.0,190
+both,Water Fund,Water Administration Exp,56289000-620200,Medical Insurance,Medical Insurance,False,2654114,2786820.0,2926161.0,132706.0,22.0,190
+both,Water Fund,Water Administration Exp,56289000-620300,Dental/Vision,Dental/Vision,False,52645,53698.0,54772.0,1053.0,22.0,190
+both,Water Fund,Water Administration Exp,56289000-620800,Social Security,Social Security,False,467105,476447.0,485976.0,9342.0,22.0,190
+both,Water Fund,Water Administration Exp,56289000-620900,Life Insurance,Life Insurance,False,13390,13658.0,13931.0,268.0,22.0,190
+both,Water Fund,Water Administration Exp,56289000-623000,Pension Contribution,Pension Contribution,False,518529,528900.0,539478.0,10371.0,22.0,191
+both,Water Fund,Water Administration Exp,56289000-624000,Unemployment Compensation,Unemployment Compensation,False,5000,5100.0,5202.0,100.0,22.0,191
+both,Water Fund,Water Administration Exp,56289000-625000,Workers Compensation,Workers Compensation,False,115517,117827.0,120184.0,2310.0,22.0,191
+both,Water Fund,Water Administration Exp,56289000-714100,PC Lease,PC Lease,False,0,0.0,0.0,0.0,22.0,191
+both,Water Fund,Water Administration Exp,56289000-716000,Rental of Parking Lot,Rental of Parking Lot,False,14000,14280.0,14566.0,280.0,22.0,191
+both,Water Fund,Water Administration Exp,56289000-718000,Rental of Uniforms,Rental of Uniforms,False,37800,38556.0,39327.0,756.0,22.0,191
+both,Water Fund,Water Administration Exp,56289000-723000,Maint. - Equipment,Maint. - Equipment,False,500,510.0,520.0,10.0,22.0,191
+both,Water Fund,Water Administration Exp,56289000-731000,Advertising,Advertising,False,4000,4080.0,4162.0,80.0,22.0,191
+both,Water Fund,Water Administration Exp,56289000-734000,Postage,Postage,False,325000,331500.0,338130.0,6500.0,22.0,191
+both,Water Fund,Water Administration Exp,56289000-735000,Printing,Printing,False,10500,10710.0,10924.0,210.0,22.0,191
+both,Water Fund,Water Administration Exp,56289000-736000,Telephone,Telephone,False,248000,252960.0,258019.0,4960.0,22.0,191
+both,Water Fund,Water Administration Exp,56289000-737000,Travel,Travel,False,7500,7650.0,7803.0,150.0,22.0,192
+both,Water Fund,Water Administration Exp,56289000-738000,Miscellaneous Expenses,Miscellaneous Expenses,False,20000,20400.0,20808.0,400.0,22.0,192
+both,Water Fund,Water Administration Exp,56289000-740000,Utility Assistance Program,Utility Assistance Program,False,30000,30600.0,31212.0,600.0,22.0,192
+both,Water Fund,Water Administration Exp,56289000-740900,Bad Debt Expense,Bad Debt Expense,False,387349,395096.0,402998.0,7747.0,22.0,192
+both,Water Fund,Water Administration Exp,56289000-741000,Professional Services,Professional Services,False,1151000,1174020.0,1197500.0,23020.0,22.0,192
+both,Water Fund,Water Administration Exp,56289000-743000,Bank Service Charges,Bank Service Charges,False,68000,69360.0,70747.0,1360.0,22.0,192
+both,Water Fund,Water Administration Exp,56289000-743100,Credit Card Fees,Credit Card Fees,False,58000,59160.0,60343.0,1160.0,22.0,193
+both,Water Fund,Water Administration Exp,56289000-744000,Contract Services,Contract Services,False,162000,165240.0,168545.0,3240.0,22.0,193
+both,Water Fund,Water Administration Exp,56289000-744500,Training & School,Training & School,False,40000,40800.0,41616.0,800.0,22.0,193
+both,Water Fund,Water Administration Exp,56289000-760300,Office Supplies,Office Supplies,False,2000,2040.0,2081.0,40.0,22.0,193
+both,Water Fund,Water Administration Exp,56289000-772000,Insurance Package,Insurance Package,False,315000,321300.0,327726.0,6300.0,22.0,193
+both,Water Fund,Water Administration Exp,56289000-820000,Minor Equipment,Minor Equipment,False,10000,10200.0,10404.0,200.0,22.0,193
+both,Water Fund,Water Administration Exp,56289000-820200,Safety Equipment,Safety Equipment,False,25000,25500.0,26010.0,500.0,22.0,193
+both,Water Fund,Water Administration Exp,56289000-825000,Computer Equip/Software,Computer Equip/Software,False,10000,10200.0,10404.0,200.0,23.0,193
+both,Water Fund,Water Administration Exp,56289000-911000,Indirect Costs,Indirect Costs,False,1347161,1374104.0,1401586.0,26943.0,23.0,194
+both,Water Fund,Water Administration Exp,56289000-912000,Treasury Allocaiton,Treasury Allocaiton,False,1231747,1256382.0,1281510.0,24635.0,23.0,194
+both,Water Fund,Water Administration Exp,56289000-913000,IT Allocaiton,IT Allocaiton,False,313173,319436.0,325825.0,6263.0,23.0,194
+both,Water Fund,Water Administration Exp,56289000-914000,Revenue Tsfr'd to City,Revenue Tsfr'd to City,False,0,0.0,0.0,0.0,23.0,194
+both,Water Fund,Water Administration Exp,56289000-923000,Paying Agent Fees,Paying Agent Fees,False,2500,2550.0,2601.0,50.0,23.0,194
+both,Water Fund,Water Administration Exp,56289000-924000,Debt Service - Interest,Debt Service - Interest,False,8415632,8633808.0,8311170.0,218176.0,23.0,194
+both,Water Fund,Water Administration Exp,56289000-926000,Debt Service - Principal,Debt Service - Principal,False,6723558,7506945.0,7829195.0,783387.0,23.0,194
+both,Water Fund,Susquehanna Trmt Plant Exp,56289100-611500,Salaried Personnel,Salaried Personnel,False,1285575,1324142.0,1363867.0,38567.0,23.0,196
+both,Water Fund,Susquehanna Trmt Plant Exp,56289100-612000,Salary Temporary,Salary Temporary,False,7680,7834.0,7990.0,154.0,23.0,196
+both,Water Fund,Susquehanna Trmt Plant Exp,56289100-618500,Overtime,Overtime,False,200000,204000.0,208080.0,4000.0,23.0,196
+both,Water Fund,Susquehanna Trmt Plant Exp,56289100-618600,On Call Stipen,On Call Stipen,False,18200,18564.0,18935.0,364.0,23.0,196
+both,Water Fund,Susquehanna Trmt Plant Exp,56289100-721000,Maint. - Buildings,Maint. - Buildings,False,189500,193290.0,197156.0,3790.0,23.0,196
+both,Water Fund,Susquehanna Trmt Plant Exp,56289100-722000,Maint. - Communications,Maint. - Communications,False,63000,64260.0,65545.0,1260.0,23.0,196
+both,Water Fund,Susquehanna Trmt Plant Exp,56289100-723000,Maint. - Equipment,Maint. - Equipment,False,527000,537540.0,548291.0,10540.0,23.0,196
+both,Water Fund,Susquehanna Trmt Plant Exp,56289100-729000,Maint. - Vehicles,Maint. - Vehicles,False,15000,15300.0,15606.0,300.0,23.0,196
+both,Water Fund,Susquehanna Trmt Plant Exp,56289100-746500,Water Utility Expense,Water Utility Expense,False,25000,25500.0,26010.0,500.0,23.0,196
+both,Water Fund,Susquehanna Trmt Plant Exp,56289100-748000,Sludge,Sludge,False,179100,182682.0,186336.0,3582.0,23.0,197
+both,Water Fund,Susquehanna Trmt Plant Exp,56289100-752000,Power Electric,Power Electric,False,1200000,1224000.0,1248480.0,24000.0,23.0,197
+both,Water Fund,Susquehanna Trmt Plant Exp,56289100-760600,Operating Supplies,Operating Supplies,False,12000,12240.0,12485.0,240.0,23.0,197
+both,Water Fund,Susquehanna Trmt Plant Exp,56289100-761800,Chemicals,Chemicals,False,1004100,1024182.0,1044666.0,20082.0,23.0,197
+both,Water Fund,Susquehanna Trmt Plant Exp,56289100-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,68000,69360.0,70747.0,1360.0,23.0,197
+both,Water Fund,Susquehanna Trmt Plant Exp,56289100-766000,Heating Oil,Heating Oil,False,63000,64260.0,65545.0,1260.0,23.0,197
+both,Water Fund,Susquehanna Trmt Plant Exp,56289100-820000,Minor Equipment,Minor Equipment,False,10500,10710.0,10924.0,210.0,23.0,197
+both,Water Fund,Susquehanna Trmt Plant Exp,56289100-827000,Vehicles,Vehicles,False,94597,96489.0,98419.0,1892.0,23.0,197
+both,Water Fund,Susquehanna Trmt Plant Exp,56289100-829000,Capital Outlay,Capital Outlay,False,757400,772548.0,787999.0,15148.0,23.0,197
+both,Water Fund,Conestoga Trmt Plant Exp,56289200-611500,Salaried Personnel,Salaried Personnel,False,1313271,1352669.0,1393249.0,39398.0,23.0,199
+both,Water Fund,Conestoga Trmt Plant Exp,56289200-612000,Salary Temporary,Salary Temporary,False,7680,7834.0,7990.0,154.0,23.0,199
+both,Water Fund,Conestoga Trmt Plant Exp,56289200-618500,Overtime,Overtime,False,143500,146370.0,149297.0,2870.0,23.0,199
+both,Water Fund,Conestoga Trmt Plant Exp,56289200-618600,On Call Stipen,On Call Stipen,False,18200,18564.0,18935.0,364.0,23.0,199
+both,Water Fund,Conestoga Trmt Plant Exp,56289200-721000,Maint. - Buildings,Maint. - Buildings,False,201000,205020.0,209120.0,4020.0,23.0,199
+both,Water Fund,Conestoga Trmt Plant Exp,56289200-722000,Maint. - Communications,Maint. - Communications,False,63000,64260.0,65545.0,1260.0,23.0,199
+both,Water Fund,Conestoga Trmt Plant Exp,56289200-723000,Maint. - Equipment,Maint. - Equipment,False,550000,561000.0,572220.0,11000.0,23.0,199
+both,Water Fund,Conestoga Trmt Plant Exp,56289200-729000,Maint. - Vehicles,Maint. - Vehicles,False,13100,13362.0,13629.0,262.0,23.0,200
+both,Water Fund,Conestoga Trmt Plant Exp,56289200-748000,Sludge,Sludge,False,80000,81600.0,83232.0,1600.0,23.0,200
+both,Water Fund,Conestoga Trmt Plant Exp,56289200-752000,Power Electric,Power Electric,False,900000,918000.0,936360.0,18000.0,23.0,200
+both,Water Fund,Conestoga Trmt Plant Exp,56289200-760600,Operating Supplies,Operating Supplies,False,16000,16320.0,16646.0,320.0,23.0,200
+both,Water Fund,Conestoga Trmt Plant Exp,56289200-761800,Chemicals,Chemicals,False,773200,788664.0,804437.0,15464.0,23.0,200
+both,Water Fund,Conestoga Trmt Plant Exp,56289200-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,81500,83130.0,84793.0,1630.0,23.0,200
+both,Water Fund,Conestoga Trmt Plant Exp,56289200-766000,Heating Oil,Heating Oil,False,65000,66300.0,67626.0,1300.0,24.0,200
+both,Water Fund,Conestoga Trmt Plant Exp,56289200-827000,Vehicles,Vehicles,False,192904,196762.0,200697.0,3858.0,24.0,200
+both,Water Fund,Conestoga Trmt Plant Exp,56289200-829000,Capital Outlay,Capital Outlay,False,824000,840480.0,857290.0,16480.0,24.0,201
+both,Water Fund,Transmission/Dist Exp,56289400-611500,Salaried Personnel,Salaried Personnel,False,1571696,1618847.0,1667412.0,47151.0,24.0,203
+both,Water Fund,Transmission/Dist Exp,56289400-612000,Salary Temporary,Salary Temporary,False,24000,24480.0,24970.0,480.0,24.0,203
+both,Water Fund,Transmission/Dist Exp,56289400-618500,Overtime,Overtime,False,165000,168300.0,171666.0,3300.0,24.0,203
+both,Water Fund,Transmission/Dist Exp,56289400-618600,On Call Stipen,On Call Stipen,False,45500,46410.0,47338.0,910.0,24.0,203
+both,Water Fund,Transmission/Dist Exp,56289400-620100,Educational Incentive,Educational Incentive,False,7500,7650.0,7803.0,150.0,24.0,203
+both,Water Fund,Transmission/Dist Exp,56289400-723000,Maint. - Equipment,Maint. - Equipment,False,5300,5406.0,5514.0,106.0,24.0,203
+both,Water Fund,Transmission/Dist Exp,56289400-725000,Maint. - Mains,Maint. - Mains,False,210000,214200.0,218484.0,4200.0,24.0,203
+both,Water Fund,Transmission/Dist Exp,56289400-728000,Maint. - Service Lines,Maint. - Service Lines,False,100000,102000.0,104040.0,2000.0,24.0,203
+both,Water Fund,Transmission/Dist Exp,56289400-729000,Maint. - Vehicles,Maint. - Vehicles,False,100000,102000.0,104040.0,2000.0,24.0,203
+both,Water Fund,Transmission/Dist Exp,56289400-741000,Professional Services,Professional Services,False,15000,15300.0,15606.0,300.0,24.0,204
+both,Water Fund,Transmission/Dist Exp,56289400-744000,Contract Services,Contract Services,False,67567,68918.0,70297.0,1351.0,24.0,204
+both,Water Fund,Transmission/Dist Exp,56289400-747000,Trench Paving,Trench Paving,False,900000,918000.0,936360.0,18000.0,24.0,204
+both,Water Fund,Transmission/Dist Exp,56289400-747500,Curb & Sidewalk,Curb & Sidewalk,False,200000,204000.0,208080.0,4000.0,24.0,204
+both,Water Fund,Transmission/Dist Exp,56289400-748200,Stone,Stone,False,106667,108800.0,110976.0,2133.0,24.0,204
+both,Water Fund,Transmission/Dist Exp,56289400-748400,Spoil Removal,Spoil Removal,False,10000,10200.0,10404.0,200.0,24.0,204
+both,Water Fund,Transmission/Dist Exp,56289400-760600,Operating Supplies,Operating Supplies,False,175000,178500.0,182070.0,3500.0,24.0,204
+both,Water Fund,Transmission/Dist Exp,56289400-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,110000,112200.0,114444.0,2200.0,24.0,204
+both,Water Fund,Transmission/Dist Exp,56289400-820000,Minor Equipment,Minor Equipment,False,39000,39780.0,40576.0,780.0,24.0,205
+both,Water Fund,Transmission/Dist Exp,56289400-824000,Hydrants,Hydrants,False,100000,102000.0,104040.0,2000.0,24.0,205
+both,Water Fund,Transmission/Dist Exp,56289400-827000,Vehicles,Vehicles,False,30000,30600.0,31212.0,600.0,24.0,205
+both,Water Fund,Transmission/Dist Exp,56289400-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,False,382000,389640.0,397433.0,7640.0,24.0,205
+both,Water Fund,Transmission/Dist Exp,56289400-829000,Capital Outlay,Capital Outlay,False,123144,125607.0,128119.0,2463.0,24.0,205
+both,Water Fund,Transmission/Dist Exp,56289400-829100,PUC Lead Line Replacements,PUC Lead Line Replacements,False,75000,76500.0,78030.0,1500.0,24.0,205
+both,Water Fund,Transmission/Dist Exp,56289400-829200,PUC Customer Reimbursement,PUC Customer Reimbursement,False,60000,61200.0,62424.0,1200.0,24.0,205
+both,Water Fund,Transmission/Dist Exp,56289400-829300,City Lead Line Replacement,City Lead Line Replacement,False,75000,76500.0,78030.0,1500.0,24.0,205
+both,Water Fund,Transmission/Dist Exp,56289400-829400,City Customer Reimbursement,City Customer Reimbursement,False,60000,61200.0,62424.0,1200.0,24.0,205
+both,Water Fund,Meter Shop Exp,56289500-611500,Salaried Personnel,Salaried Personnel,False,577929,595267.0,613125.0,17338.0,24.0,208
+both,Water Fund,Meter Shop Exp,56289500-618500,Overtime,Overtime,False,5000,5100.0,5202.0,100.0,24.0,208
+both,Water Fund,Meter Shop Exp,56289500-726000,Maint. - Meters,Maint. - Meters,False,85000,86700.0,88434.0,1700.0,24.0,208
+both,Water Fund,Meter Shop Exp,56289500-729000,Maint. - Vehicles,Maint. - Vehicles,False,6200,6324.0,6450.0,124.0,24.0,208
+both,Water Fund,Meter Shop Exp,56289500-744000,Contract Services,Contract Services,False,96419,98347.0,100314.0,1928.0,24.0,208
+both,Water Fund,Meter Shop Exp,56289500-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,7400,7548.0,7699.0,148.0,24.0,208
+both,Water Fund,Meter Shop Exp,56289500-823500,Meters,Meters,False,607208,619352.0,631739.0,12144.0,24.0,208
+both,Water Fund,Meter Shop Exp,56289500-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,False,64230,65514.0,66825.0,1284.0,24.0,208
+both,Water Fund,Grounds Maintenance Exp,56289600-611500,Salaried Personnel,Salaried Personnel,False,0,0.0,0.0,0.0,25.0,209
+both,Water Fund,Grounds Maintenance Exp,56289600-611501,Salary - Direct Invoice,Salary - Direct Invoice,False,91900,94657.0,97497.0,2757.0,25.0,209
+both,Water Fund,Grounds Maintenance Exp,56289600-612000,Salary Temporary,Salary Temporary,False,0,0.0,0.0,0.0,25.0,209
+both,Water Fund,Grounds Maintenance Exp,56289600-618500,Overtime,Overtime,False,0,0.0,0.0,0.0,25.0,209
+both,Water Fund,Grounds Maintenance Exp,56289600-629901,Fringe - Direct Invoice,Fringe - Direct Invoice,False,60282,61488.0,62717.0,1206.0,25.0,209
+both,Water Fund,Grounds Maintenance Exp,56289600-718000,Rental of Uniforms,Rental of Uniforms,False,0,0.0,0.0,0.0,25.0,209
+both,Water Fund,Grounds Maintenance Exp,56289600-721000,Maint. - Buildings,Maint. - Buildings,False,0,0.0,0.0,0.0,25.0,209
+both,Water Fund,Grounds Maintenance Exp,56289600-723000,Maint. - Equipment,Maint. - Equipment,False,0,0.0,0.0,0.0,25.0,209
+both,Water Fund,Grounds Maintenance Exp,56289600-729000,Maint. - Vehicles,Maint. - Vehicles,False,0,0.0,0.0,0.0,25.0,209
+both,Water Fund,Grounds Maintenance Exp,56289600-760600,Operating Supplies,Operating Supplies,False,0,0.0,0.0,0.0,25.0,209
+both,Water Fund,Grounds Maintenance Exp,56289600-760601,Equip/Op Supplies Direct Invoi,Equip/Op Supplies Direct Invoi,False,28400,28968.0,29547.0,568.0,25.0,209
+both,Water Fund,Grounds Maintenance Exp,56289600-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,0,0.0,0.0,0.0,25.0,210
+both,Water Fund,Grounds Maintenance Exp,56289600-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,False,0,0.0,0.0,0.0,25.0,210
+both,Water Fund,Laboratory Exp,56289800-611500,Salaried Personnel,Salaried Personnel,False,397338,409258.0,421536.0,11920.0,25.0,212
+both,Water Fund,Laboratory Exp,56289800-618500,Overtime,Overtime,False,16500,16830.0,17167.0,330.0,25.0,212
+both,Water Fund,Laboratory Exp,56289800-723000,Maint. - Equipment,Maint. - Equipment,False,1000,1020.0,1040.0,20.0,25.0,212
+both,Water Fund,Laboratory Exp,56289800-744000,Contract Services,Contract Services,False,80000,81600.0,83232.0,1600.0,25.0,212
+both,Water Fund,Laboratory Exp,56289800-761500,Laboratory Supplies,Laboratory Supplies,False,75000,76500.0,78030.0,1500.0,25.0,212
+both,Water Fund,Laboratory Exp,56289800-827000,Vehicles,Vehicles,False,19960,20359.0,20766.0,399.0,25.0,212
+both,Solid Waste & Recycling Fund,Revenue,56300000-400500,Penalty Current Tax,Penalty Current Tax,False,111626,120556.0,130201.0,8930.0,26.0,217
+both,Solid Waste & Recycling Fund,Revenue,56300000-402600,SWR Admin Tickets,SWR Admin Tickets,False,50000,51500.0,53045.0,1500.0,26.0,217
+both,Solid Waste & Recycling Fund,Revenue,56300000-406300,Interest on Investment,Interest on Investment,False,12000,12360.0,12731.0,360.0,26.0,217
+both,Solid Waste & Recycling Fund,Revenue,56300000-407100,Pension State Fund,Pension State Fund,False,38882,42078.0,45537.0,3196.0,26.0,217
+both,Solid Waste & Recycling Fund,Revenue,56300000-407300,Act 101 Recycling,Act 101 Recycling,False,153774,153774.0,153774.0,0.0,26.0,217
+both,Solid Waste & Recycling Fund,Revenue,56300000-408000,Miscellaneous Revenue,Miscellaneous Revenue,False,62902,74263.0,87674.0,11361.0,26.0,217
+both,Solid Waste & Recycling Fund,Revenue,56300000-413600,Discounts Taken (contra),Discounts Taken (contra),False,0,0.0,0.0,0.0,26.0,217
+both,Solid Waste & Recycling Fund,Revenue,56300000-417200,Trash Fees,Trash Fees,False,6543214,6543214.0,6543214.0,0.0,26.0,217
+both,Solid Waste & Recycling Fund,Revenue,56300000-417300,LCSWMA Rebate,LCSWMA Rebate,False,168457,169787.0,171129.0,1330.0,26.0,217
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-611000,Salary - Bureau Chiefs,Salary - Bureau Chiefs,False,17988,18527.0,19083.0,539.0,26.0,218
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-611500,Salaried Personnel,Salaried Personnel,False,417333,429853.0,442749.0,12520.0,26.0,218
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-618500,Overtime,Overtime,False,3000,3060.0,3121.0,60.0,26.0,218
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-618600,On Call Stipen,On Call Stipen,False,0,0.0,0.0,0.0,26.0,218
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-620200,Medical Insurance,Medical Insurance,False,25934,27231.0,28592.0,1297.0,26.0,218
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-620300,Dental/Vision,Dental/Vision,False,5618,5731.0,5845.0,113.0,26.0,218
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-620800,Social Security,Social Security,False,44057,44938.0,45837.0,881.0,26.0,218
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-620900,Life Insurance,Life Insurance,False,1314,1340.0,1367.0,26.0,26.0,218
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-623000,Pension Contribution,Pension Contribution,False,43547,44418.0,45306.0,871.0,26.0,218
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-624000,Unemployment Compensation,Unemployment Compensation,False,2000,2040.0,2081.0,40.0,26.0,218
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-625000,Workers Compensation,Workers Compensation,False,14255,14540.0,14831.0,285.0,26.0,219
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-712500,Space Rental,Space Rental,False,62540,63791.0,65067.0,1251.0,26.0,219
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-714100,PC Lease,PC Lease,False,2000,2040.0,2081.0,40.0,26.0,219
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-716000,Rental of Parking Lot,Rental of Parking Lot,False,2000,2040.0,2081.0,40.0,26.0,219
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-718000,Rental of Uniforms,Rental of Uniforms,False,6793,6929.0,7067.0,136.0,26.0,219
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-723000,Maint. - Equipment,Maint. - Equipment,False,21800,22236.0,22681.0,436.0,26.0,219
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-729000,Maint. - Vehicles,Maint. - Vehicles,False,12000,12240.0,12485.0,240.0,26.0,219
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-731000,Advertising,Advertising,False,27400,27948.0,28507.0,548.0,26.0,219
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-732000,Dues & Subscriptions,Dues & Subscriptions,False,11700,11934.0,12173.0,234.0,26.0,219
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-734000,Postage,Postage,False,78280,79846.0,81443.0,1566.0,26.0,219
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-735000,Printing,Printing,False,8000,8160.0,8323.0,160.0,26.0,220
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-736000,Telephone,Telephone,False,13000,13260.0,13525.0,260.0,26.0,220
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-737000,Travel,Travel,False,3000,3060.0,3121.0,60.0,26.0,220
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-740500,Abatement of Nuisances,Abatement of Nuisances,False,40000,40800.0,41616.0,800.0,26.0,220
+only_2027,Solid Waste & Recycling Fund,SWR Expense,56387000-740900,Bad Debt Expense,Bad Debt Expense,False,65432,,,,,220
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-741000,Professional Services,Professional Services,False,25000,25500.0,26010.0,500.0,26.0,220
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-743100,Credit Card Fees,Credit Card Fees,False,12000,12240.0,12485.0,240.0,26.0,220
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-744500,Training & School,Training & School,False,4000,4080.0,4162.0,80.0,26.0,220
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-745100,Hauling Fees,Hauling Fees,False,3277763,3343318.0,3410184.0,65555.0,26.0,221
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-745200,Tipping Fees,Tipping Fees,False,2680560,2734171.0,2788855.0,53611.0,26.0,221
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-752000,Power Electric,Power Electric,False,3900,3978.0,4058.0,78.0,26.0,221
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-760300,Office Supplies,Office Supplies,False,3000,3060.0,3121.0,60.0,26.0,221
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-760600,Operating Supplies,Operating Supplies,False,141150,143973.0,146852.0,2823.0,26.0,221
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-765400,Gas Oil & Diesel,Gas Oil & Diesel,False,10000,10200.0,10404.0,200.0,27.0,221
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-766000,Heating Oil,Heating Oil,False,5500,5610.0,5722.0,110.0,27.0,221
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-772000,Insurance Package,Insurance Package,False,12280,12526.0,12776.0,246.0,27.0,221
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-820000,Minor Equipment,Minor Equipment,False,24200,24684.0,25178.0,484.0,27.0,221
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-827100,Vehicle-Lease Purchase,Vehicle-Lease Purchase,False,74200,75684.0,77198.0,1484.0,27.0,221
+only_2027,Solid Waste & Recycling Fund,SWR Expense,56387000-829000,Capital Outlay,Capital Outlay,False,16000,,,,,222
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-911000,Indirect Costs,Indirect Costs,False,182061,185702.0,189416.0,3641.0,27.0,222
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-912000,Treasury Allocaiton,Treasury Allocaiton,False,218122,222484.0,226934.0,4362.0,27.0,222
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-913000,IT Allocaiton,IT Allocaiton,False,21773,22208.0,22652.0,435.0,27.0,222
+both,Solid Waste & Recycling Fund,SWR Expenses,56387000-924000,Debt Service - Interest,Debt Service - Interest,False,0,0.0,,0.0,27.0,222

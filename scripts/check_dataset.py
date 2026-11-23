@@ -32,7 +32,13 @@
 8. Lines far above the years either side of them (the site's "stands out" notes, app.js lineSpikes()): listed with
    the same rule (SPIKE_X, SPIKE_SHARE); every row of data/line_notes.csv names a line printed in that year and
    figure (FAIL otherwise), and is reported as matching a listed line or not.
-Exits 1 on any failure of checks 1, 2, 3, 4, 6, 7, 8 and the CSV part of 5. Standard library only.
+9. Projections (budget.json `projection`, the multi-year projections book): never in `series` (so never a
+   selectable year) and only for years after the newest year; every projection series total per fund and
+   revenue/expense equals its budget_long CSV, line for line in count; every line's org code maps to an org unit;
+   every printed section and fund total equals the validation CSV, its line sum and flag re-add from budget_long;
+   each fund's printed Surplus/(Deficit) equals the CSV and its printed Total Revenue less Total Expense; the
+   assumptions equal the extracted assumptions page.
+Exits 1 on any failure of checks 1, 2, 3, 4, 6, 7, 8, 9 and the CSV part of 5. Standard library only.
 """
 from __future__ import annotations
 
@@ -650,6 +656,136 @@ def check_printed(budget: dict) -> int:
     return bad
 
 
+def check_projection(budget: dict) -> int:
+    """Check 9 (see the module docstring)."""
+    pj = budget.get("projection")
+    print("\nProjections (multi-year projections book; shown after the newest year, never selectable):")
+    processed = ROOT / "data" / "processed"
+    have_csv = []
+    for path in sorted(processed.glob("budget_long_*.csv")):
+        with path.open(newline="", encoding="utf-8") as f:
+            rows = [r for r in csv.DictReader(f) if r["doc_type"] == "projection"]
+        if rows:
+            have_csv.append((path, rows))
+    if not pj:
+        newest = budget["newest_year"]
+        later = [p.name for p, rows in have_csv if min(int(r["fiscal_year"]) for r in rows) > newest]
+        for name in later:
+            print(f"FAIL {name} has projection years after {newest} but budget.json has no projection block")
+        if not later:
+            print("     no projections book after the newest year")
+        return len(later)
+    bad = 0
+    acc, funds, bureaus, cats, docs = budget["accounts"], budget["funds"], budget["bureaus"], budget["categories"], budget["docs"]
+    doc = docs[pj["doc"]]
+    stem = budget_stem(doc)
+    path = processed / f"budget_long_{stem}.csv"
+    with path.open(newline="", encoding="utf-8") as f:
+        rows = [r for r in csv.DictReader(f) if r["source_doc"] == doc and r["doc_type"] == "projection"]
+    newest = budget["newest_year"]
+    # Not selectable: no projection figure in `series`, and every projection year is after the newest year.
+    stray = [k for k, s in budget["series"].items() if s["measure"] == "projection" or k.endswith("|projection")]
+    early = [k for k, s in pj["series"].items() if s["year"] <= newest]
+    for k in stray:
+        print(f"FAIL projection figure {k} is in `series` (it would be a selectable year)")
+    for k in early:
+        print(f"FAIL projection {k} is not after the newest year {newest}")
+    bad += len(stray) + len(early)
+    if sorted(pj["years"]) != sorted({int(r["fiscal_year"]) for r in rows}) or sorted(pj["series"]) != [f"{y}|projection" for y in sorted(pj["years"])]:
+        print(f"FAIL projection years {pj['years']} / series {sorted(pj['series'])} differ from the CSV")
+        bad += 1
+    if not stray and not early:
+        print(f"ok   {', '.join(sorted(pj['series']))} are after {newest} and not in `series`")
+
+    # Totals per fund and kind, and line counts, against the CSV.
+    raw, n_raw = defaultdict(float), Counter()
+    for r in rows:
+        if r["amount"].strip() and float(r["amount"]) != 0:
+            k = (f"{r['fiscal_year']}|projection", r["fund"], "revenue" if r["category"] == "Revenue" else "expense")
+            raw[k] += float(r["amount"])
+            n_raw[k] += 1
+    shown, n_shown = defaultdict(float), Counter()
+    unmapped = set()
+    for key, s in pj["series"].items():
+        if s["doc"] != pj["doc"]:
+            print(f"FAIL {key}: series doc {s['doc']} is not the projections book")
+            bad += 1
+        for a, v in zip(s["a"], s["v"]):
+            k = (key, funds[acc[a][2]], "revenue" if cats[acc[a][5]] == "Revenue" else "expense")
+            shown[k] += v
+            n_shown[k] += 1
+            if acc[a][0].split("-")[0] not in budget["org"]["codes"]:
+                unmapped.add(acc[a][0].split("-")[0])
+    for k in sorted(set(raw) | set(shown)):
+        ok = abs(raw[k] - shown[k]) < 0.5 and n_raw[k] == n_shown[k]
+        bad += not ok
+        print(f"{'ok  ' if ok else 'FAIL'} {k[0]:16s} {k[1]:30s} {k[2]:8s} shown {shown[k]:>14,.0f} ({n_shown[k]} lines)  csv {raw[k]:>14,.0f} ({n_raw[k]})")
+    for o in sorted(unmapped):
+        print(f"FAIL projection org code {o} has no org unit (data/org_structure_2027.csv)")
+    bad += len(unmapped)
+    if not unmapped:
+        print("ok   every projection line maps to an org unit")
+
+    # Printed totals and Surplus/(Deficit), against the validation CSV and re-added from the CSV lines.
+    with (processed / f"validation_{stem}.csv").open(newline="", encoding="utf-8") as f:
+        val = list(csv.DictReader(f))
+    def find(level, label, page):
+        return next((r for r in val if r["level"] == level and r["label"] == label and int(r["source_page"]) == page), None)
+    nbad = 0
+    for p in pj["printed"]:
+        fund_name = p.get("fund") or funds[p["m"][0][0]]
+        row = find("section", p["label"], p["page"]) if p["level"] == "section" else find("fund", f"{fund_name} / {p['label']}", p["page"])
+        if row is None:
+            print(f"FAIL p{p['page']} {p['label']!r}: not in the validation CSV")
+            nbad += 1
+            continue
+        for key, printed in p["values"].items():
+            fy = key.split("|")[0]
+            want = float(row[f"printed_projection_{fy}"])
+            total, n = 0.0, 0
+            for r in rows:
+                if r["fiscal_year"] != fy or not r["amount"].strip() or float(r["amount"]) == 0:
+                    continue
+                if (r["category"] == "Revenue") != (p["kind"] == "revenue"):
+                    continue
+                pg = int(r["source_page"])
+                if any(r["fund"] == funds[f] and (b == -1 or r["bureau"] == bureaus[b]) and lo <= pg <= hi for f, b, lo, hi in p["m"]):
+                    total += float(r["amount"])
+                    n += 1
+            tol = ROUNDING_PER_CELL if p["level"] == "section" else max(ROUNDING_PER_CELL, ROUNDING_PER_LINE * n)
+            errs = []
+            if abs(want - printed) > 0.001:
+                errs.append(f"shown {printed} but the CSV prints {want}")
+            if abs(total - p["sum"][key]) > 0.001 or n != p["n"][key]:
+                errs.append(f"line sum {p['sum'][key]} ({p['n'][key]}) but the CSV gives {total} ({n})")
+            if (abs(total - printed) > tol) != (key in p["flag"]):
+                errs.append(f"gap {total - printed:+,.0f} vs rounding {tol:g}, flag {'set' if key in p['flag'] else 'not set'}")
+            for e in errs:
+                print(f"FAIL p{p['page']} {p['label']!r} {key}: {e}")
+            nbad += bool(errs)
+    nflag = sum(len(p["flag"]) for p in pj["printed"])
+    print(f"{'ok  ' if not nbad else 'FAIL'} {len(pj['printed'])} printed projection totals: values match the validation CSV, line sums and flags re-derived ({nflag} flagged)")
+    bad += nbad
+    tot = {(p.get("fund"), p["kind"]): p for p in pj["printed"] if p["level"] == "rollup"}
+    for sp in pj["surplus"]:
+        fund_name = funds[sp["fund"]]
+        row = find("surplus", f"{fund_name} / Surplus/(Deficit) = printed Total Revenue - Total Expense", sp["page"])
+        rv, ex = tot.get((fund_name, "revenue")), tot.get((fund_name, "expense"))
+        for key, v in sp["values"].items():
+            fy = key.split("|")[0]
+            ok = row is not None and abs(float(row[f"printed_projection_{fy}"]) - v) < 0.001 and rv and ex \
+                and abs(rv["values"][key] - ex["values"][key] - v) <= ROUNDING_PER_CELL
+            bad += not ok
+            print(f"{'ok  ' if ok else 'FAIL'} {key:16s} {fund_name:30s} Surplus/(Deficit) {v:>13,.0f} = printed revenue - expense")
+    ap = processed / f"projection_assumptions_{stem}.csv"
+    with ap.open(newline="", encoding="utf-8") as f:
+        text = " ".join(r["text"].strip() for r in csv.DictReader(f))
+    ok = " ".join(a["t"] for a in pj["assumptions"]) == text and all(a["p"] >= 1 for a in pj["assumptions"])
+    bad += not ok
+    print(f"{'ok  ' if ok else 'FAIL'} {len(pj['assumptions'])} assumption lines equal {ap.name}")
+    return bad
+
+
 def budget_stem(doc: str) -> str:
     return doc[:-4] if doc.lower().endswith(".pdf") else doc
 
@@ -776,6 +912,7 @@ def main() -> int:
     failures += check_changes(budget)
     failures += check_summaries(budget)
     failures += check_spikes(budget)
+    failures += check_projection(budget)
 
     print(f"\n{failures} series mismatches")
     return 1 if failures else 0

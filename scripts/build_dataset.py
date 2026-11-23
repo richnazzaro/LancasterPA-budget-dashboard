@@ -14,6 +14,14 @@ When a non-designated book carries the same account/year/measure with a
 different value, the designated book still wins and the disagreement is listed
 in web/data/conflicts.json.
 
+Projections (the City's multi-year projections book, doc_type "projection", data/processed/budget_long_<book>.csv
+from scripts/extract_projections.py): kept out of `series`, so they are never a selectable year and never feed the
+headline, What changed or the one-kind-per-year rule. Only years after the newest year are used. They go in their own
+`projection` block: one series per year ("<year>|projection", same shape as `series`, same accounts table), the
+book's printed section and fund totals (same shape as `printed`), its printed Surplus/(Deficit) per fund, and the
+assumptions page (data/processed/projection_assumptions_<book>.csv). The site draws them after the last year of each
+multi-year chart and table, marked as projections.
+
 Reserve Fund (the General Fund balance projection, data/processed/fund_balance_<book>.csv) follows
 the same one-kind-per-year rule: actual year-end balance for each year up to two years before the
 newest (the opening balance printed in the book two years later), projected for the year before the
@@ -50,6 +58,7 @@ from org_structure import build_org
 
 ROOT = Path(__file__).resolve().parent.parent
 MEASURES = ["actual", "projected", "proposed", "revised"]
+PROJECTION = "projection"  # doc_type of the multi-year projections book; never a measure in `series`
 PROPOSED_MEASURES = {"proposed", "revised"}  # shown only for the newest year
 # measure -> (book offset from the figure's fiscal year, source columns in preference order)
 RULE = {
@@ -111,11 +120,21 @@ def book_year(doc: str, rows: list[dict]) -> int:
     return max(int(r["fiscal_year"]) for r in rows)
 
 
-def load_books(processed: Path) -> dict:
-    """Group every budget_long row by its source document."""
+def load_books(processed: Path, projections: dict | None = None) -> dict:
+    """Group every budget_long row by its source document. Rows of a projections book (doc_type
+    "projection") are not a budget book: they go to `projections` (doc -> {doc, csv, stem, rows}) instead."""
     books: dict[str, dict] = {}
     for path in sorted(processed.glob("budget_long_*.csv")):
         rows = read_csv(path)
+        proj = [r for r in rows if r["doc_type"] == PROJECTION]
+        if proj and len(proj) != len(rows):
+            sys.exit(f"{path.name} mixes projection rows with budget columns")
+        if proj:
+            if projections is not None:
+                for doc in sorted({r["source_doc"] for r in proj}):
+                    projections[doc] = {"doc": doc, "csv": path.name, "rows": [r for r in proj if r["source_doc"] == doc],
+                                        "stem": path.name[len("budget_long_"):-len(".csv")]}
+            continue
         if not rows:
             continue
         for doc in sorted({r["source_doc"] for r in rows}):
@@ -144,7 +163,8 @@ def pick_designated(books: dict, conflicts: list) -> dict[int, dict]:
 
 
 def build(processed: Path, out: Path) -> dict:
-    books = load_books(processed)
+    projection_books: dict = {}
+    books = load_books(processed, projection_books)
     if not books:
         sys.exit(f"No budget_long_*.csv files in {processed}")
     conflicts: list[dict] = []
@@ -235,6 +255,9 @@ def build(processed: Path, out: Path) -> dict:
         out_series[key] = entry
 
     known_issues = read_csv(ROOT / "data" / "known_issues.csv") if (ROOT / "data" / "known_issues.csv").exists() else []
+    # Projections: interned into the same accounts table before it is listed, so org mapping covers their lines.
+    projection = build_projection(processed, projection_books, newest, docs, funds, depts, bureaus, cats, accounts,
+                                  known_issues)
     acct_rows = [list(a) for a in accounts.items]
     printed = printed_totals(processed, designated, newest, docs, funds, bureaus, out_series, acct_rows,
                              cats.index.get("Revenue"), known_issues)
@@ -264,6 +287,8 @@ def build(processed: Path, out: Path) -> dict:
         # Bureaus a book omits entirely (reviewed known-issue notes), keyed by source book.
         "missing_bureaus": missing_bureaus(known_issues, books),
         "reserve": reserve_fund(processed, designated, newest, docs),
+        # Multi-year projections after the newest year (see the module docstring). Never part of `series`.
+        "projection": projection,
         "conflict_count": len(conflicts),
         # Departments and bureaus as on the 2027 org chart, with "what does it do" text
         # (scripts/org_structure.py; data/org_*_2027.csv). Every org code above maps to a unit.
@@ -276,6 +301,97 @@ def build(processed: Path, out: Path) -> dict:
     # "What changed" for the newest year (scripts/changes.py): comparisons, fund shifts, positions, policy notes.
     write_json(out / "changes.json", build_changes(budget, processed, designated, newest, FUND_ALIASES))
     return budget
+
+
+def build_projection(processed: Path, projection_books: dict, newest: int, docs, funds, depts, bureaus, cats,
+                     accounts, known_issues: list) -> dict | None:
+    """The `projection` block: series for each year after the newest year, the book's printed totals, its printed
+    Surplus/(Deficit) per fund, and its assumptions page. One projections book is used: the newest one whose years
+    all come after the newest budget year (several would be ambiguous, so the build stops)."""
+    usable = []
+    for pb in projection_books.values():
+        yrs = sorted({int(r["fiscal_year"]) for r in pb["rows"]})
+        if yrs and yrs[0] > newest:
+            usable.append((pb, yrs))
+    if not usable:
+        return None
+    if len(usable) > 1:
+        sys.exit("More than one projections book after the newest year: " + ", ".join(pb["doc"] for pb, _ in usable))
+    pb, yrs = usable[0]
+    doc = docs(pb["doc"])
+    series: dict = {}
+    covered = defaultdict(set)
+    pages = defaultdict(list)  # (fund, bureau) -> pages of its lines
+    for r in pb["rows"]:
+        key = f"{r['fiscal_year']}|{PROJECTION}"
+        covered[key].add(funds(r["fund"]))
+        pages[(r["fund"], r["bureau"])].append(int(r["source_page"]))
+        amount = parse_amount(r["amount"])
+        if amount is None or amount == 0:
+            continue  # zero lines add size without adding information (as in `series`)
+        acct = accounts((r["account_code"], r["account_name"], funds(r["fund"]), depts(r["department"]),
+                         bureaus(r["bureau"]), cats(r["category"])))
+        s = series.setdefault(key, {"year": int(r["fiscal_year"]), "measure": PROJECTION, "a": [], "v": [], "p": []})
+        s["a"].append(acct)
+        s["v"].append(amount)
+        s["p"].append(int(r["source_page"]))
+    for key, s in series.items():
+        s.update(funds=sorted(covered[key]), doc=doc, column=PROJECTION)
+    series = dict(sorted(series.items()))
+
+    # Printed totals: each section over its own lines; each fund's "Total Revenue" / "Total Expense" over the fund.
+    val = read_csv(processed / f"validation_{pb['stem']}.csv")
+    acc = [list(a) for a in accounts.items]
+    revenue_cat = cats.index.get("Revenue")
+    printed, surplus = [], []
+    for r in val:
+        values = {f"{y}|{PROJECTION}": parse_amount(r[f"printed_{PROJECTION}_{y}"]) for y in yrs}
+        fund = r.get("fund") or ""
+        if r["level"] == "section":
+            pg = pages.get((fund, r["label"]))
+            if not pg:
+                continue
+            kind = "revenue" if any(x["fund"] == fund and x["bureau"] == r["label"] and x["category"] == "Revenue"
+                                    for x in pb["rows"]) else "expense"
+            item = {"level": "section", "label": r["label"], "page": int(r["source_page"]), "doc": doc, "kind": kind,
+                    "m": [[funds(fund), bureaus(r["label"]), min(pg), max(pg)]]}
+        elif r["level"] == "fund" and r["label"] in (f"{fund} / Total Revenue", f"{fund} / Total Expense"):
+            kind = "revenue" if r["label"].endswith("Revenue") else "expense"
+            item = {"level": "rollup", "label": r["label"].split(" / ", 1)[1], "page": int(r["source_page"]),
+                    "doc": doc, "kind": kind, "m": [[funds(fund), -1, 0, 100000]], "fund": fund}
+        elif r["level"] == "surplus":
+            surplus.append({"fund": funds(fund), "label": "Surplus/(Deficit)", "page": int(r["source_page"]),
+                            "values": values})
+            continue
+        else:
+            continue
+        item.update(values=values, sum={}, n={}, flag=[])
+        for key in values:
+            total, n = member_sum(series[key], acc, item, doc, revenue_cat)
+            item["sum"][key], item["n"][key] = total, n
+            if abs(total - values[key]) > tolerance(item["level"], n):
+                item["flag"].append(key)
+        iss = _issue_for(known_issues, pb["doc"], item["page"], r["label"])
+        if iss is not None:
+            item["issue"] = iss
+        printed.append(item)
+
+    assumptions = []
+    ap = processed / f"projection_assumptions_{pb['stem']}.csv"
+    for r in (read_csv(ap) if ap.exists() else []):
+        t = r["text"].strip()
+        kind = ("title" if r["line"] == "1" else "item" if re.match(r"^\([a-z]\)", t)
+                else "note" if t.startswith("*") else "head")
+        assumptions.append({"t": t, "k": kind, "p": int(r["source_page"])})
+    # A wrapped note continues on the next line: join it.
+    joined = []
+    for a in assumptions:
+        if joined and a["k"] == "head" and joined[-1]["k"] == "note":
+            joined[-1]["t"] += " " + a["t"]
+        else:
+            joined.append(a)
+    return {"label": "Projection", "doc": doc, "after_year": newest, "years": yrs, "series": series,
+            "printed": printed, "surplus": surplus, "assumptions": joined}
 
 
 SCENARIO_PREFERENCE = ["revised", "single", "proposed"]  # which printed column wins when a book has several
@@ -592,6 +708,10 @@ def main() -> None:
     for key, s in budget["series"].items():
         print(f"  {key:16s} {len(s['a']):4d} lines  total {sum(s['v']):>14,}  "
               f"column {s['column'] if isinstance(s['column'], str) else 'mixed'}")
+    pj = budget.get("projection")
+    if pj:
+        for key, s in pj["series"].items():
+            print(f"  {key:16s} {len(s['a']):4d} lines  total {sum(s['v']):>14,}  (projection block, not selectable)")
     print(f"Conflicts: {budget['conflict_count']} (web/data/conflicts.json)")
     for name in ("budget.json", "staffing.json", "conflicts.json", "changes.json"):
         print(f"  {name}: {(args.out / name).stat().st_size:,} bytes")

@@ -36,6 +36,7 @@ pip install -r requirements.txt
 | `City-of-Lancaster-Adopted-2025-Budget.pdf` | 2025 | text |
 | `2026-Adopted-Budget-2026.pdf` | 2026 | scanned (OCR) |
 | `2027-Mayors-Revised-Proposed-Budget-Rev-11-19-26.pdf` | 2027 | text (the 11/19/2026 amended Revised book) |
+| `2028-2029-Budget-Projections.pdf` | 2028 and 2029 projections (made with the 2027 budget) | text; its own extractor, not a budget book |
 | `2027 Org Chart.pdf`, `Org Descriptions 2027.pdf` | org chart and unit descriptions | text; not budget books |
 
 Each budget book has a layout file in `config/` with the same name (`.json`). If you start from the PDFs alone, `ingest.py` writes a first draft of the config for you to review (step 3).
@@ -55,6 +56,8 @@ For each budget book this detects text or scan, runs OCR where needed, extracts 
 - **Exit status 2:** a config was inferred (review it, delete its `_generated` key, run again) or a PDF could not be read.
 
 Run one book at a time with `python scripts/ingest.py "Budget PDFs - City/<file>.pdf"`.
+
+The projections book (`config/2028-2029-Budget-Projections.json`, `"kind": "projection"`) goes through `scripts/extract_projections.py`. Its report line reads `projections book (doc_type 'projection'): cross-check vs 2027 Revised: both 953, only_2027 23`: every projection line matched to a 2027 Revised line, and 23 lines printed only in the 2027 book (listed in `crosscheck_projection_*.csv`). It has no Fund Balance page and no neighbouring-book cross-check.
 
 ### Org descriptions (only when the descriptions PDF changes)
 
@@ -79,7 +82,7 @@ These are reviewed by a person and committed; the scripts read them but never wr
 ### When a check fails
 
 1. Read the failure: the report names the page, the section and the gap.
-2. If the extraction misread the page, fix the parsing (`scripts/extract_layout.py` or `config/<book>.json`; `scripts/extract_budget.py` for the 2027 book).
+2. If the extraction misread the page, fix the parsing (`scripts/extract_layout.py` or `config/<book>.json`; `scripts/extract_budget.py` for the 2027 book; `scripts/extract_projections.py` for the projections book).
 3. If the city's book is itself wrong, add a row to `data/known_issues.csv` explaining the evidence. `python scripts/review_failures.py <book name without .pdf>` drafts these rows for you to read and edit.
 4. If a value is provably misprinted (for example a negative printed without its minus sign), record the fix in the matching corrections file. `python scripts/sign_corrections.py <book> --append` proposes sign flips only when the printed total proves them.
 5. Never widen the $5 rounding tolerance to make a check pass.
@@ -140,6 +143,13 @@ Upload `_site/` to any static host. No server code or database is involved.
 2. `python scripts/ingest.py "Budget PDFs - City/<file>.pdf"`; review the inferred config (exit status 2) and clear every failure (exit status 1).
 3. `python3 scripts/build_dataset.py` and `python3 scripts/check_dataset.py`. The new year becomes Proposed/Revised and the earlier years move forward automatically. If the build stops on an unmapped org code, add the code to `data/org_structure_2027.csv`.
 4. Look at the site locally (step 5), then commit the PDF, its config, `data/` and `web/data/`, and push to `main`.
+
+### New projections
+When the city publishes projections for later years (as `2028-2029-Budget-Projections.pdf` came with the 2027 budget):
+1. Add the PDF under a clean name and copy `config/2028-2029-Budget-Projections.json` to the new name, changing `source_doc`.
+2. `python scripts/ingest.py "Budget PDFs - City/<file>.pdf"`. Clear every failure; read the cross-check list of lines that appear in only one book.
+3. Remove the old projections book (`git rm` its PDF, config and `data/processed/*<old>*.csv`): the build stops if two projections books both cover years after the newest year. A projections book whose first year is not after the newest budget year is ignored, so after a new budget book arrives the old projections drop off the site on their own.
+4. Rebuild, check, preview, commit, push.
 
 ### An amended edition of the current book
 This is how the 11/16/2026 2027 book was replaced by the 11/19/2026 one:
