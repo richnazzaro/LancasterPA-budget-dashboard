@@ -860,17 +860,17 @@
     const gap = ex.v - rv.v;
     return gap > 0 ? { ex, rv, gap, k } : null;
   }
-  const countyGap = (k) => { const g = countyGapParts(k); return g ? `, spending ${mny(g.gap)} more than it expects to collect` : ''; };
-  function countyGapNote(k) {
+  // What covers the gap: the year's budget resolution, shown on the General Fund Balance page (null when none is printed).
+  const countyGapCover = (k) => { const rb = D.reserve && cbFind(parseKey(k).y, 'budget'); return rb && cbLine(rb, 'ending') ? rb : null; };
+  const countyGapLink = (k) => { const rb = countyGapCover(k); return rb ? ` <a class="deck-link" href="${esc(homeHash({ f: D.reserve.name, y: rb.year }))}">See the ${esc(D.reserve.name)}</a>` : ''; };
+  // ", spending $9.0M more than it expects to collect, covered from the General Fund's balance". The arithmetic, the
+  // resolution and the audited balance are on the General Fund Balance page, which the deck links to.
+  const countyGap = (k) => { const g = countyGapParts(k); return g ? `, spending ${mny(g.gap)} more than it expects to collect${countyGapCover(k) ? ", covered from the General Fund's balance" : ''}` : ''; };
+  // Only when there is no comparison (so no deck): the same sentence on its own, linked to the General Fund Balance page.
+  function countyGapNote(k, hasDeck) {
     const g = countyGapParts(k);
-    if (!g) return '';
-    const bal = GB && GB.rows.filter((r) => r.group === 'General Fund' && r.line === 'Total general fund').sort((a, b) => b.year - a.year)[0];
-    const balTxt = bal ? ` The audited General Fund balance was ${gbLink(money(bal.v), bal)} at the end of ${bal.year} (<a href="${esc(eh('about?s=about-balance'))}">about this figure</a>).` : '';
-    // The budget resolution for the year says how the gap is met: from the General Fund's balance (the General Fund Balance page).
-    const rb = D.reserve && cbFind(parseKey(k).y, 'budget'), rEnd = rb && cbLine(rb, 'ending');
-    const how = rEnd ? `${esc(cbRes(rb))}, adopted with the budget, covers it from the General Fund's balance, leaving ${srcDoc(money(rEnd.v), rb.doc, rEnd.p)} at ${usDate(rEnd.as_of)}. <a href="${esc(homeHash({ f: D.reserve.name, y: rb.year }))}">See the ${esc(D.reserve.name)}</a>`
-      : 'The budget book prints no General Fund balance page, so it does not say how the gap is met.';
-    return `<p class="draw-note">${esc(seriesLabel(k))}: spending of ${fig(g.ex)} against income of ${fig(g.rv)}, a gap of ${money(g.gap)} <span class="calc-tag">calculated</span>. ${how}</p>${balTxt ? `<p class="draw-note">${balTxt.trim()}</p>` : ''}`;
+    if (!g || hasDeck) return '';
+    return `<p class="draw-note">The ${esc(seriesLabel(k))} spends ${mny(g.gap)} more than it expects to collect${countyGapCover(k) ? ", covered from the General Fund's balance" : ''}.${countyGapLink(k)}</p>`;
   }
   /* County notes as shown: no page numbers, file names as plain words, "Budget" in place of "adopted budget", no
      Actual-versus-Budget percentage, and nothing about the audit report's own Original column (it is not used). */
@@ -969,12 +969,12 @@
       const d = total.v - cmp.v, p = pctOf(d, cmp.v);
       if (!cmp.v || Math.round(d) === 0) return '';
       const gf = D.funds.indexOf(DEFAULT_FUND), dr = D.reserve && gf >= 0 && S.f === D.funds[gf] ? reserveDraw(k, gf) : null;
-      if (isCounty()) return `<p class="deck"><span class="${d > 0 ? 'up' : 'down'}">${fn(S.f) ? `${fn(S.f)} ` : ''}${S.k === 'revenue' ? (fn(S.f) ? 'income' : 'Income') : (fn(S.f) ? 'spending' : 'Spending')} ${d > 0 ? 'up' : 'down'} ${mny(Math.abs(d))} (${fmtPct(Math.abs(p))})<span class="sr-only"> ${d > 0 ? 'higher' : 'lower'}</span></span> from the ${esc(seriesLabel(S.c))}${countyGap(k)}.</p>`;
+      if (isCounty()) return `<p class="deck"><span class="${d > 0 ? 'up' : 'down'}">${fn(S.f) ? `${fn(S.f)} ` : ''}${S.k === 'revenue' ? (fn(S.f) ? 'income' : 'Income') : (fn(S.f) ? 'spending' : 'Spending')} ${d > 0 ? 'up' : 'down'} ${mny(Math.abs(d))} (${fmtPct(Math.abs(p))})<span class="sr-only"> ${d > 0 ? 'higher' : 'lower'}</span></span> from the ${esc(seriesLabel(S.c))}${countyGap(k)}.${countyGap(k) ? countyGapLink(k) : ''}</p>`;
       return `<p class="deck"><span class="${d > 0 ? 'up' : 'down'}">${d > 0 ? 'Up' : 'Down'} ${mny(Math.abs(d))} (${fmtPct(Math.abs(p))})<span class="sr-only"> ${d > 0 ? 'higher' : 'lower'}</span></span> from ${esc(seriesLabel(S.c))}${dr ? `, with ${drawParts(k, dr.v) ? drawSplit(drawParts(k, dr.v)) : `${src(millions(dr.v), k, dr.d, dr.p)} drawn from savings`}. <a class="deck-link" href="${esc(homeHash({ f: D.reserve.name }))}">See the Reserve Fund</a>` : '.'}</p>`;
     })();
     return `<header class="page-head"><h1 id="page-h">${esc(scope)} ${kindWord}: ${esc(seriesLabel(k))}</h1>
         <p class="big-total" aria-live="polite"><span class="big-label">${esc(scope)} ${kindWord}</span> ${totalHTML}</p>${flagNote}
-        ${deck || `${heroDelta(k, total, cmp)}${drawNote(k)}`}${countyGapNote(k)}</header>
+        ${deck || `${heroDelta(k, total, cmp)}${drawNote(k)}`}${countyGapNote(k, !!deck)}</header>
       <div class="home-flow">${filtersHTML()}
       ${(() => { const wc = homeChangesHTML(); return `<div class="overview${wc ? '' : ' overview-single'}">${trendHTML({}, 'Totals by Year')}${wc}</div>`; })()}</div>
       <section class="panel" id="sec-departments" tabindex="-1" aria-labelledby="dep-t"><h2 class="panel-title" id="dep-t">${isCounty() ? 'Departments by Group' : 'Departments'}</h2>
