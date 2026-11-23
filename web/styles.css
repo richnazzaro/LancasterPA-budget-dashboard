@@ -412,7 +412,7 @@ details.values summary:hover { color: var(--fg); }
 .wc-dept .wc-badge { justify-content: flex-start; margin: 0 0 16px; }
 .wc-badge-tag { padding: 2px 10px; border: 1px solid var(--fg); border-radius: 2px; color: var(--fg); }
 .wc-switch { color: var(--link); }
-@media (min-width: 1024px) { .wc-tiles:has(> li:nth-child(2):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); } } /* a County row of two tiles */
+@media (min-width: 1024px) { :not(.wc-home) > .wc-tiles:has(> li:nth-child(2):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); } } /* a County row of two tiles on the What changed page (the home panel stacks its tiles) */
 .wc-tiles { list-style: none; margin: 0 0 32px; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; border-top: 1px solid var(--fg); }
 .wc-tile { background: transparent; border: 0; border-bottom: 1px solid var(--border); border-radius: 0; padding: 18px 20px 18px 0; min-width: 0; }
 .wc-tile + .wc-tile { padding-left: 20px; border-left: 1px solid var(--border); }

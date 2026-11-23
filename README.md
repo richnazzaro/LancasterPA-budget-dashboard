@@ -48,7 +48,7 @@ When the City publishes a new budget book, every year moves forward: the new yea
 
 ## How to use the site
 
-**Overview.** The home page opens on the **General Fund**, the fund paid for mostly by taxes. At the top is the total and one sentence that says whether it is up or down and by how much, and how much is drawn from savings. Below it: a short "What changed" summary, a chart of totals by year, every department with its share, and income against spending for each fund.
+**Overview.** The home page opens on the **General Fund**, the fund paid for mostly by taxes. At the top is the total and one sentence that says whether it is up or down and by how much. On Spending it also says how much is drawn from savings to balance the budget; Below it: a short "What changed" summary (on Income, with a tile for each tax change: the change in the rate, with its arrow, and the rate before and after), a chart of totals by year, every department with its share, and income against spending for each fund.
 
 **Changing what you see.** Every page has a one-line strip such as "Viewing 2027 Revised · compared with 2026 Projected · General Fund · Spending". Press **Change view** to pick:
 
@@ -65,6 +65,13 @@ The site remembers whether you left the controls open. "What do these mean?" and
 **Line items.** Search by name or account number, sort by any column, and press **Export this view (CSV)** to download every matching line with its source page.
 
 **What changed** (in the header) explains the newest budget against the year before: the change in spending and income, the largest line-item changes, money and staff **moved into or out of the General Fund** (the City's fees-paid funds and the tax-paid General Fund are kept apart, so every move between them is called out), budgeted positions, and what the revised proposal changed. Where one line is far above the years either side of it, the page names it and says what the change would be without it.
+
+**What counts as income.** Income means money coming in: taxes, fees, fines, grants, state and federal payments, interest and rent. The budget books also list as revenue some money that is not coming in, and the site leaves it out of income:
+
+- **money drawn from savings** to balance the budget (the City's "Fund Balance Reserve" lines);
+- **transfers** from another of the government's own funds.
+
+When one fund charges another for services (for example the Water Fund paying the General Fund for billing, IT and administration), the charge stays in the income of the fund that is paid and is marked on its line. The **All funds** total leaves it out, because the paying fund's income already counts that money. Spending is shown as printed, transfers to other funds included. On the Income view the site points out what changed, in the "What changed" summary on the home page and under the total on department pages: tax increases or cuts proposed for the year (for example the earned income tax going from 1.1% to 1.3% in the 2027 Revised proposal, or the County's 10% real estate tax increase in 2026) and the income lines that changed most against the year you compare with. How much is drawn from savings to balance the budget is shown with spending, not income. The Funds and terms page explains the rule, and [`data/income_rules.csv`](data/income_rules.csv) lists every line kept out, with the budget book's own explanation.
 
 **Reserve Fund (City)** shows the General Fund's savings at the end of each year and what moves it. **General Fund Balance (County)** shows the County's balance two ways, side by side and never added together: the budget resolution's estimate, and the audited balance at December 31.
 

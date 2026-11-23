@@ -174,13 +174,23 @@
     const out = s.a.map((acct, i) => {
       const a = D.accounts[acct];
       const unit = O.codes[a[0].split('-')[0]];
-      return { code: a[0], name: a[1], fund: a[2], dept: a[3], bureau: a[4], cat: a[5], v: s.v[i], p: s.p[i], d: Array.isArray(s.doc) ? s.doc[i] : s.doc,
+      return { ai: acct, code: a[0], name: a[1], fund: a[2], dept: a[3], bureau: a[4], cat: a[5], v: s.v[i], p: s.p[i], d: Array.isArray(s.doc) ? s.doc[i] : s.doc,
         unit, od: O.units[unit].dept }; // od: department on the 2027 org chart
     });
     rowCache.set(k, out);
     return out;
   }
   const isRevenue = (r) => D.categories[r.cat] === 'Revenue';
+  /* Income is money coming in: taxes, fees, grants, interest. The books also list as revenue money drawn from savings
+     ("draw") and money moved in from the government's own funds ("transfer"); neither is income anywhere on the site.
+     Charges to its own funds for services ("charge": indirect costs, Treasury and IT allocations) are income of the fund
+     that receives them, labelled, but not of All funds, where the paying fund's income already counts that money.
+     budget.json `not_income`, from data/income_rules.csv. Spending is every expense line, as printed. */
+  const nonIncome = (ai) => (D.not_income && D.not_income[ai]) || '';
+  const incomeAcct = (ai, allFunds = false) => { const c = nonIncome(ai); return c !== 'draw' && c !== 'transfer' && !(allFunds && c === 'charge'); };
+  const isIncome = (r, allFunds = false) => isRevenue(r) && incomeAcct(r.ai, allFunds);
+  const ofKind = (r, kind, allFunds = false) => (kind === 'revenue' ? isIncome(r, allFunds) : !isRevenue(r));
+  const acctKindOk = (ai, kind, allFunds = false) => (D.categories[D.accounts[ai][5]] === 'Revenue' ? kind === 'revenue' && incomeAcct(ai, allFunds) : kind === 'expense');
   const bureauKey = (r) => `${r.fund}|${r.bureau}`;
   // Old budget-group names end in " Exp" / " Expense" (the book's section label). Show the plain name.
   const plainName = (n) => String(n).replace(/\s+Exp(?:ense)?$/i, '');
@@ -191,7 +201,7 @@
     const kind = over.kind || S.k;
     const f = D.funds.indexOf(S.f);
     return rows(k).filter((r) =>
-      (kind === 'revenue') === isRevenue(r) &&
+      ofKind(r, kind, f < 0) &&
       (over.unit != null || f < 0 || r.fund === f) && // a bureau page shows all of its funds
       (over.dept == null || r.od === over.dept) &&
       (over.unit == null || r.unit === over.unit));
@@ -426,8 +436,8 @@
     return pts;
   }
   /* Under the trend: the projection years are the city's estimates, with its printed assumptions (linked to their page),
-     the fund's printed Surplus/(Deficit) when one fund is in view, and, for the General Fund, that the newest year's income
-     counts money drawn from savings and the projections count none. Plain muted text: tentative, not alarming. */
+     the fund's printed Surplus/(Deficit) when one fund is in view, and, for the General Fund, that the newest year is
+     balanced with money drawn from savings (not income) and the projections plan none. Plain muted text: tentative, not alarming. */
   function projectionNote(scope, pts) {
     const P = D.projection, ys = pts.filter((p) => p.m === 'projection' && p.v != null).map((p) => p.y);
     if (!P || !ys.length) return '';
@@ -447,9 +457,9 @@
           : ` Their printed surplus or deficit: ${vals.map((x) => `${srcDoc(money(x.v), P.doc, sp.page)} in ${x.y}`).join(', ')}.`;
       }
       const gf = D.funds.indexOf(DEFAULT_FUND), nk = key(D.newest_year, defaultMeasure(D.newest_year));
-      const dr = fi === gf && D.reserve ? reserveDraw(nk, gf) : null;
+      const dr = fi === gf && D.reserve && S.k !== 'revenue' ? reserveDraw(nk, gf) : null; // the draw is not income
       if (dr && !ys.some((y) => reserveDraw(key(y, 'projection'), gf))) {
-        extra += ` The ${esc(seriesLabel(nk))} income includes ${src(millions(dr.v), nk, dr.d, dr.p)} drawn from savings; the projections count no draw.`;
+        extra += ` The ${esc(seriesLabel(nk))} budget is balanced with ${src(millions(dr.v), nk, dr.d, dr.p)} drawn from savings, which is not income; the projections plan no draw.`;
       }
     }
     const groups = [];
@@ -556,7 +566,7 @@
     const by = ks.map((k) => {
       const m = new Map(), tot = new Map();
       for (const r of rows(k)) {
-        if ((kind === 'revenue') !== isRevenue(r)) continue;
+        if (!ofKind(r, kind)) continue; // per fund: draws and transfers are not income
         tot.set(r.fund, (tot.get(r.fund) || 0) + r.v);
         const id = `${r.fund}|${r.code}`, g = m.get(id);
         if (g) g.v += r.v; else m.set(id, { k, v: r.v, d: r.d, p: r.p, r });
@@ -640,20 +650,95 @@
     const P = drawParts(k, dr.v);
     return `<p class="draw-note">${P ? `Balanced by ${drawSplit(P)}, as the Fund Balance Projection shows (the budget's “Fund Balance Reserve” lines).` : `Balanced by drawing ${src(millions(dr.v), k, dr.d, dr.p)} from the reserve (the budget's “Fund Balance Reserve” line).`} <a href="${esc(homeHash({ f: D.reserve.name }))}">See the Reserve Fund</a></p>`;
   }
-  /* Under the "How the Balance Changes" table: why the General Fund pages show more income than its Revenues line.
-     The budget books the money drawn from savings as income ("Fund Balance Reserve" lines); the Fund Balance
-     Projection does not. Shown only for a year whose projection prints a Revenues line and whose budget has a draw. */
+  const ownFunds = () => (isCounty() ? "the County's" : "the City's");
+  const andList = (a) => (a.length < 3 ? a.join(' and ') : `${a.slice(0, -1).join(', ')} and ${a[a.length - 1]}`);
+  const lineTag = (ai) => ({ charge: `Charged to another of ${ownFunds()} funds`, transfer: `Transfer from another of ${ownFunds()} funds: not counted as income` }[nonIncome(ai)] || '');
+  /* Under an income total: what is worth knowing about the change in income. Tax changes for the year in view (City:
+     changes.json `policy`, from data/policy_notes.csv, where the scope holds the tax's line; County: the context facts'
+     tax increase and rate) and the income lines that changed most against the comparison. Income only: nothing here
+     mentions money drawn from savings or transfers, which are not income. */
+  const INCOME_TOP = 3;
+  // County: "rises from 2.911 to 3.201 mills, a 10% tax increase", from the context facts (null for another year).
+  function countyTax(y) {
+    if (!isCounty() || !D.context || y !== D.context.year) return null;
+    const inc = ctxFact('tax_increase'), now = ctxFact(`millage_${y}`), was = ctxFact(`millage_${y - 1}`);
+    return inc && now && was ? `rises from ${ctxLink(was, was.v.toFixed(3))} to ${ctxLink(now, `${now.v.toFixed(3)} mills`)}, a ${ctxLink(inc, `${inc.v}%`)} tax increase` : null;
+  }
+  /* The Income view's tax-change tiles in "What changed", shaped like the Income change tile: the change with its arrow,
+     then the rate before → after. City: changes.json `policy` rows with a rate (rate_from, rate_to, unit) or only a
+     change in percent (change_pct); County: the context facts' rates. General Fund or All funds only, where the tax is. */
+  function taxTiles(k) {
+    if (S.f && S.f !== DEFAULT_FUND) return [];
+    const { y, m } = parseKey(k), lbl = esc(seriesLabel(k)), out = [];
+    if (isCounty()) {
+      const now = D.context && y === D.context.year ? ctxFact(`millage_${y}`) : null, was = now ? ctxFact(`millage_${y - 1}`) : null;
+      if (now && was) {
+        const mills = (n) => `${n.toFixed(3)} mills`;
+        out.push(['Real estate tax', deltaHTML(now.v - was.v, was.v, mills), `${y - 1} ${ctxLink(was, mills(was.v))} → ${lbl} ${ctxLink(now, mills(now.v))}`]);
+      }
+      return out;
+    }
+    const ps = (CH?.policy || []).filter((x) => x.year === y && x.figure === m && (x.rate_to != null || x.change_pct != null));
+    for (const it of [...new Set(ps.map((x) => x.item))]) {
+      const x = ps.find((q) => q.item === it);
+      const at = (t) => (x.d != null ? srcDoc(t, x.d, x.p) : t);
+      const from = /^user-provided/i.test(x.source) ? '<br><span class="muted">From the city\'s proposal; not printed in the budget book.</span>' : '';
+      if (x.rate_to != null) {
+        const r = (n) => `${n.toFixed(2)}${x.unit}`;
+        out.push([esc(it), deltaHTML(x.rate_to - x.rate_from, x.rate_from, (n) => `${n.toFixed(2)} pts`), `${y - 1} ${r(x.rate_from)} → ${lbl} ${at(r(x.rate_to))}${from}`]);
+      } else {
+        const d = x.change_pct;
+        out.push([esc(it), deltaHTML(d, null, (n) => `${n}%`), d ? `${at(`Rate ${d > 0 ? 'up' : 'down'} ${Math.abs(d)}%`)} from ${y - 1} to the ${lbl}.${from}` : `Rate unchanged from ${y - 1}. ${at(esc(x.text))}${from}`]);
+      }
+    }
+    return out;
+  }
+  function incomeHighlights(k, scope = {}) {
+    if (S.k !== 'revenue' || !series(k)) return '';
+    const f = D.funds.indexOf(S.f), all = f < 0;
+    const inScope = (r) => isIncome(r, all) && (scope.unit != null || all || r.fund === f) && (scope.dept == null || r.od === scope.dept) && (scope.unit == null || r.unit === scope.unit);
+    const cur = rows(k).filter(inScope), codes = new Set(cur.map((r) => r.code)), { y, m } = parseKey(k);
+    const out = [];
+    // Tax changes
+    if (!isCounty() && CH) {
+      const ps = (CH.policy || []).filter((x) => x.year === y && x.figure === m && (!x.account || codes.has(x.account)));
+      for (const it of [...new Set(ps.map((x) => x.item))]) {
+        const x = ps.find((q) => q.item === it);
+        const srcTxt = x.d != null ? ` ${srcDoc('Source', x.d, x.p)}` : /^user-provided/i.test(x.source) ? ' <span class="muted">(from the city\'s proposal; not printed in the budget book)</span>' : '';
+        out.push(`<strong>${esc(it)}:</strong> ${esc(x.text)}${srcTxt}`);
+      }
+    }
+    if (isCounty() && D.context && y === D.context.year && (all || S.f === DEFAULT_FUND) && scope.dept == null && scope.unit == null) {
+      const ct = countyTax(y);
+      if (ct) out.push(`<strong>Real estate tax:</strong> the rate ${ct}.`);
+    }
+    // The income lines that changed most against the comparison
+    if (S.c && series(S.c)) {
+      const by = new Map();
+      const add = (r, side) => { const g = by.get(r.code) || { name: r.name, where: isCounty() ? D.departments[r.dept] : O.units[r.unit].name, sel: null, cmp: null }; if (!g[side]) g[side] = { v: 0, d: r.d, p: r.p }; g[side].v += r.v; by.set(r.code, g); };
+      cur.forEach((r) => add(r, 'sel'));
+      rows(S.c).filter(inScope).forEach((r) => add(r, 'cmp'));
+      const moves = [...by.values()].map((g) => ({ ...g, dv: (g.sel?.v || 0) - (g.cmp?.v || 0) })).filter((g) => Math.round(g.dv) !== 0)
+        .sort((a, b) => Math.abs(b.dv) - Math.abs(a.dv)).slice(0, INCOME_TOP);
+      const twice = (g) => moves.filter((x) => x.name === g.name).length > 1; // the same name in two departments: say which
+      if (moves.length) out.push(`<strong>Largest changes from ${esc(seriesLabel(S.c))}:</strong> ${andList(moves.map((g) => { const at = g.sel ? src(mny(Math.abs(g.dv)), k, g.sel.d, g.sel.p) : src(mny(Math.abs(g.dv)), S.c, g.cmp.d, g.cmp.p); return `${esc(g.name)}${twice(g) ? ` (${esc(g.where)})` : ''} ${g.dv > 0 ? 'up' : 'down'} ${at}${g.sel ? '' : ' (no longer budgeted)'}${g.cmp ? '' : ' (new)'}`; }))}.`);
+    }
+    return out.length ? `<div class="income-notes">${out.map((t) => `<p class="draw-note">${t}</p>`).join('')}</div>` : '';
+  }
+  /* Under the "How the Balance Changes" table, where the General Fund's income differs from the projection's Revenues line.
+     Income leaves out the draw from savings, as the projection does; the projection's Revenues also count any transfers
+     in from the utility funds, which income leaves out. No note when the two agree. */
   function reserveTie(e) {
     const k = key(e.year, e.measure), rev = e.lines.find((l) => l.t === 'revenues');
     if (!rev || !series(k)) return '';
-    const gf = D.funds.indexOf(DEFAULT_FUND), dr = reserveDraw(k, gf);
-    if (!dr) return '';
-    const gfT = totalOf(rows(k).filter((r) => r.fund === gf && isRevenue(r)), k);
-    const gap = Math.round(rev.v + dr.v - gfT.v), ties = Math.abs(gap) <= 5;
-    const P = drawParts(k, dr.v);
-    const drawn = P ? drawSplit(P) : `${src(millions(dr.v), k, dr.d, dr.p)} drawn from the reserve`;
-    const sum = ties ? '' : ` The two come to ${money(rev.v + dr.v)}, ${money(Math.abs(gap))} ${gap > 0 ? 'more' : 'less'} than the General Fund's income.`;
-    return `<p class="hint tie-note">The ${esc(DEFAULT_FUND)} pages show ${fig(gfT)} of income for ${esc(resLabel(e))}, not the ${srcDoc(money(rev.v), e.doc, rev.p)} on the Revenues line above. The difference is the ${drawn}: the budget counts it as income, on its “Fund Balance Reserve” lines, and this projection does not.${sum} <a href="${esc(homeHash({ f: DEFAULT_FUND, k: 'revenue', y: e.year, m: e.measure }))}">See ${esc(DEFAULT_FUND)} income</a></p>`;
+    const gf = D.funds.indexOf(DEFAULT_FUND), gr = rows(k).filter((r) => r.fund === gf);
+    const gfT = totalOf(gr.filter((r) => isIncome(r)), k), tr = gr.filter((r) => isRevenue(r) && nonIncome(r.ai) === 'transfer' && r.v);
+    const trV = sum(tr), gap = Math.round(rev.v - gfT.v);
+    if (Math.abs(gap) <= 5) return '';
+    const fp = firstPage(tr), ties = tr.length && Math.abs(rev.v - gfT.v - trV) <= 5;
+    const why = ties ? ` The difference is the ${src(mny(trV), k, fp.d, fp.p)} transferred in from the utility funds: the projection counts it as revenue, and this site does not count transfers as income.`
+      : ` The difference, ${money(Math.abs(gap))}, is not explained by the budget's lines.`;
+    return `<p class="hint tie-note">The ${esc(DEFAULT_FUND)} pages show ${fig(gfT)} of income for ${esc(resLabel(e))}, not the ${srcDoc(money(rev.v), e.doc, rev.p)} on the Revenues line above.${why} <a href="${esc(homeHash({ f: DEFAULT_FUND, k: 'revenue', y: e.year, m: e.measure }))}">See ${esc(DEFAULT_FUND)} income</a></p>`;
   }
 
   /* ---------- Reserve Fund (General Fund balance) ---------- */
@@ -933,7 +1018,7 @@
   function countyGapParts(k) {
     const gf = D.funds.indexOf('General Fund');
     if (!isCounty() || S.f !== 'General Fund' || gf < 0 || S.k !== 'expense' || !series(k)) return null;
-    const ex = totalOf(rows(k).filter((r) => r.fund === gf && !isRevenue(r)), k), rv = totalOf(rows(k).filter((r) => r.fund === gf && isRevenue(r)), k);
+    const ex = totalOf(rows(k).filter((r) => r.fund === gf && !isRevenue(r)), k), rv = totalOf(rows(k).filter((r) => r.fund === gf && isIncome(r)), k);
     const gap = ex.v - rv.v;
     return gap > 0 ? { ex, rv, gap, k } : null;
   }
@@ -981,7 +1066,7 @@
     const fundBudget = (af, y, kind) => {
       const ks = bk(y);
       if (!series(ks)) return '—';
-      const ts = af.book_funds.map((f) => { const l = rows(ks).filter((r) => r.fund === D.funds.indexOf(f) && (kind === 'revenue') === isRevenue(r)); return l.length ? totalOf(l, ks) : null; }).filter(Boolean);
+      const ts = af.book_funds.map((f) => { const l = rows(ks).filter((r) => r.fund === D.funds.indexOf(f) && ofKind(r, kind)); return l.length ? totalOf(l, ks) : null; }).filter(Boolean);
       if (!ts.length) return '—';
       return ts.length === 1 ? fig(ts[0]) : `${money(ts.reduce((t, x) => t + x.v, 0))} ${CALC_TAG}`;
     };
@@ -1003,7 +1088,7 @@
       <p class="panel-note">${esc(A.years[0])} to ${esc(A.years[A.years.length - 1])} Actual is set beside the Budget only where both exist at the same level: the fund's income and spending. ${esc(cleanNote(D.actuals_note[0]))} No difference is calculated, because the two are not on the same footing.</p>
       <details class="values"><summary>About the Actual figures</summary><ul>${D.actuals_note.slice(1).map((t) => cleanNote(t)).filter(Boolean).map((t) => `<li>${esc(t)}</li>`).join('')}</ul></details>${combined}
       <div class="table-scroll"><table class="table ledger" aria-label="Budget and Actual by ${af ? 'year' : 'fund'}"><thead><tr><th scope="col">${esc(head)}</th><th scope="col" class="num">Income: Budget</th><th scope="col" class="num">Income: Actual</th><th scope="col" class="num">Spending: Budget</th><th scope="col" class="num">Spending: Actual</th></tr></thead><tbody>${body}</tbody></table></div>
-      <p class="panel-note" style="margin-top:12px">The Budget's spending includes transfers to other funds (the County match); the audited report counts transfers separately, so they are listed below and not added to the Actual spending.</p>
+      <p class="panel-note" style="margin-top:12px">Budget income leaves out transfers in from other County funds, as the audited report does. The Budget's spending includes transfers to other funds (the County match), as printed; the audited report counts transfers separately, so they are listed below and not added to the Actual spending.</p>
       <h3 class="wc-h3">Transfers and net change, Actual</h3>
       <div class="table-scroll"><table class="table ledger" aria-label="Actual transfers and net change"><thead><tr><th scope="col">${esc(head)}</th>${hasIn ? '<th scope="col" class="num">Transfers in</th>' : ''}${hasOut ? '<th scope="col" class="num">Transfers out</th>' : ''}<th scope="col" class="num">Net change in fund balance</th></tr></thead><tbody>${tbody}</tbody></table></div>`;
     if (S.f === 'General Fund' && first) {
@@ -1045,15 +1130,19 @@
       if (!cmp) return '';
       const d = total.v - cmp.v, p = pctOf(d, cmp.v);
       if (!cmp.v || Math.round(d) === 0) return '';
-      const gf = D.funds.indexOf(DEFAULT_FUND), dr = D.reserve && gf >= 0 && S.f === D.funds[gf] ? reserveDraw(k, gf) : null;
+      // On Income the draw is not part of the total; the income note under the deck says it is left out.
+      const gf = D.funds.indexOf(DEFAULT_FUND), dr = D.reserve && gf >= 0 && S.f === D.funds[gf] && S.k !== 'revenue' ? reserveDraw(k, gf) : null;
       if (isCounty()) return `<p class="deck"><span class="${d > 0 ? 'up' : 'down'}">${fn(S.f) ? `${fn(S.f)} ` : ''}${S.k === 'revenue' ? (fn(S.f) ? 'income' : 'Income') : (fn(S.f) ? 'spending' : 'Spending')} ${d > 0 ? 'up' : 'down'} ${mny(Math.abs(d))} (${fmtPct(Math.abs(p))})<span class="sr-only"> ${d > 0 ? 'higher' : 'lower'}</span></span> from the ${esc(seriesLabel(S.c))}${countyGap(k)}.${countyGap(k) ? countyGapLink(k) : ''}</p>`;
       return `<p class="deck"><span class="${d > 0 ? 'up' : 'down'}">${d > 0 ? 'Up' : 'Down'} ${mny(Math.abs(d))} (${fmtPct(Math.abs(p))})<span class="sr-only"> ${d > 0 ? 'higher' : 'lower'}</span></span> from ${esc(seriesLabel(S.c))}${dr ? `, with ${drawParts(k, dr.v) ? drawSplit(drawParts(k, dr.v)) : `${src(millions(dr.v), k, dr.d, dr.p)} drawn from savings`}. <a class="deck-link" href="${esc(homeHash({ f: D.reserve.name }))}">See the Reserve Fund</a>` : '.'}</p>`;
     })();
+    // Where the "What changed" panel is shown, its tiles carry the tax changes; otherwise the income highlights
+    // (tax changes, largest income changes) sit under the total.
+    const wc = homeChangesHTML(), hl = wc ? '' : incomeHighlights(k);
     return `<header class="page-head"><h1 id="page-h">${esc(scope)} ${kindWord}: ${esc(seriesLabel(k))}</h1>
         <p class="big-total" aria-live="polite"><span class="big-label">${esc(scope)} ${kindWord}</span> ${totalHTML}</p>${flagNote}
-        ${deck || `${heroDelta(k, total, cmp)}${drawNote(k)}`}${countyGapNote(k, !!deck)}</header>
+        ${deck || `${heroDelta(k, total, cmp)}${S.k === 'revenue' ? '' : drawNote(k)}`}${countyGapNote(k, !!deck)}${hl}</header>
       <div class="home-flow">${filtersHTML()}
-      ${(() => { const wc = homeChangesHTML(); return `<div class="overview${wc ? '' : ' overview-single'}">${trendHTML({}, 'Totals by Year')}${wc}</div>`; })()}</div>
+      <div class="overview${wc ? '' : ' overview-single'}">${trendHTML({}, 'Totals by Year')}${wc}</div></div>
       <section class="panel" id="sec-departments" tabindex="-1" aria-labelledby="dep-t"><h2 class="panel-title" id="dep-t">${isCounty() ? 'Departments by Group' : 'Departments'}</h2>
         <p class="panel-note">${isCounty() ? 'The County\'s departments are grouped as in its budget book. Select a group to see its departments.' : 'Select a department to see its detailed breakdown.'} Amounts open the source page in the budget book.</p>
         ${ledger}${gapNotes(ledgerNotes)}</section>
@@ -1127,7 +1216,7 @@
     const k = key(S.y, S.m);
     const all = rows(k);
     const data = [...new Set(all.map((r) => r.fund))].map((fi) => {
-      const fr = all.filter((r) => r.fund === fi), rl = fr.filter(isRevenue), el = fr.filter((r) => !isRevenue(r));
+      const fr = all.filter((r) => r.fund === fi), rl = fr.filter((r) => isIncome(r)), el = fr.filter((r) => !isRevenue(r));
       return { fund: fn(D.funds[fi]), rev: rl.length ? totalOf(rl, k) : null, exp: el.length ? totalOf(el, k) : null };
     }).sort((a, b) => (b.exp?.v || 0) - (a.exp?.v || 0));
     const vo = (t) => (t ? t.v : 0);
@@ -1148,12 +1237,14 @@
     const notes = new Map();
     const cell = (d, t, kind) => (t ? fig(t, { notes, what: `${d.fund} ${kind}` }) : '—');
     const dcell = (n) => { const r = Math.round(n); return `<span class="${r > 0 ? 'up' : r < 0 ? 'down neg' : 'flat'}">${money(n)}</span>`; };
-    const allRev = all.filter(isRevenue), allExp = all.filter((r) => !isRevenue(r));
+    const allRev = all.filter((r) => isIncome(r, true)), allExp = all.filter((r) => !isRevenue(r));
     const tRev = totalOf(allRev, k), tExp = totalOf(allExp, k);
     $('re-table').innerHTML = `<thead><tr><th scope="col">Fund</th><th scope="col" class="num">Income</th><th scope="col" class="num">Spending</th><th scope="col" class="num">Income minus spending</th></tr></thead>
       <tbody>${data.map((d) => `<tr><th scope="row">${esc(d.fund)}</th><td class="num">${cell(d, d.rev, 'income')}</td><td class="num">${cell(d, d.exp, 'spending')}</td><td class="num">${dcell(vo(d.rev) - vo(d.exp))}</td></tr>`).join('')}</tbody>
       <tfoot><tr><td>All funds</td><td class="num">${fig(tRev)}</td><td class="num">${fig(tExp)}</td><td class="num">${dcell(tRev.v - tExp.v)}</td></tr></tfoot>`;
-    $('re-table').parentElement.insertAdjacentHTML('afterend', gapNotes(notes));
+    const chg = all.filter((r) => isRevenue(r) && nonIncome(r.ai) === 'charge' && r.v);
+    const reNote = chg.length ? `<p class="panel-note" style="margin-top:12px">Each fund's income includes what it charges ${ownFunds()} other funds for services; the All funds total leaves out that ${src(mny(sum(chg)), k, firstPage(chg).d, firstPage(chg).p)}, because the paying fund's income already counts it. <a href="${termHref('term-income')}">What counts as income</a></p>` : '';
+    $('re-table').parentElement.insertAdjacentHTML('afterend', gapNotes(notes) + reNote);
   }
 
   /* ---------- department / bureau pages ---------- */
@@ -1306,7 +1397,7 @@
     let html = crumbsHTML(crumbs);
     if (deptPicker) html += `<div class="field dept-picker"><label class="field-label" for="dept-pick">Department</label>${deptPicker}</div>`;
     html += `<header><h1 class="dept-name" id="page-h" tabindex="-1">${esc(title)}</h1>
-      <p class="dept-total">Total ${kindWord}: <strong class="figure">${totalLink}</strong></p>${headNotes}<p class="dept-sub">${subtitle}</p></header>${about}`;
+      <p class="dept-total">Total ${kindWord}: <strong class="figure">${totalLink}</strong></p>${headNotes}${incomeHighlights(k, scope)}<p class="dept-sub">${subtitle}</p></header>${about}`;
 
     // One Compare panel holds what used to be five: the two totals, the change, the category bars and the totals by year.
     let compare = '';
@@ -1394,7 +1485,7 @@
     const body = list.slice(0, T.shown).map((e) => {
       const d = val(e, 'sel') - val(e, 'cmp');
       const sub = [e.code, showBureau ? bureauName(e.bureau) : ''].filter(Boolean).map(esc).join(' · ');
-      const draw = /^Fund Balance Reserve/i.test(e.name) && /-499000$/.test(e.code) ? `<span class="sub">${esc(drawLineLabel(e.sel ? k : S.c, (e.sel || e.cmp).v))}</span>` : '';
+      const draw = /^Fund Balance Reserve/i.test(e.name) && /-499000$/.test(e.code) ? `<span class="sub">${esc(drawLineLabel(e.sel ? k : S.c, (e.sel || e.cmp).v))}</span>` : lineTag(e.ai) ? `<span class="sub line-tag">${esc(lineTag(e.ai))}</span>` : '';
       return `<tr><td>${esc(e.name)}<span class="sub">${sub}</span>${draw}</td><td class="hide-sm">${esc(D.categories[e.cat])}</td>
         ${S.c ? `<td class="num">${e.cmp ? src(money(e.cmp.v), S.c, e.cmp.d, e.cmp.p) : '—'}</td>` : ''}<td class="num">${e.sel ? src(money(e.sel.v), k, e.sel.d, e.sel.p) : '—'}${S.c && d !== 0 ? `<span class="chg-sm ${d > 0 ? 'up' : 'down'}" aria-label="Change from ${esc(seriesLabel(S.c))}: ${money(d)}">${money(d)}</span>` : ''}</td>
         ${S.c ? `<td class="num hide-sm"><span class="${d > 0 ? 'up' : d < 0 ? 'down' : 'flat'}">${d === 0 ? '—' : money(d)}</span></td>` : ''}</tr>`;
@@ -1616,7 +1707,7 @@
      (changes.json supplies which groups exist; the amounts shown are totalOf()). */
   function wcTotal(k, kind, fund = S.f, filter = null) {
     const fi = fund ? D.funds.indexOf(fund) : -1;
-    const l = rows(k).filter((r) => (kind === 'revenue') === isRevenue(r) && (fi < 0 || r.fund === fi) && (!filter || filter(r)));
+    const l = rows(k).filter((r) => ofKind(r, kind, fi < 0) && (fi < 0 || r.fund === fi) && (!filter || filter(r)));
     return l.length ? totalOf(l, k) : null;
   }
   const wcWhat = (kind, fund = S.f) => `${fn(fund) || 'All funds'} ${kind === 'revenue' ? 'income' : 'spending'}`;
@@ -1663,19 +1754,14 @@
     return s;
   }
 
-  /* The Income view's headline: what the newest budget takes in, against the comparison, and the draw inside it. */
-  function incomeSentence(c, sc) {
+  /* The Income view's headline: what the newest budget takes in, against the comparison. The tax changes behind it are
+     tiles below it (taxTiles); never the draw, which is not income. */
+  function incomeSentence(c) {
     const t = wcTotal(c.to, 'revenue'), f = wcTotal(c.from, 'revenue'), d = vOf(t) - vOf(f), p = vOf(f) ? Math.abs(d / vOf(f)) * 100 : null;
-    let s = `The ${esc(seriesLabel(c.to))} budget takes in ${t ? fig(t, { text: mny(t.v) }) : '$0'} ${S.f ? `in the ${esc(S.f)}` : 'across all funds'}, `
+    return `The ${esc(seriesLabel(c.to))}${isCounty() ? '' : ' budget'} takes in ${t ? fig(t, { text: mny(t.v) }) : '$0'} ${S.f ? `in the ${esc(S.f)}` : 'across all funds'}, `
       + (d === 0 ? `the same as ${fromPhrase(c, false)}.` : `${mny(Math.abs(d))}${p == null ? '' : ` (${p.toFixed(1)}%)`} ${d > 0 ? 'more' : 'less'} than ${fromPhrase(c, false)}.`);
-    const dr = sc.revenue?.draw;
-    if (dr && vOf(dr.t) > 0) {
-      const P = drawParts(c.to, vOf(dr.t));
-      s += ` That includes ${P ? drawSplit(P, mny) : `${lnk(dr.t, mny(vOf(dr.t)))} drawn from the reserve`}.`;
-    }
-    return s;
   }
-  const ledeFor = (c, sc) => (S.k === 'revenue' && sc.revenue ? incomeSentence(c, sc) : headlineSentence(c, sc));
+  const ledeFor = (c, sc) => (S.k === 'revenue' && sc.revenue ? incomeSentence(c) : headlineSentence(c, sc));
 
   /* A line far above the years either side of it (lineSpikes) in either budget being compared: the generated note, and
      how much of the change it accounts for ("Leaving that line out, income rises $5.7M rather than falling $1.0M"). */
@@ -1724,9 +1810,9 @@
     if (sc.revenue && (S.k === 'revenue' || !dr)) {
       const rf = wcTotal(c.from, 'revenue'), rt = wcTotal(c.to, 'revenue');
       const t = ['Income change', deltaHTML(vOf(rt) - vOf(rf), vOf(rf), mny), `${esc(seriesLabel(c.from))} ${fx(rf, 'revenue')} → ${esc(seriesLabel(c.to))} ${fx(rt, 'revenue')}`];
-      if (S.k === 'revenue') tiles.unshift(t); else tiles.push(t);
+      if (S.k === 'revenue') tiles.unshift(t, ...taxTiles(c.to)); else tiles.push(t);
     }
-    if (dr) {
+    if (dr && S.k !== 'revenue') { // the draw is not income: shown with spending only
       const Pt = drawParts(c.to, vOf(dr.t)), Pf = drawParts(c.from, vOf(dr.f));
       tiles.push([Pt ? 'Drawn from savings' : 'Drawn from the reserve', `<span>${lnk(dr.t, mny(vOf(dr.t)))}</span>`,
         Pt ? `Of it, ${srcDoc(mny(Pt.dc.v), Pt.dc.d, Pt.dc.p)} from dedicated data center revenue (Fund Balance Projection). ${esc(seriesLabel(c.from))}: ${lnk(dr.f, dr.f ? mny(vOf(dr.f)) : '$0')}${Pf ? ` ${drawDC(Pf, mny)}` : ''}. The budget's “Fund Balance Reserve” lines.`
@@ -1814,7 +1900,7 @@
     const body = idx.map((i) => {
       const ln = c.lines[i], a = acctOf(ln), u = unitOfLine(ln), d = lineD(ln);
       const sub = [a[0], unitLabel(u, D.categories[a[5]] === 'Revenue' ? 'revenue' : 'expense'), showFund ? fn(D.funds[a[2]]) : ''].filter(Boolean).map(esc).join(' · ');
-      const drawNoteTxt = /^Fund Balance Reserve/i.test(a[1]) && /-499000$/.test(a[0]) ? `<span class="sub">${esc(ln[4] != null ? drawLineLabel(c.to, ln[4]) : drawLineLabel(c.from, ln[1]))}</span>` : '';
+      const drawNoteTxt = /^Fund Balance Reserve/i.test(a[1]) && /-499000$/.test(a[0]) ? `<span class="sub">${esc(ln[4] != null ? drawLineLabel(c.to, ln[4]) : drawLineLabel(c.from, ln[1]))}</span>` : lineTag(ln[0]) ? `<span class="sub line-tag">${esc(lineTag(ln[0]))}</span>` : '';
       return `<tr><td>${esc(a[1])}<span class="sub">${sub}</span>${drawNoteTxt}${mergeNote(c, i)}</td><td class="num hide-sm">${ln[1] == null ? '—' : lnk(lineF(ln))}</td><td class="num">${ln[4] == null ? '—' : lnk(lineT(ln))}<span class="wc-sm">${sgn(d, money)}</span></td><td class="num hide-sm">${deltaHTML(d, ln[1])}</td></tr>`;
     }).join('');
     return `<div class="table-scroll"><table class="table tight wc-lines">${caption ? `<caption>${caption}</caption>` : ''}<thead><tr><th scope="col">Line item</th><th scope="col" class="num hide-sm">${esc(seriesLabel(c.from))}</th><th scope="col" class="num">${esc(seriesLabel(c.to))}</th><th scope="col" class="num hide-sm">Change</th></tr></thead><tbody>${body}</tbody></table></div>`;
@@ -1887,7 +1973,7 @@
     const fact = (label, kind) => { const f = wcTotal(rc.from, kind), t = wcTotal(rc.to, kind); return `<li>${label}: ${f ? fig(f) : '$0'} → ${t ? fig(t) : '$0'}, ${deltaHTML(vOf(t) - vOf(f), vOf(f))}</li>`; };
     if (sc?.expense) parts.push(fact('Spending', 'expense'));
     if (sc?.revenue) parts.push(fact('Income', 'revenue'));
-    if (sc?.revenue?.draw) parts.push(`<li>${drawLabel(rc, sc.revenue.draw)}: ${lnk(sc.revenue.draw.f)} → ${lnk(sc.revenue.draw.t)}${drawSplitNote(rc, sc.revenue.draw)}</li>`);
+    if (sc?.revenue?.draw && S.k !== 'revenue') parts.push(`<li>${drawLabel(rc, sc.revenue.draw)}: ${lnk(sc.revenue.draw.f)} → ${lnk(sc.revenue.draw.t)}${drawSplitNote(rc, sc.revenue.draw)}</li>`);
     const P = rc.positions, tk = S.f ? String(D.funds.indexOf(S.f)) : 'all';
     if (P?.totals[tk]) parts.push(`<li>Positions: ${P.classes.map((cls) => { const d = P.totals[tk][cls].t - P.totals[tk][cls].f; return `${nDelta(d)} ${clsWord(cls, Math.abs(d) !== 1)}`; }).join(', ')}</li>`);
     const fi = S.f ? D.funds.indexOf(S.f) : null;
@@ -1960,7 +2046,7 @@
     const only = both ? '' : `<p class="wc-note">For ${esc(resLabel(from))} the Fund Balance Projection prints only the closing balance (${srcDoc(money(fe.v), from.doc, fe.p)}), so there are no lines to compare. The table shows the ${esc(resLabel(to))} lines.</p>`;
     const table = `<section class="panel" aria-labelledby="wc-res"><h2 class="total-label" id="wc-res">What moves the balance</h2>${only}
       <div class="table-scroll"><table class="table tight"><thead><tr><th scope="col">Fund Balance Projection line</th>${both ? `<th scope="col" class="num">${esc(resLabel(from))}</th>` : ''}<th scope="col" class="num">${esc(resLabel(to))}</th>${both ? '<th scope="col" class="num">Effect on the balance</th>' : ''}</tr></thead><tbody>${body}</tbody></table></div>
-      <p class="wc-note wc-after">The ${esc(DEFAULT_FUND)}'s budget lists the money drawn from savings as income (its “Fund Balance Reserve” lines); this page leaves it out of Revenues and shows it as the deficit and the committed data center revenue. <a href="${esc(homeHash({ f: name, y: to.year, m: to.measure }))}">See the ${esc(name)}</a></p></section>`;
+      <p class="wc-note wc-after">The ${esc(DEFAULT_FUND)}'s budget book lists the money drawn from savings as revenue (its “Fund Balance Reserve” lines). Like the rest of this site, this page does not count it as income: it shows it as the deficit and the committed data center revenue. <a href="${esc(homeHash({ f: name, y: to.year, m: to.measure }))}">See the ${esc(name)}</a></p></section>`;
     const tiles = `<ul class="wc-tiles"><li class="wc-tile"><h2 class="wc-tile-h">Balance change</h2><p class="wc-tile-v">${deltaHTML(d, fe.v, mny)}</p><p class="wc-tile-s">${esc(resLabel(from))} ${srcDoc(money(fe.v), from.doc, fe.p)} → ${esc(resLabel(to))} ${srcDoc(money(te.v), to.doc, te.p)}</p></li>${dr ? `<li class="wc-tile"><h2 class="wc-tile-h">Drawn from savings</h2><p class="wc-tile-v"><span>${src(mny(dr.v), c.to, dr.d, dr.p)}</span></p><p class="wc-tile-s">${P ? `Of it, ${srcDoc(mny(P.dc.v), P.dc.d, P.dc.p)} from dedicated data center revenue (Fund Balance Projection).` : 'The budget\'s “Fund Balance Reserve” lines.'}</p></li>` : ''}</ul>`;
     return { html: `<header class="page-head wc-head">${h1}<p class="wc-lede">${lede}</p>${badgeHTML(c)}${start}</header>${changesFiltersHTML(c)}${tiles}${table}` };
   }
@@ -2021,10 +2107,9 @@
         ${rm.n ? `<details class="values"><summary>Removed lines</summary>${lineTableHTML(c, rm.i)}</details>` : ''}</section>`;
     }
     if (rv) {
-      const dr = rv.draw;
       income += `<section class="panel" aria-labelledby="wc-inc"><h2 class="total-label" id="wc-inc">How it's paid for</h2>
         <ul class="wc-facts">${(() => { const { f, t } = grp('revenue', null), notes = new Map(); return `<li>Income: ${f ? fig(f, { notes, what: wcWhat('revenue') }) : '$0'} → ${t ? fig(t, { notes, what: wcWhat('revenue') }) : '$0'}, ${deltaHTML(vOf(t) - vOf(f), vOf(f))}${gapNotes(notes)}</li>`; })()}
-        ${dr ? `<li>${drawLabel(c, dr)}: ${lnk(dr.f, dr.f ? money(vOf(dr.f)) : '$0')} in ${esc(seriesLabel(c.from))} → ${lnk(dr.t, dr.t ? money(vOf(dr.t)) : '$0')} in ${esc(seriesLabel(c.to))}${drawSplitNote(c, dr)}. <a href="${esc(homeHash({ f: D.reserve?.name || '' }))}">See the Reserve Fund</a></li>` : ''}</ul>
+</ul>
         ${spikeWCNote(c, 'revenue')}
         ${divBars(rv.by_group.map(([g]) => ({ label: plainName(D.bureaus[g]), ...grp('revenue', (r) => r.bureau === g) })), c, 'wc-inc-b', { title: 'Income source' })}
         ${lineTableHTML(c, rv.up, { caption: 'Largest increases' })}${lineTableHTML(c, rv.down, { caption: 'Largest decreases' })}
@@ -2134,7 +2219,7 @@
     const lede = `In the ${esc(bud(c.to))}, ${esc(name)} ${word} ${dr[2] ? fig(dr[2], { text: mny(dr[2].v) }) : '$0'}${fund ? ` from the ${esc(fund)}` : ''}, ${d === 0 ? 'the same as' : `${mny(Math.abs(d))}${p == null ? '' : ` (${p.toFixed(1)}%)`} ${d > 0 ? 'more' : 'less'} than`} ${isCounty() ? `the ${esc(bud(c.from))}` : esc(seriesLabel(c.from))}.`;
     const units = unitPage ? [] : b.by_unit.filter((r) => O.units[r[0]].dept === di).map(([u]) => ({ label: unitLabel(u), f: wcTotal(c.from, S.k, fund, (r) => r.unit === u), t: wcTotal(c.to, S.k, fund, (r) => r.unit === u), href: O.departments[di].bureaus ? unitHash(u) : null }));
     const fi = fund ? D.funds.indexOf(fund) : null;
-    const mine = c.lines.map((ln, i) => i).filter((i) => { const ln = c.lines[i], a = acctOf(ln); return O.units[unitOfLine(ln)].dept === di && (!unitPage || unitOfLine(ln) === ui) && (fi == null || a[2] === fi) && (D.categories[a[5]] === 'Revenue') === (S.k === 'revenue'); })
+    const mine = c.lines.map((ln, i) => i).filter((i) => { const ln = c.lines[i], a = acctOf(ln); return O.units[unitOfLine(ln)].dept === di && (!unitPage || unitOfLine(ln) === ui) && (fi == null || a[2] === fi) && acctKindOk(ln[0], S.k, fi == null); })
       .sort((x, y) => Math.abs(lineD(c.lines[y])) - Math.abs(lineD(c.lines[x])));
     const pos = S.k === 'expense' ? positionsHTML(c, { dept: di, unit: ui, compact: true, fund }) : '';
     const summary = S.k === 'expense' ? deptSummaryHTML(c, di, ui, fund) : '';
@@ -2495,6 +2580,8 @@
       <p>Every total is shown exactly as the County printed it, and links to its page. The site adds up the line items under each printed total only to check it. A difference of up to $5 on a department total, or up to 50 cents for each line in a larger roll-up, is rounding to whole dollars and is not mentioned.</p>
       <p>Where the lines add up to something else, the printed total is still the one shown. It carries a <span class="gap-mark" aria-hidden="true">${GAP_SIGN}</span> sign, and a note beside it gives what the lines add up to and the reviewed explanation from the list below.</p>
       <p>Where the book prints no total for exactly what you are looking at, the figure is this site's own sum of the line items, labelled <span class="calc-tag">calculated</span>.</p>
+      <h2 class="about-h" id="about-income" tabindex="-1">What counts as income</h2>
+      <p>Income is money coming in: taxes, fees, grants, state and federal payments, interest and the like. The budget books also list as revenue money drawn from savings and money moved in from ${ownFunds()} other funds. The site leaves both out of income, so an income total is usually this site's own sum, labelled calculated, rather than the book's printed revenue total. What one of ${ownFunds()} funds charges another for services stays in the income of the fund that is paid, marked on its lines, and is left out of the All funds total so it is not counted twice. Spending is shown as printed, transfers out included. <a href="${termHref('term-income')}">More on what counts as income</a></p>
       <h2 class="about-h">Known problems in the source books</h2>
       <p>These come from errors or differences in the County's documents, not the extraction. A person reviewed each one.</p>
       <details class="values" id="about-issues" tabindex="-1"><summary>Show all ${shownIssues.length + (nOrig ? 1 : 0)} notes</summary><ul>${issues || '<li>None recorded.</li>'}</ul></details>
@@ -2544,6 +2631,8 @@
       <p>Every total is shown exactly as the city printed it, and links to its page. The site adds up the line items under each printed total (each section, department roll-up and fund) only to check it. A difference of up to $5 on a section total, or up to 50 cents for each line in a larger roll-up, is the city's rounding to whole dollars and is not mentioned.</p>
       <p>Where the lines add up to something else, the printed total is still the one shown. It carries a <span class="gap-mark" aria-hidden="true">${GAP_SIGN}</span> sign, and a note beside it gives what the lines add up to, the difference, and the reviewed explanation from the list of known problems below.</p>
       <p>Where the book prints no total for exactly what you are looking at, the figure is this site's own sum of the line items, labelled <span class="calc-tag">calculated</span>. That covers all funds together, departments and bureaus regrouped to the 2027 org chart, spending categories, and line items narrowed by a search.</p>
+      <h2 class="about-h" id="about-income" tabindex="-1">What counts as income</h2>
+      <p>Income is money coming in: taxes, fees, grants, state and federal payments, interest and the like. The budget books also list as revenue money drawn from savings and money moved in from ${ownFunds()} other funds. The site leaves both out of income, so an income total is usually this site's own sum, labelled calculated, rather than the book's printed revenue total. What one of ${ownFunds()} funds charges another for services stays in the income of the fund that is paid, marked on its lines, and is left out of the All funds total so it is not counted twice. Spending is shown as printed, transfers out included. <a href="${termHref('term-income')}">More on what counts as income</a></p>
       <h2 class="about-h">Known problems in the source books</h2>
       <p>These come from errors in the city's documents, not the extraction. A person reviewed each one.</p>
       <details class="values" id="about-issues" tabindex="-1"><summary>Show all ${D.known_issues.length} notes</summary><ul>${issues || '<li>None recorded.</li>'}</ul></details>
@@ -2598,17 +2687,18 @@
       : D.reserve
         ? `<dt id="term-balance" tabindex="-1">${esc(D.reserve.name)}</dt><dd>The General Fund's savings: the balance it carries from year to year, not a separate fund with spending of its own. When the General Fund spends more than it takes in, the difference is drawn from it. Because it is the General Fund's own savings, it is tax-funded in the same way. <a href="${eh(`?f=${encodeURIComponent(D.reserve.name)}`)}">Open the ${esc(D.reserve.name)}</a>.</dd>`
         : '';
+    const income = ['income', 'Income', `Money coming in from outside ${isCounty() ? 'the County' : 'the City'}: taxes, fees and charges for services, fines, grants, state and federal payments, interest and rent. The budget books also list as revenue some money that is not coming in, and the site leaves it out of income: <strong>money drawn from savings</strong>${isCounty() ? ' (the County\'s budget books list none)' : ' (the “Fund Balance Reserve” lines)'} and <strong>transfers</strong> from ${ownFunds()} other funds. What ${ownFunds()} funds <strong>charge one another</strong> for services (${isCounty() ? 'indirect costs' : 'administration, Treasury, IT and similar'}) is income of the fund that is paid, and is marked on its lines, but is left out of the All funds total so the same money is not counted twice. Spending is shown as printed, including transfers out. Each kept-out line is listed, with the book's own explanation, in <code>data/income_rules.csv</code>.`];
     const calc = ['calculated', `<span class="calc-tag">calculated</span>`, `This site's own sum of line items, shown where the book prints no total for exactly what you are looking at (for example all funds together, or a search result). A total the book does print is shown as printed, with a link to its page. Details are under <a href="${eh('about?s=about-totals')}">Printed and calculated totals</a> in About the data.`];
     const words = isCounty()
       ? [['budget', 'Budget', `The County's budget for the year, from its own budget books. The newest year (${D.newest_year}) is the budget the County passed${CFG.adopted ? `, ${esc(CFG.adopted.text)}` : ''}. Earlier years are as the next book prints them. The books do not say whether those are the original or an amended budget, so the site calls them Budget.`],
         ['actual', 'Actual', `What the County's audited annual report says it received and spent, shown only for ${D.actuals ? rangeText(D.actuals.years) : 'some years'}, by fund, revenue source and function. Actual and Budget are counted differently, so they are shown side by side and never combined.`],
-        calc]
+        income, calc]
       : [['actual', 'Actual', `What was spent or received, reported in the budget book published two years later (${yr('actual')}). It is the figure that really happened, not a plan.`],
         ['projected', 'Projected', `The city's year-end estimate for a year that is not finished (${yr('projected')}). The actual is not published yet.`],
         ['proposed', 'Proposed', `The mayor's first budget proposal for ${D.newest_year}. It is a proposal, not an adopted budget.`],
         ['revised', 'Revised', `The mayor's revised proposal for ${D.newest_year}, which replaced the first one. It is also a proposal, not an adopted budget. What changed compares Revised with the year before.`],
         ['projection', 'Projection', `The city's own multi-year estimate for the years after the newest budget${projectionYears().length ? ` (${rangeText(projectionYears())})` : ''}, from its separate projections book. It is drawn lighter at the end of the multi-year charts and tables, and is never the headline figure.`],
-        calc];
+        income, calc];
     const notShown = isCounty()
       ? `<dt id="term-adopted" tabindex="-1">Adopted and Amended</dt><dd>The County's books do not label their figures this way, so the site does not either. The ${D.newest_year} Budget is the budget the Commissioners adopted${CFG.adopted ? ` (${esc(CFG.adopted.text)})` : ''}, and the site says so beside it.</dd>`
       : `<dt id="term-adopted" tabindex="-1">Adopted and Amended (not shown)</dt><dd><strong>Adopted</strong> is the budget City Council approved before the year began; <strong>Amended</strong> is that budget after changes during the year. The books print both, and this site leaves them out on purpose. Each year shows one kind of figure, so every total compares like with like and nothing is counted twice: Actual where the year is over, the city's own estimate where it is not, and a proposal for the year ahead. The adopted and amended columns are still in the PDFs.</dd>`;

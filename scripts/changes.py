@@ -34,6 +34,8 @@ import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
+import income_rules
+
 ROOT = Path(__file__).resolve().parent.parent
 POLICY_CSV = ROOT / "data" / "policy_notes.csv"
 LINE_NOTES_CSV = ROOT / "data" / "line_notes.csv"  # what the book says about one line in one year (e.g. 2025 Building Permits)
@@ -100,6 +102,8 @@ def compare(budget: dict, frm: Series, to: Series, ctx: dict) -> dict:
     codes = budget["org"]["codes"]
     units = budget["org"]["units"]
     rev_cat = cats.index("Revenue") if "Revenue" in cats else -1
+    fund_names = budget["funds"]
+    classify = income_rules.classifier()  # draw / transfer / charge (data/income_rules.csv); '' is income
     keys = sorted(set(frm.lines) | set(to.lines))
     lines, meta = [], []  # meta: per line (fund, cat, unit, dept, is_rev, delta, is_draw, bureau)
     every = []            # every key with its from/to entry, for scope totals
@@ -110,6 +114,7 @@ def compare(budget: dict, frm: Series, to: Series, ctx: dict) -> dict:
         unit = codes[code.split("-")[0]]
         info = {"fund": fund, "cat": cat, "unit": unit, "dept": units[unit]["dept"], "rev": cat == rev_cat,
                 "bureau": bureau, "draw": code.endswith("-499000") and name.lower().startswith("fund balance reserve"),
+                "cls": classify(code, fund_names[fund]) if cat == rev_cat else "",
                 "f": f, "t": t, "delta": (t[1] if t else 0) - (f[1] if f else 0)}
         every.append(info)
         if f and t and f[1] == t[1]:
@@ -118,14 +123,15 @@ def compare(budget: dict, frm: Series, to: Series, ctx: dict) -> dict:
         lines.append([a, *(f[1:] if f else (None, None, None)), *(t[1:] if t else (None, None, None))])
         meta.append(info)
 
-    fund_names = budget["funds"]
     scopes = {}
     for scope in ["all"] + sorted({fund_names[e["fund"]] for e in every}):
         fi = None if scope == "all" else fund_names.index(scope)
         inscope = [e for e in every if fi is None or e["fund"] == fi]
         out = {}
         for kind in ("expense", "revenue"):
-            ks = [e for e in inscope if e["rev"] == (kind == "revenue")]
+            # Income leaves out draws and transfers, and in the All-funds scope also charges to the government's own
+            # funds (the paying fund's income already counts that money). Spending is every expense line.
+            ks = [e for e in inscope if e["rev"] == (kind == "revenue") and counts_as_income(e, scope)]
             if not ks:
                 continue
             block = {"total": {"f": total_link(budget, ctx, scope, kind, frm.key, ks, "f"),
@@ -148,7 +154,7 @@ def compare(budget: dict, frm: Series, to: Series, ctx: dict) -> dict:
                 block["by_cat"] = group(lambda e: e["cat"])
             else:
                 block["by_group"] = group(lambda e: e["bureau"])  # printed revenue group (budget.json `bureaus`)
-                dl = [e for e in ks if e["draw"]]
+                dl = [e for e in inscope if e["rev"] and e["draw"]]
                 if dl:
                     block["draw"] = {"f": link([e["f"] for e in dl]), "t": link([e["t"] for e in dl])}
             ids = {id(e) for e in ks}
@@ -163,6 +169,13 @@ def compare(budget: dict, frm: Series, to: Series, ctx: dict) -> dict:
             out[kind] = block
         scopes[scope] = out
     return {"lines": lines, "scopes": scopes}
+
+
+def counts_as_income(e: dict, scope: str) -> bool:
+    """An expense line, or a revenue line the site counts as income in this scope (see income_rules.py)."""
+    if not e["rev"]:
+        return True
+    return e["cls"] not in ("draw", "transfer") and not (scope == "all" and e["cls"] == "charge")
 
 
 def total_link(budget, ctx, scope, kind, key, entries, side):
@@ -732,6 +745,16 @@ def policy_notes(docs: list) -> list:
             if m.group(1) not in docs:
                 raise SystemExit(f"policy_notes.csv: unknown source document {m.group(1)}")
             e["d"], e["p"] = docs.index(m.group(1)), int(m.group(2))
+        # A tax-change tile on the Income view: the rate before and after (rate_from, rate_to, unit), or, where the
+        # rate itself is not printed, only the change in percent (change_pct; 0 = no change).
+        for k in ("rate_from", "rate_to", "change_pct"):
+            v = (r.get(k) or "").strip()
+            if v:
+                e[k] = float(v)
+        if "rate_from" in e or "rate_to" in e:
+            if not ("rate_from" in e and "rate_to" in e and (r.get("unit") or "").strip()):
+                raise SystemExit(f"policy_notes.csv: {e['year']} {e['item']}: rate_from, rate_to and unit go together")
+            e["unit"] = r["unit"].strip()
         out.append(e)
     return out
 
