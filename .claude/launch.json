@@ -1,0 +1,65 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "site",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8765",
+        "--directory",
+        "web"
+      ],
+      "port": 8765
+    },
+    {
+      "name": "fixes-preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8770",
+        "--directory",
+        "/Users/rich/Lancaster Dashboard/.claude/worktrees/county-build-779f2e/web"
+      ],
+      "port": 8770
+    },
+    {
+      "name": "context-preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8795",
+        "--directory",
+        "/Users/rich/Lancaster Dashboard/.claude/worktrees/county-context-c0b9da/web"
+      ],
+      "port": 8795
+    },
+    {
+      "name": "elected-preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8796",
+        "--directory",
+        "/Users/rich/Lancaster Dashboard/.claude/worktrees/county-elected-63ceed/web"
+      ],
+      "port": 8796
+    },
+    {
+      "name": "projections-preview",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "8797",
+        "--directory",
+        "/Users/rich/Lancaster Dashboard/.claude/worktrees/city-projections-8134ab/web"
+      ],
+      "port": 8797
+    }
+  ]
+}
