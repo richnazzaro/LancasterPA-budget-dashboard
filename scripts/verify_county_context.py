@@ -71,6 +71,8 @@ def main(argv: list[str] | None = None) -> int:
         if r["also_in"]:
             doc, pg = r["also_in"].split("#")
             val = r["find"] if r["source_kind"] != "calculated" and "|" not in r["find"] else (f"{int(r['value']):,}" if r["value"].isdigit() else r["value"])
+            if r["unit"] == "text":
+                val = r["value"]  # a label (e.g. "Reassessment"): the slide must carry the same word
             if "|" in val:
                 val = val.split("|", 1)[1]
             checks.append(("presentation agrees", doc, int(pg), val))

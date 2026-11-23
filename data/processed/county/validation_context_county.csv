@@ -60,3 +60,6 @@ grants_act13,presentation agrees,County-2026-Budget-Presentation.pdf,17,"700,000
 grants_request,source page,County-2026-Budget-Book.pdf,110,"3,260,716",True
 scta,source page,County-2026-Budget-Book.pdf,110,"542,008",True
 scta,presentation agrees,County-2026-Budget-Presentation.pdf,17,"542,008",True
+reassessment_2018,source page,County-ACFR-2025.pdf,13,reassessment in 2018,True
+reassessment_2018,presentation agrees,County-2026-Budget-Presentation.pdf,18,Reassessment,True
+revenue_2018,source page,County-2026-Budget-Presentation.pdf,18,0% revenue increase,True
