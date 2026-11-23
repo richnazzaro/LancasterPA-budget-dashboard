@@ -5,7 +5,7 @@
 This is the index of everything someone might want to change on https://budget.nazwel.net: names, wording, colors, fonts, numbers that steer what is shown, and the data files behind them. Each row gives the file, where to find it (a line link and the exact text to search for), what it controls and its current value. Line numbers drift as files change; the search text does not, so search for it if a line link lands in the wrong place.
 
 How to edit and check:
-- Preview locally with `python -m http.server 8765 --directory web` and open http://localhost:8765 (see [REBUILD.md](REBUILD.md#5-preview-locally)). Opening `index.html` from disk does not work.
+- Preview locally with `python -m http.server 8765 --directory web` and open http://localhost:8765 (see [REBUILD.md](REBUILD.md#6-preview-locally)). Opening `index.html` from disk does not work.
 - `web/` files take effect on reload (Cmd-Shift-R skips the cache). Files under `data/` take effect only after a rebuild: `python scripts/build_dataset.py` and `python scripts/check_dataset.py` (add `--entity county` for the County).
 - In `app.js`, page text sits inside template strings (`` `…` ``). Change the words, keep every `${…}` placeholder and HTML tag.
 - To find any phrase you see on screen: `grep -n "the phrase" web/app.js`.
