@@ -815,7 +815,7 @@
     return items.map((it) => {
       const sh = total > 0 && it.sel ? (it.sel.v / total) * 100 : null;
       const share = sh == null ? '' : `<span class="share">(${sh > 0 && sh < 0.1 ? '<0.1' : sh.toFixed(1)}% of ${esc(shareOf)})</span>`;
-      return `<li class="card" data-go="${esc(it.href)}"><div class="card-top"><h${level}><a href="${esc(it.href)}">${esc(it.name)}</a>${share}</h${level}>
+      return `<li class="card" data-go="${esc(it.href)}"><div class="card-top"><h${level}><a href="${esc(it.href)}">${esc(it.name)}</a>${share}${it.elected ? `<span class="elected-tag">${esc(it.elected.label)}</span>` : ''}</h${level}>
         <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div>
         <div class="bars">${S.c ? bar(it.cmp, 'cmp', seriesLabel(S.c), it.name) : ''}${bar(it.sel, 'sel', seriesLabel(k), it.name)}</div></li>`;
     }).join('');
@@ -1433,7 +1433,7 @@
     if (dept.bureaus) {
       const cmpUnits = S.c ? groupTotals(cmpRows, (r) => r.unit, S.c) : new Map();
       const ids = [...new Set([...units.keys(), ...cmpUnits.keys()])];
-      const items = ids.map((u) => ({ id: u, name: unitLabel(u), href: unitHash(u), sel: units.get(u), cmp: cmpUnits.get(u) }))
+      const items = ids.map((u) => ({ id: u, name: unitLabel(u), href: unitHash(u), elected: isCounty() ? O.units[u].elected : null, sel: units.get(u), cmp: cmpUnits.get(u) }))
         .sort((a, b) => (O.units[a.id].kind === 'department-wide') - (O.units[b.id].kind === 'department-wide') || (b.sel?.v || 0) - (a.sel?.v || 0) || (b.cmp?.v || 0) - (a.cmp?.v || 0));
       const hasWide = ids.some((u) => O.units[u].kind === 'department-wide');
       if (items.length > 1) {
@@ -1448,6 +1448,12 @@
     const v = entityView({ title: name, subtitle, selRows, cmpRows, crumbs: [{ label: 'Home', href: homeHash() }, { label: name }], bureauList, changes: deptChangesHTML(di), deptPicker: picker, scope: { dept: di }, about });
     return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats); mountLines(selRows, cmpRows, true); } };
   }
+
+  /* County: a department headed by (or serving) elected officials, from data/county/elected_offices.csv. The sentence links
+     to the page that says so; the other pages that say it (organizational chart, budget book) are listed on About. */
+  const electedLineHTML = (u) => (u.elected
+    ? `<p class="elected-line"><span class="elected-label">${esc(u.elected.label)}</span> <a class="src" href="${pdfHref(u.elected.d, u.elected.p)}" target="_blank" rel="noopener">${esc(u.elected.line)}</a>.</p>`
+    : '');
 
   function bureauPage() {
     const di = findDept(route.dept);
@@ -1476,7 +1482,7 @@
       const q = /^Bureau\b/.test(unit.name) ? 'What does this bureau do?' : /^Office\b/.test(unit.name) ? 'What does this office do?' : `What does ${unit.name} do?`;
       about = aboutHTML(q, unit.desc);
     }
-    const v = entityView({ title: name, subtitle: sub, selRows, cmpRows, crumbs: [{ label: 'Home', href: homeHash() }, { label: O.departments[di].name, href: deptHash(di) }, { label: name }], changes: deptChangesHTML(di, ui), scope, about });
+    const v = entityView({ title: name, subtitle: sub, selRows, cmpRows, crumbs: [{ label: 'Home', href: homeHash() }, { label: O.departments[di].name, href: deptHash(di) }, { label: name }], changes: deptChangesHTML(di, ui), scope, about: electedLineHTML(unit) + about });
     return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats); mountLines(selRows, cmpRows, true); } };
   }
 
@@ -2374,6 +2380,8 @@
       ${ctxAbout}
       <h2 class="about-h">Departments and funds</h2>
       <p>Departments are grouped as the County's <a href="${pdf(O.chart_doc)}#page=${O.chart_page}" target="_blank" rel="noopener">${D.newest_year} budget book</a> groups them: ${groups}. Each budget line belongs to a department by its account number, with the department's name as the book prints it. The County does not publish staffing schedules, so there is no Staff section.</p>
+      ${O.elected_chart ? `<h2 class="about-h" id="about-elected" tabindex="-1">How the County is run, and the elected offices</h2>
+      <p>Three Commissioners, elected by the voters, manage the County. Alongside them, officials elected on their own (the “row offices”: Controller, Coroner, Recorder of Deeds, Treasurer, Clerk of Courts, Prothonotary, Register of Wills, Sheriff and District Attorney) head their own offices, and the judges of the Court of Common Pleas and the Magisterial District Judges are elected too. The County's <a href="${pdfHref(O.elected_chart.d, O.elected_chart.p)}" target="_blank" rel="noopener">2026 budget presentation (slide 3)</a> marks each of them with an asterisk on its organizational chart, and the audited report's <a href="${pdfHref(O.elected_list.d, O.elected_list.p)}" target="_blank" rel="noopener">list of elected officials</a> names them. Departments headed by an elected official, or serving elected judges, say so on their page and in the department lists. The budget book's own groups, and their printed totals, are unchanged.</p>` : ''}
       <p>The County's books print fund letters without names. The names shown here come from the County's audited annual reports:</p>
       <ul>${fundList}</ul>
       <h2 class="about-h" id="about-balance" tabindex="-1">General Fund balance</h2>

@@ -232,6 +232,27 @@ def merged_views(frm: dict, to: dict, rules: list, accounts, acc_items: list) ->
     return out["f"], out["t"], merges
 
 
+def attach_elected(units: list, codes: dict) -> None:
+    """Mark departments headed by an elected official, or serving elected judges (data/county/elected_offices.csv).
+    Each row cites the printed page that says so and other pages that say the same. A row naming a department that
+    org_units.csv does not list, or under another name, stops the build."""
+    path = DATA / "elected_offices.csv"
+    if not path.exists():
+        return
+    for r in read_csv(path):
+        c = r["department_code"]
+        if c not in codes:
+            sys.exit(f"elected_offices.csv: {c} ({r['department']}) is not a County department in org_units.csv")
+        u = units[codes[c]]
+        if u["name"] != r["department"]:
+            sys.exit(f"elected_offices.csv: {c} is {u['name']!r} in org_units.csv, not {r['department']!r}")
+        if "elected" in u:
+            sys.exit(f"elected_offices.csv: {c} listed twice")
+        also = [x.split("#") for x in r["also_in"].split(";") if x]
+        u["elected"] = {"label": r["label"], "line": r["line"], "doc": r["source_doc"], "p": int(r["source_page"]),
+                        "also": [[d, int(pg)] for d, pg in also]}
+
+
 def build_org(shown_codes: set, printed_names: dict) -> dict:
     """Groups (by department letter) and departments from data/county/org_units.csv. A department code
     the file does not list (e.g. from a newly added book) is placed in its letter's group under its printed
@@ -254,6 +275,7 @@ def build_org(shown_codes: set, printed_names: dict) -> dict:
         units.append({"name": r["department"], "slug": slug(r["department"]), "dept": letters.index(r["group_letter"]),
                       "kind": "bureau", "division": r["book_section"], "chart_page": None, "desc": [], "code": c,
                       "page": int(r["department_page"]), "section_page": int(r["section_page"]), "doc": r["source_doc"]})
+    attach_elected(units, codes)
     unlisted = sorted(shown_codes - set(codes))
     for c in unlisted:
         print(f"note: department {c} ({printed_names.get(c, '?')}) is not in data/county/org_units.csv; "
@@ -609,6 +631,13 @@ def build(processed: Path = PROCESSED, out: Path = OUT) -> dict:
             printed_names[r["department_code"]] = r["department"]  # live is oldest first: the newest name wins
     shown_codes = {accounts.items[a][0].split("-")[0] for s in series.values() for a in s["a"]}
     org = build_org(shown_codes, printed_names)
+    for u in org["units"]:  # the elected-office citations use the same document list as every figure
+        if "elected" in u:
+            e = u["elected"]
+            e["d"], e["also"] = docs(e.pop("doc")), [[docs(d), pg] for d, pg in e["also"]]
+    if any("elected" in u for u in org["units"]):  # the two pages the About section cites for how the County is run
+        org["elected_chart"] = {"d": docs("County-2026-Budget-Presentation.pdf"), "p": 3}  # slide 3: "*denotes elected official(s)"
+        org["elected_list"] = {"d": docs("County-ACFR-2025.pdf"), "p": 17}  # the report's list of elected officials
 
     printed = printed_totals(processed, live, fig_book, docs, set(series))
     kpath = DATA / "known_issues.csv"

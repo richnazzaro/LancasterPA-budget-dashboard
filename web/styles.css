@@ -832,3 +832,9 @@ a.src { white-space: nowrap; }
 .ctx-note { display: block; margin-top: 2px; font-size: 14px; font-weight: 400; color: var(--muted); }
 .ctx-from { color: var(--muted); font-size: 15px; white-space: nowrap; }
 .ctx-chart { height: 220px; margin: 8px 0 12px; }
+
+/* County: offices headed by an elected official. Quiet small caps and ink, no box, no new color. */
+.elected-tag { display: block; margin-top: 4px; font-family: var(--font); font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.elected-line { margin: 0 0 24px; text-align: left; color: var(--muted); }
+.elected-label { margin-right: 8px; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--fg); }
+.elected-line a.src { white-space: normal; border-bottom-color: var(--border-strong); }
