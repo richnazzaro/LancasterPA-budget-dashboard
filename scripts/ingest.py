@@ -51,6 +51,7 @@ from budget_common import OUT_DIR, ROOT
 import crosscheck
 import extract_budget
 import extract_layout
+import extract_projections
 import fund_balance
 from extract_layout import CONFIG_DIR, load_page_lines, load_text_page_lines
 from ocr_pages import cache_dir, ocr_document
@@ -288,6 +289,8 @@ def extract_one(pdf_path, cfg):
     with contextlib.redirect_stdout(buf):
         if cfg.get("extractor") == "extract_budget":
             stats = extract_budget.run(pdf_path)
+        elif cfg.get("extractor") == "extract_projections":
+            stats = extract_projections.run(pdf_path)
         else:
             stats = extract_layout.run(pdf_path)
     return stats, buf.getvalue()
@@ -320,7 +323,7 @@ def ingest(pdf_path):
     if cfg_path.exists():
         cfg = json.loads(cfg_path.read_text())
         rep["config"] = "existing"
-        if cfg.get("source", "ocr") != source and cfg.get("extractor") != "extract_budget":
+        if cfg.get("source", "ocr") != source and cfg.get("extractor") not in ("extract_budget", "extract_projections"):
             rep["warning"] = (f"config says source={cfg.get('source', 'ocr')!r} but the PDF "
                               f"looks {source!r} ({share:.0%} of pages have text)")
     else:
@@ -339,6 +342,10 @@ def ingest(pdf_path):
     except Exception as e:                         # header mismatch etc.
         rep["error"] = f"{type(e).__name__}: {e}"
         return rep
+    rep.update(stats=stats, log=log)
+    if cfg.get("kind") == "projection":   # no Fund Balance page, no neighbouring budget books
+        rep["projection"] = True
+        return rep
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
         try:
@@ -347,7 +354,6 @@ def ingest(pdf_path):
             rep["fund_balance"] = {"ok": False, "found": None,
                                    "error": f"{type(e).__name__}: {e}"}
     rep["fb_log"] = buf.getvalue()
-    rep.update(stats=stats, log=log)
     return rep
 
 
@@ -442,6 +448,14 @@ def main():
             if not args.verbose:
                 fails = [l for l in r["log"].splitlines() if l.startswith("  p")][-8:]
                 print("    " + "\n    ".join(fails))
+        if r.get("projection"):
+            xc = s.get("crosscheck")
+            print(f"  projections book (doc_type 'projection'): cross-check vs {xc['base']} Revised: "
+                  + ", ".join(f"{k} {v}" for k, v in sorted(xc["counts"].items()))
+                  if xc else "  projections book: no Revised column to cross-check against")
+            if args.verbose:
+                print(r["log"])
+            continue
         fb = r.get("fund_balance", {})
         if fb.get("error"):
             print(f"  fund balance page: FAILED ({fb['error']})")

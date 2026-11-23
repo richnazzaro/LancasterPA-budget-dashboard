@@ -1,0 +1,7 @@
+{
+  "_comment": "The City's 2028-2029 projections book (printed from the 2027 budget workbook): one table per fund with two columns, '2028 Projection' and '2029 Projection'. It has its own extractor (scripts/extract_projections.py). It is not a budget book: it has no budget year, staffing schedule or Fund Balance page, and the site shows its figures only as Projection years after the newest year.",
+  "source_doc": "2028-2029-Budget-Projections.pdf",
+  "extractor": "extract_projections",
+  "kind": "projection",
+  "source": "text"
+}

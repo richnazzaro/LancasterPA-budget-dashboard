@@ -9,11 +9,14 @@
  * scripts/org_structure.py): every line's org code maps to one unit, and each unit to one department.
  * Older bureau links (#/department/<dept>/bureau/<fund--printed group>) redirect to the unit.
  * Shared query: y=year m=measure c=compare k=revenue f=fund
+ * Projections (budget.json `projection`, the city's multi-year projections book): years after the newest year, drawn
+ * at the end of the multi-year charts and tables as "Projection". They are not in D.series, so they are never a
+ * selectable year and never reach the headline, deck or What changed; series(k) and rows(k) still read them.
  */
 (() => {
   'use strict';
 
-  const LABEL = { proposed: 'Proposed', revised: 'Revised', projected: 'Projected', actual: 'Actual', budget: 'Budget' };
+  const LABEL = { proposed: 'Proposed', revised: 'Revised', projected: 'Projected', actual: 'Actual', budget: 'Budget', projection: 'Projection' };
   const ORDER = ['actual', 'projected', 'budget', 'proposed', 'revised'];
   const STATUS = {
     proposed: 'Proposed, not adopted', revised: 'Revised proposal, not adopted',
@@ -21,13 +24,14 @@
   };
   const CAT_ORDER = ['Salaries & Wages', 'Benefits', 'Operating', 'Equipment & Capital', 'Debt, Transfers & Allocations', 'Revenue', 'Uncoded'];
   // Colors are read from CSS variables at start-up (see loadTokens), so branding lives in styles.css.
-  let PALETTE = [], OTHER_COLOR = '#777', SEL = '#41ffca', CMP = '#ffca41', INK = '#fff', MUTED = '#b3b3b3', GRID = '#262626', SURFACE = '#0d0d0d', BG = '#000';
+  let PALETTE = [], OTHER_COLOR = '#777', SEL = '#41ffca', CMP = '#ffca41', INK = '#fff', MUTED = '#b3b3b3', GRID = '#262626', SURFACE = '#0d0d0d', BG = '#000', TRACK = '#222';
   let CFG = null, DEFAULT_FUND = '', BASE = null, ENT = 'city', SITE = '', GB = null; // BASE: config.json; CFG: BASE plus the chosen entity; GB: County audited fund balances
   function loadTokens() {
     const cs = getComputedStyle(document.documentElement), v = (n, d) => cs.getPropertyValue(n).trim() || d;
     PALETTE = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => v(`--cat-${i}`, '#888'));
     OTHER_COLOR = v('--cat-other', OTHER_COLOR); SEL = v('--sel', SEL); CMP = v('--cmp', CMP);
     INK = v('--fg', INK); MUTED = v('--muted', MUTED); GRID = v('--border', GRID); SURFACE = v('--card', SURFACE); BG = v('--bg', BG);
+    TRACK = v('--proj-band', TRACK);
   }
   const PAGE_SIZE = 20; // line-item rows shown at a time (keeps department pages short)
   const PIE_SLICES = 7;
@@ -58,16 +62,23 @@
   const slug = (s) => String(s).toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   const key = (y, m) => `${y}|${m}`;
   const parseKey = (k) => { const [y, m] = k.split('|'); return { y: +y, m }; };
-  const series = (k) => D.series[k];
+  const series = (k) => D.series[k] || D.projection?.series[k];
+  // Projection years (budget.json `projection`): shown after the newest year, never selectable.
+  const projectionYears = () => (D.projection ? D.projection.years.filter((y) => D.projection.series[key(y, 'projection')]) : []);
+  const isProjKey = (k) => !!k && parseKey(k).m === 'projection';
+  const projBook = () => `${D.projection.years[0]}–${D.projection.years[D.projection.years.length - 1]} projections book`;
+  // "the 2027 budget book" / "the 2028–2029 projections book": the book a source document is.
+  const docLabel = (d) => (D.projection && d === D.projection.doc ? projBook() : `${(D.books.find((b) => b.doc === D.docs[d]) || {}).year} budget book`);
   const seriesLabel = (k) => { const { y, m } = parseKey(k); return `${y} ${LABEL[m]}`; };
   const sum = (list) => list.reduce((t, r) => t + r.v, 0);
   /* Source links: the amount itself links to its page in the budget book (no page text is shown). */
   const bookYearOf = (k) => { const s = series(k); return s.book_year != null ? s.book_year : s.year + D.rule[s.measure].book_offset; };
+  const bookOf = (k) => (isProjKey(k) ? projBook() : `${bookYearOf(k)} budget book`);
   // County audited reports sit in the ACFR/ folder of the County PDFs, budget resolutions in Resolutions/.
   const docRel = (d) => (/^County-ACFR-/.test(D.docs[d]) ? `ACFR/${D.docs[d]}` : /^County-Resolution-/.test(D.docs[d]) ? `Resolutions/${D.docs[d]}` : D.docs[d]);
   const pdfHref = (d, p) => `${CFG.paths.pdfs}${docRel(d).split('/').map(encodeURIComponent).join('/')}#page=${p}`;
   const src = (text, k, d, p) => (d == null || !k ? text
-    : `<a class="src" href="${pdfHref(d, p)}" target="_blank" rel="noopener" title="View in budget book" aria-label="${esc(text)}: open source page in the ${bookYearOf(k)} budget book">${text}</a>`);
+    : `<a class="src" href="${pdfHref(d, p)}" target="_blank" rel="noopener" title="View in budget book" aria-label="${esc(text)}: open source page in the ${esc(docLabel(d))}">${text}</a>`);
   const firstPage = (list) => { let d = null, p = Infinity; for (const r of list) { if (d == null) d = r.d; if (r.d === d && r.p < p) p = r.p; } return { d, p }; };
   /* ---------- printed totals ----------
      A total is shown exactly as the city printed it when the book prints a total for exactly the lines in view
@@ -135,7 +146,7 @@
   /* The note under a flagged printed total: what the book prints, what its lines add up to, and why. */
   function gapNote(t, what = '') {
     const g = Math.round(t.calc - t.v), ki = t.x.flags ? t.x.flags[t.k]?.known_issue : t.x.issue, iss = ki != null ? D.known_issues[ki] : null;
-    return `<p class="gap-note"><span class="gap-mark" aria-hidden="true">${GAP_SIGN}</span> ${what ? `<strong>${esc(what)}, ${esc(seriesLabel(t.k))}:</strong> ` : ''}the ${bookYearOf(t.k)} budget book prints ${src(money(t.v), t.k, t.d, t.p)}, but the lines it totals add up to ${money(t.calc)}, <span class="nb">${money(Math.abs(g))} ${g < 0 ? 'less' : 'more'}.</span> ${iss ? esc(scrubPages(iss.note).replace(/^Text layer, every cell read cleanly \(no OCR\)\.\s*/i, '')) : 'Not yet explained.'} ${knownLink()}</p>`;
+    return `<p class="gap-note"><span class="gap-mark" aria-hidden="true">${GAP_SIGN}</span> ${what ? `<strong>${esc(what)}, ${esc(seriesLabel(t.k))}:</strong> ` : ''}the ${esc(bookOf(t.k))} prints ${src(money(t.v), t.k, t.d, t.p)}, but the lines it totals add up to ${money(t.calc)}, <span class="nb">${money(Math.abs(g))} ${g < 0 ? 'less' : 'more'}.</span> ${iss ? esc(scrubPages(iss.note).replace(/^Text layer, every cell read cleanly \(no OCR\)\.\s*/i, '')) : 'Not yet explained.'} ${knownLink()}</p>`;
   }
   // A page says each gap once, where the figure first appears; later copies of the figure carry the ≠ sign only.
   let notesShown = new Set();
@@ -149,7 +160,7 @@
       return (!scope.fund || scope.fund === m.fund) && (scope.dept == null || (u != null && O.units[u].dept === scope.dept)) && (scope.unit == null || u === scope.unit);
     });
     if (!miss.length) return '';
-    return `<p class="gap-note"><span class="gap-mark" aria-hidden="true">${GAP_SIGN}</span> <strong>Incomplete, ${esc(seriesLabel(k))}:</strong> the ${bookYearOf(k)} budget book has no line-item pages for ${esc(miss.map((m) => m.name).join(' and '))}, so the calculated figures here leave ${miss.length === 1 ? 'it' : 'them'} out. ${knownLink()}</p>`;
+    return `<p class="gap-note"><span class="gap-mark" aria-hidden="true">${GAP_SIGN}</span> <strong>Incomplete, ${esc(seriesLabel(k))}:</strong> the ${esc(bookOf(k))} has no line-item pages for ${esc(miss.map((m) => m.name).join(' and '))}, so the calculated figures here leave ${miss.length === 1 ? 'it' : 'them'} out. ${knownLink()}</p>`;
   }
 
   /* ---------- data access ---------- */
@@ -403,7 +414,48 @@
         pts.push({ y, m, v: t ? t.v : null, t });
       }
     }
+    // The city's projections follow the newest year (never selectable; see projectionYears).
+    for (const y of projectionYears()) {
+      const kk = key(y, 'projection'), l = scoped(kk, scope), t = l.length ? totalOf(l, kk) : null;
+      pts.push({ y, m: 'projection', v: t ? t.v : null, t });
+    }
     return pts;
+  }
+  /* Under the trend: the projection years are the city's estimates, with its printed assumptions (linked to their page),
+     the fund's printed Surplus/(Deficit) when one fund is in view, and, for the General Fund, that the newest year's income
+     counts money drawn from savings and the projections count none. Plain muted text: tentative, not alarming. */
+  function projectionNote(scope, pts) {
+    const P = D.projection, ys = pts.filter((p) => p.m === 'projection' && p.v != null).map((p) => p.y);
+    if (!P || !ys.length) return '';
+    const yrs = ys.length > 1 ? `${ys[0]} and ${ys[ys.length - 1]}` : String(ys[0]);
+    const page = (P.assumptions[0] || {}).p;
+    const assume = page ? srcDoc('assumptions', P.doc, page) : 'assumptions';
+    let extra = '';
+    const fi = D.funds.indexOf(S.f);
+    if (fi >= 0 && scope.dept == null && scope.unit == null) {
+      const sp = P.surplus.find((x) => x.fund === fi);
+      const vals = sp ? ys.map((y) => ({ y, v: sp.values[key(y, 'projection')] })).filter((x) => x.v != null) : [];
+      if (vals.length) {
+        const neg = vals.every((x) => x.v < 0), pos = vals.every((x) => x.v >= 0);
+        const amts = vals.map((x) => `${srcDoc(mny(Math.abs(x.v)), P.doc, sp.page)} in ${x.y}`).join(' and ');
+        extra += neg ? ` They show the ${esc(S.f)} spending more than it brings in, by ${amts}.`
+          : pos ? ` They show the ${esc(S.f)} bringing in more than it spends, by ${amts}.`
+          : ` Their printed surplus or deficit: ${vals.map((x) => `${srcDoc(money(x.v), P.doc, sp.page)} in ${x.y}`).join(', ')}.`;
+      }
+      const gf = D.funds.indexOf(DEFAULT_FUND), nk = key(D.newest_year, defaultMeasure(D.newest_year));
+      const dr = fi === gf && D.reserve ? reserveDraw(nk, gf) : null;
+      if (dr && !ys.some((y) => reserveDraw(key(y, 'projection'), gf))) {
+        extra += ` The ${esc(seriesLabel(nk))} income includes ${src(millions(dr.v), nk, dr.d, dr.p)} drawn from savings; the projections count no draw.`;
+      }
+    }
+    const groups = [];
+    for (const a of P.assumptions.slice(1)) {
+      if (a.k === 'head' || !groups.length) groups.push({ head: a.k === 'head' ? a.t : '', items: [] });
+      if (a.k !== 'head') groups[groups.length - 1].items.push(a);
+    }
+    const list = groups.map((g) => `${g.head ? `<p class="proj-head">${esc(g.head)}</p>` : ''}<ul>${g.items.map((a) => `<li${a.k === 'note' ? ' class="proj-fine"' : ''}>${esc(a.t.replace(/^\([a-z]\)\s*/, ''))}</li>`).join('')}</ul>`).join('');
+    return `<div class="trend-proj"><p><strong>${yrs} are projections</strong>, not budgets: the city's estimates made with its ${D.projection.after_year} budget, based on its ${assume}.${extra}</p>
+      ${groups.length ? `<details class="values proj-assume"><summary>The city's assumptions</summary>${list}</details>` : ''}</div>`;
   }
   function trendHTML(scope, title, { bare = false } = {}) {
     trendScope = scope;
@@ -416,19 +468,22 @@
       has('projected') && `<li><i class="ln dashed"></i>Projected</li>`,
       has('proposed') && `<li><i class="dot diamond" style="background:${PALETTE[0]}"></i>Proposed</li>`,
       has('revised') && `<li><i class="dot" style="background:${SEL}"></i>Revised</li>`,
+      has('projection') && `<li><i class="ln dotted proj"></i><i class="dot ring proj"></i>Projection</li>`,
     ].filter(Boolean).join('');
     // Proposed and Revised sit a few pixels apart on a $0-based axis, so state the revision in words.
-    const ly = pts.length ? Math.max(...pts.map((p) => p.y)) : null;
+    const budgetPts = pts.filter((p) => p.m !== 'projection');
+    const ly = budgetPts.length ? Math.max(...budgetPts.map((p) => p.y)) : null;
     const pv = pts.find((p) => p.y === ly && p.m === 'proposed' && p.v != null), rv = pts.find((p) => p.y === ly && p.m === 'revised' && p.v != null);
     const revision = pv && rv ? `<p class="trend-revision">${ly}: Proposed ${mny(pv.v)} → Revised ${mny(rv.v)}, ${deltaHTML(rv.v - pv.v, pv.v, mny)}</p>` : '';
     const notes = new Map(), what = trendWhat(scope);
-    const rowsHtml = pts.map((p) => `<tr><th scope="row">${p.y}</th><td>${LABEL[p.m]}</td><td class="num">${p.t ? fig(p.t, { notes, what }) : '—'}</td></tr>`).join('');
+    const rowsHtml = pts.map((p) => `<tr${p.m === 'projection' ? ' class="proj-row"' : ''}><th scope="row">${p.y}</th><td>${LABEL[p.m]}</td><td class="num">${p.t ? fig(p.t, { notes, what }) : '—'}</td></tr>`).join('');
+    const hasProj = has('projection');
     const head = bare ? '' : `<h2 class="panel-title" id="tr-t">${esc(title)}</h2>`;
     const inner = `${head}
-      <p class="panel-note${bare ? ' panel-note-left' : ''}">${kindWordPlain()}${S.f ? ' · ' + esc(fn(S.f)) : ''}. ${isCounty() ? 'Each year shows the County\'s budget.' : 'Each year shows one kind of figure: actual, projected or proposed.'}</p>
+      <p class="panel-note${bare ? ' panel-note-left' : ''}">${kindWordPlain()}${S.f ? ' · ' + esc(fn(S.f)) : ''}. ${isCounty() ? 'Each year shows the County\'s budget.' : 'Each year shows one kind of figure: actual, projected or proposed' + (hasProj ? ', then the city\'s projections' : '') + '.'}</p>
       <ul class="trend-legend" aria-hidden="true">${legend}</ul>${revision}
-      <div class="chart-box short"><canvas id="trend-chart" role="img" aria-label="Totals by year, ${pts[0].y} to ${pts[pts.length - 1].y}. Solid line: actual. Dashed line: projected. Hollow diamond: proposed. Solid dot: revised. The table below has the values."></canvas></div>
-      <p class="trend-axis" id="trend-axis"></p>${spikeNotes(scope, S.k)}
+      <div class="chart-box short"><canvas id="trend-chart" role="img" aria-label="Totals by year, ${pts[0].y} to ${pts[pts.length - 1].y}. Solid line: actual. Dashed line: projected. Hollow diamond: proposed. Solid dot: revised.${hasProj ? ' Dotted gray line with hollow points, on a shaded band: the city\'s projections.' : ''} The table below has the values."></canvas></div>
+      <p class="trend-axis" id="trend-axis"></p>${spikeNotes(scope, S.k)}${projectionNote(scope, pts)}
       <details class="values"><summary>Show values</summary><div class="table-scroll"><table class="table"><thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Total</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>${gapNotes(notes)}</details>`;
     return bare ? inner : `<section class="panel" aria-labelledby="tr-t">${inner}</section>`;
   }
@@ -437,6 +492,7 @@
     if (!cv || !window.Chart || !trendScope) return;
     const pts = trendData(trendScope), th = chartTheme();
     const yrs = [...new Set(pts.map((p) => p.y))];
+    const projAt = new Set(pts.filter((p) => p.m === 'projection').map((p) => p.y));
     const main = yrs.map((y) => pts.find((p) => p.y === y && (p.m === 'actual' || p.m === 'projected' || p.m === 'budget')) || null);
     const dot = (m, c) => ({ label: LABEL[m], data: yrs.map((y) => pts.find((p) => p.y === y && p.m === m)?.v ?? null), borderColor: c, backgroundColor: c, showLine: false, pointRadius: 5, pointHoverRadius: 7 });
     const datasets = [{
@@ -453,15 +509,32 @@
       datasets.push({ label: 'Revised', data: yrs.map((y, i) => (i === ri ? rvPt.v : i === pi ? main[pi].v : null)), borderColor: SEL, backgroundColor: SEL, borderWidth: 2, borderDash: [6, 4], showLine: true, spanGaps: false,
         pointRadius: (c) => (c.dataIndex === ri ? 8 : 0), pointHoverRadius: (c) => (c.dataIndex === ri ? 10 : 0), pointHitRadius: (c) => (c.dataIndex === ri ? 10 : 0), pointBorderColor: SURFACE, pointBorderWidth: 2 });
     }
+    // Projections: a thin dotted ink-gray line with hollow points, continuing from the newest year's figure in view
+    // (Revised, else Proposed), over a shaded band labelled "Projection". Gray, not green: it is not the figure being read.
+    const prPts = pts.filter((p) => p.m === 'projection' && p.v != null);
+    if (prPts.length) {
+      const nm = defaultMeasure(D.newest_year), anchor = pts.find((p) => p.y === D.newest_year && p.m === nm && p.v != null);
+      const ai = anchor ? yrs.indexOf(anchor.y) : -1;
+      const at = (i) => (i === ai ? anchor.v : prPts.find((p) => p.y === yrs[i])?.v ?? null);
+      datasets.push({ label: LABEL.projection, data: yrs.map((_, i) => at(i)), borderColor: CMP, backgroundColor: SURFACE, borderWidth: 1.5, borderDash: [2, 4], showLine: true, spanGaps: false,
+        pointStyle: 'circle', pointRadius: (c) => (c.dataIndex === ai ? 0 : 4), pointHoverRadius: (c) => (c.dataIndex === ai ? 0 : 6), pointHitRadius: (c) => (c.dataIndex === ai ? 0 : 8), pointBorderColor: CMP, pointBorderWidth: 1.5 });
+    }
+    const band = { id: 'projBand', beforeDatasetsDraw(chart) {
+      if (!projAt.size) return;
+      const xs = chart.scales.x, { top, bottom, right } = chart.chartArea, first = yrs.findIndex((y) => projAt.has(y));
+      const left = first > 0 ? (xs.getPixelForValue(first - 1) + xs.getPixelForValue(first)) / 2 : chart.chartArea.left;
+      const g = chart.ctx; g.save(); g.fillStyle = TRACK; g.fillRect(left, top, right - left, bottom - top);
+      g.fillStyle = MUTED; g.font = `600 12px ${getComputedStyle(document.documentElement).getPropertyValue('--font')}`; g.textBaseline = 'bottom'; g.fillText('Projection', left + 6, bottom - 4); g.restore(); // at the foot: the line runs high
+    } };
     // The line chart does not start at zero (a line shows movement, not size), so the axis says where it starts.
     const vals = pts.map((p) => p.v).filter((v) => v != null && v > 0);
     let yMin = 0;
     if (vals.length) { const lo = Math.min(...vals) * 0.7, pow = 10 ** Math.floor(Math.log10(lo)); yMin = Math.floor(lo / pow) * pow; }
     const ax = $('trend-axis'); if (ax) ax.textContent = yMin > 0 ? `The vertical axis starts at ${short(yMin)}, not zero.` : '';
-    charts.push(new Chart(cv, { type: 'line', data: { labels: yrs, datasets },
+    charts.push(new Chart(cv, { type: 'line', data: { labels: yrs, datasets }, plugins: [band],
       options: { responsive: true, maintainAspectRatio: false, layout: { padding: { right: 8 } }, animation: reduceMotion() ? false : { duration: 300 },
         plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { label: (c) => (c.datasetIndex === 0 ? `${LABEL[main[c.dataIndex].m]}: ${money(c.raw)}` : `${c.dataset.label}: ${money(c.raw)}`) } } },
-        scales: { x: { offset: true, ticks: { color: INK }, grid: { color: th.grid } }, y: { beginAtZero: yMin === 0, min: yMin || undefined, ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid } } } } }));
+        scales: { x: { offset: true, ticks: { color: (c) => (projAt.has(yrs[c.index]) ? MUTED : INK) }, grid: { color: th.grid } }, y: { beginAtZero: yMin === 0, min: yMin || undefined, ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid } } } } }));
   }
   /* ---------- A line far above the years either side of it (e.g. 2025 Building Permits) ----------
      Along the Actual / Projected line (then the newest year's figure), a line whose amount in one year is at least
@@ -588,7 +661,7 @@
   const docTitle = (d) => {
     const f = D.docs[d], r = (D.reserve?.sources || []).find((x) => x.file === f), a = /^County-ACFR-(\d{4})/.exec(f);
     if (/Presentation\.pdf$/.test(f)) return `${D.context?.year || ''} budget presentation`.trim();
-    return r ? `budget resolution (${r.resolution})` : a ? `${a[1]} audited annual report` : `${(D.books.find((b) => b.doc === f) || {}).year} budget book`;
+    return r ? `budget resolution (${r.resolution})` : a ? `${a[1]} audited annual report` : docLabel(d);
   };
   const srcDoc = (text, d, p) => `<a class="src" href="${pdfHref(d, p)}" target="_blank" rel="noopener" title="${isCounty() ? `View in the ${esc(docTitle(d))}` : 'View in budget book'}" aria-label="${esc(text)}: open source page in the ${esc(docTitle(d))}">${text}</a>`;
   const RES_STATUS = { actual: 'Actual year-end balance', projected: 'Projected year-end balance', proposed: 'Proposed, not adopted', revised: 'Revised proposal, not adopted' };
@@ -1135,7 +1208,7 @@
      Positions come from each book's staffing schedule (staffing.json). The city publishes budgeted positions only,
      never actual headcount, so every year is "budgeted"; the newest book prints Proposed and Revised schedules.
      Salaries are the "Salaries & Wages" budget lines (salaries, overtime, temporary wages) and follow the site's
-     one-figure-per-year rule: Actual, Projected, then Proposed and Revised. Positions are placed in org-chart
+     one-figure-per-year rule: Actual, Projected, then Proposed and Revised, then the city's projections (muted). Positions are placed in org-chart
      bureaus by org code (O.codes), the same way as the budget lines. */
   let ST = null;
   function staffHTML(scope) {
@@ -1160,6 +1233,7 @@
     const cat = D.categories.indexOf('Salaries & Wages');
     const scols = [];
     for (const y of years().slice().sort((a, b) => a - b)) for (const m of ORDER) if (series(key(y, m))) scols.push(key(y, m));
+    for (const y of projectionYears()) scols.push(key(y, 'projection')); // the city's projections, after the newest year
     const sal = new Map();
     for (const k of scols) {
       for (const r of scoped(k, { ...scope, kind: 'expense' })) {
@@ -1179,9 +1253,10 @@
     const pdfLink = (text, d, p) => (d >= 0 && d != null ? `<a class="src" href="${pdfHref(d, p)}" target="_blank" rel="noopener" title="View in budget book">${text}</a>` : text);
     const sumCol = (m, k, f) => { let t = 0, any = false; for (const u of ids) { const c = m.get(u)?.get(k); if (c) { t += f(c); any = true; } } return any ? t : null; };
     const table = (caption, cols, m, cell, total) => `<div class="table-scroll" tabindex="0" role="region" aria-label="${esc(caption)}, scrollable"><table class="table tight staff-table" aria-label="${esc(caption)}">
-      <thead><tr><th scope="col">${scope.unit == null ? 'Bureau' : ''}</th>${cols.map((c) => `<th scope="col" class="num">${c.label.split(' ').map(esc).join('<br>')}</th>`).join('')}</tr></thead>
-      <tbody>${ids.map((u) => `<tr><th scope="row">${rowHead(u)}</th>${cols.map((c) => `<td class="num">${cell(m.get(u)?.get(c.k), c.k)}</td>`).join('')}</tr>`).join('')}</tbody>
-      ${multi ? `<tfoot><tr><th scope="row">All</th>${cols.map((c) => `<td class="num">${total(c.k)}</td>`).join('')}</tr></tfoot>` : ''}</table></div>`;
+      <thead><tr><th scope="col">${scope.unit == null ? 'Bureau' : ''}</th>${cols.map((c) => `<th scope="col" class="num${pc(c)}">${c.label.split(' ').map(esc).join('<br>')}</th>`).join('')}</tr></thead>
+      <tbody>${ids.map((u) => `<tr><th scope="row">${rowHead(u)}</th>${cols.map((c) => `<td class="num${pc(c)}">${cell(m.get(u)?.get(c.k), c.k)}</td>`).join('')}</tr>`).join('')}</tbody>
+      ${multi ? `<tfoot><tr><th scope="row">All</th>${cols.map((c) => `<td class="num${pc(c)}">${total(c.k)}</td>`).join('')}</tr></tfoot>` : ''}</table></div>`;
+    const pc = (c) => (isProjKey(c.k) ? ' proj-col' : '');
     const dash = '<span class="missing" title="Not in this year\'s schedule">—</span>';
     const posTable = table('Budgeted positions by year', pcols, pos,
       (c) => (c ? pdfLink(fmtN(c.n), c.d, c.p) : dash),
@@ -1208,7 +1283,7 @@
       <p class="panel-note">From each year's staffing schedule. The city publishes budgeted positions, not how many people were actually employed. Fractions are positions shared with other bureaus or funds. Counts open the schedule page in the budget book.</p>
       ${posTable}${titles}
       <h3 class="wc-h3">Salaries and wages${where}</h3>
-      <p class="panel-note">The “Salaries &amp; Wages” budget lines (salaries, overtime and temporary wages; benefits are separate): Actual through 2025, Projected for 2026, Proposed and Revised for 2027.</p>
+      <p class="panel-note">The “Salaries &amp; Wages” budget lines (salaries, overtime and temporary wages; benefits are separate): Actual through 2025, Projected for 2026, Proposed and Revised for 2027${projectionYears().length ? `, then the city's projections for ${projectionYears().join(' and ')}` : ''}.</p>
       ${salTable}</section>`;
   }
 
@@ -2429,11 +2504,18 @@
         <li><strong>${actualYears[0]}–${actualYears[actualYears.length - 1]}: Actual</strong>, the audited spending reported in the budget book published two years later.</li>
         ${projYears.length ? `<li><strong>${projYears.join(', ')}: Projected</strong>, the city's year-end estimate (the revised projection when present) from the next year's book. The actual for ${projYears.length > 1 ? 'these years is' : 'this year is'} not published yet.</li>` : ''}
         <li><strong>${D.newest_year}: Proposed and Revised</strong>, both from the ${D.newest_year} book, so you can compare what changed between them. Neither is an adopted budget.</li>
+        ${projectionYears().length ? `<li><strong>${projectionYears().join(' and ')}: Projection</strong>, the city's own multi-year estimates made with the ${D.projection.after_year} budget, from its ${srcDoc(esc(projBook()), D.projection.doc, 1)}. They appear only at the end of the multi-year charts and tables (Totals by Year and the Staff salaries table), drawn lighter and labelled “Projection”; they are never the year you pick, and the headline, the change sentence and What changed stay on ${D.newest_year}.</li>` : ''}
       </ul>
       <p>Adopted and amended budgets, year-to-date columns and an older book's own-year proposal are not shown.</p>
+      ${D.projection ? (() => {
+        const P = D.projection, page = (P.assumptions[0] || {}).p;
+        return `<h2 class="about-h">Projections</h2>
+      <p>The ${srcDoc(esc(projBook()), P.doc, 1)} prints every account line of the General Fund and the four utility funds for ${P.years.join(' and ')}, with each fund's total income, total spending and surplus or deficit. The site checks every section and fund total against its lines, as it does for the budget books. Its ${page ? srcDoc('assumptions', P.doc, page) : 'assumptions'}: no water, sewer, stormwater or trash rate increases; 3% salary increases; General Fund costs following each department's history; and, in the utility funds, 5% medical and 2% operating cost increases. The city notes that actual results will differ where costs depart from past trends.</p>
+      <p>The projections list no money drawn from savings (their “Fund Balance Reserve” lines are blank), so where spending is higher than income they show a deficit. They have no Fund Balance Projection page, so the Reserve Fund ends at ${D.newest_year}.</p>`;
+      })() : ''}
       ${D.reserve ? `<h2 class="about-h">Reserve Fund</h2>
       <p>The <strong>Reserve Fund</strong> entry in the Fund selector is the General Fund's balance, from the budget book's Fund Balance Projection page. Each book prints the actual balance at the end of the year two years earlier; that is the <strong>actual</strong> year-end balance for that year (unaudited for recent years). The newest book also prints a projected balance for the prior year and proposed and revised balances for the newest year. The same one-kind-per-year rule applies. Where a book prints two columns that disagree, the revised column is used and the difference is stated on the page.</p>` : ''}
-      <p>Books in use:</p><ul>${books}</ul>
+      <p>Books in use:</p><ul>${books}${D.projection ? (() => { const href = `${CFG.paths.pdfs}${encodeURIComponent(D.docs[D.projection.doc])}`; return `<li><a href="${href}" target="_blank" rel="noopener">${esc(D.projection.years.join('–'))} Budget Projections</a> (<a href="${href}" download>download PDF</a>): supplies ${D.projection.years.map((y) => `${y} projection`).join(', ')}.</li>`; })() : ''}</ul>
       <p>Years appear as soon as the books that report them have been processed.</p>
       <h2 class="about-h">Departments and bureaus</h2>
       <p>Departments and bureaus follow the city's <a href="${CFG.paths.pdfs}${encodeURIComponent(O.chart_doc)}" target="_blank" rel="noopener">2027 organizational chart</a>. Each budget line belongs to a bureau by its account number, so older years are grouped the same way even where the budget book printed them under another department or name (for example, Human Resources is shown under Executive in every year). Budget groups that are not a bureau, such as city-wide insurance, benefits and debt service or fee revenue, are shown as a separate “department-wide” group. Descriptions of what each department and bureau does are quoted from the city's <a href="${CFG.paths.pdfs}${encodeURIComponent(O.desc_doc)}" target="_blank" rel="noopener">2027 organization descriptions</a>.</p>
@@ -2447,7 +2529,7 @@
       <p>These come from errors in the city's documents, not the extraction. A person reviewed each one.</p>
       <details class="values" id="about-issues" tabindex="-1"><summary>Show all ${D.known_issues.length} notes</summary><ul>${issues || '<li>None recorded.</li>'}</ul></details>
       <h2 class="about-h">Get the data</h2>
-      <p><a href="${CFG.paths.data}budget.json">budget.json</a> (every figure shown here), <a href="${CFG.paths.data}staffing.json">staffing.json</a> (budgeted positions), <a href="${CFG.paths.data}conflicts.json">conflicts.json</a>, <a href="${CFG.paths.data}changes.json">changes.json</a> (what changed in ${D.newest_year}, with the fund shifts and position counts). The extraction scripts and tables are in the project repository.</p>${CFG.contact_email ? `
+      <p><a href="${CFG.paths.data}budget.json">budget.json</a> (every figure shown here${D.projection ? ', with the projections in its <code>projection</code> block' : ''}), <a href="${CFG.paths.data}staffing.json">staffing.json</a> (budgeted positions), <a href="${CFG.paths.data}conflicts.json">conflicts.json</a>, <a href="${CFG.paths.data}changes.json">changes.json</a> (what changed in ${D.newest_year}, with the fund shifts and position counts). The extraction scripts and tables are in the project repository.</p>${CFG.contact_email ? `
       <h2 class="about-h">Contact</h2>
       <p>Found an error, or have a question about a figure? Email <a href="mailto:${esc(CFG.contact_email)}">${esc(CFG.contact_email)}</a>.</p>` : ''}`;
     groupAbout();
@@ -2495,6 +2577,8 @@
         const res = await fetch(`${e.paths.data}budget.json`, { cache: 'no-cache' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const d = await res.json();
+        // The projections book's printed section and fund totals join the others, so totalOf() shows them as printed.
+        if (d.projection) d.printed = d.printed.concat(d.projection.printed);
         ENTCACHE[id] = { D: d, O: d.org, CH: ch, ST: st, GB: gb, rowCache: new Map(), memberCache: new Map() };
       }
     } catch (err) {

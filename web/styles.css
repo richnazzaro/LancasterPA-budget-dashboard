@@ -9,6 +9,7 @@
    --cmp / --cmp-ink   the comparison figure: ink gray. It differs from green in lightness as well as hue, so
                        the pair survives any color blindness, and the comparison bar is drawn thinner.
    --red               ledger red: shortfalls and negative numbers only, always with a minus sign or arrow too.
+   --proj-band         the shaded band behind the city's projection years on trend charts (quiet, not a warning).
    --cat-1..8          pies and legends: ink, sage, olive gold, stone, steel, slate, umber, deep ink. No orange,
                        and none close to the green or red above. --cat-1 (ink) and --cat-2 (sage) also mark
                        Proposed and Revised on trends. The fund chart draws Income in --sel and Spending in --cat-2.
@@ -23,6 +24,7 @@
   --border-50: #d3d8d2;
   --border-strong: #7d867f;
   --track: #e6e9e4;       /* empty part of a bar */
+  --proj-band: #f0f2ee;   /* behind projection years on trend charts */
   --muted-bg: #eceee9;    /* button hover */
   --hover: rgba(29, 90, 58, .06);
   --fg: #1a1d1b;
@@ -51,7 +53,7 @@
   color-scheme: dark;
   --bg: #101512; --card: #171e19; --card-50: #171e19; --header-bg: #101512;
   --border: #2c3731; --border-50: #2c3731; --border-strong: #55645b;
-  --track: #232c26; --muted-bg: #232c26; --hover: rgba(127, 201, 155, .09);
+  --track: #232c26; --muted-bg: #232c26; --hover: rgba(127, 201, 155, .09); --proj-band: #18201b;
   --fg: #eef1ec; --muted: #a9b4ac;
   --sel: #7fc99b; --sel-ink: #7fc99b; --btn-bg: #7fc99b; --btn-fg: #0d1410; --cmp: #8b968e; --cmp-ink: #a9b4ac; --rule: #eef1ec;
   --accent: #7fc99b; --link: #7fc99b;
@@ -64,7 +66,7 @@
     color-scheme: dark;
     --bg: #101512; --card: #171e19; --card-50: #171e19; --header-bg: #101512;
     --border: #2c3731; --border-50: #2c3731; --border-strong: #55645b;
-    --track: #232c26; --muted-bg: #232c26; --hover: rgba(127, 201, 155, .09);
+    --track: #232c26; --muted-bg: #232c26; --hover: rgba(127, 201, 155, .09); --proj-band: #18201b;
     --fg: #eef1ec; --muted: #a9b4ac;
     --sel: #7fc99b; --sel-ink: #7fc99b; --btn-bg: #7fc99b; --btn-fg: #0d1410; --cmp: #8b968e; --cmp-ink: #a9b4ac; --rule: #eef1ec;
     --accent: #7fc99b; --link: #7fc99b;
@@ -305,6 +307,18 @@ details.values summary:hover { color: var(--fg); }
 .trend-legend li { display: inline-flex; align-items: center; gap: 8px; }
 .trend-legend .ln { width: 24px; height: 0; border-top: 2px solid var(--sel); display: inline-block; }
 .trend-legend .ln.dashed { border-top-style: dashed; }
+/* Projection years: a dotted ink-gray line with hollow points (app.js drawTrend), muted rows and columns in tables. */
+.trend-legend .ln.dotted.proj { border-top: 2px dotted var(--cmp); width: 18px; }
+.trend-legend .dot.ring.proj { width: 10px; height: 10px; border: 1.5px solid var(--cmp); margin-left: -6px; }
+.table tr.proj-row th, .table tr.proj-row td, .table .proj-col { color: var(--muted); font-style: italic; }
+.table tr.proj-row a.src, .table .proj-col a.src { color: inherit; }
+.trend-proj { margin: 12px 0 0; font-size: 14px; line-height: 20px; color: var(--muted); }
+.trend-proj p { margin: 0; }
+.trend-proj strong { color: var(--fg); }
+.trend-proj .proj-assume { margin-top: 6px; }
+.trend-proj .proj-head { margin: 8px 0 2px; font-weight: 600; color: var(--fg); }
+.trend-proj ul { margin: 4px 0 0; padding-left: 20px; }
+.trend-proj li.proj-fine { list-style: none; margin-left: -20px; margin-top: 6px; }
 .trend-legend .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 .trend-legend .dot.ring { width: 14px; height: 14px; border: 3px solid; background: transparent; }
 
