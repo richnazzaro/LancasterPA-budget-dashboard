@@ -2570,7 +2570,7 @@
     },
     county: {
       'General Fund': ['Mostly taxes', 'Pays for most County services. Paid for mostly by property taxes, plus fees, state and federal payments and other income.'],
-      'Fund B': ['Grants, not taxes', 'Federal and state grants for roads and bridges.'],
+      'Fund B': ['State money, not County taxes', 'The County\'s share of the state\'s liquid fuels (motor fuel) money, which its books list as a state grant, spent on County bridges and roads.'],
       'Fund E': ['Grants, not taxes', 'Federal and state grants, fees and transfers from other funds, for drug and alcohol programs.'],
       'Fund EI': ['Grants, not taxes', 'Federal and state grants, Medical Assistance and transfers from other funds, for early intervention services for young children.'],
       'Fund F': ['Fees and grants, not taxes', 'Federal incentive payments and fees, with transfers from other funds, for the domestic relations (child support) office.'],
