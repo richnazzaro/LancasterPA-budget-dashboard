@@ -8,7 +8,7 @@ web
 
 ## Stack
 
-Existing codebase: static HTML, CSS and vanilla JavaScript in `web/`, Chart.js from a CDN, no build step, no server. Deployed to GitHub Pages at budget.nazwel.net on every push to `main`. A Python pipeline (run by hand about once a year) turns the city's budget PDFs into the CSVs and `web/data/*.json` the site reads.
+Existing codebase: static HTML, CSS and vanilla JavaScript in `web/`, Chart.js from a CDN, no build step, no server. Deployed to GitHub Pages at budget.nazwel.net on every push to `main`. A Python 3.12 pipeline (run by hand about once a year) turns the City's and the County's budget PDFs into the CSVs and the `web/data/` JSON the site reads.
 
 ## Users
 
@@ -17,22 +17,22 @@ Secondary, served after the taxpayer: journalists and analysts who need provenan
 
 ## Product Purpose
 
-A public budget-transparency dashboard for the City of Lancaster, PA. It turns the city's budget books (2022 to 2027) into one plain, checkable view: totals by year, what changed in the proposed 2027 budget, spending by department and bureau down to line items, and the General Fund's reserve. Success: a resident understands the headline and the changes in the first screen, and anyone can verify any figure against the source PDF.
+A public budget-transparency dashboard for the City of Lancaster, PA and the County of Lancaster, PA. It turns the City's budget books (2022 to 2027, plus its 2028–2029 projections) and the County's budget books, budget resolutions and audited annual reports (2023 to 2026) into one plain, checkable view: totals by year, what changed in the newest budget, spending by department and bureau down to line items, which funds are tax-funded, and the General Fund's reserve or balance. Success: a resident understands the headline and the changes in the first screen, and anyone can verify any figure against the source PDF.
 
 ## Positioning
 
-Independent, source-linked and honest about the source's flaws. Every figure links to its PDF page; the site discloses where the city's own books disagree (40 reviewed source errors as of 11/2026, two printed 12/31/2025 reserve balances) and shows one kind of figure per year (Actual, Projected, Proposed, Revised) rather than mixing them. Plain-English narration of what changed. A neighboring site could not copy the validation behind it.
+Independent, source-linked and honest about the source's flaws. Every figure links to its PDF page; the site discloses where the city's own books disagree (40 reviewed source errors in the City's books and 27 in the County's as of 11/2026, two printed 12/31/2025 reserve balances) and shows one kind of figure per year (Actual, Projected, Proposed, Revised) rather than mixing them. Plain-English narration of what changed. A neighboring site could not copy the validation behind it.
 
 ## Operating Context
 
-Data comes from the city's budget PDFs, extracted and validated by a pipeline with cross-checks to the printed totals. Lancaster County is a second volume of the same site (City and County tabs in the rail): its Budget from the County's own books, with audited Actual only where the annual financial report gives it at the same level. The General Fund is the default view because it is the tax-funded fund; shifts into it are flagged.
+Data comes from the city's budget PDFs, extracted and validated by a pipeline with cross-checks to the printed totals. The County of Lancaster is a second volume of the same site (City and County tabs in the rail): its Budget from the County's own books, with audited Actual only where the annual financial report gives it at the same level. The General Fund is the default view because it is the tax-funded fund; shifts into it are flagged.
 
 ## Capabilities and Constraints
 
-- Views: Home (Totals by Year, What changed, departments, funds), department and bureau pages with line items and a Staff section (budgeted positions and salaries by year), What changed, Reserve Fund, About the data. County: the same pages without Staff or Reserve Fund, plus a Budget and Actual section (audited actuals beside the Budget at fund level) and the audited General Fund balance on About.
+- Views: Home (Totals by Year, What changed, departments, funds), department and bureau pages with line items and a Staff section (budgeted positions and salaries by year), What changed, Reserve Fund, Funds and terms, About the data. County: the same pages without Staff; a General Fund Balance page in the Reserve Fund's place (budget-resolution and audited balances side by side, never combined); a Budget and Actual section (audited actuals beside the Budget at fund level); The 2026 Budget in Context; elected-office labels. Every page heading carries the entity's name as a running head.
 - One kind of figure per year: historic years Actual, the prior budget year Projected, the new year Proposed and Revised. Adopted and Amended are never shown.
 - Links from numbers to PDF pages (`#page=N`) stay, quiet and without "p. N" text.
-- County figures are labelled "Budget" (never Adopted or Proposed on screen; the newest year's status line cites Resolution 79 of 2025), and audited figures "Actual". The County has no Staff section and no Reserve Fund page.
+- County figures are labelled "Budget" (never Adopted or Proposed on screen; the newest year's status line cites Resolution 79 of 2025), and audited figures "Actual". The County has no Staff section; its General Fund Balance page takes the Reserve Fund's place.
 - Entity name, title, footer, default fund, fund names and data paths live in the `entities` map of `web/config.json`; all colors live in the `:root` block of `web/styles.css` (charts read them from there). Keep it that way.
 - The site must work with no build step on GitHub Pages.
 - The lacontroller.app look-matching rule in CLAUDE.md is released for this redesign (owner, 2026-11-20).
@@ -44,7 +44,7 @@ Data comes from the city's budget PDFs, extracted and validated by a pipeline wi
 
 ## Evidence on Hand
 
-Real data for 2020 to 2027 (positions 2022 to 2027) in `web/data/*.json` (budget, changes, staffing, conflicts), real PDFs in `web/pdfs/`. No testimonials, press or usage metrics; none should be invented.
+Real City data for 2020 to 2029 (2028–2029 as projections; positions 2022 to 2027) in `web/data/*.json` (budget, changes, staffing, conflicts) and County data for 2023 to 2026 in `web/data/county/` (budget, changes, conflicts, fund_balance_gaap); real PDFs in `web/pdfs/` and `web/pdfs/county/`. No testimonials, press or usage metrics; none should be invented.
 
 ## Product Principles
 

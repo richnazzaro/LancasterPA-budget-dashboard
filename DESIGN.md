@@ -127,6 +127,8 @@ The previous look (blue and amber boxed cards matched to another site) is retire
 
 ## Colors
 
+Every token's light and dark value, and which rules and charts use it, is listed in [docs/REFERENCE.md](docs/REFERENCE.md#3-webstylescss).
+
 A restrained money palette: near-white paper, green-black ink, one green, one red, and gray for comparison.
 
 ### Primary

@@ -1,6 +1,8 @@
-# Plan: Lancaster County budget data
+# Plan: County of Lancaster budget data
 
-Status: step 1 done (see Progress at the end). Written 2026-11-20 from a survey of the three books in `Budget PDFs - County/` and the project's Impeccable context (PRODUCT.md, DESIGN.md, `.impeccable/surfaces/web-index-html.md`).
+**Status: complete (2026-11-22).** The County pages are live at https://budget.nazwel.net/#/county/ (PR #5, with the County ingest fix in PR #7): Budget 2023–2026, audited Actual 2023–2025, the General Fund Balance, The 2026 Budget in Context, elected offices, and Funds and terms. This file is kept as the history of how it was planned and built; for the current state see [SITE.md](SITE.md), [PIPELINE.md](PIPELINE.md#county-of-lancaster) and [REBUILD.md](REBUILD.md). Open items are listed under "Still open" in Progress.
+
+Original status line: step 1 done (see Progress at the end). Written 2026-11-20 from a survey of the three books in `Budget PDFs - County/` and the project's Impeccable context (PRODUCT.md, DESIGN.md, `.impeccable/surfaces/web-index-html.md`).
 
 ## Your decisions so far
 
@@ -332,7 +334,7 @@ Steps 1–3 can be checked without touching the site. Step 2 can run alongside s
 
 **Step 6, docs and rebuild test (2026-11-22).** README, PIPELINE and REBUILD now cover the County: where the books and audited reports live (all tracked, 99 MB, with a source address for each), `ingest.py --county`, the 2024 book's OCR and corrections, `extract_county_acfr.py`, both builds and checks, the hand files in `data/county/`, Budget and Actual labelling, the printed-totals rule, the City / County switch, and a yearly County update.
 - **Rebuild from a fresh clone, following REBUILD.md:** City and County ingest passed (County 2024: 2,795 checks; 2025: 2,901; 2026: 8,262; audited reports 677 checks); both checks report 0 series mismatches; every `web/data` JSON matched the committed one except timestamps.
-- **Found and fixed:** (1) the docs did not say the pinned packages do not install on Python 3.13+ (the system `python3` here was 3.15); they now say to use 3.9 to 3.12. (2) The County `printed` account-group names depended on the hash seed when OCR variants tied, so two builds differed; `build_county.py` now sorts before choosing, and the County JSON was regenerated.
+- **Found and fixed:** (1) the docs did not say the pinned packages do not install on Python 3.13+ (the system `python3` here was 3.15); they now say to use 3.9 to 3.12 (since the Pillow 13 update in PR #6, 3.12 only). (2) The County `printed` account-group names depended on the hash seed when OCR variants tied, so two builds differed; `build_county.py` now sorts before choosing, and the County JSON was regenerated.
 
 **General Fund Balance (2026-11-22).** The County's budget resolutions now give the Budget side of the General Fund balance.
 - **Sources:** Res 91 of 2023 (2024 budget), Res 83 of 2024 (2025) and Res 79 of 2025 (2026), saved as `Budget PDFs - County/Resolutions/County-Resolution-<n>-of-<year>.pdf`, with `config/county/resolutions/<budget year>.json` (URL, the County's file name, reprints). Res 109 of 2022 (2023 budget) is not used, so 2023 has an Actual balance only.
