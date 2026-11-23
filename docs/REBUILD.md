@@ -9,7 +9,7 @@ Commands run from the repository root on macOS (Linux works the same way with it
 | Tool | Used for | How to get it |
 |---|---|---|
 | git | the repository | Xcode command-line tools (`xcode-select --install`) or git-scm.com |
-| Python 3.9 to 3.12 | the pipeline (tested on 3.9.6, the macOS system Python, `/usr/bin/python3`; the publish workflow uses 3.12). **Not 3.13 or newer:** the packages pinned in `requirements.txt` do not install there, so if your `python3` is newer, create the venv with `/usr/bin/python3 -m venv .venv` or another 3.9 to 3.12 | python.org, or the system `python3` |
+| Python 3.12 | the pipeline and the publish workflow (older Pythons cannot install the pinned, security-patched packages) | `brew install python@3.12`, or python.org; the macOS system `python3` is 3.9 and is too old |
 | Tesseract | OCR of the two scanned books (the City's 2026 book and the County's 2024 book) | `brew install tesseract` |
 | A web browser | the local preview | any |
 | A GitHub account | publishing (optional) | github.com |
@@ -21,7 +21,7 @@ Commands run from the repository root on macOS (Linux works the same way with it
 ```bash
 git clone https://github.com/<owner>/<repo>.git
 cd <repo>
-python3 -m venv .venv      # or /usr/bin/python3 -m venv .venv (see step 1: Python 3.9 to 3.12)
+python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 ```
