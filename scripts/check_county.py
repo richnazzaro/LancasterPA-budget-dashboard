@@ -33,6 +33,14 @@ validation_*.csv and data/county/*.csv directly and does not import the build.
    for that year; one Actual entry per ACFR year, equal to the General Fund rows of gaap_fund_balance_acfr.csv, from
    the ACFR; Budget entries cite only resolutions and Actual entries only ACFRs; every resolution check over $5 in
    validation_resolutions_county.csv is in known_issues.csv; and the known issue on a printed line is linked to it.
+9. Context facts (budget.json `context`, from data/county/context_facts.csv): every fact equal to its CSV row (value, document,
+   page, kind, fund, slides that repeat it) and nothing else shown; the cited PDFs exist; no fact cites the budget
+   presentation as its source unless its kind is "presentation" (a slide is not a primary source); the agency grants add to
+   their printed totals (General Fund, Act 13 funds, total request) and the General Fund total and the transit line equal
+   Res 79's "Affiliated Agency/Capital Project Grants" and "RRTA Funding"; the Capital Improvement Fund total is the sum of
+   its two printed parts; the tax rate, assessed value and increase equal the resolutions' (Res 91, 83 and 79); the rate
+   history has one rate for every year 2017 to 2026; and every page check in validation_context_county.csv (written by
+   verify_county_context.py: the figure is on its page, and on the presentation slide that repeats it) passed.
 Every failure counts toward the final "N series mismatches". Standard library only.
 """
 from __future__ import annotations
@@ -227,6 +235,7 @@ def main() -> int:
     failures += check_conflicts(conflicts, rows_by_doc, live, want_book)
     failures += check_actuals(budget, rows_by_doc, want_book)
     failures += check_fund_balance(budget)
+    failures += check_context(budget)
 
     print(f"\n{failures} series mismatches")
     return 1 if failures else 0
@@ -327,6 +336,76 @@ def check_fund_balance(budget) -> int:
         print(f"FAIL {vpath.name} covers {sorted(seen)}, configs {sorted(years)}")
     print(f"{'ok  ' if not vbad else 'FAIL'} {n} resolution checks (columns, chain, draw, books, reprint); every difference over ${TOLERANCE} is in known_issues.csv")
     return bad + vbad
+
+
+def check_context(budget) -> int:
+    print("\nContext facts (budget.json context), recomputed from context_facts.csv and resolutions_county.csv:")
+    path, vpath, rpath = DATA / "context_facts.csv", PROCESSED / "validation_context_county.csv", PROCESSED / "resolutions_county.csv"
+    ctx, docs, bad = budget.get("context"), budget["docs"], 0
+    if not path.exists():
+        ok = not ctx
+        print(f"{'ok  ' if ok else 'FAIL'} no context_facts.csv: no context block")
+        return 0 if ok else 1
+    rows = read(path)
+    if not ctx:
+        print("FAIL context_facts.csv has rows but budget.json has no context block")
+        return 1
+    num = lambda t: int(t) if re.fullmatch(r"-?\d+", t) else float(t) if re.fullmatch(r"-?\d+\.\d+", t) else t
+    want = [(r["id"], r["group"], r["label"], num(r["value"]), r["unit"], int(r["year"]), r["fund"], r["source_doc"], int(r["source_page"]),
+             r["source_kind"], tuple((d, int(p)) for d, p in (x.split("#") for x in r["also_in"].split(";"))) if r["also_in"] else (), r["note"])
+            for r in rows]
+    got = [(f["id"], f["group"], f["label"], f["v"], f["unit"], f["year"], f.get("fund", ""), docs[f["d"]], f["p"], f["kind"],
+            tuple((docs[d], p) for d, p in f.get("also", [])), f.get("note", "")) for f in ctx["facts"]]
+    if want != got:
+        bad += 1
+        for k in sorted(set(want) ^ set(got), key=str):
+            print(f"FAIL {'missing' if k in want else 'extra'} {k}")
+    by = {r["id"]: num(r["value"]) for r in rows}
+    for r in rows:
+        if not any((ROOT / "Budget PDFs - County" / sub / r["source_doc"]).exists() for sub in ("", "ACFR", "Resolutions")):
+            bad += 1
+            print(f"FAIL {r['id']}: {r['source_doc']} missing")
+        if r["source_doc"].endswith("Presentation.pdf") != (r["source_kind"] == "presentation"):
+            bad += 1
+            print(f"FAIL {r['id']}: kind {r['source_kind']} cites {r['source_doc']}")
+    grants = [r for r in rows if r["group"] == "agency_grants" and r["id"].startswith("grant_") and r["id"][6:].isdigit()]
+    gf, a13 = sum(int(r["value"]) for r in grants if r["fund"] == "General Fund"), sum(int(r["value"]) for r in grants if r["fund"] == "Act 13")
+    ties = [("General Fund grants", gf, by["grants_gf"]), ("Act 13 grants", a13, by["grants_act13"]),
+            ("total request", by["grants_gf"] + by["grants_act13"], by["grants_request"]),
+            ("Capital Improvement Fund", by["cip_2026"] + by["cip_rollover"], by["cip_total"])]
+    res = read(rpath) if rpath.exists() else []
+    r79 = lambda role, line=None: [x for x in res if x["budget_year"] == "2026" and x["role"] == role and (line is None or x["line"] == line) and x["column"] in ("general_fund", "")]
+    one = lambda lst: int(float(lst[0]["amount"])) if len(lst) == 1 else None
+    ties += [("Res 79 agency grants", by["grants_gf"], one(r79("expense_line", "Affiliated Agency/Capital Project Grants"))),
+             ("Res 79 RRTA funding", by["scta"], one(r79("expense_line", "RRTA Funding"))),
+             ("Res 79 assessed value", by["assessed_value"], one(r79("assessed_value"))),
+             ("Res 79 tax increase", by["tax_increase"], one(r79("tax_increase_pct"))),
+             ("Res 79 millage", by["millage_2026"], float(r79("millage")[0]["amount"])),
+             ("Res 83 millage", by["millage_2025"], float([x for x in res if x["budget_year"] == "2025" and x["role"] == "millage"][0]["amount"])),
+             ("Res 91 millage", by["millage_2024"], float([x for x in res if x["budget_year"] == "2024" and x["role"] == "millage"][0]["amount"])),
+             ("millage history", sorted(int(r["year"]) for r in rows if r["group"] == "millage_history"), list(range(2017, 2027))),
+             ("2026 millage history", by["millage_2026"], by["millage_hist_2026"])]
+    for name, a, b in ties:
+        if a != b:
+            bad += 1
+            print(f"FAIL {name}: {a} != {b}")
+    if not vpath.exists():
+        bad += 1
+        print(f"FAIL {vpath.name} missing (run scripts/verify_county_context.py)")
+    else:
+        v = read(vpath)
+        need = {(r["id"], "source page") for r in rows if r["source_kind"] != "calculated"} | {(r["id"], "presentation agrees") for r in rows if r["also_in"]}
+        have = {(c["fact"], c["check"]) for c in v}
+        for k in sorted(need - have):
+            bad += 1
+            print(f"FAIL no page check for {k}")
+        for c in v:
+            if c["passed"] != "True":
+                bad += 1
+                print(f"FAIL {c['fact']}: {c['expected']!r} not on {c['source_doc']} p{c['source_page']}")
+    print(f"{'ok  ' if not bad else 'FAIL'} {len(rows)} facts equal the CSV; grants and Capital Improvement Fund add up; "
+          f"tax rate, assessed value and grants match the resolutions; every figure is on its cited page")
+    return bad
 
 
 def check_changes(budget, changes, csv_rows, want_book, book_year, newest) -> int:

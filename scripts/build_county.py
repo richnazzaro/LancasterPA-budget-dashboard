@@ -524,6 +524,35 @@ def build_fund_balance(processed: Path, docs, known: list) -> dict | None:
             "sources": sources, "entries": entries}
 
 
+CONTEXT_PRESENTATION = {"file": "County-2026-Budget-Presentation.pdf", "title": "2026 budget presentation",
+                        "url": "https://www.co.lancaster.pa.us/591/Budget-Financial-Information"}
+
+
+def build_context(docs) -> dict | None:
+    """Context facts (data/county/context_facts.csv): the tax rate and its history, the assessed value, bond rating, staffing,
+    Capital Improvement Fund and agency grants for the newest budget year. Each fact cites the primary document and page that
+    print it (a resolution, the budget book or the audited report), not the County's budget presentation; `also` lists the
+    presentation slides that repeat it. Only a fact of kind "presentation" (staffing) rests on the presentation alone; kind
+    "calculated" is the sum of printed figures. scripts/verify_county_context.py confirms every figure is on its page."""
+    path = DATA / "context_facts.csv"
+    if not path.exists():
+        return None
+    facts = []
+    for r in read_csv(path):
+        v = r["value"]
+        v = int(v) if re.fullmatch(r"-?\d+", v) else float(v) if re.fullmatch(r"-?\d+\.\d+", v) else v
+        f = {"id": r["id"], "group": r["group"], "label": r["label"], "v": v, "unit": r["unit"], "year": int(r["year"]),
+             "d": docs(r["source_doc"]), "p": int(r["source_page"]), "kind": r["source_kind"]}
+        if r["fund"]:
+            f["fund"] = r["fund"]
+        if r["also_in"]:
+            f["also"] = [[docs(d), int(pg)] for d, pg in (x.split("#") for x in r["also_in"].split(";"))]
+        if r["note"]:
+            f["note"] = r["note"]
+        facts.append(f)
+    return {"year": max(f["year"] for f in facts), "presentation": CONTEXT_PRESENTATION, "facts": facts}
+
+
 def build(processed: Path = PROCESSED, out: Path = OUT) -> dict:
     books = load_books(processed)
     if not books:
@@ -610,6 +639,7 @@ def build(processed: Path = PROCESSED, out: Path = OUT) -> dict:
     used = {b["doc"] for b in fig_book.values()}
     actuals = build_actuals(processed, docs, known, fig_book)
     reserve = build_fund_balance(processed, docs, known)
+    context = build_context(docs)
     budget = {
         "entity": "county",
         "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -632,6 +662,7 @@ def build(processed: Path = PROCESSED, out: Path = OUT) -> dict:
         "known_issues": known,
         "missing_bureaus": {},
         "reserve": reserve,
+        "context": context,
         "conflict_count": len(conflicts),
         "org": org,
         "actuals": actuals,
@@ -678,6 +709,8 @@ def report(budget: dict, out: Path) -> None:
         for e in r["entries"]:
             end = next(l for l in e["lines"] if l["t"] == "ending")
             print(f"  {e['year']}|{e['measure']:6s} {r['name']}: year-end {end['v']:>12,}  from {budget['docs'][e['doc']]}")
+    if budget.get("context"):
+        print(f"  context: {len(budget['context']['facts'])} facts from data/county/context_facts.csv")
     print(f"Conflicts: {budget['conflict_count']} ({out / 'conflicts.json'})")
     for name in ("budget.json", "conflicts.json", "changes.json", "fund_balance_gaap.json"):
         if (out / name).exists():

@@ -587,6 +587,7 @@
   // What a source document is called in link titles: a budget book, or (County) a budget resolution or an audited report.
   const docTitle = (d) => {
     const f = D.docs[d], r = (D.reserve?.sources || []).find((x) => x.file === f), a = /^County-ACFR-(\d{4})/.exec(f);
+    if (/Presentation\.pdf$/.test(f)) return `${D.context?.year || ''} budget presentation`.trim();
     return r ? `budget resolution (${r.resolution})` : a ? `${a[1]} audited annual report` : `${(D.books.find((b) => b.doc === f) || {}).year} budget book`;
   };
   const srcDoc = (text, d, p) => `<a class="src" href="${pdfHref(d, p)}" target="_blank" rel="noopener" title="${isCounty() ? `View in the ${esc(docTitle(d))}` : 'View in budget book'}" aria-label="${esc(text)}: open source page in the ${esc(docTitle(d))}">${text}</a>`;
@@ -981,7 +982,67 @@
         ${ledger}${gapNotes(ledgerNotes)}</section>
       <section class="panel" aria-labelledby="re-title"><h2 class="panel-title" id="re-title">Income vs. Spending by Fund: ${esc(seriesLabel(k))}</h2>
         <div class="chart-box"><canvas id="re-chart" role="img" aria-label="Income and spending by fund"></canvas></div>
-        <div class="table-scroll"><table class="table" id="re-table"></table></div></section>${actualsHTML()}`;
+        <div class="table-scroll"><table class="table" id="re-table"></table></div></section>${actualsHTML()}${contextHTML()}`;
+  }
+
+
+  /* ---------- County: the budget in context (budget.json `context`, data/county/context_facts.csv) ----------
+     Tax rate, assessed value, bond rating, staffing, Capital Improvement Fund and agency grants. Each figure links to the
+     primary page that prints it (a resolution, the budget book or the audited report); only staffing rests on the County's
+     presentation, and says so. */
+  const ctxFacts = () => (isCounty() && D.context ? D.context.facts : []);
+  const ctxFact = (id) => ctxFacts().find((f) => f.id === id);
+  const ctxLink = (f, text) => srcDoc(text, f.d, f.p);
+  const ctxFig = (f, text) => ctxLink(f, text) + (f.kind === 'calculated' ? ` ${CALC_TAG}` : '');
+  function contextHTML() {
+    const F = ctxFacts();
+    if (!F.length || (S.f && S.f !== DEFAULT_FUND)) return '';
+    const g = (id) => ctxFact(id), y = D.context.year, P = D.context.presentation;
+    const mills = (f) => ctxLink(f, `${f.v.toFixed(3)} mills`);
+    const row = (label, cell, note) => `<tr><th scope="row">${label}${note ? `<span class="ctx-note">${esc(note)}</span>` : ''}</th><td class="num">${cell}</td></tr>`;
+    const inc = g('tax_increase'), m26 = g('millage_2026'), m25 = g('millage_2025'), av = g('assessed_value'), br = g('bond_rating'), pos = g('positions');
+    const cip = [g('cip_total'), g('cip_rollover'), g('cip_2026')];
+    const tax = `<table class="table ledger ctx-table" aria-label="Tax rate and standing, ${y}"><tbody>
+      ${row(`Tax increase over ${y - 1}`, ctxLink(inc, `${inc.v}%`))}
+      ${row('Real estate tax rate', `${mills(m26)}<span class="ctx-from"> from ${ctxLink(m25, `${m25.v.toFixed(3)}`)}</span>`)}
+      ${row('Taxable assessed value', ctxLink(av, money(av.v)))}
+      ${row('Bond rating (Moody\'s)', ctxLink(br, esc(br.v)), `Maintained during ${br.year}, per the audited report.`)}
+      ${row('County staffing positions funded', ctxLink(pos, pos.v.toLocaleString('en-US')), `From the County's ${y} budget presentation only; the budget books and audited reports print no position count.`)}
+      </tbody></table>`;
+    const capital = `<h3 class="wc-h3">Capital Improvement Fund, ${y}</h3>
+      <p class="panel-note">Capital projects are counted apart from the operating budget above.</p>
+      <table class="table ledger ctx-table" aria-label="Capital Improvement Fund, ${y}"><tbody>
+      ${row('Projects begun in 2025, carried over', ctxFig(cip[1], money(cip[1].v)))}
+      ${row(`${y} projects`, ctxFig(cip[2], money(cip[2].v)))}</tbody>
+      <tfoot><tr><th scope="row">Total ${y} expense</th><td class="num">${ctxFig(cip[0], money(cip[0].v))}</td></tr></tfoot></table>`;
+    const grants = F.filter((f) => f.group === 'agency_grants' && /^grant_\d+$/.test(f.id));
+    const gcell = (f) => (f ? ctxLink(f, money(f.v)) : '');
+    const gf = (f) => (f.fund === 'General Fund'), tg = g('grants_gf'), ta = g('grants_act13'), tr = g('grants_request'), sc = g('scta');
+    const ordered = [...grants.filter(gf), ...grants.filter((f) => !gf(f))];
+    const gbody = ordered.map((f) => `<tr><th scope="row">${esc(f.label)}</th><td class="num">${gf(f) ? gcell(f) : ''}</td><td class="num">${gf(f) ? '' : gcell(f)}</td></tr>`).join('');
+    const agency = `<h3 class="wc-h3">Agency grants, ${y}</h3>
+      <p class="panel-note">Grants to outside agencies. Five are paid from the General Fund; the other five come from the County's Act 13 funds, a separate fund that is not part of the General Fund.</p>
+      <div class="table-scroll"><table class="table ledger ctx-table" aria-label="Agency grants, ${y}"><thead><tr><th scope="col">Agency</th><th scope="col" class="num">General Fund</th><th scope="col" class="num">Act 13 funds</th></tr></thead><tbody>${gbody}</tbody>
+      <tfoot><tr><th scope="row">Total</th><td class="num">${ctxLink(tg, money(tg.v))}</td><td class="num">${ctxLink(ta, money(ta.v))}</td></tr>
+      <tr><th scope="row">Total request, both</th><td class="num" colspan="2">${ctxLink(tr, money(tr.v))}</td></tr></tfoot></table></div>
+      <p class="draw-note">Transit funding for RRTA/SCTA, ${ctxLink(sc, money(sc.v))} from the General Fund, is printed apart from these grants and is not in the totals above.</p>`;
+    const hist = F.filter((f) => f.group === 'millage_history').sort((a, b) => a.year - b.year);
+    const history = `<h3 class="wc-h3">Real estate tax rate, ${hist[0].year} to ${hist[hist.length - 1].year}</h3>
+      <div class="chart-box ctx-chart"><canvas id="ctx-millage" role="img" aria-label="Real estate tax rate in mills, ${hist[0].year} to ${hist[hist.length - 1].year}: ${hist.map((f) => `${f.year} ${f.v.toFixed(3)}`).join(', ')}"></canvas></div>
+      <details class="values"><summary>Show the rate for each year</summary><div class="table-scroll"><table class="table ledger ctx-table" aria-label="Real estate tax rate by year"><thead><tr><th scope="col">Year</th><th scope="col" class="num">Mills</th></tr></thead><tbody>${[...hist].reverse().map((f) => `<tr><th scope="row">${f.year}</th><td class="num">${ctxLink(f, f.v.toFixed(3))}</td></tr>`).join('')}</tbody></table></div></details>`;
+    return `<section class="panel" id="sec-context" tabindex="-1" aria-labelledby="cx-t"><h2 class="panel-title" id="cx-t">The ${y} Budget in Context</h2>
+      <p class="panel-note">Facts about the ${y} budget from the County's own documents. Each figure opens the page that prints it. The County's ${esc(P.title)} repeats them and is listed on the About page.</p>
+      ${tax}${capital}${agency}${history}</section>`;
+  }
+  function drawContext() {
+    const cv = $('ctx-millage');
+    if (!cv || !window.Chart) return;
+    const hist = ctxFacts().filter((f) => f.group === 'millage_history').sort((a, b) => a.year - b.year), th = chartTheme();
+    charts.push(new Chart(cv, { type: 'line',
+      data: { labels: hist.map((f) => f.year), datasets: [{ label: 'Mills', data: hist.map((f) => f.v), borderColor: SEL, backgroundColor: SEL, stepped: 'middle', pointRadius: 3, borderWidth: 2 }] },
+      options: { responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
+        plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { label: (c) => `${c.raw.toFixed(3)} mills` } } },
+        scales: { x: { ticks: { color: th.tick }, grid: { display: false } }, y: { min: 0, max: 4, ticks: { color: th.tick, callback: (n) => n.toFixed(1) }, grid: { color: th.grid }, title: { display: true, text: 'Mills', color: th.tick } } } } }));
   }
 
   function revExpAfter() {
@@ -2069,7 +2130,7 @@
     destroyCharts();
     notesShown = new Set();
     let page;
-    if (route.name === 'home') page = { html: homeView(), after: () => { if (isReserve()) drawReserve(); else { drawTrend(); revExpAfter(); } } };
+    if (route.name === 'home') page = { html: homeView(), after: () => { if (isReserve()) drawReserve(); else { drawTrend(); revExpAfter(); drawContext(); } } };
     else if (route.name === 'changes') page = changesPage();
     else if (route.name === 'dept') page = deptPage();
     else if (route.name === 'about') page = { html: '<header class="page-head"><h1 id="page-h" tabindex="-1">About the data</h1></header>', after: () => { const t = q.get('s') && $(q.get('s')); if (t) { if (t.tagName === 'DETAILS') t.open = true; t.scrollIntoView(); } } };
@@ -2291,6 +2352,10 @@
     const gbYears = GB ? [...new Set(GB.rows.map((r) => r.year))].sort((a, b) => a - b) : [];
     const gbLines = GB ? [...new Set(GB.rows.map((r) => r.line))] : [];
     const gbTable = GB ? `<div class="table-scroll"><table class="table ledger" aria-label="Audited fund balances at December 31"><thead><tr><th scope="col">At December 31</th>${gbYears.map((y) => `<th scope="col" class="num">${y}</th>`).join('')}</tr></thead><tbody>${gbLines.map((ln) => `<tr><th scope="row">${esc(ln)}</th>${gbYears.map((y) => { const r = GB.rows.find((x) => x.year === y && x.line === ln); return `<td class="num">${r ? gbLink(money(r.v), r) : '—'}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>` : '';
+    const PR = D.context?.presentation;
+    const ctxAbout = PR ? `<h2 class="about-h">Context facts</h2>
+      <p>The “${D.context.year} Budget in Context” section on the overview shows the tax rate and its history, the taxable assessed value, the bond rating, the Capital Improvement Fund and the agency grants. Each figure links to the page that prints it in <a href="${pdf(`Resolutions/${RS.find((x) => x.budget_year === D.context.year)?.file || ''}`)}" target="_blank" rel="noopener">${esc(RS.find((x) => x.budget_year === D.context.year)?.resolution || 'the budget resolution')}</a>, the ${D.context.year} budget book or the ${A.years[A.years.length - 1]} audited annual report. They are shown as printed; a figure that the County's presentation gave differently from those documents would not be shown.</p>
+      <p>The County's <a href="${pdf(PR.file)}" target="_blank" rel="noopener">${D.context.year} budget presentation</a> (<a href="${pdf(PR.file)}" download>download PDF</a>; <a href="${esc(PR.url)}" target="_blank" rel="noopener">County page</a>) repeats these figures and is the only source for the number of funded staffing positions. A slide deck is not a primary document, so the site uses none of its other figures: its fund balances, revenue and spending are budget-basis or proposed figures that differ from the adopted resolution and the audit.</p>` : '';
     const merges = (CH?.account_changes || []).map((m) => `<li>${esc(m.from.join(' and '))} → ${esc(m.to)} ${esc(m.to_name)}: ${esc(m.evidence)}</li>`).join('');
     $('about-body').innerHTML = `
       <h2 class="about-h">Sources</h2>
@@ -2305,6 +2370,7 @@
       <p>Actual figures for ${A.years[0]} to ${A.years[A.years.length - 1]} come from the County's audited annual reports, in the budget-versus-actual schedules.</p>
       <ul>${D.actuals_note.map((t) => cleanNote(t)).filter(Boolean).map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
       <p>Audited reports in use:</p><ul>${acfrs}</ul>
+      ${ctxAbout}
       <h2 class="about-h">Departments and funds</h2>
       <p>Departments are grouped as the County's <a href="${pdf(O.chart_doc)}#page=${O.chart_page}" target="_blank" rel="noopener">${D.newest_year} budget book</a> groups them: ${groups}. Each budget line belongs to a department by its account number, with the department's name as the book prints it. The County does not publish staffing schedules, so there is no Staff section.</p>
       <p>The County's books print fund letters without names. The names shown here come from the County's audited annual reports:</p>

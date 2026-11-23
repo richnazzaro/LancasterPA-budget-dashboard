@@ -825,3 +825,10 @@ a.src { white-space: nowrap; }
 /* Sentences that lead a page or panel always wrap inside their column (amount links stay whole). */
 .page-head, .wc-lede, .wc-lede-sm, .deck { min-width: 0; max-width: 100%; overflow-wrap: break-word; }
 .wc-after { margin-top: 12px; }
+
+/* County overview: the budget in context (app.js contextHTML). Open ruled tables; no boxes. */
+.ctx-table { margin: 0 0 8px; }
+.ctx-table tbody tr { cursor: auto; }
+.ctx-note { display: block; margin-top: 2px; font-size: 14px; font-weight: 400; color: var(--muted); }
+.ctx-from { color: var(--muted); font-size: 15px; white-space: nowrap; }
+.ctx-chart { height: 220px; margin: 8px 0 12px; }

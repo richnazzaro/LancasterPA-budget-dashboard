@@ -14,7 +14,8 @@ that print the same year is compared line by line. A scanned County book is
 OCR'd (cached) with the "ocr" settings of its config/county/ file. Then the
 County's budget resolutions (Budget PDFs - County/Resolutions/, one per
 config/county/resolutions/<year>.json) are read and checked by
-extract_county_resolutions.py.
+extract_county_resolutions.py, and the context facts in data/county/context_facts.csv are
+checked against the pages they cite by verify_county_context.py.
 
 For each PDF:
   1. Detect whether it has a usable text layer (share of pages with text) or
@@ -374,6 +375,9 @@ def ingest_county(pdfs):
     # each budget year. Run after the books, whose printed Grand Totals they are checked against.
     import extract_county_resolutions
     status = max(status, extract_county_resolutions.main([]))
+    # The context facts (data/county/context_facts.csv): confirm every figure is on the page it cites.
+    import verify_county_context
+    status = max(status, verify_county_context.main([]))
     return status
 
 
