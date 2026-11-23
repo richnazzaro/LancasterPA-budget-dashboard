@@ -394,10 +394,14 @@ def main():
     ap.add_argument("--dir", type=Path, default=PDF_DIR)
     ap.add_argument("-v", "--verbose", action="store_true", help="show each extractor's log")
     ap.add_argument("--county", action="store_true",
-                    help=f"every County book in {COUNTY_PDF_DIR.name}/")
+                    help=f"every County budget book in {COUNTY_PDF_DIR.name}/ (those with a config in config/county/)")
     args = ap.parse_args()
     if args.county:
-        sys.exit(ingest_county(sorted(COUNTY_PDF_DIR.glob("*.pdf"))))
+        # Only the budget books: a County PDF is a book when it has a layout config in config/county/. The
+        # budget presentation in the same folder is not one (its facts are checked by verify_county_context).
+        import extract_county
+        books = [p for p in sorted(COUNTY_PDF_DIR.glob("*.pdf")) if (extract_county.CONFIG_DIR / f"{p.stem}.json").exists()]
+        sys.exit(ingest_county(books))
     pdfs = sorted(args.dir.glob("*.pdf")) if args.all else args.pdf
     county = [p for p in pdfs if p.resolve().parent.name == COUNTY_PDF_DIR.name]
     if county:
