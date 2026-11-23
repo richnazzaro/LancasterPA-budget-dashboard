@@ -1,0 +1,15 @@
+{
+  "source_doc": "County-2026-Budget-Book.pdf",
+  "original_file_name": "2026%20Budget%20Book.pdf",
+  "entity": "County of Lancaster, PA",
+  "book_year": 2026,
+  "years": [2025, 2026],
+  "edition": "Presented for adoption: cover letter dated December 3, 2025; adoption vote scheduled for December 24, 2025 (p2).",
+  "layout": "Line items from the 'Department Account' reports: General Fund revenue pp9-11, expenditure pp12-28; Other Funds pp114-123. Department pages pp32-147 are checked line by line.",
+  "department_pages": {
+    "_comment": "The department pages fold the Facilities Management costs charged to a human-services fund into that fund's department (the Other Funds detail and by-department reports list them under A3100 Facilities Management). The A3100 page shows only its General Fund budget.",
+    "A3100": {"sections": ["General Fund"]},
+    "D1400": {"add": [["Y", "Facilities Management"]]},
+    "D1800": {"add": [["H", "Facilities Management"]]}
+  }
+}

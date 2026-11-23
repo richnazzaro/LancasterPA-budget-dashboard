@@ -16,16 +16,16 @@
 (() => {
   'use strict';
 
-  const LABEL = { proposed: 'Proposed', revised: 'Revised', projected: 'Projected', actual: 'Actual', projection: 'Projection' };
-  const ORDER = ['actual', 'projected', 'proposed', 'revised'];
+  const LABEL = { proposed: 'Proposed', revised: 'Revised', projected: 'Projected', actual: 'Actual', budget: 'Budget', projection: 'Projection' };
+  const ORDER = ['actual', 'projected', 'budget', 'proposed', 'revised'];
   const STATUS = {
     proposed: 'Proposed, not adopted', revised: 'Revised proposal, not adopted',
-    projected: 'Projected year-end estimate', actual: 'Actual spending',
+    projected: 'Projected year-end estimate', actual: 'Actual spending', budget: 'Budget',
   };
   const CAT_ORDER = ['Salaries & Wages', 'Benefits', 'Operating', 'Equipment & Capital', 'Debt, Transfers & Allocations', 'Revenue', 'Uncoded'];
   // Colors are read from CSS variables at start-up (see loadTokens), so branding lives in styles.css.
   let PALETTE = [], OTHER_COLOR = '#777', SEL = '#41ffca', CMP = '#ffca41', INK = '#fff', MUTED = '#b3b3b3', GRID = '#262626', SURFACE = '#0d0d0d', BG = '#000', TRACK = '#222';
-  let CFG = null, DEFAULT_FUND = '';
+  let CFG = null, DEFAULT_FUND = '', BASE = null, ENT = 'city', SITE = '', GB = null; // BASE: config.json; CFG: BASE plus the chosen entity; GB: County audited fund balances
   function loadTokens() {
     const cs = getComputedStyle(document.documentElement), v = (n, d) => cs.getPropertyValue(n).trim() || d;
     PALETTE = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => v(`--cat-${i}`, '#888'));
@@ -37,7 +37,12 @@
   const PIE_SLICES = 7;
 
   let D = null, O = null; // O = D.org (departments, units, org code -> unit)
-  const rowCache = new Map();
+  let rowCache = new Map(), memberCache = new Map();
+  const isCounty = () => ENT === 'county';
+  /* Every route lives under #/ (City) or #/county/ (County); a plain #/ link is the City, so old links keep working. */
+  const eh = (path = '') => `#/${isCounty() ? 'county/' : ''}${path}`;
+  const fundNames = () => (CFG && CFG.fund_names) || {};
+  const fn = (f) => fundNames()[f] || f; // a fund as shown (the County's fund letters have names)
   let charts = [];
   const S = { y: 0, m: '', c: '', k: 'expense', f: '' };
   let route = { name: 'home' };
@@ -67,9 +72,11 @@
   const seriesLabel = (k) => { const { y, m } = parseKey(k); return `${y} ${LABEL[m]}`; };
   const sum = (list) => list.reduce((t, r) => t + r.v, 0);
   /* Source links: the amount itself links to its page in the budget book (no page text is shown). */
-  const bookYearOf = (k) => { const s = series(k); return s.year + D.rule[s.measure].book_offset; };
+  const bookYearOf = (k) => { const s = series(k); return s.book_year != null ? s.book_year : s.year + D.rule[s.measure].book_offset; };
   const bookOf = (k) => (isProjKey(k) ? projBook() : `${bookYearOf(k)} budget book`);
-  const pdfHref = (d, p) => `${CFG.paths.pdfs}${encodeURIComponent(D.docs[d])}#page=${p}`;
+  // County audited reports sit in the ACFR/ folder of the County PDFs, budget resolutions in Resolutions/.
+  const docRel = (d) => (/^County-ACFR-/.test(D.docs[d]) ? `ACFR/${D.docs[d]}` : /^County-Resolution-/.test(D.docs[d]) ? `Resolutions/${D.docs[d]}` : D.docs[d]);
+  const pdfHref = (d, p) => `${CFG.paths.pdfs}${docRel(d).split('/').map(encodeURIComponent).join('/')}#page=${p}`;
   const src = (text, k, d, p) => (d == null || !k ? text
     : `<a class="src" href="${pdfHref(d, p)}" target="_blank" rel="noopener" title="View in budget book" aria-label="${esc(text)}: open source page in the ${esc(docLabel(d))}">${text}</a>`);
   const firstPage = (list) => { let d = null, p = Infinity; for (const r of list) { if (d == null) d = r.d; if (r.d === d && r.p < p) p = r.p; } return { d, p }; };
@@ -79,13 +86,26 @@
      lines each covers). Otherwise the site shows its own sum of the lines and labels it "calculated". Where the printed
      figure and its lines disagree by more than rounding (`flag`), the printed figure stays and a note gives our sum, the
      gap and the reviewed explanation from known_issues.csv. Rounding-only gaps are not mentioned. */
-  const memberCache = new Map();
+  /* The County's printed items carry no member list: what a total covers follows from its kind, fund group, department
+     (and fund), account or account group, as in scripts/build_county.py. */
+  function countyMember(x) {
+    const gf = D.funds.indexOf('General Fund'), df = x.dept_fund != null ? D.funds.indexOf(x.dept_fund) : -1;
+    return (r) => {
+      if ((x.group === 'General Fund') !== (r.fund === gf)) return false;
+      if (x.department != null) return D.departments[r.dept] === x.department && (df < 0 || r.fund === df);
+      const acct = r.code.split('-')[1] || '';
+      if (x.account != null) return acct === x.account;
+      if (x.account_group != null) return acct.slice(0, 2) === x.account_group;
+      return true;
+    };
+  }
+  const isFlag = (x, k) => (x.flags ? !!x.flags[k] : (x.flag || []).includes(k));
   function membersOf(i, k) {
     const id = `${i}|${k}`;
     if (memberCache.has(id)) return memberCache.get(id);
     const x = D.printed[i], rev = x.kind === 'revenue';
-    const set = new Set(rows(k).filter((r) => r.d === x.doc && isRevenue(r) === rev
-      && x.m.some(([f, b, lo, hi]) => r.fund === f && (b === -1 || r.bureau === b) && r.p >= lo && r.p <= hi)));
+    const test = x.m ? (r) => x.m.some(([f, b, lo, hi]) => r.fund === f && (b === -1 || r.bureau === b) && r.p >= lo && r.p <= hi) : countyMember(x);
+    const set = new Set(rows(k).filter((r) => r.d === x.doc && isRevenue(r) === rev && test(r)));
     memberCache.set(id, set);
     return set;
   }
@@ -97,7 +117,7 @@
       if (!(k in x.values) || x.doc !== d || (x.kind === 'revenue') !== rev) return;
       const m = membersOf(i, k);
       if (m.size !== list.length || !list.every((r) => m.has(r))) return;
-      const score = (x.flag.includes(k) ? 2 : 0) + (x.fund ? 0 : 1); // a figure that adds up, then the fund total
+      const score = (isFlag(x, k) ? 2 : 0) + (x.fund ? 0 : 1); // a figure that adds up, then the fund total
       if (score < bestScore) { best = x; bestScore = score; }
     });
     return best;
@@ -105,7 +125,7 @@
   /* The total shown for a list of lines: { v, calc (our sum), x (printed item or null), flag, k, d, p (its page) }. */
   function totalOf(list, k) {
     const calc = sum(list), x = printedFor(list, k);
-    if (x) return { v: x.values[k], calc, x, k, d: x.doc, p: x.page, flag: x.flag.includes(k) };
+    if (x) return { v: x.values[k], calc, x, k, d: x.doc, p: x.page, flag: isFlag(x, k) };
     const fp = firstPage(list);
     return { v: calc, calc, x: null, k, d: fp.d, p: fp.p, flag: false };
   }
@@ -125,7 +145,7 @@
   }
   /* The note under a flagged printed total: what the book prints, what its lines add up to, and why. */
   function gapNote(t, what = '') {
-    const g = Math.round(t.calc - t.v), iss = t.x.issue != null ? D.known_issues[t.x.issue] : null;
+    const g = Math.round(t.calc - t.v), ki = t.x.flags ? t.x.flags[t.k]?.known_issue : t.x.issue, iss = ki != null ? D.known_issues[ki] : null;
     return `<p class="gap-note"><span class="gap-mark" aria-hidden="true">${GAP_SIGN}</span> ${what ? `<strong>${esc(what)}, ${esc(seriesLabel(t.k))}:</strong> ` : ''}the ${esc(bookOf(t.k))} prints ${src(money(t.v), t.k, t.d, t.p)}, but the lines it totals add up to ${money(t.calc)}, <span class="nb">${money(Math.abs(g))} ${g < 0 ? 'less' : 'more'}.</span> ${iss ? esc(scrubPages(iss.note).replace(/^Text layer, every cell read cleanly \(no OCR\)\.\s*/i, '')) : 'Not yet explained.'} ${knownLink()}</p>`;
   }
   // A page says each gap once, where the figure first appears; later copies of the figure carry the ≠ sign only.
@@ -208,13 +228,15 @@
     const [path, qs = ''] = raw.split('?');
     const parts = path.split('/').filter(Boolean).map(decodeURIComponent);
     const q = new URLSearchParams(qs);
+    const ent = parts[0] === 'county' ? 'county' : 'city'; // #/county/... is the County; any other #/... is the City
+    if (ent === 'county') parts.shift();
     let r = { name: 'home' };
     if (parts[0] === 'changes') r = { name: 'changes' };
     else if (parts[0] === 'about') r = { name: 'about' };
     else if (parts[0] === 'department' && parts[1]) {
       r = parts[2] === 'bureau' && parts[3] ? { name: 'bureau', dept: parts[1], bureau: parts[3] } : { name: 'dept', dept: parts[1] };
     } else if (parts.length && location.hash.startsWith('#/')) r = { name: 'missing' }; // any other path is not a page
-    return { r, q };
+    return { r, q, ent };
   }
   function applyQuery(q) {
     const ys = years();
@@ -235,9 +257,9 @@
     if (!s.f) q.set('f', 'all'); else if (s.f !== DEFAULT_FUND) q.set('f', s.f);
     return q.toString();
   }
-  const deptHash = (dept, over) => `#/department/${O.departments[dept].slug}?${query(over)}`;
-  const unitHash = (unit, over) => `#/department/${O.departments[O.units[unit].dept].slug}/bureau/${O.units[unit].slug}?${query(over)}`;
-  const homeHash = (over) => `#/?${query(over)}`;
+  const deptHash = (dept, over) => eh(`department/${O.departments[dept].slug}?${query(over)}`);
+  const unitHash = (unit, over) => eh(`department/${O.departments[O.units[unit].dept].slug}/bureau/${O.units[unit].slug}?${query(over)}`);
+  const homeHash = (over) => eh(`?${query(over)}`);
 
   function navigate(hash, replace = false) {
     if (replace) { history.replaceState(null, '', hash); onRoute(false); } else { location.hash = hash; }
@@ -247,17 +269,18 @@
   /* ---------- shared UI pieces ---------- */
   function statusHTML() {
     const draft = S.m === 'proposed' || S.m === 'revised';
-    return `<span class="status${draft ? ' not-adopted' : ''}">${S.y}: ${STATUS[S.m]}</span>`;
+    const ad = CFG.adopted && CFG.adopted.year === S.y && S.m === 'budget' ? `, ${CFG.adopted.text}` : ''; // the County's newest budget cites its resolution
+    return `<span class="status${draft ? ' not-adopted' : ''}">${S.y}: ${STATUS[S.m]}${ad}</span>`;
   }
 
-  const knownLink = () => `<a class="known-link" href="#/about?s=about-issues">Known issues for this view</a>`;
+  const knownLink = () => `<a class="known-link" href="${eh('about?s=about-issues')}">Known issues for this view</a>`;
 
   /* The one Fund list, used by every view: "All funds" (on a department page only while it is the choice), the funds that
      have lines in what is shown (plus the current choice), and the Reserve Fund view where the page allows it. */
   function fundOptions(present, scope) {
     const opt = (v, label, on) => `<option value="${esc(v)}"${on ? ' selected' : ''}>${esc(label)}</option>`;
     return (!scope || !S.f ? opt('', 'All funds', !S.f) : '')
-      + D.funds.map((f, i) => (present.has(i) || f === S.f ? opt(f, f, f === S.f) : '')).join('')
+      + D.funds.map((f, i) => (present.has(i) || f === S.f ? opt(f, fn(f), f === S.f) : '')).join('')
       + (scope ? '' : extraFundViews().map((f) => opt(f, f, f === S.f)).join(''));
   }
 
@@ -276,10 +299,14 @@
   }
 
   /* Short plain definitions beside the controls. A <details> works on touch and with screen readers (no hover or title). */
-  const DEFINE_FIGURES = [['Proposed', 'the administration\'s first budget proposal.'], ['Revised', 'the revised proposal.'], ['Neither is adopted.', ''],
+  const DEFINE_CITY = [['Proposed', 'the administration\'s first budget proposal.'], ['Revised', 'the revised proposal.'], ['Neither is adopted.', ''],
     ['Projected', 'the city\'s year-end estimate.'], ['Actual', 'what was spent, reported in the budget book two years later.']];
-  const defineFigures = () => `<details class="define"><summary>What do these mean?</summary><ul>${DEFINE_FIGURES.map(([a, b]) => (b ? `<li><strong>${a}:</strong> ${b}</li>` : `<li class="aside">${a}</li>`)).join('')}</ul></details>`;
-  const defineFund = () => `<details class="define"><summary>What is a fund?</summary><p>A fund is a separate account the city keeps for a purpose. The General Fund pays for most city services and is paid for mostly by taxes; others, such as water, sewer, stormwater and trash, are paid for by their own fees and are not mixed with it. The Reserve Fund is the General Fund's savings balance.</p></details>`;
+  const DEFINE_COUNTY = [['Budget', 'the County\'s budget for the year, from its own budget books. The newest year is the budget the County passed for it; earlier years are as the next book prints them.'],
+    ['Actual', 'what the County\'s audited annual report says it received and spent. Shown only for 2023 to 2025, by fund, revenue source and function.']];
+  const defineList = () => (isCounty() ? DEFINE_COUNTY : DEFINE_CITY);
+  const defineFigures = () => `<details class="define"><summary>What do these mean?</summary><ul>${defineList().map(([a, b]) => (b ? `<li><strong>${a}:</strong> ${b}</li>` : `<li class="aside">${a}</li>`)).join('')}</ul></details>`;
+  const defineFund = () => (isCounty() ? `<details class="define"><summary>What is a fund?</summary><p>A fund is a separate account the County keeps for a purpose. The General Fund pays for most County services and is paid for mostly by property taxes. The others, such as Children &amp; Youth, Aging, Behavioral Health and Liquid Fuels, take in their own grants and transfers and are not mixed with it. The County prints the fund letters without names; the names here come from the County's audited report.${D.reserve ? ` The ${esc(D.reserve.name)} is the General Fund's accumulated balance, which covers its budget gap.` : ''}</p></details>`
+    : `<details class="define"><summary>What is a fund?</summary><p>A fund is a separate account the city keeps for a purpose. The General Fund pays for most city services and is paid for mostly by taxes; others, such as water, sewer, stormwater and trash, are paid for by their own fees and are not mixed with it. The Reserve Fund is the General Fund's savings balance.</p></details>`);
 
   /* One controls component for every page (home with any fund, the Reserve Fund, department and bureau pages, What changed):
      a one-line strip (the year's status stamp, then "Viewing …") with a "Change view" / "Close" button, and the fields
@@ -311,6 +338,7 @@
   }
 
   function filtersHTML({ fund = true, scope = null } = {}) {
+    if (isReserve() && isCounty()) return controlsWrap(cbFiltersHTML(), `Viewing ${S.y} · ${esc(D.reserve.name)}`, `<span class="status">${S.y}: Budget and Actual balances</span>`);
     if (isReserve()) {
       const e = resFind(S.y, S.m);
       const stamp = e ? `<span class="status${e.measure === 'proposed' || e.measure === 'revised' ? ' not-adopted' : ''}">${e.year}: ${esc(RES_STATUS[e.measure])}</span>` : '';
@@ -341,7 +369,7 @@
         ${kindTabs}
       </div>`;
     const parts = [`Viewing ${esc(seriesLabel(k))}`, S.c ? `compared with ${esc(seriesLabel(S.c))}` : 'no comparison'];
-    if (fund) parts.push(esc(S.f || 'All funds'));
+    if (fund) parts.push(esc(fn(S.f) || 'All funds'));
     parts.push(kindWordPlain());
     return controlsWrap(inner, parts.join(' · '));
   }
@@ -436,6 +464,7 @@
     const has = (m) => pts.some((p) => p.m === m && p.v != null);
     const legend = [
       has('actual') && `<li><i class="ln"></i>Actual</li>`,
+      has('budget') && `<li><i class="ln"></i>Budget</li>`,
       has('projected') && `<li><i class="ln dashed"></i>Projected</li>`,
       has('proposed') && `<li><i class="dot diamond" style="background:${PALETTE[0]}"></i>Proposed</li>`,
       has('revised') && `<li><i class="dot" style="background:${SEL}"></i>Revised</li>`,
@@ -451,7 +480,7 @@
     const hasProj = has('projection');
     const head = bare ? '' : `<h2 class="panel-title" id="tr-t">${esc(title)}</h2>`;
     const inner = `${head}
-      <p class="panel-note${bare ? ' panel-note-left' : ''}">${kindWordPlain()}${S.f ? ' · ' + esc(S.f) : ''}. Each year shows one kind of figure: actual, projected or proposed${hasProj ? ', then the city\'s projections' : ''}.</p>
+      <p class="panel-note${bare ? ' panel-note-left' : ''}">${kindWordPlain()}${S.f ? ' · ' + esc(fn(S.f)) : ''}. ${isCounty() ? 'Each year shows the County\'s budget.' : 'Each year shows one kind of figure: actual, projected or proposed' + (hasProj ? ', then the city\'s projections' : '') + '.'}</p>
       <ul class="trend-legend" aria-hidden="true">${legend}</ul>${revision}
       <div class="chart-box short"><canvas id="trend-chart" role="img" aria-label="Totals by year, ${pts[0].y} to ${pts[pts.length - 1].y}. Solid line: actual. Dashed line: projected. Hollow diamond: proposed. Solid dot: revised.${hasProj ? ' Dotted gray line with hollow points, on a shaded band: the city\'s projections.' : ''} The table below has the values."></canvas></div>
       <p class="trend-axis" id="trend-axis"></p>${spikeNotes(scope, S.k)}${projectionNote(scope, pts)}
@@ -464,7 +493,7 @@
     const pts = trendData(trendScope), th = chartTheme();
     const yrs = [...new Set(pts.map((p) => p.y))];
     const projAt = new Set(pts.filter((p) => p.m === 'projection').map((p) => p.y));
-    const main = yrs.map((y) => pts.find((p) => p.y === y && (p.m === 'actual' || p.m === 'projected')) || null);
+    const main = yrs.map((y) => pts.find((p) => p.y === y && (p.m === 'actual' || p.m === 'projected' || p.m === 'budget')) || null);
     const dot = (m, c) => ({ label: LABEL[m], data: yrs.map((y) => pts.find((p) => p.y === y && p.m === m)?.v ?? null), borderColor: c, backgroundColor: c, showLine: false, pointRadius: 5, pointHoverRadius: 7 });
     const datasets = [{
       label: 'Actual / Projected', data: main.map((p) => p?.v ?? null), borderColor: SEL, borderWidth: 2, tension: 0, spanGaps: true,
@@ -560,8 +589,8 @@
 
   /* What a scope's total is called in a gap note ("General Fund spending", "Public Safety spending"). */
   function trendWhat(scope) {
-    const name = scope.unit != null ? unitLabel(scope.unit) : scope.dept != null ? O.departments[scope.dept].name : S.f || CFG.entity.short;
-    const fund = (scope.unit == null && S.f && (scope.dept != null)) ? ` (${S.f})` : '';
+    const name = scope.unit != null ? unitLabel(scope.unit) : scope.dept != null ? O.departments[scope.dept].name : fn(S.f) || CFG.entity.short;
+    const fund = (scope.unit == null && S.f && (scope.dept != null)) ? ` (${fn(S.f)})` : '';
     return `${name}${fund} ${kindWordPlain().toLowerCase()}`;
   }
 
@@ -628,7 +657,13 @@
   const resEnd = (e) => e.lines.find((l) => l.t === 'ending');
   const resLabel = (e) => `${e.year} ${e.measure === 'actual' && e.basis === 'unaudited' ? 'Actual (unaudited)' : LABEL[e.measure]}`;
   const resBookYear = (e) => (D.books.find((b) => b.doc === D.docs[e.doc]) || {}).year;
-  const srcDoc = (text, d, p) => `<a class="src" href="${pdfHref(d, p)}" target="_blank" rel="noopener" title="View in budget book" aria-label="${esc(text)}: open source page in the ${esc(docLabel(d))}">${text}</a>`;
+  // What a source document is called in link titles: a budget book, or (County) a budget resolution or an audited report.
+  const docTitle = (d) => {
+    const f = D.docs[d], r = (D.reserve?.sources || []).find((x) => x.file === f), a = /^County-ACFR-(\d{4})/.exec(f);
+    if (/Presentation\.pdf$/.test(f)) return `${D.context?.year || ''} budget presentation`.trim();
+    return r ? `budget resolution (${r.resolution})` : a ? `${a[1]} audited annual report` : docLabel(d);
+  };
+  const srcDoc = (text, d, p) => `<a class="src" href="${pdfHref(d, p)}" target="_blank" rel="noopener" title="${isCounty() ? `View in the ${esc(docTitle(d))}` : 'View in budget book'}" aria-label="${esc(text)}: open source page in the ${esc(docTitle(d))}">${text}</a>`;
   const RES_STATUS = { actual: 'Actual year-end balance', projected: 'Projected year-end balance', proposed: 'Proposed, not adopted', revised: 'Revised proposal, not adopted' };
   function resChange(e) {
     let base = null, from = '';
@@ -670,6 +705,7 @@
   const resSorted = () => D.reserve.entries.slice().sort((a, b) => a.year - b.year || ORDER.indexOf(a.measure) - ORDER.indexOf(b.measure));
 
   function reserveView() {
+    if (isCounty()) return countyBalanceView();
     const e = resFind(S.y, S.m) || resFind(S.y, ORDER.find((m) => resFind(S.y, m)));
     if (!e) return `<header class="page-head"><h1 id="page-h" tabindex="-1">${esc(D.reserve.name)}</h1><p class="muted">No reserve figures for ${S.y}.</p></header>${filtersHTML()}`;
     const end = resEnd(e), ch = resChange(e), name = D.reserve.name;
@@ -711,6 +747,7 @@
         <thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Year-end balance</th><th scope="col" class="num">Change</th></tr></thead><tbody>${yrRows}</tbody></table></div></section>`;
   }
   function drawReserve() {
+    if (isCounty()) { drawCountyBalance(); return; }
     const cv = $('res-chart');
     if (!cv || !window.Chart) return;
     const th = chartTheme(), entries = resSorted(), cur = resFind(S.y, S.m);
@@ -736,6 +773,104 @@
         scales: { x: { ticks: { color: INK, maxRotation: 45 }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid } } } } }));
   }
 
+  /* ---------- County: General Fund Balance (budget.json `reserve`, scripts/build_county.py build_fund_balance) ----------
+     Two measures, shown side by side and never combined. Budget entries come from the budget resolution adopted with each
+     year's budget: the General Fund balance at the start of the year, receipts, expenditures and the balance remaining, as
+     printed (the planned change, receipts minus expenditures, is calculated and says so). Actual entries are the audited
+     balances at December 31 from the annual financial reports (GAAP). The resolution's balances are budget estimates and
+     do not tie to the audited ones; a quiet note under each Budget year gives the audited figure for the same date. */
+  const cbFind = (y, m) => D.reserve.entries.find((e) => e.year === y && e.measure === m);
+  const cbLine = (e, t) => (e ? e.lines.find((l) => l.t === t) : null);
+  const cbYears = () => [...new Set(D.reserve.entries.map((e) => e.year))].sort((a, b) => a - b);
+  const cbRes = (e) => (D.reserve.sources.find((x) => x.doc === e.doc) || {}).resolution || 'the budget resolution';
+  const usDate = (iso) => { const [y, m, d] = iso.split('-'); return `${+m}/${+d}/${y}`; };
+  const isEst = (l) => /estimated/i.test(l.l);
+  function cbFiltersHTML() {
+    const ys = cbYears().slice().reverse();
+    const ym = measuresFor(S.y)[0], funds = fundOptions(new Set(ym ? rows(key(S.y, ym)).map((r) => r.fund) : D.funds.map((f, i) => i)), null);
+    return `<div class="filters">
+        <div class="field"><label class="field-label" for="f-y">Fiscal year</label><select id="f-y" data-sel="y">${ys.map((y) => `<option value="${y}" ${y === S.y ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
+        <div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select>${defineFund()}</div>
+      </div>`;
+  }
+  function cbLineLabel(l) {
+    const est = isEst(l) ? 'estimated, ' : '';
+    if (l.t === 'beginning') return `Balance at the start (${est}${usDate(l.as_of)})`;
+    if (l.t === 'encumbrances') return 'Reserve for encumbrances';
+    if (l.t === 'revenues') return 'Receipts';
+    if (l.t === 'expenditures') return 'Expenditures';
+    if (l.t === 'commitments') return 'Prior-year commitments spent this year';
+    if (l.t === 'surplus') return l.v < 0 ? 'Planned draw from the balance' : l.v > 0 ? 'Planned addition to the balance' : 'Planned change in the balance';
+    if (l.t === 'ending') return `Balance remaining (${est}${usDate(l.as_of)})`;
+    return l.l;
+  }
+  // Under a Budget year: the audited balance at each date the resolution prints, and a resolution balance that equals an
+  // audited balance at another date. Worded quietly; the figures are linked, nothing is subtracted.
+  function cbTieNote(e) {
+    const out = [];
+    for (const t of ['beginning', 'ending']) {
+      const l = cbLine(e, t);
+      if (!l || !l.as_of) continue;
+      const y = +l.as_of.slice(0, 4), a = cbLine(cbFind(y, 'actual'), 'ending');
+      const same = D.reserve.entries.filter((x) => x.measure === 'actual' && x.year !== y).map((x) => cbLine(x, 'ending')).find((x) => x && x.v === l.v);
+      const what = t === 'beginning' ? 'start' : 'end';
+      if (same) out.push(`${cbRes(e)} dates its ${what} balance, ${srcDoc(money(l.v), e.doc, l.p)}, ${usDate(l.as_of)}; that equals the audited balance at ${usDate(same.as_of)}.${a ? ` The audited balance at ${usDate(l.as_of)} is ${srcDoc(money(a.v), cbFind(y, 'actual').doc, a.p)}.` : ''}`);
+      else if (a) out.push(`The audited balance at ${usDate(l.as_of)} is ${srcDoc(money(a.v), cbFind(y, 'actual').doc, a.p)}.`);
+    }
+    if (!out.length) return '';
+    const ki = e.lines.some((l) => l.known_issue != null);
+    return `<p class="draw-note">${out.join(' ')} Budget balances are the County's estimates on its budget basis; audited balances are counted on its accounting basis, so the two are not expected to match.${ki ? ` ${knownLink()}` : ''}</p>`;
+  }
+  function countyBalanceView() {
+    const name = D.reserve.name, ys = cbYears(), y = ys.includes(S.y) ? S.y : ys[ys.length - 1];
+    const b = cbFind(y, 'budget'), a = cbFind(y, 'actual'), bEnd = cbLine(b, 'ending'), aEnd = cbLine(a, 'ending');
+    document.title = `${name} ${y} · ${CFG.site_title}`;
+    const big = b ? `<p class="big-total" aria-live="polite"><span class="big-label">Budget: planned balance at ${usDate(bEnd.as_of)}</span> ${srcDoc(money(bEnd.v), b.doc, bEnd.p)}</p>`
+      : aEnd ? `<p class="big-total" aria-live="polite"><span class="big-label">Actual: audited balance at ${usDate(aEnd.as_of)}</span> ${srcDoc(money(aEnd.v), a.doc, aEnd.p)}</p>` : '';
+    let deck = '';
+    if (b) {
+      const sur = cbLine(b, 'surplus'), st = cbLine(b, 'beginning');
+      const start = `${cbRes(b)} puts the balance at ${srcDoc(money(st.v), b.doc, st.p)} on ${usDate(st.as_of)}${isEst(st) ? ', an estimate' : ''}`;
+      deck = sur.v < 0 ? `The ${y} Budget spends ${mny(-sur.v)} more than it expects to collect <span class="calc-tag">calculated</span> and covers the gap from the General Fund's balance. ${start}.`
+        : sur.v > 0 ? `The ${y} Budget expects to collect ${mny(sur.v)} more than it spends <span class="calc-tag">calculated</span>, adding it to the General Fund's balance. ${start}.`
+          : `The ${y} Budget expects to collect what it spends. ${start}.`;
+    }
+    const detail = b ? `<div class="table-scroll"><table class="table"><thead><tr><th scope="col">Line</th><th scope="col" class="num">Amount</th></tr></thead><tbody>${b.lines.map((l) => `<tr><td>${esc(cbLineLabel(l))}${l.calc ? ' <span class="calc-tag">calculated</span>' : ''}</td><td class="num">${l.calc ? money(l.v) : srcDoc(money(l.v), b.doc, l.p)}</td></tr>`).join('')}</tbody></table></div>
+        ${(b.footnotes || []).map((f) => `<p class="draw-note">The resolution's footnote: “${esc(f.l.replace(/^\*+\s*/, '')).replace(money(f.v), srcDoc(money(f.v), b.doc, f.p))}”</p>`).join('')}${cbTieNote(b)}`
+      : `<p class="panel-note" style="margin:0">This site does not have the budget resolution for ${y}.</p>`;
+    const audited = a ? `<div class="table-scroll"><table class="table"><tbody>${a.lines.map((l) => `<tr><td>${l.t === 'ending' ? `General Fund balance at ${usDate(l.as_of)}` : `Of it, ${esc(l.l.toLowerCase())}`}</td><td class="num">${srcDoc(money(l.v), a.doc, l.p)}</td></tr>`).join('')}</tbody></table></div>
+        <p class="draw-note">From the County's ${esc(docTitle(a.doc))}, on its accounting (modified accrual) basis. Unassigned is the part not set aside for a particular purpose.</p>`
+      : `<p class="panel-note" style="margin:0">No audited balance for ${y} yet.</p>`;
+    const cell = (e, t) => { const l = cbLine(e, t); return l ? (l.calc ? money(l.v) : srcDoc(money(l.v), e.doc, l.p)) : '—'; };
+    const yrRows = ys.map((x) => { const xb = cbFind(x, 'budget'), xa = cbFind(x, 'actual'); return `<tr${x === y ? ' aria-current="true"' : ''}><th scope="row"><a href="${esc(homeHash({ y: x }))}">${x}</a></th><td class="num">${cell(xb, 'beginning')}</td><td class="num">${cell(xb, 'surplus')}</td><td class="num">${cell(xb, 'ending')}</td><td class="num">${cell(xa, 'ending')}</td></tr>`; }).join('');
+    const label = (x, m) => { const l = cbLine(cbFind(x, m), 'ending'); return l ? `${x} ${LABEL[m]} ${money(l.v)}` : null; };
+    return `<header class="page-head"><h1 id="page-h" tabindex="-1">${esc(name)}: ${y}</h1>${big}
+        ${deck ? `<p class="deck">${deck}</p>` : ''}</header>
+      ${filtersHTML()}
+      <p class="hint" style="margin-top:0">The General Fund's accumulated balance, carried from year to year. <strong>Budget</strong> figures are the County's plan, from the budget resolution adopted with each year's budget. <strong>Actual</strong> figures are audited year-end balances from the County's annual financial reports. They are counted differently and are shown side by side, never combined. ${knownLink()}</p>
+      <section class="panel" aria-labelledby="rb-t"><h2 class="panel-title" id="rb-t">Balance at Year-End, ${ys[0]}–${ys[ys.length - 1]}</h2>
+        <ul class="trend-legend" aria-hidden="true"><li><i class="sw hatched" style="--c:${PALETTE[0]}"></i>Budget: planned</li><li><i class="sw"></i>Actual: audited</li></ul>
+        <div class="chart-box"><canvas id="res-chart" role="img" aria-label="General Fund balance at year-end: ${esc(ys.flatMap((x) => [label(x, 'budget'), label(x, 'actual')]).filter(Boolean).join(', '))}. The table below has the values."></canvas></div></section>
+      <section class="panel" aria-labelledby="rd-t"><h2 class="total-label" id="rd-t">${y} Budget: How the Balance Changes</h2>${detail}</section>
+      <section class="panel" aria-labelledby="ra-t"><h2 class="total-label" id="ra-t">${y} Actual: Audited Balance</h2>${audited}</section>
+      <section class="panel" aria-labelledby="ry-t"><h2 class="total-label" id="ry-t">Balance by Year</h2><div class="table-scroll"><table class="table tight">
+        <thead><tr><th scope="col">Year</th><th scope="col" class="num">Budget: at the start</th><th scope="col" class="num">Budget: planned change <span class="calc-tag">calculated</span></th><th scope="col" class="num">Budget: remaining at year-end</th><th scope="col" class="num">Actual: audited at year-end</th></tr></thead><tbody>${yrRows}</tbody></table></div></section>`;
+  }
+  function drawCountyBalance() {
+    const cv = $('res-chart');
+    if (!cv || !window.Chart) return;
+    const th = chartTheme(), ys = cbYears();
+    const end = (x, m) => cbLine(cbFind(x, m), 'ending')?.v ?? null;
+    const ds = (m, label, color, solid) => ({ label, data: ys.map((x) => end(x, m)), backgroundColor: solid ? color : hatch(color),
+      borderColor: ys.map((x) => (x === S.y ? INK : color)), borderWidth: ys.map((x) => (x === S.y ? 3 : solid ? 0 : 1.5)), borderRadius: 0 });
+    charts.push(new Chart(cv, { type: 'bar',
+      data: { labels: ys.map(String), datasets: [ds('budget', 'Budget: planned', PALETTE[0], false), ds('actual', 'Actual: audited', SEL, true)] },
+      options: { responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
+        onClick: (_ev, els) => { if (els.length) navigate(homeHash({ y: ys[els[0].index] }), true); },
+        plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { title: (c) => `${ys[c[0].dataIndex]} ${c[0].dataset.label}`, label: (c) => money(c.raw) } } },
+        scales: { x: { ticks: { color: INK }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid } } } } }));
+  }
+
   /* Lines grouped by a key, each group with the total shown for it (printed or calculated). */
   function groupTotals(list, keyFn, k) {
     const m = new Map();
@@ -753,7 +888,7 @@
     return items.map((it) => {
       const sh = total > 0 && it.sel ? (it.sel.v / total) * 100 : null;
       const share = sh == null ? '' : `<span class="share">(${sh > 0 && sh < 0.1 ? '<0.1' : sh.toFixed(1)}% of ${esc(shareOf)})</span>`;
-      return `<li class="card" data-go="${esc(it.href)}"><div class="card-top"><h${level}><a href="${esc(it.href)}">${esc(it.name)}</a>${share}</h${level}>
+      return `<li class="card" data-go="${esc(it.href)}"><div class="card-top"><h${level}><a href="${esc(it.href)}">${esc(it.name)}</a>${share}${it.elected ? `<span class="elected-tag">${esc(it.elected.label)}</span>` : ''}</h${level}>
         <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div>
         <div class="bars">${S.c ? bar(it.cmp, 'cmp', seriesLabel(S.c), it.name) : ''}${bar(it.sel, 'sel', seriesLabel(k), it.name)}</div></li>`;
     }).join('');
@@ -771,9 +906,9 @@
       const cell = (t, calc) => (t ? fig(t, { tag: !calc, notes, what: `${i.name} ${kindWordPlain().toLowerCase()}` }) : '<span class="missing">No figures</span>');
       return `<tr data-go="${esc(i.href)}"><th scope="row"><a href="${esc(i.href)}">${esc(i.name)}</a></th>${S.c ? `<td class="num hide-sm">${cell(i.cmp, cmpCalc)}</td>` : ''}<td class="num">${cell(i.sel, selCalc)}</td>${S.c ? `<td class="num">${deltaHTML(sel - cmp, cmp, mny)}</td>` : ''}<td class="num hide-sm">${sh == null ? '' : (sh > 0 && sh < 0.1 ? '<0.1' : sh.toFixed(1)) + '%'}</td></tr>`;
     }).join('');
-    const foot = (t) => fig(t, { notes, what: `${S.f || CFG.entity.short} ${kindWordPlain().toLowerCase()}` });
-    return `<div class="table-scroll"><table class="table ledger" aria-label="Departments"><thead><tr><th scope="col">Department</th>${S.c ? `<th scope="col" class="num hide-sm">${head(seriesLabel(S.c), cmpCalc)}</th>` : ''}<th scope="col" class="num">${head(seriesLabel(k), selCalc)}</th>${S.c ? '<th scope="col" class="num">Change</th>' : ''}<th scope="col" class="num hide-sm">Share</th></tr></thead>
-      <tbody>${body}</tbody><tfoot><tr><th scope="row">All departments</th>${S.c ? `<td class="num hide-sm">${cmpTotal ? foot(cmpTotal) : ''}</td>` : ''}<td class="num">${foot(total)}</td>${S.c ? `<td class="num">${deltaHTML(total.v - (cmpTotal?.v || 0), cmpTotal?.v || 0, mny)}</td>` : ''}<td class="num hide-sm">100%</td></tr></tfoot></table></div>`;
+    const foot = (t) => fig(t, { notes, what: `${fn(S.f) || CFG.entity.short} ${kindWordPlain().toLowerCase()}` });
+    return `<div class="table-scroll"><table class="table ledger" aria-label="${isCounty() ? 'Groups' : 'Departments'}"><thead><tr><th scope="col">${isCounty() ? 'Group' : 'Department'}</th>${S.c ? `<th scope="col" class="num hide-sm">${head(seriesLabel(S.c), cmpCalc)}</th>` : ''}<th scope="col" class="num">${head(seriesLabel(k), selCalc)}</th>${S.c ? '<th scope="col" class="num">Change</th>' : ''}<th scope="col" class="num hide-sm">Share</th></tr></thead>
+      <tbody>${body}</tbody><tfoot><tr><th scope="row">${isCounty() ? 'All groups' : 'All departments'}</th>${S.c ? `<td class="num hide-sm">${cmpTotal ? foot(cmpTotal) : ''}</td>` : ''}<td class="num">${foot(total)}</td>${S.c ? `<td class="num">${deltaHTML(total.v - (cmpTotal?.v || 0), cmpTotal?.v || 0, mny)}</td>` : ''}<td class="num hide-sm">100%</td></tr></tfoot></table></div>`;
   }
 
   /* ---------- home ---------- */
@@ -786,13 +921,110 @@
     const txt = Math.round(d) === 0 ? 'No change' : `${mny(Math.abs(d))}${p == null ? '' : ` (${fmtPct(Math.abs(p))})`}<span class="sr-only"> ${d > 0 ? 'higher' : 'lower'}</span>`;
     return `<p class="hero-delta"><span class="${Math.round(d) === 0 ? 'flat' : cls}">${txt}</span> vs ${esc(seriesLabel(S.c))}</p>`;
   }
+  /* ---------- County: the General Fund gap, and audited actuals beside the budget ----------
+     The County's books print no General Fund balance page, so the gap is revenue minus expense of the printed totals and the
+     note says so. Actuals (budget.json `actuals`, from the audited annual reports) exist only for fund totals, General Fund
+     revenue by source and General Fund spending by function; they are shown only there, never as a variance and never
+     against the ACFR's own "original budget" column. */
+  function countyGapParts(k) {
+    const gf = D.funds.indexOf('General Fund');
+    if (!isCounty() || S.f !== 'General Fund' || gf < 0 || S.k !== 'expense' || !series(k)) return null;
+    const ex = totalOf(rows(k).filter((r) => r.fund === gf && !isRevenue(r)), k), rv = totalOf(rows(k).filter((r) => r.fund === gf && isRevenue(r)), k);
+    const gap = ex.v - rv.v;
+    return gap > 0 ? { ex, rv, gap, k } : null;
+  }
+  // What covers the gap: the year's budget resolution, shown on the General Fund Balance page (null when none is printed).
+  const countyGapCover = (k) => { const rb = D.reserve && cbFind(parseKey(k).y, 'budget'); return rb && cbLine(rb, 'ending') ? rb : null; };
+  const countyGapLink = (k) => { const rb = countyGapCover(k); return rb ? ` <a class="deck-link" href="${esc(homeHash({ f: D.reserve.name, y: rb.year }))}">See the ${esc(D.reserve.name)}</a>` : ''; };
+  // ", spending $9.0M more than it expects to collect, covered from the General Fund's balance". The arithmetic, the
+  // resolution and the audited balance are on the General Fund Balance page, which the deck links to.
+  const countyGap = (k) => { const g = countyGapParts(k); return g ? `, spending ${mny(g.gap)} more than it expects to collect${countyGapCover(k) ? ", covered from the General Fund's balance" : ''}` : ''; };
+  // Only when there is no comparison (so no deck): the same sentence on its own, linked to the General Fund Balance page.
+  function countyGapNote(k, hasDeck) {
+    const g = countyGapParts(k);
+    if (!g || hasDeck) return '';
+    return `<p class="draw-note">The ${esc(seriesLabel(k))} spends ${mny(g.gap)} more than it expects to collect${countyGapCover(k) ? ", covered from the General Fund's balance" : ''}.${countyGapLink(k)}</p>`;
+  }
+  /* County notes as shown: no page numbers, file names as plain words, "Budget" in place of "adopted budget", no
+     Actual-versus-Budget percentage, and nothing about the audit report's own Original column (it is not used). */
+  const cleanNote = (t) => t
+    .replace(/County-ACFR-(\d{4})\.pdf/g, 'the $1 audited report').replace(/County-(\d{4})-Budget-Book\.pdf/g, 'the $1 budget book')
+    .replace(/Actual revenue ran [^.]*\.\s*/g, '').replace(/adopted budget/gi, 'Budget').replace(/was adopted/g, 'was passed')
+    .replace(/\s*\bpp?\.?\s*\d+(?:\s*[-–]\s*\d+)?/g, '').replace(/\(\s*\)/g, '').replace(/\s+([,.;)])/g, '$1').replace(/\s{2,}/g, ' ').trim();
+  const noOriginal = (t) => /original/i.test(t);
+  const gbHref = (r) => `${CFG.paths.pdfs}ACFR/${encodeURIComponent(r.doc)}#page=${r.p}`;
+  const gbLink = (text, r) => `<a class="src" href="${gbHref(r)}" target="_blank" rel="noopener" title="View in the County's audited report" aria-label="${esc(text)}: open source page in the ${r.year} audited annual report">${text}</a>`;
+
+  const actFund = (f) => D.actuals.funds.find((x) => x.book_funds.includes(f));
+  const actFigs = (af, y, level) => D.actuals.figures.filter((a) => a.fund === af.fund && a.year === y && a.level === level);
+  const actLink = (a, text = money(a.v)) => {
+    const flagged = (a.flags || []).length ? `<span class="gap-mark" title="The County's audited report has a known problem with this figure"><span aria-hidden="true">${GAP_SIGN}</span><span class="sr-only"> (known problem with this figure; see the note)</span></span>` : '';
+    return `<a class="src" href="${pdfHref(a.doc, a.p)}" target="_blank" rel="noopener" title="View in the County's audited report" aria-label="${esc(text)}: open source page in the ${D.actuals.sources.find((x) => x.doc === a.doc)?.year} audited annual report">${text}</a>${flagged}`;
+  };
+  const actNote = (a, what, seen) => {
+    const out = [];
+    for (const f of a.flags || []) {
+      if (seen.has(f.known_issue)) continue;
+      seen.add(f.known_issue);
+      out.push(`<p class="gap-note"><span class="gap-mark" aria-hidden="true">${GAP_SIGN}</span> <strong>${esc(what)}, ${a.year} Actual:</strong> ${esc(cleanNote(D.known_issues[f.known_issue].note))} ${knownLink()}</p>`);
+    }
+    return out.join('');
+  };
+  function actualsHTML() {
+    if (!isCounty() || !D.actuals) return '';
+    const A = D.actuals, bk = (y) => key(y, 'budget');
+    const af = S.f ? actFund(S.f) : null, seen = new Set(), notes = [];
+    const fundBudget = (af, y, kind) => {
+      const ks = bk(y);
+      if (!series(ks)) return '—';
+      const ts = af.book_funds.map((f) => { const l = rows(ks).filter((r) => r.fund === D.funds.indexOf(f) && (kind === 'revenue') === isRevenue(r)); return l.length ? totalOf(l, ks) : null; }).filter(Boolean);
+      if (!ts.length) return '—';
+      return ts.length === 1 ? fig(ts[0]) : `${money(ts.reduce((t, x) => t + x.v, 0))} ${CALC_TAG}`;
+    };
+    const one = (af, y, section) => actFigs(af, y, 'fund_total').find((a) => a.section === section);
+    const trn = (af, y) => actFigs(af, y, 'transfer');
+    const cellA = (a, what) => { if (!a) return '—'; const t = actNote(a, what, seen); if (t) notes.push(t); return actLink(a); };
+    // Rows: the chosen fund over the years, or every fund for one year when the page shows all funds.
+    const yrs = [...new Set([...years(), ...A.years])].filter((y) => series(bk(y)) || A.years.includes(y)).sort((a, b) => b - a);
+    const allY = A.years.includes(S.y) ? S.y : Math.max(...A.years);
+    const lines = (af ? yrs.map((y) => [String(y), af, y]) : A.funds.map((f) => [fn(f.fund), f, allY]));
+    const body = lines.map(([lab, f, y]) => `<tr><th scope="row">${esc(lab)}</th><td class="num">${fundBudget(f, y, 'revenue')}</td><td class="num">${cellA(one(f, y, 'revenue'), `${fn(f.fund)} income`)}</td><td class="num">${fundBudget(f, y, 'expense')}</td><td class="num">${cellA(one(f, y, 'expenditure'), `${fn(f.fund)} spending`)}</td></tr>`).join('');
+    const tlines = lines.filter(([, , y]) => A.years.includes(y));
+    const hasIn = tlines.some(([, f, y]) => trn(f, y).some((a) => /in$/i.test(a.line))), hasOut = tlines.some(([, f, y]) => trn(f, y).some((a) => /out$/i.test(a.line)));
+    const tbody = tlines.map(([lab, f, y]) => { const t = trn(f, y), net = one(f, y, 'net_change'); return `<tr><th scope="row">${esc(lab)}</th>${hasIn ? `<td class="num">${cellA(t.find((a) => /in$/i.test(a.line)), `${fn(f.fund)} transfers in`)}</td>` : ''}${hasOut ? `<td class="num">${cellA(t.find((a) => /out$/i.test(a.line)), `${fn(f.fund)} transfers out`)}</td>` : ''}<td class="num">${cellA(net, `${fn(f.fund)} net change`)}</td></tr>`; }).join('');
+    const first = lines[0] && lines[0][1];
+    const head = af ? 'Year' : `Fund, ${allY}`;
+    const combined = af && af.book_funds.length > 1 ? `<p class="panel-note">${esc(fn(af.fund))} are reported together in the County's audited report, so the Budget figures here add the three funds' printed totals <span class="calc-tag">calculated</span>.</p>` : '';
+    let html = `<section class="panel" id="sec-actual" tabindex="-1" aria-labelledby="ac-t"><h2 class="panel-title" id="ac-t">Budget and Actual${af ? `: ${esc(fn(af.fund))}` : ' by Fund'}</h2>
+      <p class="panel-note">${esc(A.years[0])} to ${esc(A.years[A.years.length - 1])} Actual is set beside the Budget only where both exist at the same level: the fund's income and spending. ${esc(cleanNote(D.actuals_note[0]))} No difference is calculated, because the two are not on the same footing.</p>
+      <details class="values"><summary>About the Actual figures</summary><ul>${D.actuals_note.slice(1).map((t) => cleanNote(t)).filter(Boolean).map((t) => `<li>${esc(t)}</li>`).join('')}</ul></details>${combined}
+      <div class="table-scroll"><table class="table ledger" aria-label="Budget and Actual by ${af ? 'year' : 'fund'}"><thead><tr><th scope="col">${esc(head)}</th><th scope="col" class="num">Income: Budget</th><th scope="col" class="num">Income: Actual</th><th scope="col" class="num">Spending: Budget</th><th scope="col" class="num">Spending: Actual</th></tr></thead><tbody>${body}</tbody></table></div>
+      <p class="panel-note" style="margin-top:12px">The Budget's spending includes transfers to other funds (the County match); the audited report counts transfers separately, so they are listed below and not added to the Actual spending.</p>
+      <h3 class="wc-h3">Transfers and net change, Actual</h3>
+      <div class="table-scroll"><table class="table ledger" aria-label="Actual transfers and net change"><thead><tr><th scope="col">${esc(head)}</th>${hasIn ? '<th scope="col" class="num">Transfers in</th>' : ''}${hasOut ? '<th scope="col" class="num">Transfers out</th>' : ''}<th scope="col" class="num">Net change in fund balance</th></tr></thead><tbody>${tbody}</tbody></table></div>`;
+    if (S.f === 'General Fund' && first) {
+      const y3 = A.years.slice().sort((a, b) => a - b);
+      const lc = (t) => t.toLowerCase();
+      // The report capitalises a line differently from year to year ("Public Safety", "Public safety"): one row, named as the newest year prints it.
+      const lineSet = (level) => { const m = new Map(); A.figures.filter((a) => a.fund === 'General Fund' && a.level === level).sort((a, b) => a.year - b.year).forEach((a) => m.set(lc(a.line), a.line)); return [...m.values()]; };
+      const tot = (section) => (y) => one(first, y, section);
+      const tbl = (title, cap, level, totalLabel, totalSection) => `<h3 class="wc-h3">${esc(title)}</h3><div class="table-scroll"><table class="table ledger" aria-label="${esc(cap)}"><thead><tr><th scope="col">${esc(cap)}</th>${y3.map((y) => `<th scope="col" class="num">${y} Actual</th>`).join('')}</tr></thead>
+        <tbody>${lineSet(level).map((ln) => `<tr><th scope="row">${esc(ln)}</th>${y3.map((y) => `<td class="num">${cellA(A.figures.find((a) => a.fund === 'General Fund' && a.year === y && a.level === level && lc(a.line) === lc(ln)), `${ln}, ${title.toLowerCase()}`)}</td>`).join('')}</tr>`).join('')}</tbody>
+        <tfoot><tr><th scope="row">${esc(totalLabel)}</th>${y3.map((y) => `<td class="num">${cellA(tot(totalSection)(y), totalLabel)}</td>`).join('')}</tr></tfoot></table></div>`;
+      html += tbl('General Fund income by source, Actual', 'Source', 'revenue_source', 'Total revenues', 'revenue')
+        + tbl('General Fund spending by function, Actual', 'Function', 'function', 'Total expenditures', 'expenditure')
+        + `<p class="panel-note" style="margin-top:12px">The Budget is not broken down by source or function the way the audited report is, so no Budget figures are shown beside these.</p>`;
+    }
+    return html + notes.join('') + '</section>';
+  }
+
   function homeView() {
     if (isReserve()) return reserveView();
     const k = key(S.y, S.m);
     const list = scoped(k);
     const total = totalOf(list, k), cmp = S.c && series(S.c) ? totalOf(scoped(S.c), S.c) : null;
     const kindWord = kindWordPlain();
-    const scope = S.f ? S.f : CFG.entity.short;
+    const scope = S.f ? fn(S.f) : CFG.entity.short;
     document.title = `${scope} ${kindWord}: ${seriesLabel(k)} · ${CFG.site_title}`;
 
     const notes = new Map(), what = `${scope} ${kindWord.toLowerCase()}`;
@@ -810,19 +1042,81 @@
       const d = total.v - cmp.v, p = pctOf(d, cmp.v);
       if (!cmp.v || Math.round(d) === 0) return '';
       const gf = D.funds.indexOf(DEFAULT_FUND), dr = D.reserve && gf >= 0 && S.f === D.funds[gf] ? reserveDraw(k, gf) : null;
+      if (isCounty()) return `<p class="deck"><span class="${d > 0 ? 'up' : 'down'}">${fn(S.f) ? `${fn(S.f)} ` : ''}${S.k === 'revenue' ? (fn(S.f) ? 'income' : 'Income') : (fn(S.f) ? 'spending' : 'Spending')} ${d > 0 ? 'up' : 'down'} ${mny(Math.abs(d))} (${fmtPct(Math.abs(p))})<span class="sr-only"> ${d > 0 ? 'higher' : 'lower'}</span></span> from the ${esc(seriesLabel(S.c))}${countyGap(k)}.${countyGap(k) ? countyGapLink(k) : ''}</p>`;
       return `<p class="deck"><span class="${d > 0 ? 'up' : 'down'}">${d > 0 ? 'Up' : 'Down'} ${mny(Math.abs(d))} (${fmtPct(Math.abs(p))})<span class="sr-only"> ${d > 0 ? 'higher' : 'lower'}</span></span> from ${esc(seriesLabel(S.c))}${dr ? `, with ${drawParts(k, dr.v) ? drawSplit(drawParts(k, dr.v)) : `${src(millions(dr.v), k, dr.d, dr.p)} drawn from savings`}. <a class="deck-link" href="${esc(homeHash({ f: D.reserve.name }))}">See the Reserve Fund</a>` : '.'}</p>`;
     })();
     return `<header class="page-head"><h1 id="page-h">${esc(scope)} ${kindWord}: ${esc(seriesLabel(k))}</h1>
         <p class="big-total" aria-live="polite"><span class="big-label">${esc(scope)} ${kindWord}</span> ${totalHTML}</p>${flagNote}
-        ${deck || `${heroDelta(k, total, cmp)}${drawNote(k)}`}</header>
+        ${deck || `${heroDelta(k, total, cmp)}${drawNote(k)}`}${countyGapNote(k, !!deck)}</header>
       <div class="home-flow">${filtersHTML()}
       ${(() => { const wc = homeChangesHTML(); return `<div class="overview${wc ? '' : ' overview-single'}">${trendHTML({}, 'Totals by Year')}${wc}</div>`; })()}</div>
-      <section class="panel" id="sec-departments" tabindex="-1" aria-labelledby="dep-t"><h2 class="panel-title" id="dep-t">Departments</h2>
-        <p class="panel-note">Select a department to see its detailed breakdown. Amounts open the source page in the budget book.</p>
+      <section class="panel" id="sec-departments" tabindex="-1" aria-labelledby="dep-t"><h2 class="panel-title" id="dep-t">${isCounty() ? 'Departments by Group' : 'Departments'}</h2>
+        <p class="panel-note">${isCounty() ? 'The County\'s departments are grouped as in its budget book. Select a group to see its departments.' : 'Select a department to see its detailed breakdown.'} Amounts open the source page in the budget book.</p>
         ${ledger}${gapNotes(ledgerNotes)}</section>
       <section class="panel" aria-labelledby="re-title"><h2 class="panel-title" id="re-title">Income vs. Spending by Fund: ${esc(seriesLabel(k))}</h2>
         <div class="chart-box"><canvas id="re-chart" role="img" aria-label="Income and spending by fund"></canvas></div>
-        <div class="table-scroll"><table class="table" id="re-table"></table></div></section>`;
+        <div class="table-scroll"><table class="table" id="re-table"></table></div></section>${actualsHTML()}${contextHTML()}`;
+  }
+
+
+  /* ---------- County: the budget in context (budget.json `context`, data/county/context_facts.csv) ----------
+     Tax rate, assessed value, bond rating, staffing, Capital Improvement Fund and agency grants. Each figure links to the
+     primary page that prints it (a resolution, the budget book or the audited report); only staffing rests on the County's
+     presentation, and says so. */
+  const ctxFacts = () => (isCounty() && D.context ? D.context.facts : []);
+  const ctxFact = (id) => ctxFacts().find((f) => f.id === id);
+  const ctxLink = (f, text) => srcDoc(text, f.d, f.p);
+  const ctxFig = (f, text) => ctxLink(f, text) + (f.kind === 'calculated' ? ` ${CALC_TAG}` : '');
+  function contextHTML() {
+    const F = ctxFacts();
+    if (!F.length || (S.f && S.f !== DEFAULT_FUND)) return '';
+    const g = (id) => ctxFact(id), y = D.context.year, P = D.context.presentation;
+    const mills = (f) => ctxLink(f, `${f.v.toFixed(3)} mills`);
+    const row = (label, cell, note) => `<tr><th scope="row">${label}${note ? `<span class="ctx-note">${esc(note)}</span>` : ''}</th><td class="num">${cell}</td></tr>`;
+    const inc = g('tax_increase'), m26 = g('millage_2026'), m25 = g('millage_2025'), av = g('assessed_value'), br = g('bond_rating'), pos = g('positions');
+    const cip = [g('cip_total'), g('cip_rollover'), g('cip_2026')];
+    const tax = `<table class="table ledger ctx-table" aria-label="Tax rate and standing, ${y}"><tbody>
+      ${row(`Tax increase over ${y - 1}`, ctxLink(inc, `${inc.v}%`))}
+      ${row('Real estate tax rate', `${mills(m26)}<span class="ctx-from"> from ${ctxLink(m25, `${m25.v.toFixed(3)}`)}</span>`)}
+      ${row('Taxable assessed value', ctxLink(av, money(av.v)))}
+      ${row('Bond rating (Moody\'s)', ctxLink(br, esc(br.v)), `Maintained during ${br.year}, per the audited report.`)}
+      ${row('County staffing positions funded', ctxLink(pos, pos.v.toLocaleString('en-US')), `From the County's ${y} budget presentation only; the budget books and audited reports print no position count.`)}
+      </tbody></table>`;
+    const capital = `<h3 class="wc-h3">Capital Improvement Fund, ${y}</h3>
+      <p class="panel-note">Capital projects are counted apart from the operating budget above.</p>
+      <table class="table ledger ctx-table" aria-label="Capital Improvement Fund, ${y}"><tbody>
+      ${row('Projects begun in 2025, carried over', ctxFig(cip[1], money(cip[1].v)))}
+      ${row(`${y} projects`, ctxFig(cip[2], money(cip[2].v)))}</tbody>
+      <tfoot><tr><th scope="row">Total ${y} expense</th><td class="num">${ctxFig(cip[0], money(cip[0].v))}</td></tr></tfoot></table>`;
+    const grants = F.filter((f) => f.group === 'agency_grants' && /^grant_\d+$/.test(f.id));
+    const gcell = (f) => (f ? ctxLink(f, money(f.v)) : '');
+    const gf = (f) => (f.fund === 'General Fund'), tg = g('grants_gf'), ta = g('grants_act13'), tr = g('grants_request'), sc = g('scta');
+    const ordered = [...grants.filter(gf), ...grants.filter((f) => !gf(f))];
+    const gbody = ordered.map((f) => `<tr><th scope="row">${esc(f.label)}</th><td class="num">${gf(f) ? gcell(f) : ''}</td><td class="num">${gf(f) ? '' : gcell(f)}</td></tr>`).join('');
+    const agency = `<h3 class="wc-h3">Agency grants, ${y}</h3>
+      <p class="panel-note">Grants to outside agencies. Five are paid from the General Fund; the other five come from the County's Act 13 funds, a separate fund that is not part of the General Fund.</p>
+      <div class="table-scroll"><table class="table ledger ctx-table" aria-label="Agency grants, ${y}"><thead><tr><th scope="col">Agency</th><th scope="col" class="num">General Fund</th><th scope="col" class="num">Act 13 funds</th></tr></thead><tbody>${gbody}</tbody>
+      <tfoot><tr><th scope="row">Total</th><td class="num">${ctxLink(tg, money(tg.v))}</td><td class="num">${ctxLink(ta, money(ta.v))}</td></tr>
+      <tr><th scope="row">Total request, both</th><td class="num" colspan="2">${ctxLink(tr, money(tr.v))}</td></tr></tfoot></table></div>
+      <p class="draw-note">Transit funding for RRTA/SCTA, ${ctxLink(sc, money(sc.v))} from the General Fund, is printed apart from these grants and is not in the totals above.</p>`;
+    const hist = F.filter((f) => f.group === 'millage_history').sort((a, b) => a.year - b.year);
+    const history = `<h3 class="wc-h3">Real estate tax rate, ${hist[0].year} to ${hist[hist.length - 1].year}</h3>
+      <div class="chart-box ctx-chart"><canvas id="ctx-millage" role="img" aria-label="Real estate tax rate in mills, ${hist[0].year} to ${hist[hist.length - 1].year}: ${hist.map((f) => `${f.year} ${f.v.toFixed(3)}`).join(', ')}"></canvas></div>
+      ${(() => { const ra = g('reassessment_2018'), rv = g('revenue_2018'); return ra && rv ? `<p class="draw-note">The drop from ${hist[0].v.toFixed(3)} to ${hist[1].v.toFixed(3)} mills in ${ra.year} came with the County's ${ctxLink(ra, 'countywide reassessment')}. A reassessment is meant to raise no extra revenue, so the lower rate was not a tax cut. The County's presentation marks ${ra.year} as ${ctxLink(rv, esc(rv.v))}.</p>` : ''; })()}
+      <details class="values"><summary>Show the rate for each year</summary><div class="table-scroll"><table class="table ledger ctx-table" aria-label="Real estate tax rate by year"><thead><tr><th scope="col">Year</th><th scope="col" class="num">Mills</th></tr></thead><tbody>${[...hist].reverse().map((f) => `<tr><th scope="row">${f.year}</th><td class="num">${ctxLink(f, f.v.toFixed(3))}</td></tr>`).join('')}</tbody></table></div></details>`;
+    return `<section class="panel" id="sec-context" tabindex="-1" aria-labelledby="cx-t"><h2 class="panel-title" id="cx-t">The ${y} Budget in Context</h2>
+      <p class="panel-note">Facts about the ${y} budget from the County's own documents. Each figure opens the page that prints it. The County's ${esc(P.title)} repeats them and is listed on the About page.</p>
+      ${tax}${capital}${agency}${history}</section>`;
+  }
+  function drawContext() {
+    const cv = $('ctx-millage');
+    if (!cv || !window.Chart) return;
+    const hist = ctxFacts().filter((f) => f.group === 'millage_history').sort((a, b) => a.year - b.year), th = chartTheme();
+    charts.push(new Chart(cv, { type: 'line',
+      data: { labels: hist.map((f) => f.year), datasets: [{ label: 'Mills', data: hist.map((f) => f.v), borderColor: SEL, backgroundColor: SEL, stepped: 'middle', pointRadius: 3, borderWidth: 2 }] },
+      options: { responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
+        plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { label: (c) => `${c.raw.toFixed(3)} mills` } } },
+        scales: { x: { ticks: { color: th.tick }, grid: { display: false } }, y: { min: 0, max: 4, ticks: { color: th.tick, callback: (n) => n.toFixed(1) }, grid: { color: th.grid }, title: { display: true, text: 'Mills', color: th.tick } } } } }));
   }
 
   function revExpAfter() {
@@ -830,14 +1124,14 @@
     const all = rows(k);
     const data = [...new Set(all.map((r) => r.fund))].map((fi) => {
       const fr = all.filter((r) => r.fund === fi), rl = fr.filter(isRevenue), el = fr.filter((r) => !isRevenue(r));
-      return { fund: D.funds[fi], rev: rl.length ? totalOf(rl, k) : null, exp: el.length ? totalOf(el, k) : null };
+      return { fund: fn(D.funds[fi]), rev: rl.length ? totalOf(rl, k) : null, exp: el.length ? totalOf(el, k) : null };
     }).sort((a, b) => (b.exp?.v || 0) - (a.exp?.v || 0));
     const vo = (t) => (t ? t.v : 0);
     const th = chartTheme();
     if (window.Chart) {
       charts.push(new Chart($('re-chart'), {
         type: 'bar',
-        data: { labels: data.map((d) => d.fund.replace(' Fund', '')), datasets: [
+        data: { labels: data.map((d) => d.fund.replace(/ Fund$/, '')), datasets: [
           { label: 'Income', data: data.map((d) => vo(d.rev)), backgroundColor: SEL, borderRadius: 0 },
           { label: 'Spending', data: data.map((d) => vo(d.exp)), backgroundColor: PALETTE[1], borderRadius: 0 }] },
         options: {
@@ -993,8 +1287,9 @@
       ${salTable}</section>`;
   }
 
+  const bdWord = () => (S.k === 'revenue' ? 'Revenue' : isCounty() ? 'Spending' : 'Budget'); // "Total Budget" on a City department page; the County's figure is already called Budget
   function entityView({ title, subtitle, selRows, cmpRows, crumbs, bureauList = '', changes = '', deptPicker, scope, about = '' }) {
-    const k = key(S.y, S.m), kindWord = S.k === 'revenue' ? 'Revenue' : 'Budget';
+    const k = key(S.y, S.m), kindWord = bdWord();
     const selT = totalOf(selRows, k), cmpT = S.c ? totalOf(cmpRows, S.c) : null;
     const total = selT.v, cmpTotal = cmpT ? cmpT.v : 0;
     const notes = new Map(), what = trendWhat(scope);
@@ -1026,7 +1321,7 @@
     }
     const hasChanges = changes.includes('id="sec-changes"'), hasBureaus = bureauList.includes('id="sec-bureaus"');
     const staff = staffHTML(scope);
-    const nav = [hasChanges && ['sec-changes', 'What changed'], cats.length && ['sec-compare', 'Compare'], hasBureaus && ['sec-bureaus', 'Bureaus'], staff && ['sec-staff', 'Staff'], cats.length && ['sec-categories', 'Categories'], ['sec-lines', 'Line items']].filter(Boolean);
+    const nav = [hasChanges && ['sec-changes', 'What changed'], cats.length && ['sec-compare', 'Compare'], hasBureaus && ['sec-bureaus', isCounty() ? 'Departments' : 'Bureaus'], staff && ['sec-staff', 'Staff'], cats.length && ['sec-categories', 'Categories'], ['sec-lines', 'Line items']].filter(Boolean);
     html += jumpNav(nav);
     html += `<div class="entity-flow"><div class="dept-filters">${filtersHTML({ fund: !!deptPicker, scope })}</div>${changes}${compare}${bureauList}${staff}`;
     html += categorySection(`${title} ${seriesLabel(k)} ${kindWord} Breakdown`, cats.map(withColor), { k, secId: 'sec-categories' });
@@ -1037,7 +1332,7 @@
   const alpha = (hex, a) => { const m = /^#([0-9a-f]{6})$/i.exec(hex); if (!m) return hex; const n = parseInt(m[1], 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
   function entityCharts(selRows, cmpRows, cats) {
     const k = key(S.y, S.m), th = chartTheme();
-    drawPie(`${$('page-h').textContent} ${seriesLabel(k)} ${S.k === 'revenue' ? 'Revenue' : 'Budget'} Breakdown`, cats);
+    drawPie(`${$('page-h').textContent} ${seriesLabel(k)} ${bdWord()} Breakdown`, cats);
     drawTrend();
     const yoy = $('yoy-chart');
     if (yoy && window.Chart) {
@@ -1086,7 +1381,7 @@
     const all = mergeLines(selRows, cmpRows);
     let list = all;
     const q = T.q.trim().toLowerCase();
-    if (q) list = list.filter((e) => `${e.code} ${e.name} ${bureauName(e.bureau)} ${D.funds[e.fund]} ${D.categories[e.cat]}`.toLowerCase().includes(q));
+    if (q) list = list.filter((e) => `${e.code} ${e.name} ${bureauName(e.bureau)} ${fn(D.funds[e.fund])} ${D.categories[e.cat]}`.toLowerCase().includes(q));
     const val = (e, s) => (e[s] ? e[s].v : 0);
     const sorters = { code: (e) => e.code, name: (e) => e.name.toLowerCase(), cat: (e) => D.categories[e.cat], sel: (e) => val(e, 'sel'), cmp: (e) => val(e, 'cmp'), chg: (e) => val(e, 'sel') - val(e, 'cmp') };
     const f = sorters[T.sort] || sorters.sel;
@@ -1123,7 +1418,7 @@
     const head = ['Account', 'Line item', 'Department', 'Budget group', 'Fund', 'Category', S.c ? seriesLabel(S.c) : '', seriesLabel(k), S.c ? 'Change' : '', `Source book (${seriesLabel(k)})`, `Source page (${seriesLabel(k)})`, S.c ? `Source book (${seriesLabel(S.c)})` : '', S.c ? `Source page (${seriesLabel(S.c)})` : ''];
     const lines = lastList.map((e) => {
       const u = O.codes[e.code.split('-')[0]];
-      return [e.code, e.name, O.departments[O.units[u].dept].name, bureauName(e.bureau), D.funds[e.fund], D.categories[e.cat], S.c ? v(e, 'cmp') : '', v(e, 'sel'), S.c ? (e.sel ? e.sel.v : 0) - (e.cmp ? e.cmp.v : 0) : '',
+      return [e.code, e.name, O.departments[O.units[u].dept].name, bureauName(e.bureau), fn(D.funds[e.fund]), D.categories[e.cat], S.c ? v(e, 'cmp') : '', v(e, 'sel'), S.c ? (e.sel ? e.sel.v : 0) - (e.cmp ? e.cmp.v : 0) : '',
         e.sel ? D.docs[e.sel.d] : '', e.sel ? e.sel.p : '', S.c && e.cmp ? D.docs[e.cmp.d] : '', S.c && e.cmp ? e.cmp.p : ''];
     });
     const csv = [head, ...lines].map((r) => r.map(cell).join(',')).join('\r\n');
@@ -1201,9 +1496,10 @@
     const funds = new Set(selRows.map((r) => r.fund));
     const units = groupTotals(selRows, (r) => r.unit, k);
     const nBureaus = [...units.keys()].filter((u) => O.units[u].kind === 'bureau').length;
-    const count = !dept.bureaus ? 'No bureaus' : nBureaus ? `${nBureaus} bureau${nBureaus === 1 ? '' : 's'}` : '';
+    const UW = isCounty() ? 'department' : 'bureau';
+    const count = !dept.bureaus ? `No ${UW}s` : nBureaus ? `${nBureaus} ${UW}${nBureaus === 1 ? '' : 's'}` : '';
     const subtitle = selRows.length
-      ? [count, [...funds].map((f) => esc(D.funds[f])).join(', '), lineCountText(selRows, cmpRows)].filter(Boolean).join(' · ')
+      ? [count, [...funds].map((f) => esc(fn(D.funds[f]))).join(', '), lineCountText(selRows, cmpRows)].filter(Boolean).join(' · ')
       : `No ${S.k === 'revenue' ? 'revenue' : 'expense'} lines for this department in ${esc(seriesLabel(k))}.`;
     // Bureau list: only for departments that have bureaus on the org chart. Several budget groups can make up one
     // bureau; budget groups that are not a bureau form one "department-wide" card, listed last.
@@ -1212,13 +1508,13 @@
     if (dept.bureaus) {
       const cmpUnits = S.c ? groupTotals(cmpRows, (r) => r.unit, S.c) : new Map();
       const ids = [...new Set([...units.keys(), ...cmpUnits.keys()])];
-      const items = ids.map((u) => ({ id: u, name: unitLabel(u), href: unitHash(u), sel: units.get(u), cmp: cmpUnits.get(u) }))
+      const items = ids.map((u) => ({ id: u, name: unitLabel(u), href: unitHash(u), elected: isCounty() ? O.units[u].elected : null, sel: units.get(u), cmp: cmpUnits.get(u) }))
         .sort((a, b) => (O.units[a.id].kind === 'department-wide') - (O.units[b.id].kind === 'department-wide') || (b.sel?.v || 0) - (a.sel?.v || 0) || (b.cmp?.v || 0) - (a.cmp?.v || 0));
       const hasWide = ids.some((u) => O.units[u].kind === 'department-wide');
       if (items.length > 1) {
-        const note = 'Bureaus as on the city\'s 2027 org chart. Select one to see its line items.'
+        const note = (isCounty() ? 'Departments as the County\'s 2026 budget book groups them. Select one to see its line items.' : 'Bureaus as on the city\'s 2027 org chart. Select one to see its line items.')
           + (hasWide ? ` “${unitLabel(ids.find((u) => O.units[u].kind === 'department-wide'))}” collects budget groups that are not a bureau.` : '');
-        bureauList = `<section class="bureau-list" id="sec-bureaus" tabindex="-1" aria-labelledby="bl-t"><h2 class="list-title" id="bl-t">${S.k === 'revenue' ? 'Income by Bureau' : 'Spending by Bureau'}</h2><p class="hint hint-top">${esc(note)} Amounts open the source page in the budget book.</p>
+        bureauList = `<section class="bureau-list" id="sec-bureaus" tabindex="-1" aria-labelledby="bl-t"><h2 class="list-title" id="bl-t">${S.k === 'revenue' ? 'Income by' : 'Spending by'} ${isCounty() ? 'Department' : 'Bureau'}</h2><p class="hint hint-top">${esc(note)} Amounts open the source page in the budget book.</p>
           <ul class="cards" aria-labelledby="bl-t">${cardList(items, { total: totalOf(selRows, k).v, k, shareOf: `${name} ${S.k === 'revenue' ? 'revenue' : 'spending'}`, level: 3, notes: cardNotes })}</ul>${gapNotes(cardNotes)}</section>`;
       }
     }
@@ -1227,6 +1523,12 @@
     const v = entityView({ title: name, subtitle, selRows, cmpRows, crumbs: [{ label: 'Home', href: homeHash() }, { label: name }], bureauList, changes: deptChangesHTML(di), deptPicker: picker, scope: { dept: di }, about });
     return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats); mountLines(selRows, cmpRows, true); } };
   }
+
+  /* County: a department headed by (or serving) elected officials, from data/county/elected_offices.csv. The sentence links
+     to the page that says so; the other pages that say it (organizational chart, budget book) are listed on About. */
+  const electedLineHTML = (u) => (u.elected
+    ? `<p class="elected-line"><span class="elected-label">${esc(u.elected.label)}</span> <a class="src" href="${pdfHref(u.elected.d, u.elected.p)}" target="_blank" rel="noopener">${esc(u.elected.line)}</a>.</p>`
+    : '');
 
   function bureauPage() {
     const di = findDept(route.dept);
@@ -1244,9 +1546,9 @@
     const k = key(S.y, S.m), name = unitLabel(ui);
     const selRows = scoped(k, { unit: ui }), cmpRows = S.c ? scoped(S.c, { unit: ui }) : [];
     const scope = { unit: ui };
-    const funds = [...new Set([...selRows, ...cmpRows].map((r) => r.fund))].map((f) => esc(D.funds[f]));
+    const funds = [...new Set([...selRows, ...cmpRows].map((r) => r.fund))].map((f) => esc(fn(D.funds[f])));
     document.title = `${name} ${seriesLabel(k)} · ${CFG.site_title}`;
-    const sub = [esc(O.departments[di].name), unit.division ? `${esc(unit.division)} Division` : '', ...funds, lineCountText(selRows, cmpRows)].filter(Boolean).join(' · ');
+    const sub = [esc(O.departments[di].name), unit.division ? (isCounty() ? esc(unit.division) : `${esc(unit.division)} Division`) : '', ...funds, lineCountText(selRows, cmpRows)].filter(Boolean).join(' · ');
     let about;
     if (unit.kind === 'department-wide') {
       const groupsShown = [...new Set([...selRows, ...cmpRows].map((r) => bureauName(r.bureau)))].sort();
@@ -1255,7 +1557,7 @@
       const q = /^Bureau\b/.test(unit.name) ? 'What does this bureau do?' : /^Office\b/.test(unit.name) ? 'What does this office do?' : `What does ${unit.name} do?`;
       about = aboutHTML(q, unit.desc);
     }
-    const v = entityView({ title: name, subtitle: sub, selRows, cmpRows, crumbs: [{ label: 'Home', href: homeHash() }, { label: O.departments[di].name, href: deptHash(di) }, { label: name }], changes: deptChangesHTML(di, ui), scope, about });
+    const v = entityView({ title: name, subtitle: sub, selRows, cmpRows, crumbs: [{ label: 'Home', href: homeHash() }, { label: O.departments[di].name, href: deptHash(di) }, { label: name }], changes: deptChangesHTML(di, ui), scope, about: electedLineHTML(unit) + about });
     return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats); mountLines(selRows, cmpRows, true); } };
   }
 
@@ -1265,7 +1567,7 @@
      every changed line, shifts between funds found in the city's line notes, and position counts per bureau with
      the artifacts that make printed schedules differ. Every amount links to its page in the budget book. */
   let CH = null;
-  const changesHash = (over) => `#/changes?${query(over)}`;
+  const changesHash = (over) => eh(`changes?${query(over)}`);
   const WC_TOP = 10;
   const vOf = (x) => (x ? x.v : 0);
   /* Short money for sentences and tiles: $87.8M, $1.25M (a second decimal when one would be more than 2.5% off), $148K. */
@@ -1292,14 +1594,15 @@
   const revisionCmp = () => (CH ? CH.comparisons[`${D.newest_year}|revised~${D.newest_year}|proposed`] || null : null);
   const kindOf = (k) => parseKey(k).m;
   const crossYear = (c) => parseKey(c.from).y !== parseKey(c.to).y;
+  const bud = (k) => (kindOf(k) === 'budget' ? `${parseKey(k).y} budget` : `${seriesLabel(k)} budget`); // "2026 budget" (the County's figure is already called Budget)
   function fromPhrase(c, spend = true) {
     const { y, m } = parseKey(c.from);
     if (m === 'projected') return `the city expects to ${spend ? 'spend' : 'collect'} in ${y}`;
     if (m === 'actual') return `the city ${spend ? 'spent' : 'collected'} in ${y}`;
-    return `the ${seriesLabel(c.from)} budget`;
+    return `the ${bud(c.from)}`;
   }
   const scopeName = () => S.f || 'all';
-  const fundWords = () => (S.f ? `from the ${esc(S.f)}` : 'across all funds');
+  const fundWords = () => (S.f ? `from the ${esc(fn(S.f))}` : 'across all funds');
   const acctOf = (ln) => D.accounts[ln[0]];
   const unitOfLine = (ln) => O.codes[acctOf(ln)[0].split('-')[0]];
   const lineF = (ln) => (ln[1] == null ? null : { v: ln[1], d: ln[2], p: ln[3] });
@@ -1312,7 +1615,7 @@
     const l = rows(k).filter((r) => (kind === 'revenue') === isRevenue(r) && (fi < 0 || r.fund === fi) && (!filter || filter(r)));
     return l.length ? totalOf(l, k) : null;
   }
-  const wcWhat = (kind, fund = S.f) => `${fund || 'All funds'} ${kind === 'revenue' ? 'income' : 'spending'}`;
+  const wcWhat = (kind, fund = S.f) => `${fn(fund) || 'All funds'} ${kind === 'revenue' ? 'income' : 'spending'}`;
 
   /* Shifts between funds that touch this scope (fund, and optionally one department). */
   function shiftsFor(c, fund, dept = null, unit = null) {
@@ -1337,7 +1640,7 @@
   function headlineSentence(c, sc) {
     const ex = sc.expense; if (!ex) return '';
     const t = wcTotal(c.to, 'expense'), f = wcTotal(c.from, 'expense'), d = vOf(t) - vOf(f), p = vOf(f) ? Math.abs(d / vOf(f)) * 100 : null;
-    let s = `The ${esc(seriesLabel(c.to))} budget spends ${t ? fig(t, { text: mny(t.v) }) : '$0'} ${fundWords()}, `
+    let s = `The ${esc(bud(c.to))} spends ${t ? fig(t, { text: mny(t.v) }) : '$0'} ${fundWords()}, `
       + (d === 0 ? `the same as ${fromPhrase(c)}.` : `${mny(Math.abs(d))}${p == null ? '' : ` (${p.toFixed(1)}%)`} ${d > 0 ? 'more' : 'less'} than ${fromPhrase(c)}.`);
     if (S.f) {
       const ins = shiftsFor(c, S.f).filter((x) => x.to_fund === S.f && x.to?.values);
@@ -1410,7 +1713,7 @@
     const fx = (t, kind) => (t ? fig(t, { notes, what: wcWhat(kind) }) : '$0');
     if (ex && !(S.k === 'revenue' && sc.revenue)) {
       const tf = wcTotal(c.from, 'expense'), tt = wcTotal(c.to, 'expense');
-      tiles.push(['Spending change', deltaHTML(vOf(tt) - vOf(tf), vOf(tf), mny), `${esc(seriesLabel(c.from))} ${fx(tf, 'expense')} → ${esc(seriesLabel(c.to))} ${fx(tt, 'expense')}`]);
+      tiles.push(['Spending change', deltaHTML(vOf(tt) - vOf(tf), vOf(tf), mny), `<span class="nb">${esc(seriesLabel(c.from))}</span> ${fx(tf, 'expense')} → <span class="nb">${esc(seriesLabel(c.to))}</span> ${fx(tt, 'expense')}`]);
     }
     const dr = sc.revenue?.draw;
     // The Income tile: on the Income view always (first), otherwise only where there is no draw tile.
@@ -1495,13 +1798,20 @@
     return `<div class="wc-div" id="${id}">${note ? `<p class="wc-note">${note}</p>` : ''}<ul class="wc-bars">${bars}</ul>${unchanged ? `<p class="wc-note">${unchanged} unchanged.</p>` : ''}${table}</div>`;
   }
 
+  /* County: where the book folded accounts together, say so under the line (changes.json `merges`; the evidence is in `account_changes`). */
+  const mergeNote = (c, i) => {
+    const m = (c.merges || []).find((x) => x.line === i);
+    if (!m) return '';
+    const codes = (l) => [...new Set(l.map((x) => (D.accounts[x[0]][0].split('-')[1] || '')))].join(', ');
+    return `<span class="sub">Accounts merged: ${parseKey(c.from).y} ${esc(codes(m.f))} → ${parseKey(c.to).y} ${esc(codes(m.t))}; shown as one line in both years. <a class="known-link" href="${esc(eh('about?s=about-merges'))}">Details</a></span>`;
+  };
   function lineTableHTML(c, idx, { caption, showFund = !S.f, empty = '' } = {}) {
     if (!idx.length) return empty;
     const body = idx.map((i) => {
       const ln = c.lines[i], a = acctOf(ln), u = unitOfLine(ln), d = lineD(ln);
-      const sub = [a[0], unitLabel(u, D.categories[a[5]] === 'Revenue' ? 'revenue' : 'expense'), showFund ? D.funds[a[2]] : ''].filter(Boolean).map(esc).join(' · ');
+      const sub = [a[0], unitLabel(u, D.categories[a[5]] === 'Revenue' ? 'revenue' : 'expense'), showFund ? fn(D.funds[a[2]]) : ''].filter(Boolean).map(esc).join(' · ');
       const drawNoteTxt = /^Fund Balance Reserve/i.test(a[1]) && /-499000$/.test(a[0]) ? `<span class="sub">${esc(ln[4] != null ? drawLineLabel(c.to, ln[4]) : drawLineLabel(c.from, ln[1]))}</span>` : '';
-      return `<tr><td>${esc(a[1])}<span class="sub">${sub}</span>${drawNoteTxt}</td><td class="num hide-sm">${ln[1] == null ? '—' : lnk(lineF(ln))}</td><td class="num">${ln[4] == null ? '—' : lnk(lineT(ln))}<span class="wc-sm">${sgn(d, money)}</span></td><td class="num hide-sm">${deltaHTML(d, ln[1])}</td></tr>`;
+      return `<tr><td>${esc(a[1])}<span class="sub">${sub}</span>${drawNoteTxt}${mergeNote(c, i)}</td><td class="num hide-sm">${ln[1] == null ? '—' : lnk(lineF(ln))}</td><td class="num">${ln[4] == null ? '—' : lnk(lineT(ln))}<span class="wc-sm">${sgn(d, money)}</span></td><td class="num hide-sm">${deltaHTML(d, ln[1])}</td></tr>`;
     }).join('');
     return `<div class="table-scroll"><table class="table tight wc-lines">${caption ? `<caption>${caption}</caption>` : ''}<thead><tr><th scope="col">Line item</th><th scope="col" class="num hide-sm">${esc(seriesLabel(c.from))}</th><th scope="col" class="num">${esc(seriesLabel(c.to))}</th><th scope="col" class="num hide-sm">Change</th></tr></thead><tbody>${body}</tbody></table></div>`;
   }
@@ -1525,7 +1835,7 @@
         const notes = r[9].filter((i) => P.artifacts[i].kind !== 'titles').map((i) => `<a class="wc-ref" href="#wc-note-${ref(i)}" aria-label="Note ${ref(i)}">${ref(i)}</a>`).join('');
         const fl = r[7] != null ? srcDoc(fmtN(r[3]), P.from_doc, r[7]) : fmtN(r[3]);
         const tl = r[8] != null ? srcDoc(fmtN(r[4]), P.to_doc, r[8]) : fmtN(r[4]);
-        const nm = unitLabel(r[1]) + (fi == null ? ` · ${D.funds[r[0]]}` : '');
+        const nm = unitLabel(r[1]) + (fi == null ? ` · ${fn(D.funds[r[0]])}` : '');
         const href = O.departments[O.units[r[1]].dept].bureaus && O.units[r[1]].kind === 'bureau' ? unitHash(r[1]) : deptHash(O.units[r[1]].dept);
         return `<tr><td><a href="${esc(href)}">${esc(nm)}</a>${notes ? `<sup class="wc-refs">${notes}</sup>` : ''}<span class="sub">${esc(O.departments[O.units[r[1]].dept].name)}</span><span class="wc-sm">${fl} → ${tl}</span></td><td class="num hide-sm">${fl}</td><td class="num hide-sm">${tl}</td><td class="num">${nDelta(r[4] - r[3])}</td><td class="num">${nDelta(r[6] - r[5])}</td></tr>`;
       }).join('');
@@ -1580,7 +1890,7 @@
     const idx = rc.lines.map((ln, i) => i).filter((i) => fi == null || acctOf(rc.lines[i])[2] === fi).sort((a, b) => Math.abs(lineD(rc.lines[b])) - Math.abs(lineD(rc.lines[a])));
     const n = idx.length;
     return `<section class="panel" aria-labelledby="wc-rev"><h2 class="total-label" id="wc-rev">What the revision changed</h2>
-      <p class="wc-note">From the ${esc(seriesLabel(rc.from))} budget to the ${esc(seriesLabel(rc.to))} budget${S.f ? `, ${esc(S.f)}` : ''}. ${n} line${n === 1 ? '' : 's'} changed.</p>
+      <p class="wc-note">From the ${esc(seriesLabel(rc.from))} budget to the ${esc(seriesLabel(rc.to))} budget${S.f ? `, ${esc(fn(S.f))}` : ''}. ${n} line${n === 1 ? '' : 's'} changed.</p>
       <ul class="wc-facts">${parts.join('')}</ul>
       ${policyHTML(c)}
       ${lineTableHTML(rcc, idx.slice(0, WC_TOP), { caption: `Largest changes, ${esc(seriesLabel(rc.from))} → ${esc(seriesLabel(rc.to))}` })}
@@ -1665,7 +1975,7 @@
         ${ms.length > 1 ? tabField('m', `Figure (${D.newest_year})`, ms.map((m) => [m, LABEL[m]]), S.m) : ''}
         ${isReserve() ? '' : tabField('k', 'Show first', [['expense', 'Spending'], ['revenue', 'Income']], S.k)}
       </div>`;
-    return controlsWrap(inner, `Viewing ${esc(seriesLabel(c.to))} · compared with ${esc(seriesLabel(c.from))} · ${esc(S.f || 'All funds')}${isReserve() ? '' : ` · ${kindWordPlain()} first`}`);
+    return controlsWrap(inner, `Viewing ${esc(seriesLabel(c.to))} · compared with ${esc(seriesLabel(c.from))} · ${esc(fn(S.f) || 'All funds')}${isReserve() ? '' : ` · ${kindWordPlain()} first`}`);
   }
 
   function changesPage() {
@@ -1675,13 +1985,13 @@
     if (c.from !== S.c) S.c = c.from;
     if (isReserve()) return reserveChangesPage(c);
     const sc = c.scopes[scopeName()];
-    document.title = `What changed: ${seriesLabel(c.to)}${S.f ? ' · ' + S.f : ''} · ${CFG.site_title}`;
+    document.title = `What changed: ${seriesLabel(c.to)}${S.f ? ' · ' + fn(S.f) : ''} · ${CFG.site_title}`;
     const head = `<header class="page-head wc-head"><h1 id="page-h" tabindex="-1">What changed in ${D.newest_year}</h1>
       ${sc ? `<p class="wc-lede">${ledeFor(c, sc)}</p>` : ''}${badgeHTML(c)}</header>`;
     if (!sc) {
       // A fund with no lines in either budget being compared (e.g. one the city has since folded into another).
-      const others = D.funds.filter((f) => c.scopes[f]).map((f) => `<a href="${esc(changesHash({ f }))}">${esc(f)}</a>`);
-      return { html: `${head}${changesFiltersHTML(c)}<p class="hint wc-fundnote">The ${esc(S.f)} has no lines in the ${esc(seriesLabel(c.to))} budget or in ${esc(seriesLabel(c.from))}, so there is nothing to compare. What changed covers ${listWords(others)}, or <a href="${esc(changesHash({ f: '' }))}">all funds</a>.</p>` };
+      const others = D.funds.filter((f) => c.scopes[f]).map((f) => `<a href="${esc(changesHash({ f }))}">${esc(fn(f))}</a>`);
+      return { html: `${head}${changesFiltersHTML(c)}<p class="hint wc-fundnote">The ${esc(fn(S.f))} has no lines in the ${esc(seriesLabel(c.to))} budget or in ${esc(seriesLabel(c.from))}, so there is nothing to compare. What changed covers ${listWords(others)}, or <a href="${esc(changesHash({ f: '' }))}">all funds</a>.</p>` };
     }
     const k = 'expense', ex = sc.expense, rv = sc.revenue;
     const grp = (kind, test) => ({ f: wcTotal(c.from, kind, S.f, test), t: wcTotal(c.to, kind, S.f, test) });
@@ -1691,11 +2001,11 @@
     if (ex) {
       spend += `<section class="panel" aria-labelledby="wc-cat"><h2 class="total-label" id="wc-cat">Spending by category</h2>${spikeWCNote(c, 'expense')}
         ${divBars(ex.by_cat.map(([i]) => ({ label: D.categories[i], ...grp('expense', (r) => r.cat === i) })), c, 'wc-cat-b', { title: 'Category' })}</section>
-        <section class="panel" aria-labelledby="wc-dep"><h2 class="total-label" id="wc-dep">Spending by department</h2>
-        ${divBars(deptRows(ex, k), c, 'wc-dep-b', { title: 'Department', note: 'Select a department to see its bureaus and lines.' })}</section>`;
+        <section class="panel" aria-labelledby="wc-dep"><h2 class="total-label" id="wc-dep">Spending by ${isCounty() ? 'group' : 'department'}</h2>
+        ${divBars(deptRows(ex, k), c, 'wc-dep-b', { title: isCounty() ? 'Group' : 'Department', note: isCounty() ? 'Select a group to see its departments and lines.' : 'Select a department to see its bureaus and lines.' })}</section>`;
     }
     const pos = positionsHTML(c);
-    if (pos || ex) spend += `<section class="panel" aria-labelledby="wc-pos"><h2 class="total-label" id="wc-pos">Positions</h2>${pos || '<p class="wc-note">No position schedule for this comparison.</p>'}${benefitsLine(c, sc)}</section>`;
+    if (pos || (ex && (c.positions || ST))) spend += `<section class="panel" aria-labelledby="wc-pos"><h2 class="total-label" id="wc-pos">Positions</h2>${pos || '<p class="wc-note">No position schedule for this comparison.</p>'}${benefitsLine(c, sc)}</section>`;
     if (ex) {
       spend += `<section class="panel" aria-labelledby="wc-top"><h2 class="total-label" id="wc-top">Largest line-item changes</h2>
         <p class="wc-note">Lines in both budgets. New and removed lines are listed below.</p>
@@ -1814,10 +2124,10 @@
     // The same lines (and so the same total) as the page's own header.
     const inScope = (r) => (unitPage ? r.unit === ui : r.od === di);
     const dr = has && [null, wcTotal(c.from, S.k, fund, inScope), wcTotal(c.to, S.k, fund, inScope)];
-    if (!dr) return `<p class="wc-deptlink sec-changes-link">${link('What changed across the city →')}</p>`;
+    if (!dr) return `<p class="wc-deptlink sec-changes-link">${link(`What changed across ${isCounty() ? 'the County' : 'the city'} →`)}</p>`;
     const name = unitPage ? unitLabel(ui) : O.departments[di].name, word = S.k === 'revenue' ? 'takes in' : 'spends';
     const d = vOf(dr[2]) - vOf(dr[1]), p = vOf(dr[1]) ? Math.abs(d / vOf(dr[1])) * 100 : null;
-    const lede = `In the ${esc(seriesLabel(c.to))} budget, ${esc(name)} ${word} ${dr[2] ? fig(dr[2], { text: mny(dr[2].v) }) : '$0'}${fund ? ` from the ${esc(fund)}` : ''}, ${d === 0 ? 'the same as' : `${mny(Math.abs(d))}${p == null ? '' : ` (${p.toFixed(1)}%)`} ${d > 0 ? 'more' : 'less'} than`} ${esc(seriesLabel(c.from))}.`;
+    const lede = `In the ${esc(bud(c.to))}, ${esc(name)} ${word} ${dr[2] ? fig(dr[2], { text: mny(dr[2].v) }) : '$0'}${fund ? ` from the ${esc(fund)}` : ''}, ${d === 0 ? 'the same as' : `${mny(Math.abs(d))}${p == null ? '' : ` (${p.toFixed(1)}%)`} ${d > 0 ? 'more' : 'less'} than`} ${isCounty() ? `the ${esc(bud(c.from))}` : esc(seriesLabel(c.from))}.`;
     const units = unitPage ? [] : b.by_unit.filter((r) => O.units[r[0]].dept === di).map(([u]) => ({ label: unitLabel(u), f: wcTotal(c.from, S.k, fund, (r) => r.unit === u), t: wcTotal(c.to, S.k, fund, (r) => r.unit === u), href: O.departments[di].bureaus ? unitHash(u) : null }));
     const fi = fund ? D.funds.indexOf(fund) : null;
     const mine = c.lines.map((ln, i) => i).filter((i) => { const ln = c.lines[i], a = acctOf(ln); return O.units[unitOfLine(ln)].dept === di && (!unitPage || unitOfLine(ln) === ui) && (fi == null || a[2] === fi) && (D.categories[a[5]] === 'Revenue') === (S.k === 'revenue'); })
@@ -1826,7 +2136,7 @@
     const summary = S.k === 'expense' ? deptSummaryHTML(c, di, ui, fund) : '';
     return `<section class="panel wc-dept" id="sec-changes" tabindex="-1" aria-labelledby="wc-d"><h2 class="panel-title" id="wc-d">What changed in ${D.newest_year}</h2>
       <p class="wc-lede-sm">${lede}</p>${badgeHTML(c)}${summary}
-      ${units.length > 1 ? `<details class="values wc-lines-d"><summary>Change by bureau</summary>${divBars(units, c, 'wc-du', { title: 'Bureau' })}</details>` : ''}
+      ${units.length > 1 ? `<details class="values wc-lines-d"><summary>Change by ${isCounty() ? 'department' : 'bureau'}</summary>${divBars(units, c, 'wc-du', { title: isCounty() ? 'Department' : 'Bureau' })}</details>` : ''}
       ${pos ? `<details class="values wc-lines-d"><summary>Positions</summary>${pos}</details>` : ''}
       ${mine.length ? `<details class="values wc-lines-d"><summary>Largest line changes (${Math.min(6, mine.length)})</summary>${lineTableHTML(c, mine.slice(0, 6))}</details>` : ''}
       ${S.k === 'expense' ? shiftsHTML(c, di, ui, fund) : ''}
@@ -1837,8 +2147,8 @@
   function renderMargin() {
     const m = $('margin'); if (!m) return;
     m.innerHTML = `<h2 class="margin-h">Reading notes</h2>
-      <dl>${DEFINE_FIGURES.filter(([, b]) => b).map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl>
-      <p>Every amount links to its page in the city's budget book.</p>
+      <dl>${defineList().filter(([, b]) => b).map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl>
+      <p>Every amount links to its page in ${isCounty() ? 'the County\'s' : 'the city\'s'} ${isCounty() ? 'books' : 'budget book'}.</p>
       <p>${knownLink()}</p>`;
   }
 
@@ -1889,19 +2199,20 @@
   }
 
   /* ---------- render / events ---------- */
-  function onRoute(scroll = true) {
+  async function onRoute(scroll = true) {
     if (!D) return;
-    const { r, q } = parseHash();
+    const { r, q, ent } = parseHash();
+    if (ent !== ENT) { if (await loadEntity(ent)) onRoute(true); return; } // the other entity: load it, then draw this address
     route = r;
     if (scroll) aboutOpen = false;
     if (q.get('c') === 'none') { applyQuery(q); S.c = ''; } else applyQuery(q);
-    if (route.name !== 'home' && route.name !== 'changes' && isReserve()) S.f = DEFAULT_FUND; // the reserve has no departments or bureaus
+    if (route.name !== 'home' && (route.name !== 'changes' || isCounty()) && isReserve()) S.f = DEFAULT_FUND; // the reserve has no departments or bureaus (and the County's no What changed page)
     if (route.name === 'changes' && S.y !== D.newest_year) { S.y = D.newest_year; S.m = defaultMeasure(S.y); S.c = defaultCompare(S.y, S.m); }
     T.sort = 'sel'; T.dir = -1; T.q = route.name === 'dept' || route.name === 'bureau' ? (q.get('q') || '') : ''; T.shown = PAGE_SIZE;
     destroyCharts();
     notesShown = new Set();
     let page;
-    if (route.name === 'home') page = { html: homeView(), after: () => { if (isReserve()) drawReserve(); else { drawTrend(); revExpAfter(); } } };
+    if (route.name === 'home') page = { html: homeView(), after: () => { if (isReserve()) drawReserve(); else { drawTrend(); revExpAfter(); drawContext(); } } };
     else if (route.name === 'changes') page = changesPage();
     else if (route.name === 'dept') page = deptPage();
     else if (route.name === 'about') page = { html: '<header class="page-head"><h1 id="page-h" tabindex="-1">About the data</h1></header>', after: () => { const t = q.get('s') && $(q.get('s')); if (t) { if (t.tagName === 'DETAILS') t.open = true; t.scrollIntoView(); } } };
@@ -1917,6 +2228,7 @@
     const onUnit = route.name === 'dept' || route.name === 'bureau';
     document.querySelectorAll('#site-nav a').forEach((a) => { if (a.dataset.nav === here && !onUnit) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     renderRail(here, onUnit);
+    renderSwitch();
     renderMargin();
     // The rail's "What changed" link keeps the fund (the Reserve Fund included: that page says it shows the General Fund),
     // the figure and the comparison, and Spending / Income; from an earlier year it opens the newest year's defaults.
@@ -1958,7 +2270,7 @@
     view.addEventListener('change', (e) => {
       const sel = e.target.closest('select');
       if (!sel) return;
-      if (sel.dataset.pick) navigate(`#/department/${sel.value}?${query()}`);
+      if (sel.dataset.pick) navigate(eh(`department/${sel.value}?${query()}`));
       else if (sel.dataset.sel) onFilter(sel.dataset.sel, sel.value);
     });
     view.addEventListener('click', (e) => {
@@ -2033,10 +2345,13 @@
      A combobox with a listbox: arrow keys move, Enter opens, Escape closes. A line item opens its bureau (or
      department) page with the line-item search pre-filled (the q= parameter). */
   let jumpIndex = null;
+  const JT = () => (isCounty() ? ['Group', 'Department', 'Line item'] : ['Department', 'Bureau', 'Line item']);
   function buildJumpIndex() {
+    const JT_ = JT(); // eslint-disable-line
+
     const out = [];
-    O.departments.forEach((d, i) => out.push({ t: 'Department', name: d.name, sub: '', href: deptHash(i, { f: DEFAULT_FUND }), hay: d.name.toLowerCase(), rank: 0 }));
-    O.units.forEach((u, i) => { if (u.kind === 'bureau' && O.departments[u.dept].bureaus) out.push({ t: 'Bureau', name: u.name, sub: O.departments[u.dept].name, href: unitHash(i), hay: `${u.name} ${O.departments[u.dept].name}`.toLowerCase(), rank: 1 }); });
+    O.departments.forEach((d, i) => out.push({ t: JT_[0], name: d.name, sub: '', href: deptHash(i, { f: DEFAULT_FUND }), hay: d.name.toLowerCase(), rank: 0 }));
+    O.units.forEach((u, i) => { if (u.kind === 'bureau' && O.departments[u.dept].bureaus) out.push({ t: JT_[1], name: u.name, sub: O.departments[u.dept].name, href: unitHash(i), hay: `${u.name} ${O.departments[u.dept].name}`.toLowerCase(), rank: 1 }); });
     const seen = new Set();
     D.accounts.forEach((a) => {
       const id = `${a[0]}|${a[1]}`; if (seen.has(id)) return; seen.add(id);
@@ -2044,7 +2359,7 @@
       const unit = O.units[u], dept = O.departments[unit.dept];
       const over = { k: D.categories[a[5]] === 'Revenue' ? 'revenue' : 'expense', f: D.funds[a[2]] };
       const base = dept.bureaus && unit.kind !== 'whole-department' ? unitHash(u, over) : deptHash(unit.dept, over);
-      out.push({ t: 'Line item', name: a[1], sub: `${a[0]} · ${unit.kind === 'bureau' ? unit.name : dept.name}`, href: `${base}&q=${encodeURIComponent(a[0])}`, hay: `${a[0]} ${a[1]} ${unit.name}`.toLowerCase(), rank: 2 });
+      out.push({ t: JT_[2], name: a[1], sub: `${a[0]} · ${unit.kind === 'bureau' ? unit.name : dept.name}`, href: `${base}&q=${encodeURIComponent(a[0])}`, hay: `${a[0]} ${a[1]} ${unit.name}`.toLowerCase(), rank: 2 });
     });
     return out;
   }
@@ -2067,7 +2382,8 @@
       const hits = jumpIndex.filter((x) => toks.every((t) => x.hay.includes(t)));
       hits.sort((a, b) => a.rank - b.rank || (b.hay.startsWith(q) - a.hay.startsWith(q)) || a.name.localeCompare(b.name));
       const take = (t, n) => hits.filter((x) => x.t === t).slice(0, n);
-      items = [...take('Department', 4), ...take('Bureau', 6), ...take('Line item', 8)];
+      const jt = JT();
+      items = [...take(jt[0], 4), ...take(jt[1], 6), ...take(jt[2], 8)];
       list.innerHTML = items.length ? items.map((it, i) => `<li role="option" id="jump-opt-${i}" aria-selected="false" data-i="${i}"><span class="jt">${it.t}</span><span class="jn">${esc(it.name)}</span>${it.sub ? `<span class="js">${esc(it.sub)}</span>` : ''}</li>`).join('')
         : '<li class="jump-none" role="presentation">No matches</li>';
       list.hidden = false; input.setAttribute('aria-expanded', 'true');
@@ -2093,7 +2409,85 @@
     // Notes quote source page numbers; the site does not show page references.
     return text.replace(/\s*(?:\(|,)?\s*(?:on |from |at )?\b(?:pp?\.?|pages?)\s*\d+(?:\s*[-–]\s*\d+)?(?:\s*(?:and|,)\s*(?:pp?\.?|pages?)?\s*\d+)*\)?/gi, '').replace(/\(\s*\)/g, '').replace(/\s{2,}/g, ' ').trim();
   }
+  /* Group each heading with what follows it, so wide screens can lay the sections out as a grid. */
+  function groupAbout() {
+    const ab = $('about-body'), secs = [];
+    [...ab.childNodes].forEach((n) => {
+      if (n.nodeType === 1 && n.classList.contains('about-h')) { secs.push(document.createElement('section')); secs[secs.length - 1].className = 'about-sec'; }
+      if (secs.length) secs[secs.length - 1].appendChild(n);
+    });
+    secs.forEach((x) => { if (x.querySelector('details, .about-wide') || /Known problems|Get the data|General Fund balance|Actual figures/.test(x.firstChild.textContent)) x.classList.add('about-sec-wide'); ab.appendChild(x); });
+    $('generated').textContent = `Data built ${D.generated.slice(0, 10)}.`;
+  }
+  function renderAboutCounty() {
+    const A = D.actuals, ac = CFG.adopted, pdf = (rel) => `${CFG.paths.pdfs}${rel.split('/').map(encodeURIComponent).join('/')}`;
+    const yrOf = Object.fromEntries(A.sources.map((x) => [x.file, x.year]));
+    const RS = D.reserve?.sources || [];
+    const nameOf = Object.fromEntries([...D.books.map((b) => [b.doc, `${b.year} Budget Book`]), ...A.sources.map((x) => [x.file, `${x.year} audited annual report`]), ...RS.map((x) => [x.file, x.resolution])]);
+    const resols = RS.map((x) => `<li><a href="${pdf(`Resolutions/${x.file}`)}" target="_blank" rel="noopener">${esc(x.resolution)}</a> (<a href="${pdf(`Resolutions/${x.file}`)}" download>download PDF</a>; <a href="${esc(x.url)}" target="_blank" rel="noopener">County page</a>): the ${x.budget_year} budget.</li>`).join('');
+    const books = D.books.filter((b) => b.used).map((b) => `<li><a href="${pdf(b.doc)}" target="_blank" rel="noopener">${esc(nameOf[b.doc])}</a> (<a href="${pdf(b.doc)}" download>download PDF</a>): supplies ${b.figures.map((y) => `${y} Budget`).join(' and ')}.</li>`).join('');
+    const acfrs = A.sources.map((x) => `<li><a href="${pdf(`ACFR/${x.file}`)}" target="_blank" rel="noopener">${esc(nameOf[x.file])}</a> (<a href="${pdf(`ACFR/${x.file}`)}" download>download PDF</a>; <a href="${esc(x.url)}" target="_blank" rel="noopener">County archive page</a>).</li>`).join('');
+    const shownIssues = D.known_issues.filter((i) => !noOriginal(i.note)), nOrig = D.known_issues.length - shownIssues.length;
+    const issues = shownIssues.map((i) => `<li>${esc(nameOf[i.source_doc] || i.source_doc.replace(/\.pdf$/i, ''))}: ${esc(cleanNote(i.note))}</li>`).join('') + (nOrig ? `<li>${nOrig} further notes compare the audited report's own “original budget” column with the budget books. That column is not used on this site, so they are kept in the project repository and not listed here.</li>` : '');
+    const groups = O.departments.map((g) => `${esc(g.name)} (${g.letter})`).join(', ');
+    const fundList = Object.entries(CFG.fund_names || {}).filter(([k]) => D.funds.includes(k)).map(([k, v]) => `<li>${esc(v)}</li>`).join('');
+    const gbYears = GB ? [...new Set(GB.rows.map((r) => r.year))].sort((a, b) => a - b) : [];
+    const gbLines = GB ? [...new Set(GB.rows.map((r) => r.line))] : [];
+    const gbTable = GB ? `<div class="table-scroll"><table class="table ledger" aria-label="Audited fund balances at December 31"><thead><tr><th scope="col">At December 31</th>${gbYears.map((y) => `<th scope="col" class="num">${y}</th>`).join('')}</tr></thead><tbody>${gbLines.map((ln) => `<tr><th scope="row">${esc(ln)}</th>${gbYears.map((y) => { const r = GB.rows.find((x) => x.year === y && x.line === ln); return `<td class="num">${r ? gbLink(money(r.v), r) : '—'}</td>`; }).join('')}</tr>`).join('')}</tbody></table></div>` : '';
+    const PR = D.context?.presentation;
+    const ctxAbout = PR ? `<h2 class="about-h">Context facts</h2>
+      <p>The “${D.context.year} Budget in Context” section on the overview shows the tax rate and its history, the taxable assessed value, the bond rating, the Capital Improvement Fund and the agency grants. Each figure links to the page that prints it in <a href="${pdf(`Resolutions/${RS.find((x) => x.budget_year === D.context.year)?.file || ''}`)}" target="_blank" rel="noopener">${esc(RS.find((x) => x.budget_year === D.context.year)?.resolution || 'the budget resolution')}</a>, the ${D.context.year} budget book or the ${A.years[A.years.length - 1]} audited annual report. They are shown as printed; a figure that the County's presentation gave differently from those documents would not be shown.</p>
+      <p>The County's <a href="${pdf(PR.file)}" target="_blank" rel="noopener">${D.context.year} budget presentation</a> (<a href="${pdf(PR.file)}" download>download PDF</a>; <a href="${esc(PR.url)}" target="_blank" rel="noopener">County page</a>) repeats these figures and is the only source for the number of funded staffing positions. A slide deck is not a primary document, so the site uses none of its other figures: its fund balances, revenue and spending are budget-basis or proposed figures that differ from the adopted resolution and the audit.</p>` : '';
+    const merges = (CH?.account_changes || []).map((m) => `<li>${esc(m.from.join(' and '))} → ${esc(m.to)} ${esc(m.to_name)}: ${esc(m.evidence)}</li>`).join('');
+    $('about-body').innerHTML = `
+      <h2 class="about-h">Sources</h2>
+      <p>Every Budget figure comes from the County of Lancaster's published budget books. Each book reports two or three years side by side; this site shows <strong>one Budget figure per year</strong>, from the newest book that prints that year, and labels it simply “Budget”.</p>
+      <ul>
+        <li><strong>${D.newest_year}: Budget</strong>${ac ? `, ${esc(ac.text)}` : ''}.</li>
+        <li><strong>${years().filter((y) => y < D.newest_year).sort((a, b) => a - b).join(', ')}: Budget</strong>, as the next year's book prints them. The books do not say whether these are the original or an amended budget, so the site calls them Budget.</li>
+      </ul>
+      <p>Books in use:</p><ul>${books}</ul>
+      <p>Years appear as soon as the books that report them have been processed.</p>
+      <h2 class="about-h">Actual figures</h2>
+      <p>Actual figures for ${A.years[0]} to ${A.years[A.years.length - 1]} come from the County's audited annual reports, in the budget-versus-actual schedules.</p>
+      <ul>${D.actuals_note.map((t) => cleanNote(t)).filter(Boolean).map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
+      <p>Audited reports in use:</p><ul>${acfrs}</ul>
+      ${ctxAbout}
+      <h2 class="about-h">Departments and funds</h2>
+      <p>Departments are grouped as the County's <a href="${pdf(O.chart_doc)}#page=${O.chart_page}" target="_blank" rel="noopener">${D.newest_year} budget book</a> groups them: ${groups}. Each budget line belongs to a department by its account number, with the department's name as the book prints it. The County does not publish staffing schedules, so there is no Staff section.</p>
+      ${O.elected_chart ? `<h2 class="about-h" id="about-elected" tabindex="-1">How the County is run, and the elected offices</h2>
+      <p>Three Commissioners, elected by the voters, manage the County. Alongside them, officials elected on their own (the “row offices”: Controller, Coroner, Recorder of Deeds, Treasurer, Clerk of Courts, Prothonotary, Register of Wills, Sheriff and District Attorney) head their own offices, and the judges of the Court of Common Pleas and the Magisterial District Judges are elected too. The County's <a href="${pdfHref(O.elected_chart.d, O.elected_chart.p)}" target="_blank" rel="noopener">2026 budget presentation (slide 3)</a> marks each of them with an asterisk on its organizational chart, and the audited report's <a href="${pdfHref(O.elected_list.d, O.elected_list.p)}" target="_blank" rel="noopener">list of elected officials</a> names them. Departments headed by an elected official, or serving elected judges, say so on their page and in the department lists. The budget book's own groups, and their printed totals, are unchanged.</p>` : ''}
+      <p>The County's books print fund letters without names. The names shown here come from the County's audited annual reports:</p>
+      <ul>${fundList}</ul>
+      <h2 class="about-h" id="about-balance" tabindex="-1">General Fund balance</h2>
+      ${D.reserve ? `<p>The <strong>${esc(D.reserve.name)}</strong> entry, last in the Fund list, shows the General Fund's accumulated balance in two separate measures:</p>
+      <ul><li><strong>Budget</strong>: the budget resolution the Commissioners adopt with each year's budget prints the General Fund's balance at the start of the year, its receipts and expenditures, and the balance remaining at the end. That is how the County covers a budget gap: from the balance. These are the County's own estimates, on its budget basis. The planned change (receipts minus expenditures) is calculated by this site; every other figure is as printed.</li>
+      <li><strong>Actual</strong>: the audited balance at December 31 from the County's audited annual reports, on its accounting (modified accrual) basis.</li></ul>
+      <p>The two are counted differently and do not tie, so they are never combined. Under each Budget year the page gives the audited balance for the same date. The County's budget books themselves print no General Fund balance page.</p>
+      <p>Budget resolutions in use:</p><ul>${resols}</ul>
+      <p>All audited fund balances (General Fund, other governmental funds and the total):</p>`
+      : `<p>The County's budget books print no General Fund balance page, so this site cannot say how the General Fund's budget gap is met. The audited annual reports do print year-end fund balances. These are <strong>audited year-end balances on the County's accounting (modified accrual) basis</strong>, not budget figures: they are not comparable with the Budget or with the Actual figures above, and they are not a projection.</p>`}
+      ${gbTable}
+      <h2 class="about-h">Validation</h2>
+      <p>Line items were extracted from the PDFs by script (the 2024 book is a scan and was read with OCR, then checked line by line). Figures are shown as printed, never adjusted. Where overlapping books disagree on the same figure, the newest book wins and the disagreement is logged (${D.conflict_count} so far). Lines of $0 are left out.</p>
+      <h2 class="about-h" id="about-merges" tabindex="-1">Merged accounts</h2>
+      <p>In the 2026 book the County folded some accounts into others and restated 2025 to match. Where that happens, What changed compares the accounts as one line in both years and says so under the line.</p>
+      <ul>${merges || '<li>None recorded.</li>'}</ul>
+      <h2 class="about-h" id="about-totals">Printed and calculated totals</h2>
+      <p>Every total is shown exactly as the County printed it, and links to its page. The site adds up the line items under each printed total only to check it. A difference of up to $5 on a department total, or up to 50 cents for each line in a larger roll-up, is rounding to whole dollars and is not mentioned.</p>
+      <p>Where the lines add up to something else, the printed total is still the one shown. It carries a <span class="gap-mark" aria-hidden="true">${GAP_SIGN}</span> sign, and a note beside it gives what the lines add up to and the reviewed explanation from the list below.</p>
+      <p>Where the book prints no total for exactly what you are looking at, the figure is this site's own sum of the line items, labelled <span class="calc-tag">calculated</span>.</p>
+      <h2 class="about-h">Known problems in the source books</h2>
+      <p>These come from errors or differences in the County's documents, not the extraction. A person reviewed each one.</p>
+      <details class="values" id="about-issues" tabindex="-1"><summary>Show all ${shownIssues.length + (nOrig ? 1 : 0)} notes</summary><ul>${issues || '<li>None recorded.</li>'}</ul></details>
+      <h2 class="about-h">Get the data</h2>
+      <p><a href="${CFG.paths.data}budget.json">budget.json</a> (every figure shown here, including the Actual figures), <a href="${CFG.paths.data}changes.json">changes.json</a> (what changed in ${D.newest_year}), <a href="${CFG.paths.data}conflicts.json">conflicts.json</a> and <a href="${CFG.paths.data}fund_balance_gaap.json">fund_balance_gaap.json</a> (audited year-end balances). The extraction scripts and tables are in the project repository.</p>${CFG.contact_email ? `
+      <h2 class="about-h">Contact</h2>
+      <p>Found an error, or have a question about a figure? Email <a href="mailto:${esc(CFG.contact_email)}">${esc(CFG.contact_email)}</a>.</p>` : ''}`;
+    groupAbout();
+  }
   function renderAbout() {
+    if (isCounty()) { renderAboutCounty(); return; }
     const used = D.books.filter((b) => b.used);
     const yrsOf = (m) => Object.values(D.series).filter((x) => x.measure === m).map((x) => x.year).sort((a, b) => a - b);
     const actualYears = yrsOf('actual'), projYears = yrsOf('projected');
@@ -2138,14 +2532,7 @@
       <p><a href="${CFG.paths.data}budget.json">budget.json</a> (every figure shown here${D.projection ? ', with the projections in its <code>projection</code> block' : ''}), <a href="${CFG.paths.data}staffing.json">staffing.json</a> (budgeted positions), <a href="${CFG.paths.data}conflicts.json">conflicts.json</a>, <a href="${CFG.paths.data}changes.json">changes.json</a> (what changed in ${D.newest_year}, with the fund shifts and position counts). The extraction scripts and tables are in the project repository.</p>${CFG.contact_email ? `
       <h2 class="about-h">Contact</h2>
       <p>Found an error, or have a question about a figure? Email <a href="mailto:${esc(CFG.contact_email)}">${esc(CFG.contact_email)}</a>.</p>` : ''}`;
-    // Group each heading with what follows it, so wide screens can lay the sections out as a grid.
-    const ab = $('about-body'), secs = [];
-    [...ab.childNodes].forEach((n) => {
-      if (n.nodeType === 1 && n.classList.contains('about-h')) { secs.push(document.createElement('section')); secs[secs.length - 1].className = 'about-sec'; }
-      if (secs.length) secs[secs.length - 1].appendChild(n);
-    });
-    secs.forEach((x) => { if (x.querySelector('details, .about-wide') || /Known problems|Get the data/.test(x.firstChild.textContent)) x.classList.add('about-sec-wide'); ab.appendChild(x); });
-    $('generated').textContent = `Data built ${D.generated.slice(0, 10)}.`;
+    groupAbout();
   }
 
   /* Theme: follows the device until the visitor clicks the toggle; then an explicit choice is saved and set as
@@ -2173,25 +2560,82 @@
     applyTheme(false);
   }
 
-  async function boot() {
+  /* ---------- entities: City and County ----------
+     config.json `entities` holds each one's name, wording, default fund and data/PDF paths. Each is loaded once, on first visit,
+     and kept; switching swaps D, O, CH, ST and the caches, then re-renders the route. */
+  const ENTCACHE = {};
+  async function loadEntity(id) {
+    const e = BASE.entities && BASE.entities[id];
+    if (!e) return false;
     try {
-      CFG = await (await fetch('config.json', { cache: 'no-cache' })).json();
-      // changes.json feeds "What changed"; the rest of the site works without it.
-      const chP = fetch(`${CFG.paths.data}changes.json`, { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-      // staffing.json feeds the Staff section on department and bureau pages; optional like changes.json.
-      const stP = fetch(`${CFG.paths.data}staffing.json`, { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-      const res = await fetch(`${CFG.paths.data}budget.json`, { cache: 'no-cache' });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      D = await res.json();
-      O = D.org;
-      // The projections book's printed section and fund totals join the others, so totalOf() shows them as printed.
-      if (D.projection) D.printed = D.printed.concat(D.projection.printed);
-      CH = await chP;
-      ST = await stP;
+      if (!ENTCACHE[id]) {
+        const get = (f) => fetch(`${e.paths.data}${f}`, { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+        // changes.json feeds "What changed", staffing.json the Staff section, fund_balance_gaap.json the County's audited balances;
+        // each is optional (an entity lists the ones it has under `files`).
+        const has = (f) => !e.files || e.files.includes(f);
+        const [ch, st, gb] = await Promise.all([has('changes') ? get('changes.json') : null, has('staffing') ? get('staffing.json') : null, has('fund_balance_gaap') ? get('fund_balance_gaap.json') : null]);
+        const res = await fetch(`${e.paths.data}budget.json`, { cache: 'no-cache' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const d = await res.json();
+        // The projections book's printed section and fund totals join the others, so totalOf() shows them as printed.
+        if (d.projection) d.printed = d.printed.concat(d.projection.printed);
+        ENTCACHE[id] = { D: d, O: d.org, CH: ch, ST: st, GB: gb, rowCache: new Map(), memberCache: new Map() };
+      }
     } catch (err) {
       $('view').innerHTML = `<header class="page-head"><h1>Could not load the budget data</h1><p class="muted">budget data: ${esc(err.message)}. If you opened index.html from disk, serve the folder over HTTP instead.</p></header>`;
+      return false;
+    }
+    const c = ENTCACHE[id];
+    ENT = id; D = c.D; O = c.O; CH = c.CH; ST = c.ST; GB = c.GB; rowCache = c.rowCache; memberCache = c.memberCache; jumpIndex = null;
+    CFG = { ...BASE, ...e, site_title: SITE + (e.title_suffix || '') };
+    DEFAULT_FUND = D.funds.includes(CFG.default_fund) ? CFG.default_fund : '';
+    try { localStorage.setItem('entity', id); } catch (err) { /* the choice lasts for this visit */ }
+    applyChrome();
+    renderAbout();
+    return true;
+  }
+  /* The name, disclaimer, footer and contents links follow the entity. */
+  function applyChrome() {
+    document.documentElement.setAttribute('data-entity', ENT);
+    document.title = CFG.site_title;
+    $('wordmark').textContent = SITE; $('wordmark').setAttribute('href', eh(''));
+    document.querySelector('meta[name=description]')?.setAttribute('content', CFG.description);
+    $('footer-text').textContent = CFG.footer;
+    if (CFG.tagline) $('tagline').textContent = CFG.tagline;
+    if (CFG.contact_email) $('footer-contact').innerHTML = `Questions or corrections: <a href="mailto:${esc(CFG.contact_email)}">${esc(CFG.contact_email)}</a>`;
+    const nav = { home: eh(''), changes: eh('changes'), reserve: eh(`?f=${encodeURIComponent(D.reserve?.name || 'Reserve Fund')}`), about: eh('about') };
+    document.querySelectorAll('#site-nav a[data-nav]').forEach((a) => {
+      a.setAttribute('href', nav[a.dataset.nav]);
+      if (a.dataset.nav === 'reserve') { a.closest('li').hidden = !D.reserve; if (D.reserve) a.textContent = D.reserve.name; } // the City's Reserve Fund, the County's General Fund Balance
+    });
+    jumpIndexReset();
+  }
+  const jumpIndexReset = () => { jumpIndex = null; const i = $('jump-input'); if (i) i.value = ''; };
+  /* City / County tabs: each opens the same kind of page in the other entity (the overview, What changed or About). */
+  function renderSwitch() {
+    const tail = route.name === 'changes' ? 'changes' : route.name === 'about' ? 'about' : '';
+    document.querySelectorAll('#entity-switch a').forEach((a) => {
+      const county = a.dataset.entity === 'county';
+      a.setAttribute('href', `#/${county ? 'county/' : ''}${tail}`);
+      if (a.dataset.entity === ENT) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
+  }
+
+  async function boot() {
+    try {
+      BASE = await (await fetch('config.json', { cache: 'no-cache' })).json();
+    } catch (err) {
+      $('view').innerHTML = `<header class="page-head"><h1>Could not load the budget data</h1><p class="muted">config: ${esc(err.message)}. If you opened index.html from disk, serve the folder over HTTP instead.</p></header>`;
       return;
     }
+    SITE = BASE.site_title;
+    // A bare address opens the entity the visitor last chose; any #/... address says which one it means.
+    if (!location.hash || location.hash === '#') {
+      let saved = null;
+      try { saved = localStorage.getItem('entity'); } catch (e) { /* no storage */ }
+      if (saved && saved !== 'city' && BASE.entities[saved]) history.replaceState(null, '', `#/${saved}/`);
+    }
+    if (!(await loadEntity(parseHash().ent))) return;
     loadTokens();
     if (window.Chart) { Chart.defaults.font.family = getComputedStyle(document.documentElement).getPropertyValue('--font').trim(); Chart.defaults.font.size = 13; Chart.defaults.color = MUTED; }
     // Charts are drawn on canvas, so wait for the web font before the first draw (but never more than 1.5s).
@@ -2199,16 +2643,8 @@
     // Light/dark follows the device; redraw the charts in the new colors when it changes.
     matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => applyTheme());
     initThemeToggle();
-    DEFAULT_FUND = D.funds.includes(CFG.default_fund) ? CFG.default_fund : '';
-    document.title = CFG.site_title;
-    $('wordmark').textContent = CFG.site_title;
-    document.querySelector('meta[name=description]')?.setAttribute('content', CFG.description);
-    $('footer-text').textContent = CFG.footer;
-    if (CFG.tagline) $('tagline').textContent = CFG.tagline;
-    if (CFG.contact_email) $('footer-contact').innerHTML = `Questions or corrections: <a href="mailto:${esc(CFG.contact_email)}">${esc(CFG.contact_email)}</a>`;
     wire();
     initJump();
-    renderAbout();
     $('site-footer').hidden = false; // shown only once there is something to show; About appears on its own page
     onRoute(false);
   }

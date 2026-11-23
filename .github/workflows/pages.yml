@@ -1,4 +1,4 @@
-# Builds web/data from data/processed and publishes web/ (plus the source PDFs) to GitHub Pages.
+# Builds web/data (City) and web/data/county (County) from data/processed and publishes web/ (plus the source PDFs) to GitHub Pages.
 # One-time setup: repo Settings > Pages > Build and deployment > Source: "GitHub Actions".
 name: Publish dashboard
 
@@ -27,12 +27,17 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - name: Build and check dashboard data
+      # Each step runs under bash -e, so a failed build or check for either entity stops the publish.
+      - name: Build and check City data
         run: |
           python scripts/build_dataset.py
           python scripts/check_dataset.py
+      - name: Build and check County data
+        run: |
+          python scripts/build_dataset.py --entity county
+          python scripts/check_dataset.py --entity county
       - name: Assemble site
-        # web/pdfs is a symlink to "Budget PDFs - City"; -L copies the PDFs themselves.
+        # web/pdfs is a symlink to "Budget PDFs - City", which holds a "county" symlink to "Budget PDFs - County" (pdfs/county/); -L copies the PDFs themselves.
         run: |
           mkdir _site
           cp -RL web/. _site/

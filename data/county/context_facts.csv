@@ -1,0 +1,35 @@
+id,group,label,value,unit,year,fund,source_doc,source_page,source_kind,find,also_in,note
+tax_increase,tax,Tax increase over 2025,10,percent,2026,,County-Resolution-79-of-2025.pdf,1,printed,10%,County-2026-Budget-Presentation.pdf#4,
+millage_2026,tax,"Real estate tax rate, 2026",3.201,mills,2026,,County-Resolution-79-of-2025.pdf,1,printed,3.201,County-2026-Budget-Presentation.pdf#4,
+assessed_value,tax,"Taxable assessed value, 2026",45286188100,dollars,2026,,County-Resolution-79-of-2025.pdf,1,printed,45286188100,County-2026-Budget-Presentation.pdf#6,
+millage_2017,millage_history,"Real estate tax rate, 2017",3.735,mills,2017,,County-ACFR-2025.pdf,129,printed,2017|3.735,County-2026-Budget-Presentation.pdf#18,
+millage_2018,millage_history,"Real estate tax rate, 2018",2.911,mills,2018,,County-ACFR-2025.pdf,129,printed,2018|2.911,County-2026-Budget-Presentation.pdf#18,
+millage_2019,millage_history,"Real estate tax rate, 2019",2.911,mills,2019,,County-ACFR-2025.pdf,129,printed,2019|2.911,County-2026-Budget-Presentation.pdf#18,
+millage_2020,millage_history,"Real estate tax rate, 2020",2.911,mills,2020,,County-ACFR-2025.pdf,129,printed,2020|2.911,County-2026-Budget-Presentation.pdf#18,
+millage_2021,millage_history,"Real estate tax rate, 2021",2.911,mills,2021,,County-ACFR-2025.pdf,129,printed,2021|2.911,County-2026-Budget-Presentation.pdf#18,
+millage_2022,millage_history,"Real estate tax rate, 2022",2.911,mills,2022,,County-ACFR-2025.pdf,129,printed,2022|2.911,County-2026-Budget-Presentation.pdf#18,
+millage_2023,millage_history,"Real estate tax rate, 2023",2.911,mills,2023,,County-ACFR-2025.pdf,129,printed,2023|2.911,County-2026-Budget-Presentation.pdf#18,
+millage_2024,millage_history,"Real estate tax rate, 2024",2.911,mills,2024,,County-ACFR-2025.pdf,129,printed,2024|2.911,County-2026-Budget-Presentation.pdf#18,
+millage_2025,millage_history,"Real estate tax rate, 2025",2.911,mills,2025,,County-ACFR-2025.pdf,129,printed,2025|2.911,County-2026-Budget-Presentation.pdf#18,
+millage_hist_2026,millage_history,"Real estate tax rate, 2026",3.201,mills,2026,,County-Resolution-79-of-2025.pdf,1,printed,3.201,County-2026-Budget-Presentation.pdf#18,
+bond_rating,standing,Bond rating (Moody's),Aa2,rating,2025,,County-ACFR-2025.pdf,24,printed,Aa2,County-2026-Budget-Presentation.pdf#4,The audited report says the County maintained this rating during 2025.
+positions,standing,County staffing positions funded,1929,positions,2026,,County-2026-Budget-Presentation.pdf,4,presentation,"1,929",,Stated only in the County's budget presentation; no budget book or audited report prints a position count to check it against.
+cip_2026,capital,Capital Improvement Fund: 2026 project costs,5900000,dollars,2026,Capital Reserve Fund,County-2026-Budget-Book.pdf,149,printed,"5,900,000",County-2026-Budget-Presentation.pdf#4,
+cip_rollover,capital,Capital Improvement Fund: 2025 rollover project costs,4209623,dollars,2026,Capital Reserve Fund,County-2026-Budget-Book.pdf,149,printed,"4,209,623",County-2026-Budget-Presentation.pdf#4,
+cip_total,capital,Capital Improvement Fund: total 2026 expense,10109623,dollars,2026,Capital Reserve Fund,County-2026-Budget-Book.pdf,149,calculated,,County-2026-Budget-Presentation.pdf#4,The two printed figures above added together; the presentation prints the same total.
+grant_1,agency_grants,Agricultural Extension (Penn State College of Ag),474955,dollars,2026,General Fund,County-2026-Budget-Book.pdf,110,printed,"474,955",County-2026-Budget-Presentation.pdf#17,
+grant_2,agency_grants,Library System,1756894,dollars,2026,General Fund,County-2026-Budget-Book.pdf,110,printed,"1,756,894",County-2026-Budget-Presentation.pdf#17,
+grant_3,agency_grants,Member Libraries,186750,dollars,2026,General Fund,County-2026-Budget-Book.pdf,110,printed,"186,750",County-2026-Budget-Presentation.pdf#17,
+grant_4,agency_grants,Economic Development Company of Lancaster,87150,dollars,2026,General Fund,County-2026-Budget-Book.pdf,110,printed,"87,150",County-2026-Budget-Presentation.pdf#17,"The book prints this name as ""Economic Development County of Lancaster""."
+grant_5,agency_grants,Downtown Investment District,54967,dollars,2026,General Fund,County-2026-Budget-Book.pdf,110,printed,"54,967",County-2026-Budget-Presentation.pdf#17,
+grant_6,agency_grants,Lancaster County Ag Council,20000,dollars,2026,Act 13,County-2026-Budget-Book.pdf,110,printed,"20,000",County-2026-Budget-Presentation.pdf#17,
+grant_7,agency_grants,Lancaster Conservation District,250000,dollars,2026,Act 13,County-2026-Budget-Book.pdf,110,printed,"250,000",County-2026-Budget-Presentation.pdf#17,
+grant_8,agency_grants,Susquehanna National Heritage Area,30000,dollars,2026,Act 13,County-2026-Budget-Book.pdf,110,printed,"30,000",County-2026-Budget-Presentation.pdf#17,
+grant_9,agency_grants,Lancaster Conservancy,150000,dollars,2026,Act 13,County-2026-Budget-Book.pdf,110,printed,"150,000",County-2026-Budget-Presentation.pdf#17,
+grant_10,agency_grants,Ag Preserve/Farmland Trust,250000,dollars,2026,Act 13,County-2026-Budget-Book.pdf,110,printed,"250,000",County-2026-Budget-Presentation.pdf#17,
+grants_gf,agency_grants,"Total, General Fund",2560716,dollars,2026,General Fund,County-2026-Budget-Book.pdf,110,printed,"2,560,716",County-2026-Budget-Presentation.pdf#17,
+grants_act13,agency_grants,"Total, Act 13 funds",700000,dollars,2026,Act 13,County-2026-Budget-Book.pdf,110,printed,"700,000",County-2026-Budget-Presentation.pdf#17,
+grants_request,agency_grants,Total request,3260716,dollars,2026,,County-2026-Budget-Book.pdf,110,printed,"3,260,716",,
+scta,agency_grants,RRTA/SCTA transit funding,542008,dollars,2026,General Fund,County-2026-Budget-Book.pdf,110,printed,"542,008",County-2026-Budget-Presentation.pdf#17,"The book prints this line below the total, outside it."
+reassessment_2018,millage_note,"Countywide reassessment, 2018",Reassessment,text,2018,,County-ACFR-2025.pdf,13,printed,reassessment in 2018,County-2026-Budget-Presentation.pdf#18,The audited report says a reassessment does not raise revenue; taxing bodies adjust their rate to stay revenue neutral.
+revenue_2018,millage_note,"Revenue change at the 2018 rate, as labelled in the presentation",0% revenue increase,text,2018,,County-2026-Budget-Presentation.pdf,18,presentation,0% revenue increase,,Stated only on the presentation slide; the primary documents do not label 2018 this way.

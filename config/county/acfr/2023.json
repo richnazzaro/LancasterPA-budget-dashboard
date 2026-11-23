@@ -1,0 +1,73 @@
+{
+  "source_doc": "County-ACFR-2023.pdf",
+  "title": "County of Lancaster, Pennsylvania, Annual Comprehensive Financial Report for the year ended December 31, 2023",
+  "fiscal_year": 2023,
+  "url": "https://lancastercountypa.gov/Archive.aspx?ADID=3395",
+  "download_url": "https://lancastercountypa.gov/ArchiveCenter/ViewFile/Item/3395",
+  "downloaded": "2026-11-21",
+  "pdf_pages": 154,
+  "dated": null,
+  "page_note": "All pages are PDF page numbers (the printed page number is 9-10 lower).",
+  "schedules": [
+    {
+      "fund": "General Fund",
+      "acfr_fund": "General Fund",
+      "book_funds": [
+        "General Fund"
+      ],
+      "page": 116
+    },
+    {
+      "fund": "Fund Y",
+      "acfr_fund": "Children and Youth Services Fund",
+      "book_funds": [
+        "Fund Y"
+      ],
+      "page": 117
+    },
+    {
+      "fund": "Fund H+R+EI",
+      "acfr_fund": "Behavioral Health and Developmental Services Fund",
+      "book_funds": [
+        "Fund H",
+        "Fund R",
+        "Fund EI"
+      ],
+      "page": 118
+    },
+    {
+      "fund": "Fund F",
+      "acfr_fund": "Domestic Relations Special Revenue Fund",
+      "book_funds": [
+        "Fund F"
+      ],
+      "page": 119
+    },
+    {
+      "fund": "Fund G",
+      "acfr_fund": "Office of Aging Special Revenue Fund",
+      "book_funds": [
+        "Fund G"
+      ],
+      "page": 124
+    },
+    {
+      "fund": "Fund E",
+      "acfr_fund": "Drug and Alcohol Special Revenue Fund",
+      "book_funds": [
+        "Fund E"
+      ],
+      "page": 125
+    },
+    {
+      "fund": "Fund B",
+      "acfr_fund": "Liquid Fuels Special Revenue Fund",
+      "book_funds": [
+        "Fund B"
+      ],
+      "page": 126
+    }
+  ],
+  "fund_balance_table_page": 131,
+  "gaap_statement_page": 43
+}

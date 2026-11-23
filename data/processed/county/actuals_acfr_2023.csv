@@ -1,0 +1,80 @@
+fiscal_year,doc_type,fund,book_funds,acfr_fund,section,row_type,heading,line,basis,original,final,actual,variance,source_doc,source_page
+2023,actual,General Fund,General Fund,General Fund,revenue,line,,Real estate taxes,budgetary,127292707,127292707,128029246,736539,County-ACFR-2023.pdf,116
+2023,actual,General Fund,General Fund,General Fund,revenue,line,,Intergovernmental,budgetary,7326228,75277984,38237036,-37040948,County-ACFR-2023.pdf,116
+2023,actual,General Fund,General Fund,General Fund,revenue,line,,Departmental,budgetary,28969784,28969784,27012490,-1957294,County-ACFR-2023.pdf,116
+2023,actual,General Fund,General Fund,General Fund,revenue,line,,Fines and costs,budgetary,3398006,3398006,2316146,-1081860,County-ACFR-2023.pdf,116
+2023,actual,General Fund,General Fund,General Fund,revenue,line,,Investment earnings,budgetary,6798589,6798589,5169566,-1629023,County-ACFR-2023.pdf,116
+2023,actual,General Fund,General Fund,General Fund,revenue,line,,Other,budgetary,4800300,4810300,4670621,-139679,County-ACFR-2023.pdf,116
+2023,actual,General Fund,General Fund,General Fund,revenue,total,,Total revenues,budgetary,178585614,246547370,205435105,-41112265,County-ACFR-2023.pdf,116
+2023,actual,General Fund,General Fund,General Fund,expenditure,line,,General government,budgetary,41408808,98754118,50859472,47894646,County-ACFR-2023.pdf,116
+2023,actual,General Fund,General Fund,General Fund,expenditure,line,,Public Safety,budgetary,13770125,13833918,9821844,4012074,County-ACFR-2023.pdf,116
+2023,actual,General Fund,General Fund,General Fund,expenditure,line,,Judicial,budgetary,51364431,52081624,50975988,1105636,County-ACFR-2023.pdf,116
+2023,actual,General Fund,General Fund,General Fund,expenditure,line,,Corrections,budgetary,37282006,37467925,35228703,2239222,County-ACFR-2023.pdf,116
+2023,actual,General Fund,General Fund,General Fund,expenditure,line,,Cultural and recreation,budgetary,2785978,2808630,2591792,216838,County-ACFR-2023.pdf,116
+2023,actual,General Fund,General Fund,General Fund,expenditure,line,,Capital outlay,budgetary,4050408,14836706,7567382,7269324,County-ACFR-2023.pdf,116
+2023,actual,General Fund,General Fund,General Fund,expenditure,line,Debt service,Principal retirement,budgetary,15335000,15335000,19703729,-4368729,County-ACFR-2023.pdf,116
+2023,actual,General Fund,General Fund,General Fund,expenditure,line,Debt service,Interest and fiscal charges,budgetary,6365878,6365878,6299640,66238,County-ACFR-2023.pdf,116
+2023,actual,General Fund,General Fund,General Fund,expenditure,total,,Total expenditures,budgetary,172362634,241483799,183048550,58435249,County-ACFR-2023.pdf,116
+2023,actual,General Fund,General Fund,General Fund,net_change,excess,,Excess (deficiency) of revenues over (under) expenditures,budgetary,6222980,5063571,22386555,17322984,County-ACFR-2023.pdf,116
+2023,actual,General Fund,General Fund,General Fund,transfer,line,,Transfers out,budgetary,-13758442,-19749233,-18962872,786361,County-ACFR-2023.pdf,116
+2023,actual,General Fund,General Fund,General Fund,transfer,total,,Total other financing sources (uses),budgetary,-13758442,-19749233,-18962872,786361,County-ACFR-2023.pdf,116
+2023,actual,General Fund,General Fund,General Fund,net_change,net_change,,Net change in fund balances,budgetary,-7535462,-14685662,3423683,18109345,County-ACFR-2023.pdf,116
+2023,actual,Fund Y,Fund Y,Children and Youth Services Fund,revenue,line,,Intergovernmental,budgetary,39317764,39317764,29846548,-9471216,County-ACFR-2023.pdf,117
+2023,actual,Fund Y,Fund Y,Children and Youth Services Fund,revenue,line,,Departmental,budgetary,639227,639227,276770,-362457,County-ACFR-2023.pdf,117
+2023,actual,Fund Y,Fund Y,Children and Youth Services Fund,revenue,total,,Total revenues,budgetary,39956991,39956991,30123318,-9833673,County-ACFR-2023.pdf,117
+2023,actual,Fund Y,Fund Y,Children and Youth Services Fund,expenditure,line,"Health, education, and welfare",Children and youth,budgetary,49514992,49445862,49435086,10776,County-ACFR-2023.pdf,117
+2023,actual,Fund Y,Fund Y,Children and Youth Services Fund,expenditure,line,,Capital outlay,budgetary,125555,194685,127750,66935,County-ACFR-2023.pdf,117
+2023,actual,Fund Y,Fund Y,Children and Youth Services Fund,expenditure,total,,Total expenditures,budgetary,49640547,49640547,49562836,77711,County-ACFR-2023.pdf,117
+2023,actual,Fund Y,Fund Y,Children and Youth Services Fund,net_change,excess,,Excess (deficiency) of revenues over (under) expenditures,budgetary,-9683556,-9683556,-19439518,-9755962,County-ACFR-2023.pdf,117
+2023,actual,Fund Y,Fund Y,Children and Youth Services Fund,transfer,line,,Transfers in,budgetary,9423143,9423143,13660173,4237030,County-ACFR-2023.pdf,117
+2023,actual,Fund Y,Fund Y,Children and Youth Services Fund,net_change,net_change,,Net change in fund balances,budgetary,-260413,-260413,-5779345,-5518932,County-ACFR-2023.pdf,117
+2023,actual,Fund H+R+EI,Fund H;Fund R;Fund EI,Behavioral Health and Developmental Services Fund,revenue,line,,Intergovernmental,budgetary,28884399,31019399,34635750,3616351,County-ACFR-2023.pdf,118
+2023,actual,Fund H+R+EI,Fund H;Fund R;Fund EI,Behavioral Health and Developmental Services Fund,revenue,line,,Departmental,budgetary,2565981,2565981,1730218,-835763,County-ACFR-2023.pdf,118
+2023,actual,Fund H+R+EI,Fund H;Fund R;Fund EI,Behavioral Health and Developmental Services Fund,revenue,total,,Total revenues,budgetary,31450380,33585380,36365968,2780588,County-ACFR-2023.pdf,118
+2023,actual,Fund H+R+EI,Fund H;Fund R;Fund EI,Behavioral Health and Developmental Services Fund,expenditure,line,"Health, education, and welfare",Behavioral Health & Developmental Services,budgetary,32238083,34450600,32355751,2094849,County-ACFR-2023.pdf,118
+2023,actual,Fund H+R+EI,Fund H;Fund R;Fund EI,Behavioral Health and Developmental Services Fund,expenditure,line,,Capital outlay,budgetary,242439,164922,86092,78830,County-ACFR-2023.pdf,118
+2023,actual,Fund H+R+EI,Fund H;Fund R;Fund EI,Behavioral Health and Developmental Services Fund,expenditure,line,Debt service,Principal retirement,budgetary,0,0,189058,-189058,County-ACFR-2023.pdf,118
+2023,actual,Fund H+R+EI,Fund H;Fund R;Fund EI,Behavioral Health and Developmental Services Fund,expenditure,line,Debt service,Interest and fiscal charges,budgetary,0,0,310966,-310966,County-ACFR-2023.pdf,118
+2023,actual,Fund H+R+EI,Fund H;Fund R;Fund EI,Behavioral Health and Developmental Services Fund,expenditure,total,,Total expenditures,budgetary,32480522,34615522,32941867,1673655,County-ACFR-2023.pdf,118
+2023,actual,Fund H+R+EI,Fund H;Fund R;Fund EI,Behavioral Health and Developmental Services Fund,net_change,excess,,Excess (deficiency) of revenues over (under) expenditures,budgetary,-1030142,-1030142,3424101,4454243,County-ACFR-2023.pdf,118
+2023,actual,Fund H+R+EI,Fund H;Fund R;Fund EI,Behavioral Health and Developmental Services Fund,transfer,line,,Transfers in,budgetary,982000,982000,1039809,57809,County-ACFR-2023.pdf,118
+2023,actual,Fund H+R+EI,Fund H;Fund R;Fund EI,Behavioral Health and Developmental Services Fund,net_change,net_change,,Net change in fund balances,budgetary,-48142,-48142,4463910,4512052,County-ACFR-2023.pdf,118
+2023,actual,Fund F,Fund F,Domestic Relations Special Revenue Fund,revenue,line,,Intergovernmental,budgetary,5123009,5123009,5207992,84983,County-ACFR-2023.pdf,119
+2023,actual,Fund F,Fund F,Domestic Relations Special Revenue Fund,revenue,line,,Departmental,budgetary,20000,20000,16114,-3886,County-ACFR-2023.pdf,119
+2023,actual,Fund F,Fund F,Domestic Relations Special Revenue Fund,revenue,line,,Investment earnings,budgetary,18000,18000,716744,698744,County-ACFR-2023.pdf,119
+2023,actual,Fund F,Fund F,Domestic Relations Special Revenue Fund,revenue,total,,Total revenues,budgetary,5161009,5161009,5940850,779841,County-ACFR-2023.pdf,119
+2023,actual,Fund F,Fund F,Domestic Relations Special Revenue Fund,expenditure,line,,Judicial,budgetary,7541495,7451495,7024592,426903,County-ACFR-2023.pdf,119
+2023,actual,Fund F,Fund F,Domestic Relations Special Revenue Fund,expenditure,line,,Capital outlay,budgetary,34000,124000,107047,16953,County-ACFR-2023.pdf,119
+2023,actual,Fund F,Fund F,Domestic Relations Special Revenue Fund,expenditure,total,,Total expenditures,budgetary,7575495,7575495,7131639,443856,County-ACFR-2023.pdf,119
+2023,actual,Fund F,Fund F,Domestic Relations Special Revenue Fund,net_change,excess,,Excess (deficiency) of revenues over (under) expenditures,budgetary,-2414486,-2414486,-1190789,1223697,County-ACFR-2023.pdf,119
+2023,actual,Fund F,Fund F,Domestic Relations Special Revenue Fund,transfer,line,,Transfers in,budgetary,2378889,2378889,2876457,497568,County-ACFR-2023.pdf,119
+2023,actual,Fund F,Fund F,Domestic Relations Special Revenue Fund,net_change,net_change,,Net change in fund balances,budgetary,-35597,-35597,1685668,1721265,County-ACFR-2023.pdf,119
+2023,actual,Fund G,Fund G,Office of Aging Special Revenue Fund,revenue,line,,Intergovernmental,budgetary,11065685,11065685,13674269,2608584,County-ACFR-2023.pdf,124
+2023,actual,Fund G,Fund G,Office of Aging Special Revenue Fund,revenue,line,,Departmental,budgetary,48082,48082,48082,0,County-ACFR-2023.pdf,124
+2023,actual,Fund G,Fund G,Office of Aging Special Revenue Fund,revenue,line,,Other,budgetary,1111,1111,20060,18949,County-ACFR-2023.pdf,124
+2023,actual,Fund G,Fund G,Office of Aging Special Revenue Fund,revenue,total,,Total revenues,budgetary,11114878,11114878,13742411,2627533,County-ACFR-2023.pdf,124
+2023,actual,Fund G,Fund G,Office of Aging Special Revenue Fund,expenditure,line,"Health, education, and welfare",Office of Aging,budgetary,11696981,11627323,10863559,763764,County-ACFR-2023.pdf,124
+2023,actual,Fund G,Fund G,Office of Aging Special Revenue Fund,expenditure,line,,Capital outlay,budgetary,98723,168381,104772,63609,County-ACFR-2023.pdf,124
+2023,actual,Fund G,Fund G,Office of Aging Special Revenue Fund,expenditure,total,,Total expenditures,budgetary,11795704,11795704,10968331,827373,County-ACFR-2023.pdf,124
+2023,actual,Fund G,Fund G,Office of Aging Special Revenue Fund,net_change,excess,,Excess (deficiency) of revenues over (under) expenditures,budgetary,-680826,-680826,2774080,3454906,County-ACFR-2023.pdf,124
+2023,actual,Fund G,Fund G,Office of Aging Special Revenue Fund,transfer,line,,Transfers in,budgetary,660000,660000,0,-660000,County-ACFR-2023.pdf,124
+2023,actual,Fund G,Fund G,Office of Aging Special Revenue Fund,net_change,net_change,,Net change in fund balances,budgetary,-20826,-20826,2774080,2794906,County-ACFR-2023.pdf,124
+2023,actual,Fund E,Fund E,Drug and Alcohol Special Revenue Fund,revenue,line,,Intergovernmental,budgetary,5401795,5401795,6085839,684044,County-ACFR-2023.pdf,125
+2023,actual,Fund E,Fund E,Drug and Alcohol Special Revenue Fund,revenue,line,,Departmental,budgetary,680802,680802,310660,-370142,County-ACFR-2023.pdf,125
+2023,actual,Fund E,Fund E,Drug and Alcohol Special Revenue Fund,revenue,line,,Investment earnings,budgetary,1600,1600,6210,4610,County-ACFR-2023.pdf,125
+2023,actual,Fund E,Fund E,Drug and Alcohol Special Revenue Fund,revenue,line,,Other,budgetary,26000,26000,0,-26000,County-ACFR-2023.pdf,125
+2023,actual,Fund E,Fund E,Drug and Alcohol Special Revenue Fund,revenue,total,,Total revenues,budgetary,6110197,6110197,6402709,292512,County-ACFR-2023.pdf,125
+2023,actual,Fund E,Fund E,Drug and Alcohol Special Revenue Fund,expenditure,line,"Health, education, and welfare",Drug and alcohol,budgetary,6361442,6361442,5973535,387907,County-ACFR-2023.pdf,125
+2023,actual,Fund E,Fund E,Drug and Alcohol Special Revenue Fund,expenditure,total,,Total expenditures,budgetary,6361442,6361442,5973535,387907,County-ACFR-2023.pdf,125
+2023,actual,Fund E,Fund E,Drug and Alcohol Special Revenue Fund,net_change,excess,,Excess (deficiency) of revenues over (under) expenditures,budgetary,-251245,-251245,429174,680419,County-ACFR-2023.pdf,125
+2023,actual,Fund E,Fund E,Drug and Alcohol Special Revenue Fund,transfer,line,,Transfers in,budgetary,244000,244000,196247,-47753,County-ACFR-2023.pdf,125
+2023,actual,Fund E,Fund E,Drug and Alcohol Special Revenue Fund,net_change,net_change,,Net change in fund balances,budgetary,-7245,-7245,625421,632666,County-ACFR-2023.pdf,125
+2023,actual,Fund B,Fund B,Liquid Fuels Special Revenue Fund,revenue,line,,Intergovernmental,budgetary,2122460,2122460,1090545,-1031915,County-ACFR-2023.pdf,126
+2023,actual,Fund B,Fund B,Liquid Fuels Special Revenue Fund,revenue,line,,Investment earnings,budgetary,1000,1000,83998,82998,County-ACFR-2023.pdf,126
+2023,actual,Fund B,Fund B,Liquid Fuels Special Revenue Fund,revenue,total,,Total revenues,budgetary,2123460,2123460,1174543,-948917,County-ACFR-2023.pdf,126
+2023,actual,Fund B,Fund B,Liquid Fuels Special Revenue Fund,expenditure,line,,Roads and bridges,budgetary,465809,465809,172749,293060,County-ACFR-2023.pdf,126
+2023,actual,Fund B,Fund B,Liquid Fuels Special Revenue Fund,expenditure,line,,Capital outlay,budgetary,2649790,2649790,1924455,725335,County-ACFR-2023.pdf,126
+2023,actual,Fund B,Fund B,Liquid Fuels Special Revenue Fund,expenditure,total,,Total expenditures,budgetary,3115599,3115599,2097204,1018395,County-ACFR-2023.pdf,126
+2023,actual,Fund B,Fund B,Liquid Fuels Special Revenue Fund,net_change,excess,,Excess (deficiency) of revenues over (under) expenditures,budgetary,-992139,-992139,-922661,-1967312,County-ACFR-2023.pdf,126
+2023,actual,Fund B,Fund B,Liquid Fuels Special Revenue Fund,transfer,line,,Transfers in,budgetary,0,0,226434,,County-ACFR-2023.pdf,126
+2023,actual,Fund B,Fund B,Liquid Fuels Special Revenue Fund,net_change,net_change,,Net change in fund balances,budgetary,-992139,-992139,-696227,-1967312,County-ACFR-2023.pdf,126
