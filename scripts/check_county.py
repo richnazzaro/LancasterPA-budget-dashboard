@@ -25,6 +25,14 @@ validation_*.csv and data/county/*.csv directly and does not import the build.
    every fund's net change foots (with the printed figures); the books' totals beside them equal the CSV sums;
    every ACFR check over $5 in validation_acfr_<year>.csv is in known_issues.csv; and fund_balance_gaap.json
    equals data/processed/county/gaap_fund_balance_acfr.csv, with the General Fund and other funds adding to the total.
+8. General Fund balance (budget.json `reserve`): one Budget entry per config/county/resolutions/*.json, each line
+   (start, encumbrances, receipts, expenditures, commitments, remaining) equal to the General Fund column of
+   resolutions_county.csv with its page, signed (expenditures and commitments negative); the calculated line equal to
+   receipts - expenditures and marked calculated; start + receipts - expenditures (with encumbrances and commitments)
+   = remaining within $5; receipts and expenditures within $5 of every printed General Fund Grand Total in the books
+   for that year; one Actual entry per ACFR year, equal to the General Fund rows of gaap_fund_balance_acfr.csv, from
+   the ACFR; Budget entries cite only resolutions and Actual entries only ACFRs; every resolution check over $5 in
+   validation_resolutions_county.csv is in known_issues.csv; and the known issue on a printed line is linked to it.
 Every failure counts toward the final "N series mismatches". Standard library only.
 """
 from __future__ import annotations
@@ -218,9 +226,107 @@ def main() -> int:
     failures += check_changes(budget, changes, csv_rows, want_book, book_year, newest)
     failures += check_conflicts(conflicts, rows_by_doc, live, want_book)
     failures += check_actuals(budget, rows_by_doc, want_book)
+    failures += check_fund_balance(budget)
 
     print(f"\n{failures} series mismatches")
     return 1 if failures else 0
+
+
+def check_fund_balance(budget) -> int:
+    print("\nGeneral Fund balance (budget.json reserve), recomputed from resolutions_county.csv and gaap_fund_balance_acfr.csv:")
+    cfgs = {json.loads(p.read_text())["source_doc"]: json.loads(p.read_text())
+            for p in sorted((ROOT / "config" / "county" / "resolutions").glob("*.json"))}
+    rpath, gpath, vpath = (PROCESSED / n for n in ("resolutions_county.csv", "gaap_fund_balance_acfr.csv", "validation_resolutions_county.csv"))
+    res, docs = budget.get("reserve"), budget["docs"]
+    if not cfgs:
+        ok = not res
+        print(f"{'ok  ' if ok else 'FAIL'} no resolution configs: no balance view")
+        return 0 if ok else 1
+    bad = 0
+    for path in (rpath, gpath, vpath):
+        if not path.exists():
+            print(f"FAIL {path.name} missing")
+            bad += 1
+    if bad or not res:
+        print("FAIL no reserve block" if not res else "")
+        return bad + (not res)
+    known = read(DATA / "known_issues.csv") if (DATA / "known_issues.csv").exists() else []
+    rows = read(rpath)
+    signs = {"fb_start": ("beginning", 1), "encumbrances": ("encumbrances", 1), "receipts_total": ("revenues", 1),
+             "exp_total": ("expenditures", -1), "commitments": ("commitments", -1), "fb_end": ("ending", 1)}
+    entries = res["entries"]
+    want, got = Counter(), Counter()
+    for doc, cfg in cfgs.items():
+        if not (ROOT / "Budget PDFs - County" / "Resolutions" / doc).exists():
+            bad += 1
+            print(f"FAIL {doc}: PDF missing")
+        gf = {r["role"]: r for r in rows if r["source_doc"] == doc and r["column"] == "general_fund"}
+        if not gf:
+            bad += 1
+            print(f"FAIL {doc}: no rows in {rpath.name}")
+            continue
+        y = cfg["budget_year"]
+        for role, (t, sign) in signs.items():
+            if role in gf:
+                want[(y, "budget", doc, t, gf[role]["line"], sign * int(gf[role]["amount"]), int(gf[role]["source_page"]))] += 1
+        rec, exp = int(gf["receipts_total"]["amount"]), int(gf["exp_total"]["amount"])
+        want[(y, "budget", doc, "surplus", "calc", rec - exp, None)] += 1
+        # every printed General Fund Grand Total in the books for this year
+        for vp in sorted(PROCESSED.glob("validation_County-*-Budget-Book.csv")):
+            for c in read(vp):
+                if c["check"] == "grand total vs departments" and c["column"] == f"budget_{y}" and c["label"] in ("General Fund revenue", "General Fund expense"):
+                    mine = rec if c["label"].endswith("revenue") else exp
+                    if abs(float(c["printed"]) - mine) > TOLERANCE:
+                        bad += 1
+                        print(f"FAIL {y} {c['label']}: resolution {mine:,} vs {vp.stem[11:]} p{c['source_page']} printed {float(c['printed']):,.0f}")
+    for r in read(gpath):
+        if r["group"] == "General Fund":
+            t = "ending" if r["line"] == "Total general fund" else re.sub(r"[^a-z0-9]+", "_", r["line"].lower()).strip("_")
+            want[(int(r["fiscal_year"]), "actual", r["source_doc"], t, r["line"], int(r["amount"]), int(r["source_page"]))] += 1
+    for e in entries:
+        doc = docs[e["doc"]]
+        if (e["measure"] == "budget") != (doc in cfgs) or (e["measure"] == "actual") != doc.startswith("County-ACFR-"):
+            bad += 1
+            print(f"FAIL {e['year']} {e['measure']} cites {doc}")
+        for ln in e["lines"]:
+            if ln.get("calc"):
+                got[(e["year"], e["measure"], doc, ln["t"], "calc", ln["v"], None)] += 1
+            else:
+                got[(e["year"], e["measure"], doc, ln["t"], ln["l"], ln["v"], ln["p"])] += 1
+            ki = [i for i, k in enumerate(known) if k["source_doc"] == doc and k["label"] == ln["l"]]
+            if ki != ([ln["known_issue"]] if "known_issue" in ln else []):
+                bad += 1
+                print(f"FAIL {e['year']} {ln['l']}: known issue link {ln.get('known_issue')} != {ki}")
+        if e["measure"] == "budget":
+            v = {ln["t"]: ln["v"] for ln in e["lines"]}
+            chain = v.get("beginning", 0) + v.get("encumbrances", 0) + v.get("revenues", 0) + v.get("expenditures", 0) + v.get("commitments", 0)
+            if abs(chain - v.get("ending", 0)) > TOLERANCE:
+                bad += 1
+                print(f"FAIL {e['year']} Budget: start + receipts - expenditures = {chain:,}, remaining printed {v.get('ending', 0):,}")
+    diff = (want - got) + (got - want)
+    for k in sorted(diff, key=str):
+        print(f"FAIL {'missing' if k in want else 'extra'} {k}")
+    bad += sum(diff.values())
+    nb, na = sum(e["measure"] == "budget" for e in entries), sum(e["measure"] == "actual" for e in entries)
+    print(f"{'ok  ' if not bad else 'FAIL'} {nb} Budget entries (one per resolution) and {na} Actual entries (one per ACFR) equal the CSVs; "
+          f"each Budget chain adds up and ties to the books' General Fund Grand Totals")
+    vbad = n = 0
+    norm = lambda t: re.sub(r"[^a-z0-9]", "", t.lower())
+    years = {str(c["budget_year"]) for c in cfgs.values()}
+    seen = set()
+    for c in read(vpath):
+        n += 1
+        seen.add(c["budget_year"])
+        if abs(float(c["diff"] or 0)) <= TOLERANCE and c["passed"] == "True":
+            continue
+        hit = [k for k in known if k["source_doc"] == c["source_doc"] and k["source_page"] == c["source_page"] and norm(k["label"]) == norm(c["label"])]
+        print(f"{'DIFF' if hit else 'FAIL'} {c['budget_year']} {c['check']}: {c['label']} [{c['column']}] printed {c['printed']} computed {c['computed']}")
+        vbad += not hit
+    if seen != years:
+        vbad += 1
+        print(f"FAIL {vpath.name} covers {sorted(seen)}, configs {sorted(years)}")
+    print(f"{'ok  ' if not vbad else 'FAIL'} {n} resolution checks (columns, chain, draw, books, reprint); every difference over ${TOLERANCE} is in known_issues.csv")
+    return bad + vbad
 
 
 def check_changes(budget, changes, csv_rows, want_book, book_year, newest) -> int:

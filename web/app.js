@@ -63,8 +63,8 @@
   const sum = (list) => list.reduce((t, r) => t + r.v, 0);
   /* Source links: the amount itself links to its page in the budget book (no page text is shown). */
   const bookYearOf = (k) => { const s = series(k); return s.book_year != null ? s.book_year : s.year + D.rule[s.measure].book_offset; };
-  // County audited reports sit in the ACFR/ folder of the County PDFs.
-  const docRel = (d) => (/^County-ACFR-/.test(D.docs[d]) ? `ACFR/${D.docs[d]}` : D.docs[d]);
+  // County audited reports sit in the ACFR/ folder of the County PDFs, budget resolutions in Resolutions/.
+  const docRel = (d) => (/^County-ACFR-/.test(D.docs[d]) ? `ACFR/${D.docs[d]}` : /^County-Resolution-/.test(D.docs[d]) ? `Resolutions/${D.docs[d]}` : D.docs[d]);
   const pdfHref = (d, p) => `${CFG.paths.pdfs}${docRel(d).split('/').map(encodeURIComponent).join('/')}#page=${p}`;
   const src = (text, k, d, p) => (d == null || !k ? text
     : `<a class="src" href="${pdfHref(d, p)}" target="_blank" rel="noopener" title="View in budget book" aria-label="${esc(text)}: open source page in the ${bookYearOf(k)} budget book">${text}</a>`);
@@ -294,7 +294,7 @@
     ['Actual', 'what the County\'s audited annual report says it received and spent. Shown only for 2023 to 2025, by fund, revenue source and function.']];
   const defineList = () => (isCounty() ? DEFINE_COUNTY : DEFINE_CITY);
   const defineFigures = () => `<details class="define"><summary>What do these mean?</summary><ul>${defineList().map(([a, b]) => (b ? `<li><strong>${a}:</strong> ${b}</li>` : `<li class="aside">${a}</li>`)).join('')}</ul></details>`;
-  const defineFund = () => (isCounty() ? `<details class="define"><summary>What is a fund?</summary><p>A fund is a separate account the County keeps for a purpose. The General Fund pays for most County services and is paid for mostly by property taxes. The others, such as Children &amp; Youth, Aging, Behavioral Health and Liquid Fuels, take in their own grants and transfers and are not mixed with it. The County prints the fund letters without names; the names here come from the County's audited report.</p></details>`
+  const defineFund = () => (isCounty() ? `<details class="define"><summary>What is a fund?</summary><p>A fund is a separate account the County keeps for a purpose. The General Fund pays for most County services and is paid for mostly by property taxes. The others, such as Children &amp; Youth, Aging, Behavioral Health and Liquid Fuels, take in their own grants and transfers and are not mixed with it. The County prints the fund letters without names; the names here come from the County's audited report.${D.reserve ? ` The ${esc(D.reserve.name)} is the General Fund's accumulated balance, which covers its budget gap.` : ''}</p></details>`
     : `<details class="define"><summary>What is a fund?</summary><p>A fund is a separate account the city keeps for a purpose. The General Fund pays for most city services and is paid for mostly by taxes; others, such as water, sewer, stormwater and trash, are paid for by their own fees and are not mixed with it. The Reserve Fund is the General Fund's savings balance.</p></details>`);
 
   /* One controls component for every page (home with any fund, the Reserve Fund, department and bureau pages, What changed):
@@ -327,6 +327,7 @@
   }
 
   function filtersHTML({ fund = true, scope = null } = {}) {
+    if (isReserve() && isCounty()) return controlsWrap(cbFiltersHTML(), `Viewing ${S.y} · ${esc(D.reserve.name)}`, `<span class="status">${S.y}: Budget and Actual balances</span>`);
     if (isReserve()) {
       const e = resFind(S.y, S.m);
       const stamp = e ? `<span class="status${e.measure === 'proposed' || e.measure === 'revised' ? ' not-adopted' : ''}">${e.year}: ${esc(RES_STATUS[e.measure])}</span>` : '';
@@ -583,7 +584,12 @@
   const resEnd = (e) => e.lines.find((l) => l.t === 'ending');
   const resLabel = (e) => `${e.year} ${e.measure === 'actual' && e.basis === 'unaudited' ? 'Actual (unaudited)' : LABEL[e.measure]}`;
   const resBookYear = (e) => (D.books.find((b) => b.doc === D.docs[e.doc]) || {}).year;
-  const srcDoc = (text, d, p) => `<a class="src" href="${pdfHref(d, p)}" target="_blank" rel="noopener" title="View in budget book" aria-label="${esc(text)}: open source page in the ${(D.books.find((b) => b.doc === D.docs[d]) || {}).year} budget book">${text}</a>`;
+  // What a source document is called in link titles: a budget book, or (County) a budget resolution or an audited report.
+  const docTitle = (d) => {
+    const f = D.docs[d], r = (D.reserve?.sources || []).find((x) => x.file === f), a = /^County-ACFR-(\d{4})/.exec(f);
+    return r ? `budget resolution (${r.resolution})` : a ? `${a[1]} audited annual report` : `${(D.books.find((b) => b.doc === f) || {}).year} budget book`;
+  };
+  const srcDoc = (text, d, p) => `<a class="src" href="${pdfHref(d, p)}" target="_blank" rel="noopener" title="${isCounty() ? `View in the ${esc(docTitle(d))}` : 'View in budget book'}" aria-label="${esc(text)}: open source page in the ${esc(docTitle(d))}">${text}</a>`;
   const RES_STATUS = { actual: 'Actual year-end balance', projected: 'Projected year-end balance', proposed: 'Proposed, not adopted', revised: 'Revised proposal, not adopted' };
   function resChange(e) {
     let base = null, from = '';
@@ -625,6 +631,7 @@
   const resSorted = () => D.reserve.entries.slice().sort((a, b) => a.year - b.year || ORDER.indexOf(a.measure) - ORDER.indexOf(b.measure));
 
   function reserveView() {
+    if (isCounty()) return countyBalanceView();
     const e = resFind(S.y, S.m) || resFind(S.y, ORDER.find((m) => resFind(S.y, m)));
     if (!e) return `<header class="page-head"><h1 id="page-h" tabindex="-1">${esc(D.reserve.name)}</h1><p class="muted">No reserve figures for ${S.y}.</p></header>${filtersHTML()}`;
     const end = resEnd(e), ch = resChange(e), name = D.reserve.name;
@@ -666,6 +673,7 @@
         <thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Year-end balance</th><th scope="col" class="num">Change</th></tr></thead><tbody>${yrRows}</tbody></table></div></section>`;
   }
   function drawReserve() {
+    if (isCounty()) { drawCountyBalance(); return; }
     const cv = $('res-chart');
     if (!cv || !window.Chart) return;
     const th = chartTheme(), entries = resSorted(), cur = resFind(S.y, S.m);
@@ -689,6 +697,104 @@
         onClick: (_ev, els) => { if (els.length) { const x = entries[els[0].index]; navigate(homeHash({ y: x.year, m: x.measure }), true); } },
         plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { title: (c) => resLabel(entries[c[0].dataIndex]), label: (c) => money(c.raw) } } },
         scales: { x: { ticks: { color: INK, maxRotation: 45 }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid } } } } }));
+  }
+
+  /* ---------- County: General Fund Balance (budget.json `reserve`, scripts/build_county.py build_fund_balance) ----------
+     Two measures, shown side by side and never combined. Budget entries come from the budget resolution adopted with each
+     year's budget: the General Fund balance at the start of the year, receipts, expenditures and the balance remaining, as
+     printed (the planned change, receipts minus expenditures, is calculated and says so). Actual entries are the audited
+     balances at December 31 from the annual financial reports (GAAP). The resolution's balances are budget estimates and
+     do not tie to the audited ones; a quiet note under each Budget year gives the audited figure for the same date. */
+  const cbFind = (y, m) => D.reserve.entries.find((e) => e.year === y && e.measure === m);
+  const cbLine = (e, t) => (e ? e.lines.find((l) => l.t === t) : null);
+  const cbYears = () => [...new Set(D.reserve.entries.map((e) => e.year))].sort((a, b) => a - b);
+  const cbRes = (e) => (D.reserve.sources.find((x) => x.doc === e.doc) || {}).resolution || 'the budget resolution';
+  const usDate = (iso) => { const [y, m, d] = iso.split('-'); return `${+m}/${+d}/${y}`; };
+  const isEst = (l) => /estimated/i.test(l.l);
+  function cbFiltersHTML() {
+    const ys = cbYears().slice().reverse();
+    const ym = measuresFor(S.y)[0], funds = fundOptions(new Set(ym ? rows(key(S.y, ym)).map((r) => r.fund) : D.funds.map((f, i) => i)), null);
+    return `<div class="filters">
+        <div class="field"><label class="field-label" for="f-y">Fiscal year</label><select id="f-y" data-sel="y">${ys.map((y) => `<option value="${y}" ${y === S.y ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
+        <div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select>${defineFund()}</div>
+      </div>`;
+  }
+  function cbLineLabel(l) {
+    const est = isEst(l) ? 'estimated, ' : '';
+    if (l.t === 'beginning') return `Balance at the start (${est}${usDate(l.as_of)})`;
+    if (l.t === 'encumbrances') return 'Reserve for encumbrances';
+    if (l.t === 'revenues') return 'Receipts';
+    if (l.t === 'expenditures') return 'Expenditures';
+    if (l.t === 'commitments') return 'Prior-year commitments spent this year';
+    if (l.t === 'surplus') return l.v < 0 ? 'Planned draw from the balance' : l.v > 0 ? 'Planned addition to the balance' : 'Planned change in the balance';
+    if (l.t === 'ending') return `Balance remaining (${est}${usDate(l.as_of)})`;
+    return l.l;
+  }
+  // Under a Budget year: the audited balance at each date the resolution prints, and a resolution balance that equals an
+  // audited balance at another date. Worded quietly; the figures are linked, nothing is subtracted.
+  function cbTieNote(e) {
+    const out = [];
+    for (const t of ['beginning', 'ending']) {
+      const l = cbLine(e, t);
+      if (!l || !l.as_of) continue;
+      const y = +l.as_of.slice(0, 4), a = cbLine(cbFind(y, 'actual'), 'ending');
+      const same = D.reserve.entries.filter((x) => x.measure === 'actual' && x.year !== y).map((x) => cbLine(x, 'ending')).find((x) => x && x.v === l.v);
+      const what = t === 'beginning' ? 'start' : 'end';
+      if (same) out.push(`${cbRes(e)} dates its ${what} balance, ${srcDoc(money(l.v), e.doc, l.p)}, ${usDate(l.as_of)}; that equals the audited balance at ${usDate(same.as_of)}.${a ? ` The audited balance at ${usDate(l.as_of)} is ${srcDoc(money(a.v), cbFind(y, 'actual').doc, a.p)}.` : ''}`);
+      else if (a) out.push(`The audited balance at ${usDate(l.as_of)} is ${srcDoc(money(a.v), cbFind(y, 'actual').doc, a.p)}.`);
+    }
+    if (!out.length) return '';
+    const ki = e.lines.some((l) => l.known_issue != null);
+    return `<p class="draw-note">${out.join(' ')} Budget balances are the County's estimates on its budget basis; audited balances are counted on its accounting basis, so the two are not expected to match.${ki ? ` ${knownLink()}` : ''}</p>`;
+  }
+  function countyBalanceView() {
+    const name = D.reserve.name, ys = cbYears(), y = ys.includes(S.y) ? S.y : ys[ys.length - 1];
+    const b = cbFind(y, 'budget'), a = cbFind(y, 'actual'), bEnd = cbLine(b, 'ending'), aEnd = cbLine(a, 'ending');
+    document.title = `${name} ${y} · ${CFG.site_title}`;
+    const big = b ? `<p class="big-total" aria-live="polite"><span class="big-label">Budget: planned balance at ${usDate(bEnd.as_of)}</span> ${srcDoc(money(bEnd.v), b.doc, bEnd.p)}</p>`
+      : aEnd ? `<p class="big-total" aria-live="polite"><span class="big-label">Actual: audited balance at ${usDate(aEnd.as_of)}</span> ${srcDoc(money(aEnd.v), a.doc, aEnd.p)}</p>` : '';
+    let deck = '';
+    if (b) {
+      const sur = cbLine(b, 'surplus'), st = cbLine(b, 'beginning');
+      const start = `${cbRes(b)} puts the balance at ${srcDoc(money(st.v), b.doc, st.p)} on ${usDate(st.as_of)}${isEst(st) ? ', an estimate' : ''}`;
+      deck = sur.v < 0 ? `The ${y} Budget spends ${mny(-sur.v)} more than it expects to collect <span class="calc-tag">calculated</span> and covers the gap from the General Fund's balance. ${start}.`
+        : sur.v > 0 ? `The ${y} Budget expects to collect ${mny(sur.v)} more than it spends <span class="calc-tag">calculated</span>, adding it to the General Fund's balance. ${start}.`
+          : `The ${y} Budget expects to collect what it spends. ${start}.`;
+    }
+    const detail = b ? `<div class="table-scroll"><table class="table"><thead><tr><th scope="col">Line</th><th scope="col" class="num">Amount</th></tr></thead><tbody>${b.lines.map((l) => `<tr><td>${esc(cbLineLabel(l))}${l.calc ? ' <span class="calc-tag">calculated</span>' : ''}</td><td class="num">${l.calc ? money(l.v) : srcDoc(money(l.v), b.doc, l.p)}</td></tr>`).join('')}</tbody></table></div>
+        ${(b.footnotes || []).map((f) => `<p class="draw-note">The resolution's footnote: “${esc(f.l.replace(/^\*+\s*/, '')).replace(money(f.v), srcDoc(money(f.v), b.doc, f.p))}”</p>`).join('')}${cbTieNote(b)}`
+      : `<p class="panel-note" style="margin:0">This site does not have the budget resolution for ${y}.</p>`;
+    const audited = a ? `<div class="table-scroll"><table class="table"><tbody>${a.lines.map((l) => `<tr><td>${l.t === 'ending' ? `General Fund balance at ${usDate(l.as_of)}` : `Of it, ${esc(l.l.toLowerCase())}`}</td><td class="num">${srcDoc(money(l.v), a.doc, l.p)}</td></tr>`).join('')}</tbody></table></div>
+        <p class="draw-note">From the County's ${esc(docTitle(a.doc))}, on its accounting (modified accrual) basis. Unassigned is the part not set aside for a particular purpose.</p>`
+      : `<p class="panel-note" style="margin:0">No audited balance for ${y} yet.</p>`;
+    const cell = (e, t) => { const l = cbLine(e, t); return l ? (l.calc ? money(l.v) : srcDoc(money(l.v), e.doc, l.p)) : '—'; };
+    const yrRows = ys.map((x) => { const xb = cbFind(x, 'budget'), xa = cbFind(x, 'actual'); return `<tr${x === y ? ' aria-current="true"' : ''}><th scope="row"><a href="${esc(homeHash({ y: x }))}">${x}</a></th><td class="num">${cell(xb, 'beginning')}</td><td class="num">${cell(xb, 'surplus')}</td><td class="num">${cell(xb, 'ending')}</td><td class="num">${cell(xa, 'ending')}</td></tr>`; }).join('');
+    const label = (x, m) => { const l = cbLine(cbFind(x, m), 'ending'); return l ? `${x} ${LABEL[m]} ${money(l.v)}` : null; };
+    return `<header class="page-head"><h1 id="page-h" tabindex="-1">${esc(name)}: ${y}</h1>${big}
+        ${deck ? `<p class="deck">${deck}</p>` : ''}</header>
+      ${filtersHTML()}
+      <p class="hint" style="margin-top:0">The General Fund's accumulated balance, carried from year to year. <strong>Budget</strong> figures are the County's plan, from the budget resolution adopted with each year's budget. <strong>Actual</strong> figures are audited year-end balances from the County's annual financial reports. They are counted differently and are shown side by side, never combined. ${knownLink()}</p>
+      <section class="panel" aria-labelledby="rb-t"><h2 class="panel-title" id="rb-t">Balance at Year-End, ${ys[0]}–${ys[ys.length - 1]}</h2>
+        <ul class="trend-legend" aria-hidden="true"><li><i class="sw hatched" style="--c:${PALETTE[0]}"></i>Budget: planned</li><li><i class="sw"></i>Actual: audited</li></ul>
+        <div class="chart-box"><canvas id="res-chart" role="img" aria-label="General Fund balance at year-end: ${esc(ys.flatMap((x) => [label(x, 'budget'), label(x, 'actual')]).filter(Boolean).join(', '))}. The table below has the values."></canvas></div></section>
+      <section class="panel" aria-labelledby="rd-t"><h2 class="total-label" id="rd-t">${y} Budget: How the Balance Changes</h2>${detail}</section>
+      <section class="panel" aria-labelledby="ra-t"><h2 class="total-label" id="ra-t">${y} Actual: Audited Balance</h2>${audited}</section>
+      <section class="panel" aria-labelledby="ry-t"><h2 class="total-label" id="ry-t">Balance by Year</h2><div class="table-scroll"><table class="table tight">
+        <thead><tr><th scope="col">Year</th><th scope="col" class="num">Budget: at the start</th><th scope="col" class="num">Budget: planned change <span class="calc-tag">calculated</span></th><th scope="col" class="num">Budget: remaining at year-end</th><th scope="col" class="num">Actual: audited at year-end</th></tr></thead><tbody>${yrRows}</tbody></table></div></section>`;
+  }
+  function drawCountyBalance() {
+    const cv = $('res-chart');
+    if (!cv || !window.Chart) return;
+    const th = chartTheme(), ys = cbYears();
+    const end = (x, m) => cbLine(cbFind(x, m), 'ending')?.v ?? null;
+    const ds = (m, label, color, solid) => ({ label, data: ys.map((x) => end(x, m)), backgroundColor: solid ? color : hatch(color),
+      borderColor: ys.map((x) => (x === S.y ? INK : color)), borderWidth: ys.map((x) => (x === S.y ? 3 : solid ? 0 : 1.5)), borderRadius: 0 });
+    charts.push(new Chart(cv, { type: 'bar',
+      data: { labels: ys.map(String), datasets: [ds('budget', 'Budget: planned', PALETTE[0], false), ds('actual', 'Actual: audited', SEL, true)] },
+      options: { responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
+        onClick: (_ev, els) => { if (els.length) navigate(homeHash({ y: ys[els[0].index] }), true); },
+        plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { title: (c) => `${ys[c[0].dataIndex]} ${c[0].dataset.label}`, label: (c) => money(c.raw) } } },
+        scales: { x: { ticks: { color: INK }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid } } } } }));
   }
 
   /* Lines grouped by a key, each group with the total shown for it (printed or calculated). */
@@ -759,7 +865,11 @@
     if (!g) return '';
     const bal = GB && GB.rows.filter((r) => r.group === 'General Fund' && r.line === 'Total general fund').sort((a, b) => b.year - a.year)[0];
     const balTxt = bal ? ` The audited General Fund balance was ${gbLink(money(bal.v), bal)} at the end of ${bal.year} (<a href="${esc(eh('about?s=about-balance'))}">about this figure</a>).` : '';
-    return `<p class="draw-note">${esc(seriesLabel(k))}: spending of ${fig(g.ex)} against income of ${fig(g.rv)}, a gap of ${money(g.gap)} <span class="calc-tag">calculated</span>. The budget book prints no General Fund balance page, so it does not say how the gap is met.</p>${balTxt ? `<p class="draw-note">${balTxt.trim()}</p>` : ''}`;
+    // The budget resolution for the year says how the gap is met: from the General Fund's balance (the General Fund Balance page).
+    const rb = D.reserve && cbFind(parseKey(k).y, 'budget'), rEnd = rb && cbLine(rb, 'ending');
+    const how = rEnd ? `${esc(cbRes(rb))}, adopted with the budget, covers it from the General Fund's balance, leaving ${srcDoc(money(rEnd.v), rb.doc, rEnd.p)} at ${usDate(rEnd.as_of)}. <a href="${esc(homeHash({ f: D.reserve.name, y: rb.year }))}">See the ${esc(D.reserve.name)}</a>`
+      : 'The budget book prints no General Fund balance page, so it does not say how the gap is met.';
+    return `<p class="draw-note">${esc(seriesLabel(k))}: spending of ${fig(g.ex)} against income of ${fig(g.rv)}, a gap of ${money(g.gap)} <span class="calc-tag">calculated</span>. ${how}</p>${balTxt ? `<p class="draw-note">${balTxt.trim()}</p>` : ''}`;
   }
   /* County notes as shown: no page numbers, file names as plain words, "Budget" in place of "adopted budget", no
      Actual-versus-Budget percentage, and nothing about the audit report's own Original column (it is not used). */
@@ -1953,7 +2063,7 @@
     route = r;
     if (scroll) aboutOpen = false;
     if (q.get('c') === 'none') { applyQuery(q); S.c = ''; } else applyQuery(q);
-    if (route.name !== 'home' && route.name !== 'changes' && isReserve()) S.f = DEFAULT_FUND; // the reserve has no departments or bureaus
+    if (route.name !== 'home' && (route.name !== 'changes' || isCounty()) && isReserve()) S.f = DEFAULT_FUND; // the reserve has no departments or bureaus (and the County's no What changed page)
     if (route.name === 'changes' && S.y !== D.newest_year) { S.y = D.newest_year; S.m = defaultMeasure(S.y); S.c = defaultCompare(S.y, S.m); }
     T.sort = 'sel'; T.dir = -1; T.q = route.name === 'dept' || route.name === 'bureau' ? (q.get('q') || '') : ''; T.shown = PAGE_SIZE;
     destroyCharts();
@@ -2169,7 +2279,9 @@
   function renderAboutCounty() {
     const A = D.actuals, ac = CFG.adopted, pdf = (rel) => `${CFG.paths.pdfs}${rel.split('/').map(encodeURIComponent).join('/')}`;
     const yrOf = Object.fromEntries(A.sources.map((x) => [x.file, x.year]));
-    const nameOf = Object.fromEntries([...D.books.map((b) => [b.doc, `${b.year} Budget Book`]), ...A.sources.map((x) => [x.file, `${x.year} audited annual report`])]);
+    const RS = D.reserve?.sources || [];
+    const nameOf = Object.fromEntries([...D.books.map((b) => [b.doc, `${b.year} Budget Book`]), ...A.sources.map((x) => [x.file, `${x.year} audited annual report`]), ...RS.map((x) => [x.file, x.resolution])]);
+    const resols = RS.map((x) => `<li><a href="${pdf(`Resolutions/${x.file}`)}" target="_blank" rel="noopener">${esc(x.resolution)}</a> (<a href="${pdf(`Resolutions/${x.file}`)}" download>download PDF</a>; <a href="${esc(x.url)}" target="_blank" rel="noopener">County page</a>): the ${x.budget_year} budget.</li>`).join('');
     const books = D.books.filter((b) => b.used).map((b) => `<li><a href="${pdf(b.doc)}" target="_blank" rel="noopener">${esc(nameOf[b.doc])}</a> (<a href="${pdf(b.doc)}" download>download PDF</a>): supplies ${b.figures.map((y) => `${y} Budget`).join(' and ')}.</li>`).join('');
     const acfrs = A.sources.map((x) => `<li><a href="${pdf(`ACFR/${x.file}`)}" target="_blank" rel="noopener">${esc(nameOf[x.file])}</a> (<a href="${pdf(`ACFR/${x.file}`)}" download>download PDF</a>; <a href="${esc(x.url)}" target="_blank" rel="noopener">County archive page</a>).</li>`).join('');
     const shownIssues = D.known_issues.filter((i) => !noOriginal(i.note)), nOrig = D.known_issues.length - shownIssues.length;
@@ -2197,8 +2309,14 @@
       <p>Departments are grouped as the County's <a href="${pdf(O.chart_doc)}#page=${O.chart_page}" target="_blank" rel="noopener">${D.newest_year} budget book</a> groups them: ${groups}. Each budget line belongs to a department by its account number, with the department's name as the book prints it. The County does not publish staffing schedules, so there is no Staff section.</p>
       <p>The County's books print fund letters without names. The names shown here come from the County's audited annual reports:</p>
       <ul>${fundList}</ul>
-      <h2 class="about-h" id="about-balance" tabindex="-1">General Fund balance (audited)</h2>
-      <p>The County's budget books print no General Fund balance page, so this site cannot say how the General Fund's budget gap is met. The audited annual reports do print year-end fund balances. These are <strong>audited year-end balances on the County's accounting (modified accrual) basis</strong>, not budget figures: they are not comparable with the Budget or with the Actual figures above, and they are not a projection.</p>
+      <h2 class="about-h" id="about-balance" tabindex="-1">General Fund balance</h2>
+      ${D.reserve ? `<p>The <strong>${esc(D.reserve.name)}</strong> entry, last in the Fund list, shows the General Fund's accumulated balance in two separate measures:</p>
+      <ul><li><strong>Budget</strong>: the budget resolution the Commissioners adopt with each year's budget prints the General Fund's balance at the start of the year, its receipts and expenditures, and the balance remaining at the end. That is how the County covers a budget gap: from the balance. These are the County's own estimates, on its budget basis. The planned change (receipts minus expenditures) is calculated by this site; every other figure is as printed.</li>
+      <li><strong>Actual</strong>: the audited balance at December 31 from the County's audited annual reports, on its accounting (modified accrual) basis.</li></ul>
+      <p>The two are counted differently and do not tie, so they are never combined. Under each Budget year the page gives the audited balance for the same date. The County's budget books themselves print no General Fund balance page.</p>
+      <p>Budget resolutions in use:</p><ul>${resols}</ul>
+      <p>All audited fund balances (General Fund, other governmental funds and the total):</p>`
+      : `<p>The County's budget books print no General Fund balance page, so this site cannot say how the General Fund's budget gap is met. The audited annual reports do print year-end fund balances. These are <strong>audited year-end balances on the County's accounting (modified accrual) basis</strong>, not budget figures: they are not comparable with the Budget or with the Actual figures above, and they are not a projection.</p>`}
       ${gbTable}
       <h2 class="about-h">Validation</h2>
       <p>Line items were extracted from the PDFs by script (the 2024 book is a scan and was read with OCR, then checked line by line). Figures are shown as printed, never adjusted. Where overlapping books disagree on the same figure, the newest book wins and the disagreement is logged (${D.conflict_count} so far). Lines of $0 are left out.</p>
@@ -2326,10 +2444,10 @@
     $('footer-text').textContent = CFG.footer;
     if (CFG.tagline) $('tagline').textContent = CFG.tagline;
     if (CFG.contact_email) $('footer-contact').innerHTML = `Questions or corrections: <a href="mailto:${esc(CFG.contact_email)}">${esc(CFG.contact_email)}</a>`;
-    const nav = { home: eh(''), changes: eh('changes'), reserve: eh('?f=Reserve%20Fund'), about: eh('about') };
+    const nav = { home: eh(''), changes: eh('changes'), reserve: eh(`?f=${encodeURIComponent(D.reserve?.name || 'Reserve Fund')}`), about: eh('about') };
     document.querySelectorAll('#site-nav a[data-nav]').forEach((a) => {
       a.setAttribute('href', nav[a.dataset.nav]);
-      if (a.dataset.nav === 'reserve') a.closest('li').hidden = !D.reserve; // the County has no Reserve Fund page
+      if (a.dataset.nav === 'reserve') { a.closest('li').hidden = !D.reserve; if (D.reserve) a.textContent = D.reserve.name; } // the City's Reserve Fund, the County's General Fund Balance
     });
     jumpIndexReset();
   }

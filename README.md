@@ -32,10 +32,11 @@ The two tabs at the top of the left rail (**City**, **County**) switch between t
 The County view shows the same pages with County figures, all labelled **Budget** (the newest year, 2026, was adopted Dec 24, 2025 by Resolution 79 of 2025), plus:
 - the fund letters with their names (Liquid Fuels, Drug & Alcohol, Early Intervention, Domestic Relations, Aging, Behavioral Health, Developmental Services, Children & Youth);
 - departments grouped as the County's book groups them (General Government, Courts and Row Offices, Corrections, Human Services), each with its departments and line items;
-- the deck sentence "General Fund spending up $15.8M (8.5%) from the 2025 Budget, spending $9.0M more than it expects to collect", with a note that the book prints no General Fund balance page;
+- the deck sentence "General Fund spending up $15.8M (8.5%) from the 2025 Budget, spending $9.0M more than it expects to collect", with a note that the year's budget resolution covers the gap from the General Fund's balance (linked to the General Fund Balance page);
 - **Budget and Actual**: audited 2023–2025 Actual from the County's annual financial reports beside the Budget, only at fund totals (income and spending), plus General Fund income by source and spending by function as their own small tables. No variance is shown, and the report's own "original budget" column is never used;
-- on About, the audited General Fund balance (modified accrual basis, labelled as audited year-end balances, not comparable with the budget);
-- no Staff section and no Reserve Fund page (the County prints no staffing schedule, and its printed balance pages are not extracted yet).
+- **General Fund Balance** (last in the Fund list, and in the header, as the City's Reserve Fund): two measures side by side, never combined. **Budget**, from the budget resolution adopted with each year's budget (Res 91 of 2023, Res 83 of 2024, Res 79 of 2025): the balance at the start of the year, receipts, expenditures, the planned draw (calculated: $5.4M in 2025, $9.0M in 2026; 2024 planned a $100,000 addition) and the balance remaining. **Actual**: the audited balance at December 31 for 2023–2025 and its unassigned part, from the annual financial reports. A grouped chart, a per-year table and a quiet note under each Budget year give the audited balance for the same date; the resolution balances are budget estimates and do not tie (Res 83 dates $69,155,866 12/31/2024, but it is the audited 12/31/2023 balance; logged in the known issues). Every figure links to its PDF page;
+- on About, the General Fund balance section (both measures, the resolutions in use, and the audited balances of every fund group);
+- no Staff section (the County prints no staffing schedule).
 
 ### What the site shows
 - **Home (all departments):**
@@ -89,8 +90,8 @@ Funds: General, Stormwater Management, Sewer, Water, Solid Waste & Recycling, Li
 | What | Where | Notes |
 |---|---|---|
 | Source budget books (PDF) | [`Budget PDFs - City/`](Budget%20PDFs%20-%20City/), also published at `<site>/pdfs/` | 2022–2027 books |
-| County budget books and audited annual reports (PDF) | [`Budget PDFs - County/`](Budget%20PDFs%20-%20County/) (books for 2024, 2025 and 2026; `ACFR/` for the 2023–2025 reports), also published at `<site>/pdfs/county/` | Source addresses: [docs/REBUILD.md](docs/REBUILD.md) |
-| County data the site reads | [`web/data/county/`](web/data/county/) | `budget.json` (Budget 2023–2026 with its printed totals, plus the Actual 2023–2025 block), `changes.json`, `conflicts.json`, `fund_balance_gaap.json` (audited year-end balances) |
+| County budget books, audited annual reports and budget resolutions (PDF) | [`Budget PDFs - County/`](Budget%20PDFs%20-%20County/) (books for 2024, 2025 and 2026; `ACFR/` for the 2023–2025 reports; `Resolutions/` for the 2024–2026 budget resolutions), also published at `<site>/pdfs/county/` | Source addresses: [docs/REBUILD.md](docs/REBUILD.md) |
+| County data the site reads | [`web/data/county/`](web/data/county/) | `budget.json` (Budget 2023–2026 with its printed totals, the Actual 2023–2025 block, and the General Fund Balance as `reserve`), `changes.json`, `conflicts.json`, `fund_balance_gaap.json` (audited year-end balances) |
 | County reviewed files | [`data/county/`](data/county/) | known issues, OCR corrections for the scanned 2024 book, merged accounts, department groups |
 | Data the site reads | [`web/data/budget.json`](web/data/budget.json) | Every figure shown, with its source book and page |
 | Budgeted positions | [`web/data/staffing.json`](web/data/staffing.json) | Per book: each year's own schedule (the newest book's Proposed and Revised). Shown in the Staff section of department and bureau pages, and as position changes on the "What changed" page |

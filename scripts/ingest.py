@@ -11,7 +11,10 @@ Usage:
 County books (any PDF in a folder named "Budget PDFs - County") go to
 extract_county.py instead of steps 2-3 below, then every pair of County books
 that print the same year is compared line by line. A scanned County book is
-OCR'd (cached) with the "ocr" settings of its config/county/ file.
+OCR'd (cached) with the "ocr" settings of its config/county/ file. Then the
+County's budget resolutions (Budget PDFs - County/Resolutions/, one per
+config/county/resolutions/<year>.json) are read and checked by
+extract_county_resolutions.py.
 
 For each PDF:
   1. Detect whether it has a usable text layer (share of pages with text) or
@@ -367,6 +370,10 @@ def ingest_county(pdfs):
     for year, a, b, n, nd, net in extract_county.crossbook():
         print(f"cross-book {year}: {a} vs {b}: {n} lines, {nd} differ (net {net:+,.0f}); "
               f"see data/processed/county/crosscheck_{year}_{a}_vs_{b}.csv")
+    # The budget resolutions (Budget PDFs - County/Resolutions/): General Fund balance at the start and end of
+    # each budget year. Run after the books, whose printed Grand Totals they are checked against.
+    import extract_county_resolutions
+    status = max(status, extract_county_resolutions.main([]))
     return status
 
 

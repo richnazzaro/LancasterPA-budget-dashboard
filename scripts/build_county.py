@@ -35,7 +35,13 @@ Shapes follow the City JSON so web/app.js can reuse its code:
   changes    the newest year against the year before, line by line (changes.compare), with the account
              merges in data/county/account_changes.csv applied to both years so merged accounts are
              compared as their combined total. Each merged line is listed under `merges`.
-No staffing.json and no reserve: the County books print no positions and no General Fund balance page.
+No staffing.json: the County books print no positions.
+
+General Fund balance (budget.json `reserve`, named "General Fund Balance"; build_fund_balance): the County's books print
+no balance page, but each year's budget resolution (data/processed/county/resolutions_county.csv, from
+extract_county_resolutions.py) prints the General Fund balance at the start of the year and the balance remaining at its
+end. Those are the entries with measure "budget"; the audited year-end balances from the ACFRs
+(gaap_fund_balance_acfr.csv) are separate entries with measure "actual". The two are never combined.
 
 Actuals (measure "actual", 2023-2025): from the County's audited ACFRs, budgetary basis
 (data/processed/county/actuals_acfr_<year>.csv, written by extract_county_acfr.py). They are not account lines,
@@ -448,6 +454,76 @@ def build_gaap_fund_balance(processed: Path) -> dict | None:
                       "doc": r["source_doc"], "p": int(r["source_page"])} for r in rows]}
 
 
+RESOLUTION_CONFIG = ROOT / "config" / "county" / "resolutions"
+RESOLUTION_PDF_DIR = "Budget PDFs - County/Resolutions"
+BALANCE_NAME = "General Fund Balance"
+# Resolution rows shown on the balance page, in order, as City-style reserve lines (t). Expenditures and commitments are
+# negative, as on the City's Fund Balance Projection.
+BALANCE_ROLES = [("fb_start", "beginning", 1), ("encumbrances", "encumbrances", 1), ("receipts_total", "revenues", 1),
+                 ("exp_total", "expenditures", -1), ("commitments", "commitments", -1), ("fb_end", "ending", 1)]
+
+
+def build_fund_balance(processed: Path, docs, known: list) -> dict | None:
+    """The County's General Fund balance view (budget.json `reserve`, as the City's Reserve Fund).
+
+    Two measures, never mixed:
+      budget  one entry per budget resolution (resolutions_county.csv, General Fund column): balance at the start of the
+              year, receipts, expenditures (and the 2024 resolution's encumbrances and commitments), balance remaining,
+              all as printed, plus the planned change (receipts - expenditures), which is calculated (`calc`).
+      actual  one entry per ACFR year (gaap_fund_balance_acfr.csv): the audited General Fund balance at December 31 and
+              its unassigned part, GAAP (modified accrual).
+    The resolution balances are budget-basis estimates and do not tie to the audited year-ends; the page says so."""
+    rpath, gpath = processed / "resolutions_county.csv", processed / "gaap_fund_balance_acfr.csv"
+    if not rpath.exists():
+        return None
+    cfgs = {json.loads(p.read_text())["source_doc"]: json.loads(p.read_text()) for p in sorted(RESOLUTION_CONFIG.glob("*.json"))}
+    rows = read_csv(rpath)
+    entries, sources = [], []
+    for doc in sorted({r["source_doc"] for r in rows}, key=lambda d: cfgs[d]["budget_year"]):
+        cfg, d = cfgs[doc], docs(doc)
+        mine = [r for r in rows if r["source_doc"] == doc]
+        gf = {r["role"]: r for r in mine if r["column"] == "general_fund"}
+        fy = cfg["budget_year"]
+        lines = []
+        for role, t, sign in BALANCE_ROLES:
+            r = gf.get(role)
+            if not r:
+                continue
+            ln = {"t": t, "l": r["line"], "v": sign * int(r["amount"]), "p": int(r["source_page"])}
+            if r["as_of"]:
+                ln["as_of"] = r["as_of"]
+                ln["fy"] = int(r["as_of"][:4])
+            ki = [i for i, k in enumerate(known) if k["source_doc"] == doc and k["label"] == r["line"]]
+            if ki:
+                ln["known_issue"] = ki[0]
+            lines.append(ln)
+        change = int(gf["receipts_total"]["amount"]) - int(gf["exp_total"]["amount"])
+        lines.insert(next(i for i, l in enumerate(lines) if l["t"] == "ending"),
+                     {"t": "surplus", "l": "Receipts minus expenditures", "v": change, "calc": True})
+        notes = [{"l": r["line"], "v": int(r["amount"]), "p": int(r["source_page"])}
+                 for r in mine if r["role"] == "footnote" and r["amount"]]
+        entries.append({"year": fy, "measure": MEASURE, "doc": d, "basis": "budget", "resolution": cfg["resolution"],
+                        "lines": lines, "footnotes": notes})
+        sources.append({"doc": d, "file": doc, "path": f"{RESOLUTION_PDF_DIR}/{doc}", "url": cfg["url"],
+                        "title": cfg["title"], "resolution": cfg["resolution"], "budget_year": fy})
+    if gpath.exists():
+        for r in read_csv(gpath):
+            if r["group"] != "General Fund":
+                continue
+            y = int(r["fiscal_year"])
+            e = next((x for x in entries if x["year"] == y and x["measure"] == ACTUAL), None)
+            if not e:
+                e = {"year": y, "measure": ACTUAL, "doc": docs(r["source_doc"]), "basis": "audited", "lines": []}
+                entries.append(e)
+            e["lines"].append({"t": "ending" if r["line"] == "Total general fund" else slug(r["line"]).replace("-", "_"),
+                               "l": r["line"], "v": int(r["amount"]), "p": int(r["source_page"]), "fy": y,
+                               "as_of": f"{y}-12-31"})
+    entries.sort(key=lambda e: (e["year"], e["measure"] != ACTUAL))
+    return {"name": BALANCE_NAME, "entity": "county", "measures": [ACTUAL, MEASURE],
+            "basis": {MEASURE: "budget resolution (budget basis, estimated)", ACTUAL: "audited, GAAP (modified accrual)"},
+            "sources": sources, "entries": entries}
+
+
 def build(processed: Path = PROCESSED, out: Path = OUT) -> dict:
     books = load_books(processed)
     if not books:
@@ -533,6 +609,7 @@ def build(processed: Path = PROCESSED, out: Path = OUT) -> dict:
         docs(b["doc"])
     used = {b["doc"] for b in fig_book.values()}
     actuals = build_actuals(processed, docs, known, fig_book)
+    reserve = build_fund_balance(processed, docs, known)
     budget = {
         "entity": "county",
         "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -554,7 +631,7 @@ def build(processed: Path = PROCESSED, out: Path = OUT) -> dict:
         "printed": printed,
         "known_issues": known,
         "missing_bureaus": {},
-        "reserve": None,
+        "reserve": reserve,
         "conflict_count": len(conflicts),
         "org": org,
         "actuals": actuals,
@@ -596,6 +673,11 @@ def report(budget: dict, out: Path) -> None:
             gf = {f["line"]: f["v"] for f in figs if f["fund"] == "General Fund" and f["level"] == "fund_total"}
             print(f"  {y}|actual  {len(figs):4d} figures  General Fund revenue {gf.get('Total revenues', 0):>14,}  "
                   f"expenditure {gf.get('Total expenditures', 0):>14,}  from {budget['docs'][figs[0]['doc']] if figs else '-'}")
+    r = budget.get("reserve")
+    if r:
+        for e in r["entries"]:
+            end = next(l for l in e["lines"] if l["t"] == "ending")
+            print(f"  {e['year']}|{e['measure']:6s} {r['name']}: year-end {end['v']:>12,}  from {budget['docs'][e['doc']]}")
     print(f"Conflicts: {budget['conflict_count']} ({out / 'conflicts.json'})")
     for name in ("budget.json", "conflicts.json", "changes.json", "fund_balance_gaap.json"):
         if (out / name).exists():
