@@ -796,7 +796,7 @@ a.src { white-space: nowrap; }
   .margin-h { margin: 0 0 14px; font-size: 14px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--fg); }
   .margin dl { margin: 0 0 14px; } .margin dt { font-weight: 700; color: var(--fg); margin-top: 10px; } .margin dd { margin: 0; }
   .margin p { margin: 0 0 10px; }
-  .about-page .margin { display: none; }
+  .about-page .margin, .terms-page .margin { display: none; }
 }
 
 .trend-axis { margin: 6px 0 0; font-size: 13px; line-height: 18px; color: var(--muted); }
@@ -852,3 +852,28 @@ a.src { white-space: nowrap; }
 .elected-line { margin: 0 0 24px; text-align: left; color: var(--muted); }
 .elected-label { margin-right: 8px; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--fg); }
 .elected-line a.src { white-space: normal; border-bottom-color: var(--border-strong); }
+
+/* Funds and terms: the reference page, and the links that lead to it. */
+a.status { text-decoration: none; }
+a.status:hover { text-decoration: underline; text-underline-offset: 3px; }
+.define-more { margin: 8px 0 0; }
+.define-more a { display: inline-flex; align-items: center; min-height: 44px; }
+.lede-sm { margin: 0; max-width: 62ch; font-size: 18px; line-height: 27px; color: var(--muted); }
+.terms-table th[scope="row"] { white-space: normal; min-width: 11em; }
+.terms-table td:nth-child(2) { white-space: nowrap; }
+.terms-table .ctx-note { display: block; margin-top: 2px; font-size: 13px; font-weight: 400; color: var(--muted); }
+.terms-dl { margin: 16px 0 0; max-width: 68ch; }
+.terms-dl dt { margin: 20px 0 4px; font-family: var(--serif); font-size: 20px; line-height: 26px; font-weight: 700; }
+.terms-dl dt:first-child { margin-top: 0; }
+.terms-dl dt:focus { outline: none; }
+.terms-dl dd { margin: 0; }
+.terms-after { margin-top: 24px; }
+@media (max-width: 767px) {
+  /* Phones: each fund is a short stack (name, what pays for it, what it is), not a three-column table. */
+  .terms-table, .terms-table tbody, .terms-table tr, .terms-table th, .terms-table td { display: block; }
+  .terms-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .terms-table tr { padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .terms-table th, .terms-table td { padding: 2px 0; border: 0; white-space: normal; min-width: 0; }
+  .terms-table th[scope="row"] { font-size: 17px; }
+  .terms-table td:nth-child(2)::before { content: "Paid for by: "; font-weight: 400; color: var(--muted); }
+}

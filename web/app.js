@@ -5,6 +5,7 @@
  *   #/department/<dept>                       one department
  *   #/department/<dept>/bureau/<unit>         one bureau (org-chart unit)
  *   #/changes                                 what changed in the newest year (changes.json, scripts/changes.py)
+ *   #/terms                                   funds and terms: which funds are tax-funded, what each figure word means
  * Departments and bureaus follow the city's 2027 org chart (budget.json `org` block, built by
  * scripts/org_structure.py): every line's org code maps to one unit, and each unit to one department.
  * Older bureau links (#/department/<dept>/bureau/<fund--printed group>) redirect to the unit.
@@ -233,6 +234,7 @@
     let r = { name: 'home' };
     if (parts[0] === 'changes') r = { name: 'changes' };
     else if (parts[0] === 'about') r = { name: 'about' };
+    else if (parts[0] === 'terms') r = { name: 'terms' };
     else if (parts[0] === 'department' && parts[1]) {
       r = parts[2] === 'bureau' && parts[3] ? { name: 'bureau', dept: parts[1], bureau: parts[3] } : { name: 'dept', dept: parts[1] };
     } else if (parts.length && location.hash.startsWith('#/')) r = { name: 'missing' }; // any other path is not a page
@@ -270,7 +272,7 @@
   function statusHTML() {
     const draft = S.m === 'proposed' || S.m === 'revised';
     const ad = CFG.adopted && CFG.adopted.year === S.y && S.m === 'budget' ? `, ${CFG.adopted.text}` : ''; // the County's newest budget cites its resolution
-    return `<span class="status${draft ? ' not-adopted' : ''}">${S.y}: ${STATUS[S.m]}${ad}</span>`;
+    return `<a class="status${draft ? ' not-adopted' : ''}" href="${termHref(`term-${S.m}`)}" title="What this means">${S.y}: ${STATUS[S.m]}${ad}<span class="sr-only"> (what this means)</span></a>`;
   }
 
   const knownLink = () => `<a class="known-link" href="${eh('about?s=about-issues')}">Known issues for this view</a>`;
@@ -304,9 +306,9 @@
   const DEFINE_COUNTY = [['Budget', 'the County\'s budget for the year, from its own budget books. The newest year is the budget the County passed for it; earlier years are as the next book prints them.'],
     ['Actual', 'what the County\'s audited annual report says it received and spent. Shown only for 2023 to 2025, by fund, revenue source and function.']];
   const defineList = () => (isCounty() ? DEFINE_COUNTY : DEFINE_CITY);
-  const defineFigures = () => `<details class="define"><summary>What do these mean?</summary><ul>${defineList().map(([a, b]) => (b ? `<li><strong>${a}:</strong> ${b}</li>` : `<li class="aside">${a}</li>`)).join('')}</ul></details>`;
-  const defineFund = () => (isCounty() ? `<details class="define"><summary>What is a fund?</summary><p>A fund is a separate account the County keeps for a purpose. The General Fund pays for most County services and is paid for mostly by property taxes. The others, such as Children &amp; Youth, Aging, Behavioral Health and Liquid Fuels, take in their own grants and transfers and are not mixed with it. The County prints the fund letters without names; the names here come from the County's audited report.${D.reserve ? ` The ${esc(D.reserve.name)} is the General Fund's accumulated balance, which covers its budget gap.` : ''}</p></details>`
-    : `<details class="define"><summary>What is a fund?</summary><p>A fund is a separate account the city keeps for a purpose. The General Fund pays for most city services and is paid for mostly by taxes; others, such as water, sewer, stormwater and trash, are paid for by their own fees and are not mixed with it. The Reserve Fund is the General Fund's savings balance.</p></details>`);
+  const defineFigures = () => `<details class="define"><summary>What do these mean?</summary><ul>${defineList().map(([a, b]) => (b ? `<li><strong>${a}:</strong> ${b}</li>` : `<li class="aside">${a}</li>`)).join('')}</ul><p class="define-more"><a href="${termHref('terms-figures')}">All the figure words →</a></p></details>`;
+  const defineFund = () => (isCounty() ? `<details class="define"><summary>What is a fund?</summary><p>A fund is a separate account the County keeps for a purpose. The General Fund pays for most County services and is paid for mostly by property taxes. The others, such as Children &amp; Youth, Aging, Behavioral Health and Liquid Fuels, take in their own grants and transfers and are not mixed with it. The County prints the fund letters without names; the names here come from the County's audited report.${D.reserve ? ` The ${esc(D.reserve.name)} is the General Fund's accumulated balance, which covers its budget gap.` : ''}</p><p class="define-more"><a href="${termHref('terms-funds')}">Every fund, and which are paid for by taxes →</a></p></details>`
+    : `<details class="define"><summary>What is a fund?</summary><p>A fund is a separate account the city keeps for a purpose. The General Fund pays for most city services and is paid for mostly by taxes; others, such as water, sewer, stormwater and trash, are paid for by their own fees and are not mixed with it. The Reserve Fund is the General Fund's savings balance.</p><p class="define-more"><a href="${termHref('terms-funds')}">Every fund, and which are paid for by taxes →</a></p></details>`);
 
   /* One controls component for every page (home with any fund, the Reserve Fund, department and bureau pages, What changed):
      a one-line strip (the year's status stamp, then "Viewing …") with a "Change view" / "Close" button, and the fields
@@ -338,10 +340,10 @@
   }
 
   function filtersHTML({ fund = true, scope = null } = {}) {
-    if (isReserve() && isCounty()) return controlsWrap(cbFiltersHTML(), `Viewing ${S.y} · ${esc(D.reserve.name)}`, `<span class="status">${S.y}: Budget and Actual balances</span>`);
+    if (isReserve() && isCounty()) return controlsWrap(cbFiltersHTML(), `Viewing ${S.y} · ${esc(D.reserve.name)}`, `<a class="status" href="${termHref('term-balance')}" title="What this means">${S.y}: Budget and Actual balances<span class="sr-only"> (what this means)</span></a>`);
     if (isReserve()) {
       const e = resFind(S.y, S.m);
-      const stamp = e ? `<span class="status${e.measure === 'proposed' || e.measure === 'revised' ? ' not-adopted' : ''}">${e.year}: ${esc(RES_STATUS[e.measure])}</span>` : '';
+      const stamp = e ? `<a class="status${e.measure === 'proposed' || e.measure === 'revised' ? ' not-adopted' : ''}" href="${termHref('term-balance')}" title="What this means">${e.year}: ${esc(RES_STATUS[e.measure])}<span class="sr-only"> (what this means)</span></a>` : '';
       return controlsWrap(reserveFiltersHTML(), `Viewing ${S.y}${S.m ? ' ' + esc(LABEL[S.m]) : ''} · ${esc(D.reserve.name)}`, stamp);
     }
     const k = key(S.y, S.m);
@@ -1776,7 +1778,7 @@
     if (!fund) return block('Moved between funds', list, 'wc-mv');
     return block(`Moved into the ${esc(fund)}`, into, 'wc-in') + block(`Moved out of the ${esc(fund)}`, out, 'wc-out');
   }
-  const defineMoved = () => `<details class="define"><summary>Why this matters</summary><p>The General Fund is paid for mostly by taxes. The Water, Sewer, Stormwater and Solid Waste funds are paid for by their own fees. Work moved into the General Fund is paid for from taxes from now on; work moved out of it is paid for by fees.</p></details>`;
+  const defineMoved = () => `<details class="define"><summary>Why this matters</summary><p>The General Fund is paid for mostly by taxes. The Water, Sewer, Stormwater and Solid Waste funds are paid for by their own fees. Work moved into the General Fund is paid for from taxes from now on; work moved out of it is paid for by fees.</p><p class="define-more"><a href="${termHref('terms-funds')}">Every fund, and which are paid for by taxes →</a></p></details>`;
 
   /* Diverging bars: one row per group, the bar grows right for an increase and left for a decrease. */
   function divBars(rows, c, id, { title, note = '' }) {
@@ -2216,15 +2218,17 @@
     else if (route.name === 'changes') page = changesPage();
     else if (route.name === 'dept') page = deptPage();
     else if (route.name === 'about') page = { html: '<header class="page-head"><h1 id="page-h" tabindex="-1">About the data</h1></header>', after: () => { const t = q.get('s') && $(q.get('s')); if (t) { if (t.tagName === 'DETAILS') t.open = true; t.scrollIntoView(); } } };
+    else if (route.name === 'terms') page = termsPage(q);
     else if (route.name === 'missing') page = notFound('Page');
     else page = bureauPage();
     if (page.redirect) { navigate(page.redirect, true); return; }
     $('view').innerHTML = page.html;
     $('about').hidden = route.name !== 'about';
     document.body.classList.toggle('about-page', route.name === 'about');
+    document.body.classList.toggle('terms-page', route.name === 'terms');
     page.after?.();
     // Mark where the reader is in the contents.
-    const here = route.name === 'changes' ? 'changes' : route.name === 'about' ? 'about' : route.name === 'home' ? (isReserve() ? 'reserve' : 'home') : 'home';
+    const here = route.name === 'changes' ? 'changes' : route.name === 'about' ? 'about' : route.name === 'terms' ? 'terms' : route.name === 'home' ? (isReserve() ? 'reserve' : 'home') : 'home';
     const onUnit = route.name === 'dept' || route.name === 'bureau';
     document.querySelectorAll('#site-nav a').forEach((a) => { if (a.dataset.nav === here && !onUnit) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     renderRail(here, onUnit);
@@ -2237,7 +2241,7 @@
       const nm = defaultMeasure(D.newest_year);
       wcLink.setAttribute('href', changesHash(S.y === D.newest_year ? {} : { y: D.newest_year, m: nm, c: defaultCompare(D.newest_year, nm) }));
     }
-    const jumpTo = route.name === 'changes' && q.get('s') ? $(q.get('s')) : null; // e.g. "How this is counted" from the Overview
+    const jumpTo = (route.name === 'changes' || route.name === 'terms') && q.get('s') ? $(q.get('s')) : null; // e.g. "How this is counted" from the Overview
     if (scroll && jumpTo) {
       jumpTo.scrollIntoView();
       jumpTo.focus({ preventScroll: true });
@@ -2448,6 +2452,7 @@
       </ul>
       <p>Books in use:</p><ul>${books}</ul>
       <p>Years appear as soon as the books that report them have been processed.</p>
+      <p>Not sure what a word or fund means? See <a href="${eh('terms')}">Funds and terms</a>.</p>
       <h2 class="about-h">Actual figures</h2>
       <p>Actual figures for ${A.years[0]} to ${A.years[A.years.length - 1]} come from the County's audited annual reports, in the budget-versus-actual schedules.</p>
       <ul>${D.actuals_note.map((t) => cleanNote(t)).filter(Boolean).map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
@@ -2517,6 +2522,7 @@
       <p>The <strong>Reserve Fund</strong> entry in the Fund selector is the General Fund's balance, from the budget book's Fund Balance Projection page. Each book prints the actual balance at the end of the year two years earlier; that is the <strong>actual</strong> year-end balance for that year (unaudited for recent years). The newest book also prints a projected balance for the prior year and proposed and revised balances for the newest year. The same one-kind-per-year rule applies. Where a book prints two columns that disagree, the revised column is used and the difference is stated on the page.</p>` : ''}
       <p>Books in use:</p><ul>${books}${D.projection ? (() => { const href = `${CFG.paths.pdfs}${encodeURIComponent(D.docs[D.projection.doc])}`; return `<li><a href="${href}" target="_blank" rel="noopener">${esc(D.projection.years.join('–'))} Budget Projections</a> (<a href="${href}" download>download PDF</a>): supplies ${D.projection.years.map((y) => `${y} projection`).join(', ')}.</li>`; })() : ''}</ul>
       <p>Years appear as soon as the books that report them have been processed.</p>
+      <p>Not sure what a word or fund means? See <a href="${eh('terms')}">Funds and terms</a>.</p>
       <h2 class="about-h">Departments and bureaus</h2>
       <p>Departments and bureaus follow the city's <a href="${CFG.paths.pdfs}${encodeURIComponent(O.chart_doc)}" target="_blank" rel="noopener">2027 organizational chart</a>. Each budget line belongs to a bureau by its account number, so older years are grouped the same way even where the budget book printed them under another department or name (for example, Human Resources is shown under Executive in every year). Budget groups that are not a bureau, such as city-wide insurance, benefits and debt service or fee revenue, are shown as a separate “department-wide” group. Descriptions of what each department and bureau does are quoted from the city's <a href="${CFG.paths.pdfs}${encodeURIComponent(O.desc_doc)}" target="_blank" rel="noopener">2027 organization descriptions</a>.</p>
       <h2 class="about-h">Validation</h2>
@@ -2534,6 +2540,79 @@
       <p>Found an error, or have a question about a figure? Email <a href="mailto:${esc(CFG.contact_email)}">${esc(CFG.contact_email)}</a>.</p>` : ''}`;
     groupAbout();
   }
+
+  /* ---------- Funds and terms: the reference page (#/terms, #/county/terms) ----------
+     What each fund is paid for with (taxes or something else) and what every figure word on the site means. One page per
+     entity; the fund rows follow D.funds, so a fund the data does not have is not listed. Opened from the "What do these
+     mean?" and "What is a fund?" toggles, from the status stamp, from About and from the contents. */
+  const FUND_INFO = {
+    city: {
+      'General Fund': ['Mostly taxes', 'The city\'s everyday budget: police, fire, streets, parks and administration. Paid for mostly by taxes (real estate, earned income, local services and real estate transfer taxes), plus fees, licenses and other city income. Every other fund below is kept apart from it.'],
+      'Stormwater Management Fund': ['Fees, not taxes', 'Paid for by the stormwater management fee charged to property owners.'],
+      'Sewer Fund': ['Fees, not taxes', 'Paid for by sewage treatment charges to customers.'],
+      'Water Fund': ['Fees, not taxes', 'Paid for by water rents (customers\' water bills).'],
+      'Solid Waste & Recycling Fund': ['Fees, not taxes', 'Paid for by trash fees, with some state recycling grant money.'],
+      'Liquid Fuels Fund': ['State money, not city taxes', 'The city\'s share of the state\'s liquid fuels (motor fuel) money, spent on streets. The data lists it only for the years the books print it.'],
+      'Long\'s Park Fund': ['Rentals and gifts, not taxes', 'Paid for by pavilion and amphitheater rentals, concessions, contributions and investment earnings, and spent on Long\'s Park. The data lists it only for the years the books print it.'],
+    },
+    county: {
+      'General Fund': ['Mostly taxes', 'Pays for most County services. Paid for mostly by property taxes, plus fees, state and federal payments and other income.'],
+      'Fund B': ['Grants, not taxes', 'Federal and state grants for roads and bridges.'],
+      'Fund E': ['Grants, not taxes', 'Federal and state grants, fees and transfers from other funds, for drug and alcohol programs.'],
+      'Fund EI': ['Grants, not taxes', 'Federal and state grants, Medical Assistance and transfers from other funds, for early intervention services for young children.'],
+      'Fund F': ['Fees and grants, not taxes', 'Federal incentive payments and fees, with transfers from other funds, for the domestic relations (child support) office.'],
+      'Fund G': ['Grants, not taxes', 'Federal and state grants, fees, contributions and transfers from other funds, for aging services.'],
+      'Fund H': ['Grants, not taxes', 'Federal and state grants, Medical Assistance and transfers from other funds, for behavioral health services.'],
+      'Fund R': ['Grants, not taxes', 'Federal and state grants and Medical Assistance, for developmental services.'],
+      'Fund Y': ['Grants, not taxes', 'Federal and state grants and transfers from other funds, for children and youth services.'],
+    },
+  };
+  const rangeText = (ys) => (ys.length === 1 ? String(ys[0]) : `${ys[0]}–${ys[ys.length - 1]}`);
+  const fundYears = (i) => rangeText([...new Set(Object.values(D.series).filter((x) => x.funds.includes(i)).map((x) => x.year))].sort((a, b) => a - b));
+  const termDl = (items) => `<dl class="terms-dl">${items.map(([id, t, d]) => `<dt id="term-${id}" tabindex="-1">${t}</dt><dd>${d}</dd>`).join('')}</dl>`;
+  function termsPage(q) {
+    const info = FUND_INFO[ENT], nm = CFG.entity.short, other = isCounty() ? 'city' : 'county';
+    document.title = `${nm} · Funds and terms · ${SITE}`;
+    const yrsOf = (m) => Object.values(D.series).filter((x) => x.measure === m).map((x) => x.year).sort((a, b) => a - b);
+    const yr = (m) => (yrsOf(m).length ? rangeText(yrsOf(m)) : '');
+    const fundRows = D.funds.map((f, i) => {
+      const [paid, text] = info[f] || ['See the books', 'The books do not describe this fund.'];
+      const label = f === 'General Fund' ? 'General Fund' : esc(fn(f));
+      return `<tr><th scope="row">${label}<span class="ctx-note">In the data: ${fundYears(i)}</span></th><td><strong>${esc(paid)}</strong></td><td>${esc(text)}</td></tr>`;
+    }).join('');
+    const balance = isCounty() && D.reserve
+      ? `<dt id="term-balance" tabindex="-1">${esc(D.reserve.name)}</dt><dd>The General Fund's accumulated balance: what it has kept over the years, which is how the County covers a budget gap. It is the General Fund's own savings, so it is tax-funded in the same way. The page shows two measures side by side and never adds them together: <strong>Budget</strong> (the budget resolution's estimate) and <strong>Actual</strong> (the audited balance at December 31). <a href="${eh(`?f=${encodeURIComponent(D.reserve.name)}`)}">Open the ${esc(D.reserve.name)}</a>.</dd>`
+      : D.reserve
+        ? `<dt id="term-balance" tabindex="-1">${esc(D.reserve.name)}</dt><dd>The General Fund's savings: the balance it carries from year to year, not a separate fund with spending of its own. When the General Fund spends more than it takes in, the difference is drawn from it. Because it is the General Fund's own savings, it is tax-funded in the same way. <a href="${eh(`?f=${encodeURIComponent(D.reserve.name)}`)}">Open the ${esc(D.reserve.name)}</a>.</dd>`
+        : '';
+    const calc = ['calculated', `<span class="calc-tag">calculated</span>`, `This site's own sum of line items, shown where the book prints no total for exactly what you are looking at (for example all funds together, or a search result). A total the book does print is shown as printed, with a link to its page. Details are under <a href="${eh('about?s=about-totals')}">Printed and calculated totals</a> in About the data.`];
+    const words = isCounty()
+      ? [['budget', 'Budget', `The County's budget for the year, from its own budget books. The newest year (${D.newest_year}) is the budget the County passed${CFG.adopted ? `, ${esc(CFG.adopted.text)}` : ''}. Earlier years are as the next book prints them. The books do not say whether those are the original or an amended budget, so the site calls them Budget.`],
+        ['actual', 'Actual', `What the County's audited annual report says it received and spent, shown only for ${D.actuals ? rangeText(D.actuals.years) : 'some years'}, by fund, revenue source and function. Actual and Budget are counted differently, so they are shown side by side and never combined.`],
+        calc]
+      : [['actual', 'Actual', `What was spent or received, reported in the budget book published two years later (${yr('actual')}). It is the figure that really happened, not a plan.`],
+        ['projected', 'Projected', `The city's year-end estimate for a year that is not finished (${yr('projected')}). The actual is not published yet.`],
+        ['proposed', 'Proposed', `The mayor's first budget proposal for ${D.newest_year}. It is a proposal, not an adopted budget.`],
+        ['revised', 'Revised', `The mayor's revised proposal for ${D.newest_year}, which replaced the first one. It is also a proposal, not an adopted budget. What changed compares Revised with the year before.`],
+        ['projection', 'Projection', `The city's own multi-year estimate for the years after the newest budget${projectionYears().length ? ` (${rangeText(projectionYears())})` : ''}, from its separate projections book. It is drawn lighter at the end of the multi-year charts and tables, and is never the headline figure.`],
+        calc];
+    const notShown = isCounty()
+      ? `<dt id="term-adopted" tabindex="-1">Adopted and Amended</dt><dd>The County's books do not label their figures this way, so the site does not either. The ${D.newest_year} Budget is the budget the Commissioners adopted${CFG.adopted ? ` (${esc(CFG.adopted.text)})` : ''}, and the site says so beside it.</dd>`
+      : `<dt id="term-adopted" tabindex="-1">Adopted and Amended (not shown)</dt><dd><strong>Adopted</strong> is the budget City Council approved before the year began; <strong>Amended</strong> is that budget after changes during the year. The books print both, and this site leaves them out on purpose. Each year shows one kind of figure, so every total compares like with like and nothing is counted twice: Actual where the year is over, the city's own estimate where it is not, and a proposal for the year ahead. The adopted and amended columns are still in the PDFs.</dd>`;
+    const html = `<header class="page-head"><h1 id="page-h" tabindex="-1">Funds and terms</h1>
+        <p class="lede-sm">Which of ${esc(CFG.entity.possessive)} funds are paid for by taxes and which are not, and what each figure word on this site means.</p></header>
+      <section class="panel" id="terms-funds" tabindex="-1" aria-labelledby="tf-t"><h2 class="panel-title" id="tf-t">Funds</h2>
+        <p class="hint" style="margin-top:0">A fund is a separate account kept for a purpose. Money in one fund is not mixed with another, so a fund paid for by fees can only be spent on its own service. Only the General Fund is paid for mostly by taxes.</p>
+        <div class="table-scroll"><table class="table terms-table"><thead><tr><th scope="col">Fund</th><th scope="col">Paid for by</th><th scope="col">What it is</th></tr></thead><tbody>${fundRows}</tbody></table></div>
+        ${balance ? `<dl class="terms-dl terms-after">${balance}</dl>` : ''}</section>
+      <section class="panel" id="terms-figures" tabindex="-1" aria-labelledby="tw-t"><h2 class="panel-title" id="tw-t">Figure words</h2>
+        <p class="hint" style="margin-top:0">${isCounty() ? 'Every figure on the County pages is one of these.' : 'Every year on the City pages shows one of these kinds of figure.'} The year's kind is shown in the stamp above the controls.</p>
+        ${termDl(words)}<dl class="terms-dl">${notShown}</dl></section>
+      <p class="hint">${isCounty() ? 'Looking for the City?' : 'Looking for the County?'} <a href="#/${other === 'county' ? 'county/' : ''}terms">See the ${esc(BASE.entities[other].entity.short)} funds and terms</a>. Sources and how the figures are checked: <a href="${eh('about')}">About the data</a>.</p>`;
+    return { html };
+  }
+  const termHref = (id) => eh(`terms?s=${id}`);
+
 
   /* Theme: follows the device until the visitor clicks the toggle; then an explicit choice is saved and set as
      data-theme on <html> (the CSS and the inline script in index.html's <head> use it). Storage may be blocked. */
@@ -2603,7 +2682,7 @@
     $('footer-text').textContent = CFG.footer;
     if (CFG.tagline) $('tagline').textContent = CFG.tagline;
     if (CFG.contact_email) $('footer-contact').innerHTML = `Questions or corrections: <a href="mailto:${esc(CFG.contact_email)}">${esc(CFG.contact_email)}</a>`;
-    const nav = { home: eh(''), changes: eh('changes'), reserve: eh(`?f=${encodeURIComponent(D.reserve?.name || 'Reserve Fund')}`), about: eh('about') };
+    const nav = { home: eh(''), changes: eh('changes'), reserve: eh(`?f=${encodeURIComponent(D.reserve?.name || 'Reserve Fund')}`), about: eh('about'), terms: eh('terms') };
     document.querySelectorAll('#site-nav a[data-nav]').forEach((a) => {
       a.setAttribute('href', nav[a.dataset.nav]);
       if (a.dataset.nav === 'reserve') { a.closest('li').hidden = !D.reserve; if (D.reserve) a.textContent = D.reserve.name; } // the City's Reserve Fund, the County's General Fund Balance
@@ -2613,7 +2692,7 @@
   const jumpIndexReset = () => { jumpIndex = null; const i = $('jump-input'); if (i) i.value = ''; };
   /* City / County tabs: each opens the same kind of page in the other entity (the overview, What changed or About). */
   function renderSwitch() {
-    const tail = route.name === 'changes' ? 'changes' : route.name === 'about' ? 'about' : '';
+    const tail = route.name === 'changes' ? 'changes' : route.name === 'about' ? 'about' : route.name === 'terms' ? 'terms' : '';
     document.querySelectorAll('#entity-switch a').forEach((a) => {
       const county = a.dataset.entity === 'county';
       a.setAttribute('href', `#/${county ? 'county/' : ''}${tail}`);
