@@ -41,7 +41,7 @@
   --link: #1d5a3a;
   --mint: var(--sel);
   --gold: var(--cmp);
-  --cat-1: #1a1d1b; --cat-2: #6b7770; --cat-3: #8a7a2c; --cat-4: #b8b09a; --cat-5: #5f7f8f; --cat-6: #4d6b86; --cat-7: #8a5a44; --cat-8: #3b4a42;
+  --cat-1: #1a1d1b; --cat-2: #6b7770; --cat-3: #8a7a2c; --cat-4: #938f80; --cat-5: #5f7f8f; --cat-6: #4d6b86; --cat-7: #8a5a44; --cat-8: #3b4a42;
   --cat-other: #d0d4cd;
   --red: #a12626;
   --blue: #1d5a3a;        /* focus ring */
@@ -52,7 +52,7 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
   --bg: #101512; --card: #171e19; --card-50: #171e19; --header-bg: #101512;
-  --border: #2c3731; --border-50: #2c3731; --border-strong: #55645b;
+  --border: #2c3731; --border-50: #2c3731; --border-strong: #6d7d73;
   --track: #232c26; --muted-bg: #232c26; --hover: rgba(127, 201, 155, .09); --proj-band: #18201b;
   --fg: #eef1ec; --muted: #a9b4ac;
   --sel: #7fc99b; --sel-ink: #7fc99b; --btn-bg: #7fc99b; --btn-fg: #0d1410; --cmp: #8b968e; --cmp-ink: #a9b4ac; --rule: #eef1ec;
@@ -65,7 +65,7 @@
   :root:not([data-theme="light"]) {
     color-scheme: dark;
     --bg: #101512; --card: #171e19; --card-50: #171e19; --header-bg: #101512;
-    --border: #2c3731; --border-50: #2c3731; --border-strong: #55645b;
+    --border: #2c3731; --border-50: #2c3731; --border-strong: #6d7d73;
     --track: #232c26; --muted-bg: #232c26; --hover: rgba(127, 201, 155, .09); --proj-band: #18201b;
     --fg: #eef1ec; --muted: #a9b4ac;
     --sel: #7fc99b; --sel-ink: #7fc99b; --btn-bg: #7fc99b; --btn-fg: #0d1410; --cmp: #8b968e; --cmp-ink: #a9b4ac; --rule: #eef1ec;
@@ -878,5 +878,10 @@ a.status:hover { text-decoration: underline; text-underline-offset: 3px; }
   .terms-table td:nth-child(2)::before { content: "Paid for by: "; font-weight: 400; color: var(--muted); }
 }
 
-/* Which budget this page is about, above every page heading. */
-.eyebrow { margin: 0 0 10px; font-size: 14px; line-height: 20px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--sel-ink); }
+/* Which budget this page is about: a running head above every page heading, as in a printed book. */
+.eyebrow { margin: 0 0 6px; font-family: var(--serif); font-size: 18px; line-height: 24px; font-weight: 600; color: var(--sel-ink); }
+
+/* The select chevron is drawn in --muted; its light-theme stroke is baked into the image, so dark themes swap it. */
+:root[data-theme="dark"] select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a9b4ac' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a9b4ac' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); } }
+.hint, .lede-sm { text-wrap: pretty; }
