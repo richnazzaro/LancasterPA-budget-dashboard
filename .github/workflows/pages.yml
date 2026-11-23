@@ -1,4 +1,4 @@
-# Builds web/data from data/processed and publishes web/ (plus the source PDFs) to GitHub Pages.
+# Builds web/data (City) and web/data/county (County) from data/processed and publishes web/ (plus the source PDFs) to GitHub Pages.
 # One-time setup: repo Settings > Pages > Build and deployment > Source: "GitHub Actions".
 name: Publish dashboard
 
@@ -23,22 +23,27 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      - name: Build and check dashboard data
+      # Each step runs under bash -e, so a failed build or check for either entity stops the publish.
+      - name: Build and check City data
         run: |
           python scripts/build_dataset.py
           python scripts/check_dataset.py
+      - name: Build and check County data
+        run: |
+          python scripts/build_dataset.py --entity county
+          python scripts/check_dataset.py --entity county
       - name: Assemble site
-        # web/pdfs is a symlink to "Budget PDFs - City"; -L copies the PDFs themselves.
+        # web/pdfs is a symlink to "Budget PDFs - City", which holds a "county" symlink to "Budget PDFs - County" (pdfs/county/); -L copies the PDFs themselves.
         run: |
           mkdir _site
           cp -RL web/. _site/
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/configure-pages@v6
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

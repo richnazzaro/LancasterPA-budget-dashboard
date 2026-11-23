@@ -39,6 +39,8 @@
    each fund's printed Surplus/(Deficit) equals the CSV and its printed Total Revenue less Total Expense; the
    assumptions equal the extracted assumptions page.
 Exits 1 on any failure of checks 1, 2, 3, 4, 6, 7, 8, 9 and the CSV part of 5. Standard library only.
+Usage: python3 scripts/check_dataset.py [--entity city|county]
+  --entity county checks web/data/county/ against data/processed/county/ (scripts/check_county.py).
 """
 from __future__ import annotations
 
@@ -841,6 +843,13 @@ def check_spikes(budget: dict) -> int:
 
 
 def main() -> int:
+    import argparse
+    ap = argparse.ArgumentParser(description="Check the dashboard JSON against the processed CSVs.")
+    ap.add_argument("--entity", choices=["city", "county"], default="city",
+                    help="city (default): web/data/; county: web/data/county/ (scripts/check_county.py)")
+    if ap.parse_args().entity == "county":
+        import check_county
+        return check_county.main()
     budget = json.loads((ROOT / "web" / "data" / "budget.json").read_text())
     acc = budget["accounts"]
     shown = defaultdict(float)
