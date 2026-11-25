@@ -6,4 +6,5 @@ AGENTS.md
 data/ocr_cache/
 EDITING.md
 LancBudgetVault.DS_Store
-.impeccable
+.impeccable/
+.claude/
