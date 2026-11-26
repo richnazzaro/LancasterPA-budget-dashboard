@@ -2586,7 +2586,7 @@
       <p>These come from errors or differences in the County's documents, not the extraction. A person reviewed each one.</p>
       <details class="values" id="about-issues" tabindex="-1"><summary>Show all ${shownIssues.length + (nOrig ? 1 : 0)} notes</summary><ul>${issues || '<li>None recorded.</li>'}</ul></details>
       <h2 class="about-h">Get the data</h2>
-      <p><a href="${CFG.paths.data}budget.json">budget.json</a> (every figure shown here, including the Actual figures), <a href="${CFG.paths.data}changes.json">changes.json</a> (what changed in ${D.newest_year}), <a href="${CFG.paths.data}conflicts.json">conflicts.json</a> and <a href="${CFG.paths.data}fund_balance_gaap.json">fund_balance_gaap.json</a> (audited year-end balances). The extraction scripts and tables are in the project <a href="${CFG.project_repository">repository</a>.</p>${CFG.contact_email ? `
+      <p><a href="${CFG.paths.data}budget.json">budget.json</a> (every figure shown here, including the Actual figures), <a href="${CFG.paths.data}changes.json">changes.json</a> (what changed in ${D.newest_year}), <a href="${CFG.paths.data}conflicts.json">conflicts.json</a> and <a href="${CFG.paths.data}fund_balance_gaap.json">fund_balance_gaap.json</a> (audited year-end balances). The extraction scripts and tables are in the project <a href="${CFG.project_repository}">repository</a>.</p>${CFG.contact_email ? `
       <h2 class="about-h">Contact</h2>
       <p>Found an error, or have a question about a figure? Email <a href="mailto:${esc(CFG.contact_email)}">${esc(CFG.contact_email)}</a>.</p>` : ''}`;
     groupAbout();
