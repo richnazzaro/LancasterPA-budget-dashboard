@@ -1,6 +1,7 @@
 {
   "site_title": "Lancaster Budget Explorer",
   "contact_email": "budget@nazwel.net",
+  "project_repository": "https://github.com/richnazzaro/LancasterPA-budget-dashboard",
   "default_entity": "city",
   "entities": {
     "city": {
