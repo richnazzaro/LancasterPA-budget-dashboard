@@ -2530,7 +2530,7 @@
     const books = D.books.filter((b) => b.used).map((b) => `<li><a href="${pdf(b.doc)}" target="_blank" rel="noopener">${esc(nameOf[b.doc])}</a> (<a href="${pdf(b.doc)}" download>download PDF</a>): supplies ${b.figures.map((y) => `${y} Budget`).join(' and ')}.</li>`).join('');
     const acfrs = A.sources.map((x) => `<li><a href="${pdf(`ACFR/${x.file}`)}" target="_blank" rel="noopener">${esc(nameOf[x.file])}</a> (<a href="${pdf(`ACFR/${x.file}`)}" download>download PDF</a>; <a href="${esc(x.url)}" target="_blank" rel="noopener">County archive page</a>).</li>`).join('');
     const shownIssues = D.known_issues.filter((i) => !noOriginal(i.note)), nOrig = D.known_issues.length - shownIssues.length;
-    const issues = shownIssues.map((i) => `<li>${esc(nameOf[i.source_doc] || i.source_doc.replace(/\.pdf$/i, ''))}: ${esc(cleanNote(i.note))}</li>`).join('') + (nOrig ? `<li>${nOrig} further notes compare the audited report's own “original budget” column with the budget books. That column is not used on this site, so they are kept in the project repository and not listed here.</li>` : '');
+    const issues = shownIssues.map((i) => `<li>${esc(nameOf[i.source_doc] || i.source_doc.replace(/\.pdf$/i, ''))}: ${esc(cleanNote(i.note))}</li>`).join('') + (nOrig ? `<li>${nOrig} further notes compare the audited report's own “original budget” column with the budget books. That column is not used on this site, so they are kept in the project <a href="${CFG.project_repository}">repository</a> and not listed here.</li>` : '');
     const groups = O.departments.map((g) => `${esc(g.name)} (${g.letter})`).join(', ');
     const fundList = Object.entries(CFG.fund_names || {}).filter(([k]) => D.funds.includes(k)).map(([k, v]) => `<li>${esc(v)}</li>`).join('');
     const gbYears = GB ? [...new Set(GB.rows.map((r) => r.year))].sort((a, b) => a - b) : [];
@@ -2586,7 +2586,7 @@
       <p>These come from errors or differences in the County's documents, not the extraction. A person reviewed each one.</p>
       <details class="values" id="about-issues" tabindex="-1"><summary>Show all ${shownIssues.length + (nOrig ? 1 : 0)} notes</summary><ul>${issues || '<li>None recorded.</li>'}</ul></details>
       <h2 class="about-h">Get the data</h2>
-      <p><a href="${CFG.paths.data}budget.json">budget.json</a> (every figure shown here, including the Actual figures), <a href="${CFG.paths.data}changes.json">changes.json</a> (what changed in ${D.newest_year}), <a href="${CFG.paths.data}conflicts.json">conflicts.json</a> and <a href="${CFG.paths.data}fund_balance_gaap.json">fund_balance_gaap.json</a> (audited year-end balances). The extraction scripts and tables are in the project <a href="${CFG.project_repository}">repository</a>.</p>${CFG.contact_email ? `
+      <p><a href="${CFG.paths.data}budget.json">budget.json</a> (every figure shown here, including the Actual figures), <a href="${CFG.paths.data}changes.json">changes.json</a> (what changed in ${D.newest_year}), <a href="${CFG.paths.data}conflicts.json">conflicts.json</a> and <a href="${CFG.paths.data}fund_balance_gaap.json">fund_balance_gaap.json</a> (audited year-end balances). The extraction scripts and tables are in the project <a href="${CFG.project_<a href="${CFG.project_repository}">repository</a>}"><a href="${CFG.project_repository}">repository</a></a>.</p>${CFG.contact_email ? `
       <h2 class="about-h">Contact</h2>
       <p>Found an error, or have a question about a figure? Email <a href="mailto:${esc(CFG.contact_email)}">${esc(CFG.contact_email)}</a>.</p>` : ''}`;
     groupAbout();
@@ -2637,7 +2637,7 @@
       <p>These come from errors in the city's documents, not the extraction. A person reviewed each one.</p>
       <details class="values" id="about-issues" tabindex="-1"><summary>Show all ${D.known_issues.length} notes</summary><ul>${issues || '<li>None recorded.</li>'}</ul></details>
       <h2 class="about-h">Get the data</h2>
-      <p><a href="${CFG.paths.data}budget.json">budget.json</a> (every figure shown here${D.projection ? ', with the projections in its <code>projection</code> block' : ''}), <a href="${CFG.paths.data}staffing.json">staffing.json</a> (budgeted positions), <a href="${CFG.paths.data}conflicts.json">conflicts.json</a>, <a href="${CFG.paths.data}changes.json">changes.json</a> (what changed in ${D.newest_year}, with the fund shifts and position counts). The extraction scripts and tables are in the project repository.</p>${CFG.contact_email ? `
+      <p><a href="${CFG.paths.data}budget.json">budget.json</a> (every figure shown here${D.projection ? ', with the projections in its <code>projection</code> block' : ''}), <a href="${CFG.paths.data}staffing.json">staffing.json</a> (budgeted positions), <a href="${CFG.paths.data}conflicts.json">conflicts.json</a>, <a href="${CFG.paths.data}changes.json">changes.json</a> (what changed in ${D.newest_year}, with the fund shifts and position counts). The extraction scripts and tables are in the project <a href="${CFG.project_repository}">repository</a>.</p>${CFG.contact_email ? `
       <h2 class="about-h">Contact</h2>
       <p>Found an error, or have a question about a figure? Email <a href="mailto:${esc(CFG.contact_email)}">${esc(CFG.contact_email)}</a>.</p>` : ''}`;
     groupAbout();
