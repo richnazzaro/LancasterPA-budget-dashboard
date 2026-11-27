@@ -2819,7 +2819,7 @@
         ['proposed', 'Proposed', `The mayor's first budget proposal. It is a proposal, not an adopted budget.`],
         ['revised', 'Revised', `A second presentation of a proposed budget, it is still a proposal and is not an adopted budget.`],
         ['adopted', 'Adopted', `The budget City Council passed before the year began, as the next year's budget book prints it.${yr('adopted') ? ` It is the budget figure for ${yr('adopted')}, where the books print no Amended figure.` : ''}`],
-        ['amended', 'Amended', `The adopted budget with the changes made to it during the year, as the next year's budget book prints it${yr('amended') ? ` (${yr('amended')})` : ''}.`],
+        ['amended', 'Amended', `The adopted budget with the changes made to it during the year, as the next year's budget book prints it.`],
         ['projection', 'Projection', `The city's own multi-year estimate for the years after the newest budget as required by Home Rule.`],
         income, calc];
   }
