@@ -347,7 +347,7 @@
      the toggle, with Escape (focus returns to the toggle) and when focus leaves the controls. */
   let explainOpen = false;
   let controlsOpen = false; // phones only: the compact bar is the default; tapping it opens the fields
-  let controlsOpenedAt = 0;
+  let controlsOpenedAt = 0, controlsIgnoreUntil = 0;
   const EXPLAIN_FIGURES = { city: ['actual', 'projected', 'proposed', 'revised', 'amended', 'adopted', 'projection', 'calculated'], county: ['budget', 'actual', 'calculated'] };
   function explainHTML({ shown = [], comparing = [], funds = [] } = {}) {
     const item = (title, text, tags) => `<div class="explain-item${tags.length ? ' is-on' : ''}"><dt>${title}${tags.map((t) => ` <span class="explain-tag">${t}</span>`).join('')}</dt><dd>${text}</dd></div>`;
@@ -2534,7 +2534,7 @@
       const top = parseFloat(getComputedStyle(bar).top) || 0;
       bar.classList.toggle('is-stuck', window.scrollY > 0 && bar.getBoundingClientRect().top <= top + 1);
       // On phones the open fields close again once the reader scrolls, leaving only the selected values pinned.
-      if (controlsOpen && Math.abs(window.scrollY - controlsOpenedAt) > 8) setControls(false);
+      if (controlsOpen && Date.now() > controlsIgnoreUntil && Math.abs(window.scrollY - controlsOpenedAt) > 8) setControls(false);
     };
     window.addEventListener('scroll', pinScroll, { passive: true });
     pinObserver = new ResizeObserver(measure);
@@ -2542,14 +2542,19 @@
     measure();
   }
   function setControls(open) {
-    controlsOpen = open;
     const bar = $('controls'), btn = $('controls-compact');
     if (!bar || !btn) return;
-    if (open) controlsOpenedAt = window.scrollY;
+    // Opening or closing the sticky bar changes the page's height and the browser shifts the scroll position. Keep
+    // the reader's place and ignore that internal shift, so it isn't mistaken for a scroll that closes the fields.
+    const y = window.scrollY;
+    controlsOpen = open; controlsOpenedAt = y;
+    if (open) controlsIgnoreUntil = Date.now() + 300;
     bar.classList.toggle('is-open', open);
     btn.setAttribute('aria-expanded', String(open));
     if (!open && explainOpen) setExplain(false);
-    pinMeasure?.();
+    const restore = () => { if (window.scrollY !== y) window.scrollTo(0, y); pinMeasure?.(); };
+    if (window.scrollY !== y) window.scrollTo(0, y);
+    requestAnimationFrame(restore);
   }
   function setExplain(open, focusToggle = false) {
     explainOpen = open;
