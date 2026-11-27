@@ -50,7 +50,7 @@ When the City publishes a new budget book, every year moves forward: the new yea
 
 **Overview.** The home page opens on the **General Fund**, the fund paid for mostly by taxes. At the top is the total and one sentence that says whether it is up or down and by how much. On Spending it also says how much is drawn from savings to balance the budget; Below it: a short "What changed" summary (on Income, with a tile for each tax change: the change in the rate, with its arrow, and the rate before and after), a chart of totals by year, every department with its share, and income against spending for each fund.
 
-**Changing what you see.** Every page has the same controls above the figures, always open, under a stamp that names the figure in view (such as "2027: Revised proposal, not adopted"):
+**Changing what you see.** Every page has the same controls above the figures: on a phone they start as a one-line bar showing just the selected view (tap to open the fields, scroll to close them); on wider screens they are always open, under a stamp that names the figure in view (such as "2027: Revised proposal, not adopted"):
 
 - **Budget year,** the year and figure to show, such as "2027 Revised", "2027 Proposed", "2026 Projected", "2026 Amended" or "2025 Actual";
 - **Compare with,** any other year and figure from the same list, or no comparison;
