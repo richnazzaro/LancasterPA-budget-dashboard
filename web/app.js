@@ -346,6 +346,8 @@
      "comparing" and the chosen fund "selected" (in words, in bold and with a rule, not by colour alone). It closes with
      the toggle, with Escape (focus returns to the toggle) and when focus leaves the controls. */
   let explainOpen = false;
+  let controlsOpen = false; // phones only: the compact bar is the default; tapping it opens the fields
+  let controlsOpenedAt = 0, controlsIgnoreUntil = 0;
   const EXPLAIN_FIGURES = { city: ['actual', 'projected', 'proposed', 'revised', 'amended', 'adopted', 'projection', 'calculated'], county: ['budget', 'actual', 'calculated'] };
   function explainHTML({ shown = [], comparing = [], funds = [] } = {}) {
     const item = (title, text, tags) => `<div class="explain-item${tags.length ? ' is-on' : ''}"><dt>${title}${tags.map((t) => ` <span class="explain-tag">${t}</span>`).join('')}</dt><dd>${text}</dd></div>`;
@@ -368,14 +370,26 @@
   const mOf = (k) => (k ? parseKey(k).m : null);
 
   /* One controls component for every page (home with any fund, the Reserve Fund, department and bureau pages, What changed),
-     always open: the year's status stamp, then one group named "View" holding, in Tab order, Budget year, Compare with,
-     Fund and the Spending / Income tabs (each where the page has it), then the short definitions. A change re-draws the
-     page, keeps focus on the control and is announced in one sentence (announceView). The whole bar stays pinned at the
-     top of the main column while the page scrolls (.controls in styles.css; pinControls measures it). */
+     always open on wide screens. On phones it starts as a compact bar naming only the current selections; tapping it opens
+     the fields, and scrolling closes them again. The bar stays pinned at the top of the main column while the page scrolls
+     (.controls in styles.css; pinControls measures it). */
+  function controlsSummary(fields) {
+    if (route.name === 'home' && isReserve()) {
+      const e = isCounty() ? null : resCur();
+      return [e ? resLabel(e) : `${S.y}: Budget and Actual balances`, /id="f-f"/.test(fields) ? fn(S.f) : null].filter(Boolean).join(' · ');
+    }
+    const parts = [seriesLabel(key(S.y, S.m)), S.c ? seriesLabel(S.c) : 'No comparison'];
+    if (/id="f-f"/.test(fields)) parts.push(fn(S.f) || 'All funds');
+    if (/data-tab="k"/.test(fields)) parts.push(kindWordPlain());
+    return parts.join(' · ');
+  }
   function controlsWrap(fields, stamp = statusHTML(), explain = '') {
-    return `<div class="controls" id="controls">${stamp ? `<p class="controls-stamp">${stamp}</p>` : ''}
-      <fieldset class="controls-fields"><legend class="sr-only">View</legend>${fields}</fieldset>
-      ${explain}</div>`;
+    const summary = esc(controlsSummary(fields));
+    return `<div class="controls${controlsOpen ? ' is-open' : ''}" id="controls">
+      <button type="button" class="controls-compact" id="controls-compact" aria-expanded="${controlsOpen}" aria-controls="controls-body" aria-label="Change view. ${summary}"><span class="controls-compact-vals">${summary}</span><span class="controls-compact-cue" aria-hidden="true">Change view</span></button>
+      <div class="controls-body" id="controls-body">${stamp ? `<p class="controls-stamp">${stamp}</p>` : ''}
+        <fieldset class="controls-fields"><legend class="sr-only">View</legend>${fields}</fieldset>
+        ${explain}</div></div>`;
   }
   const kindWordPlain = () => (S.k === 'revenue' ? 'Income' : 'Spending');
 
@@ -2439,7 +2453,7 @@
     const { r, q, ent } = parseHash();
     if (ent !== ENT) { if (await loadEntity(ent)) onRoute(true); return; } // the other entity: load it, then draw this address
     route = r;
-    if (scroll) { aboutOpen = false; explainOpen = false; const ls = $('view-status'); if (ls) ls.textContent = ''; } // a new page: the last control announcement no longer applies
+    if (scroll) { aboutOpen = false; explainOpen = false; controlsOpen = false; const ls = $('view-status'); if (ls) ls.textContent = ''; } // a new page: the last control announcement no longer applies
     if (q.get('c') === 'none') { applyQuery(q); S.c = ''; } else applyQuery(q);
     if (route.name !== 'home' && (route.name !== 'changes' || isCounty()) && isReserve()) S.f = DEFAULT_FUND; // the reserve has no departments or bureaus (and the County's no What changed page)
     if (route.name === 'changes' && S.y !== D.newest_year) { S.y = D.newest_year; S.m = defaultMeasure(S.y); S.c = defaultCompare(S.y, S.m); }
@@ -2502,12 +2516,12 @@
      controls); html's scroll-padding-top uses it, so in-page jumps and keyboard focus land below the bar. On phones the
      status stamp scrolls away and the controls under it stay (top: -stamp height). A ResizeObserver keeps the numbers
      right when the bar wraps or the window changes; .is-stuck draws the ink rule under the bar once it is pinned. */
-  let pinObserver = null, pinScroll = null;
+  let pinObserver = null, pinScroll = null, pinMeasure = null;
   function pinControls() {
     pinObserver?.disconnect(); pinObserver = null;
     if (pinScroll) { window.removeEventListener('scroll', pinScroll); pinScroll = null; }
     const root = document.documentElement, bar = $('controls');
-    if (!bar) { root.style.setProperty('--pin-h', '0px'); return; }
+    if (!bar) { root.style.setProperty('--pin-h', '0px'); pinMeasure = null; return; }
     const measure = () => {
       const stamp = bar.querySelector('.controls-stamp');
       bar.style.setProperty('--stamp-h', `${stamp ? stamp.offsetHeight + parseFloat(getComputedStyle(stamp).marginBottom) : 0}px`);
@@ -2515,11 +2529,32 @@
       root.style.setProperty('--pin-h', `${Math.ceil(bar.offsetHeight + top)}px`);
       pinScroll?.();
     };
-    pinScroll = () => { const top = parseFloat(getComputedStyle(bar).top) || 0; bar.classList.toggle('is-stuck', window.scrollY > 0 && bar.getBoundingClientRect().top <= top + 1); };
+    pinMeasure = measure;
+    pinScroll = () => {
+      const top = parseFloat(getComputedStyle(bar).top) || 0;
+      bar.classList.toggle('is-stuck', window.scrollY > 0 && bar.getBoundingClientRect().top <= top + 1);
+      // On phones the open fields close again once the reader scrolls, leaving only the selected values pinned.
+      if (controlsOpen && Date.now() > controlsIgnoreUntil && Math.abs(window.scrollY - controlsOpenedAt) > 8) setControls(false);
+    };
     window.addEventListener('scroll', pinScroll, { passive: true });
     pinObserver = new ResizeObserver(measure);
     pinObserver.observe(bar);
     measure();
+  }
+  function setControls(open) {
+    const bar = $('controls'), btn = $('controls-compact');
+    if (!bar || !btn) return;
+    // Opening or closing the sticky bar changes the page's height and the browser shifts the scroll position. Keep
+    // the reader's place and ignore that internal shift, so it isn't mistaken for a scroll that closes the fields.
+    const y = window.scrollY;
+    controlsOpen = open; controlsOpenedAt = y;
+    if (open) controlsIgnoreUntil = Date.now() + 300;
+    bar.classList.toggle('is-open', open);
+    btn.setAttribute('aria-expanded', String(open));
+    if (!open && explainOpen) setExplain(false);
+    const restore = () => { if (window.scrollY !== y) window.scrollTo(0, y); pinMeasure?.(); };
+    if (window.scrollY !== y) window.scrollTo(0, y);
+    requestAnimationFrame(restore);
   }
   function setExplain(open, focusToggle = false) {
     explainOpen = open;
@@ -2555,6 +2590,7 @@
       else if (sel.dataset.sel) onFilter(sel.dataset.sel, sel.value);
     });
     view.addEventListener('click', (e) => {
+      if (e.target.closest('#controls-compact')) { setControls(!controlsOpen); return; }
       if (e.target.closest('#explain-toggle')) { setExplain(!explainOpen); return; }
       // In-page jump (e.g. "How this is counted"): scroll if the target is on this page, else follow the link.
       const jump = e.target.closest('[data-scroll]');
@@ -2576,7 +2612,11 @@
     view.addEventListener('toggle', (e) => { if (e.target.classList?.contains('org-about')) aboutOpen = e.target.open; }, true);
     // "What do these mean?": Escape closes it and returns focus to its toggle; so does leaving the controls (by Tab or a
     // click elsewhere), so the open panel never covers the part of the page in use.
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && explainOpen && !e.defaultPrevented) { e.preventDefault(); setExplain(false, true); } });
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return;
+      if (explainOpen) { e.preventDefault(); setExplain(false, true); }
+      else if (controlsOpen) { e.preventDefault(); setControls(false); $('controls-compact')?.focus(); }
+    });
     view.addEventListener('focusout', (e) => { if (explainOpen && e.target.closest('#controls') && e.relatedTarget && !e.relatedTarget.closest('#controls')) setExplain(false); });
     document.addEventListener('pointerdown', (e) => { if (explainOpen && !e.target.closest('#controls')) setExplain(false); });
     // Name every data table and give sideways-scrolling regions a keyboard stop and a label.
