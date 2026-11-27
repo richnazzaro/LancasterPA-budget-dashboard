@@ -2814,13 +2814,13 @@
       ? [['budget', 'Budget', `The County's budget for the year, from its own budget books. The newest year (${D.newest_year}) is the budget the County passed${CFG.adopted ? `, ${esc(CFG.adopted.text)}` : ''}. Earlier years are as the next book prints them. The books do not say whether those are the original or an amended budget, so the site calls them Budget.`],
         ['actual', 'Actual', `What the County's audited annual report says it received and spent, shown only for ${D.actuals ? rangeText(D.actuals.years) : 'some years'}, by fund, revenue source and function. Actual and Budget are counted differently, so they are shown side by side and never combined.`],
         income, calc]
-      : [['actual', 'Actual', `What was spent or received, reported in the budget book published two years later (${yr('actual')}). It is the figure that really happened, not a plan.`],
-        ['projected', 'Projected', `The city's year-end estimate for a year that is not finished (${yr('projected')}). The actual is not published yet.`],
-        ['proposed', 'Proposed', `The mayor's first budget proposal for ${D.newest_year}. It is a proposal, not an adopted budget.`],
-        ['revised', 'Revised', `The mayor's revised proposal for ${D.newest_year}, which replaced the first one. It is also a proposal, not an adopted budget. What changed compares Revised with the year before.`],
-        ['adopted', 'Adopted', `The budget City Council passed before the year began, as the next year's budget book prints it. ${yr('adopted') ? `It is the budget figure for ${yr('adopted')}, where the books print no Amended figure.` : 'Every year in the data has an Amended figure, so Adopted is not in the lists at present.'}`],
-        ['amended', 'Amended', `The adopted budget with the changes made to it during the year, as the next year's budget book prints it${yr('amended') ? ` (${yr('amended')})` : ''}. Each year offers one budget figure in Budget year and Compare with: <strong>Amended when the books print it, otherwise Adopted</strong>, never both, so a year's plan is counted once. It is a plan, not what was spent: compare it with that year's Actual or Projected to see how the year turned out. The multi-year charts and tables keep one figure per year (Actual, Projected, Proposed, Revised) and do not draw it.`],
-        ['projection', 'Projection', `The city's own multi-year estimate for the years after the newest budget${projectionYears().length ? ` (${rangeText(projectionYears())})` : ''}, from its separate projections book. It is drawn lighter at the end of the multi-year charts and tables, and is never the headline figure.`],
+      : [['actual', 'Actual', `What was spent or received, reported in the budget book published two years later. It is the figure that really happened, not a plan.`],
+        ['projected', 'Projected', `The city's year-end estimate for a year that is not finished. The actual is not published yet.`],
+        ['proposed', 'Proposed', `The mayor's first budget proposal. It is a proposal, not an adopted budget.`],
+        ['revised', 'Revised', `A second presentation of a proposed budget, it is still a proposal and is not an adopted budget.`],
+        ['adopted', 'Adopted', `The budget City Council passed before the year began, as the next year's budget book prints it.${yr('adopted') ? ` It is the budget figure for ${yr('adopted')}, where the books print no Amended figure.` : ''}`],
+        ['amended', 'Amended', `The adopted budget with the changes made to it during the year, as the next year's budget book prints it${yr('amended') ? ` (${yr('amended')})` : ''}.`],
+        ['projection', 'Projection', `The city's own multi-year estimate for the years after the newest budget as required by Home Rule.`],
         income, calc];
   }
   function termsPage(q) {
