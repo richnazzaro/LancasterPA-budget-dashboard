@@ -710,7 +710,7 @@ a.src { white-space: nowrap; }
   .brand { flex: 1 1 0; min-width: 0; }
   .header-actions { order: 2; }
   .site-header nav { order: 3; flex: 1 1 100%; min-width: 0; border-top: 1px solid var(--border); }
-  .site-nav { padding: 2px 0 0; gap: 20px; } /* six sections fit in one row from about 700px */
+  .site-nav { padding: 2px 0 0; gap: 16px; } /* six sections, including Home Rule and the Budget, fit in one row from about 750px */
   .jump-search { order: 4; flex: 1 1 100%; max-width: none; margin: 0; }
 }
 @media (min-width: 1100px) {

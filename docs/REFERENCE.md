@@ -73,7 +73,7 @@ The page shell. `app.js` replaces the wordmark, tagline, description, footer and
 | Wordmark | `id="wordmark"` ([L33](../web/index.html#L33)) | "Lancaster Budget Explorer" | Replaced by `site_title` (+ `title_suffix`). |
 | City / County tabs | `id="entity-switch"` ([L34](../web/index.html#L34)) | "City" (`#/`), "County" (`#/county/`); group label "Budget" | Their links are reset per page by `renderSwitch()` in `app.js`. |
 | Disclaimer | `id="tagline"` ([L35](../web/index.html#L35)) | "This is an independent project, not associated with the City of Lancaster." | Replaced by the entity's `tagline`. |
-| Header navigation | `id="site-nav"` ([L37](../web/index.html#L37)) | Overview · What changed · Reserve Fund · Funds and terms · Budget calendar · About the data (each `data-nav`: `home`, `changes`, `reserve`, `terms`, `calendar`, `about`) | `applyChrome()` sets the links per entity, renames "Reserve Fund" to the data's reserve name (the County's "General Fund Balance") and hides "Budget calendar" (the How the City budget is made page) for an entity with no `budget_calendar` block in `config.json` (the County). `onRoute()` keeps "What changed" pointing at the current fund and figure. |
+| Header navigation | `id="site-nav"` ([L37](../web/index.html#L37)) | Overview · What changed · Reserve Fund · Funds and terms · Home Rule and the Budget · About the data (each `data-nav`: `home`, `changes`, `reserve`, `terms`, `calendar`, `about`) | `applyChrome()` sets the links per entity, renames "Reserve Fund" to the data's reserve name (the County's "General Fund Balance") and hides "Budget calendar" (the How the City budget is made page) for an entity with no `budget_calendar` block in `config.json` (the County). `onRoute()` keeps "What changed" pointing at the current fund and figure. |
 | Jump search label and placeholder | `id="jump-input"` ([L46](../web/index.html#L46)) | label "Jump to a department, bureau or line item"; placeholder "Jump to a department or line" | Results come from `buildJumpIndex()` in `app.js`. |
 | Theme button | `id="theme-toggle"` ([L51](../web/index.html#L51)) | moon icon and "Dark" while light; sun and "Light" while dark | Label and title set by `applyTheme()`. |
 | Loading text | `Loading budget…` ([L57](../web/index.html#L57)) | "Loading budget…" | Shown until the data arrives. |
@@ -164,7 +164,7 @@ Other colors outside the token blocks:
 |---|---|---|
 | 1750px and up | Reading notes margin (260px) appears beside the page; main `max-width: 1480px` | `min-width: 1750px` ([L792](../web/styles.css#L792)) |
 | 1280px and up | About sections two to a row | `min-width: 1280px` ([L750](../web/styles.css#L750)) |
-| 1099px and down | Header is a top bar; the sections are one row (20px apart, fits from about 700px; narrower it scrolls sideways) | `max-width: 1099px` |
+| 1099px and down | Header is a top bar; the sections are one row (16px apart, fits from about 750px; narrower it scrolls sideways) | `max-width: 1099px` |
 | 1100px and up | Header becomes the 300px contents rail; main column `max-width: 1360px` | `min-width: 1100px` ([L662](../web/styles.css#L662)) |
 | 1024px and up / 1023px and down | Bureau cards and What changed tiles two to a row; smaller page headings and big totals below | `min-width: 1024px`, `max-width: 1023px` |
 | 767px and down | Phone layout (stacked tables, "On this page" outline, 46px tabs; the pinned controls in two rows of two, the status stamp scrolling away, field notes read by screen readers only) | `max-width: 767px` |
