@@ -52,7 +52,8 @@
   const eh = (path = '') => `#/${isCounty() ? 'county/' : ''}${path}`;
   const fundNames = () => (CFG && CFG.fund_names) || {};
   const fn = (f) => fundNames()[f] || f; // a fund as shown (the County's fund letters have names)
-  let charts = [];
+  let charts = [], histChart = null; // histChart: the one open line-item history chart (see lineHistory), kept apart from the page's charts
+  function closeHist() { if (histChart) { histChart.destroy(); histChart = null; } }
   const S = { y: 0, m: '', c: '', k: 'expense', f: '' };
   let route = { name: 'home' };
   let aboutOpen = false; // "What does this … do?" stays open when the page re-renders (theme, filters)
@@ -466,7 +467,7 @@
     announceView();
   }
 
-  function destroyCharts() { charts.forEach((c) => c.destroy()); charts = []; }
+  function destroyCharts() { charts.forEach((c) => c.destroy()); charts = []; closeHist(); }
   const chartTheme = () => ({
     tip: { backgroundColor: BG, borderColor: GRID, borderWidth: 1, titleColor: INK, bodyColor: INK, padding: 10 },
     tick: MUTED, grid: GRID,
@@ -528,12 +529,10 @@
     return `<div class="trend-proj"><p><strong>${yrs} are projections</strong>, not budgets: the city's estimates made with its ${D.projection.after_year} budget, based on its ${assume}.${extra}</p>
       ${groups.length ? `<details class="values proj-assume"><summary>The city's assumptions</summary>${list}</details>` : ''}</div>`;
   }
-  function trendHTML(scope, title, { bare = false } = {}) {
-    trendScope = scope;
-    const pts = trendData(scope);
-    if (!pts.some((p) => p.v != null)) return '';
+  // The legend under a trend: one entry per kind of figure the points hold (shared by Totals by Year and a line item's history).
+  function trendLegend(pts) {
     const has = (m) => pts.some((p) => p.m === m && p.v != null);
-    const legend = [
+    return [
       has('actual') && `<li><i class="ln"></i>Actual</li>`,
       has('budget') && `<li><i class="ln"></i>Budget</li>`,
       has('projected') && `<li><i class="ln dashed"></i>Projected</li>`,
@@ -541,6 +540,13 @@
       has('revised') && `<li><i class="dot" style="background:${SEL}"></i>Revised</li>`,
       has('projection') && `<li><i class="ln dotted proj"></i><i class="dot ring proj"></i>Projection</li>`,
     ].filter(Boolean).join('');
+  }
+  function trendHTML(scope, title, { bare = false } = {}) {
+    trendScope = scope;
+    const pts = trendData(scope);
+    if (!pts.some((p) => p.v != null)) return '';
+    const has = (m) => pts.some((p) => p.m === m && p.v != null);
+    const legend = trendLegend(pts);
     // Proposed and Revised sit a few pixels apart on a $0-based axis, so state the revision in words.
     const budgetPts = pts.filter((p) => p.m !== 'projection');
     const ly = budgetPts.length ? Math.max(...budgetPts.map((p) => p.y)) : null;
@@ -561,7 +567,13 @@
   function drawTrend() {
     const cv = $('trend-chart');
     if (!cv || !window.Chart || !trendScope) return;
-    const pts = trendData(trendScope), th = chartTheme();
+    charts.push(trendChart(cv, trendData(trendScope), $('trend-axis')));
+  }
+  /* The trend line chart for a list of points ({ y, m, v }, v null where there is no figure): Totals by Year, and the
+     history of one line item (lineHistory). `axisEl` receives the note that the axis does not start at zero; `fine` gives a
+     narrow range in millions the decimals its ticks need. */
+  function trendChart(cv, pts, axisEl, fine = false) {
+    const th = chartTheme();
     const yrs = [...new Set(pts.map((p) => p.y))];
     const projAt = new Set(pts.filter((p) => p.m === 'projection').map((p) => p.y));
     const main = yrs.map((y) => pts.find((p) => p.y === y && (p.m === 'actual' || p.m === 'projected' || p.m === 'budget')) || null);
@@ -576,7 +588,7 @@
     if (pts.some((p) => p.m === 'proposed')) datasets.push({ ...dot('proposed', PALETTE[0]), pointStyle: 'rectRot', pointRadius: 7, pointHoverRadius: 9, backgroundColor: SURFACE, borderWidth: 2.5 });
     const rvPt = pts.filter((p) => p.m === 'revised' && p.v != null).pop();
     if (rvPt) {
-      const ri = yrs.indexOf(rvPt.y), pi = main.map((p, i) => (p ? i : -1)).filter((i) => i >= 0 && i < ri).pop();
+      const ri = yrs.indexOf(rvPt.y), pi = main.map((p, i) => (p && p.v != null ? i : -1)).filter((i) => i >= 0 && i < ri).pop();
       datasets.push({ label: 'Revised', data: yrs.map((y, i) => (i === ri ? rvPt.v : i === pi ? main[pi].v : null)), borderColor: SEL, backgroundColor: SEL, borderWidth: 2, borderDash: [6, 4], showLine: true, spanGaps: false,
         pointRadius: (c) => (c.dataIndex === ri ? 8 : 0), pointHoverRadius: (c) => (c.dataIndex === ri ? 10 : 0), pointHitRadius: (c) => (c.dataIndex === ri ? 10 : 0), pointBorderColor: SURFACE, pointBorderWidth: 2 });
     }
@@ -601,11 +613,14 @@
     const vals = pts.map((p) => p.v).filter((v) => v != null && v > 0);
     let yMin = 0;
     if (vals.length) { const lo = Math.min(...vals) * 0.7, pow = 10 ** Math.floor(Math.log10(lo)); yMin = Math.floor(lo / pow) * pow; }
-    const ax = $('trend-axis'); if (ax) ax.textContent = yMin > 0 ? `The vertical axis starts at ${short(yMin)}, not zero.` : '';
-    charts.push(new Chart(cv, { type: 'line', data: { labels: yrs, datasets }, plugins: [band],
+    // A narrow range in millions would repeat "$6M, $6M"; give those ticks the decimals they need.
+    const span = vals.length ? Math.max(...vals) - Math.min(...vals) : 0;
+    const tickFmt = (n) => (fine && span < 5e6 && Math.abs(n) >= 1e6 ? `${n < 0 ? MINUS : ''}$${parseFloat((Math.abs(n) / 1e6).toFixed(2))}M` : short(n));
+    if (axisEl) axisEl.textContent = yMin > 0 ? `The vertical axis starts at ${short(yMin)}, not zero.` : '';
+    return new Chart(cv, { type: 'line', data: { labels: yrs, datasets }, plugins: [band],
       options: { responsive: true, maintainAspectRatio: false, layout: { padding: { right: 8 } }, animation: reduceMotion() ? false : { duration: 300 },
         plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { label: (c) => (c.datasetIndex === 0 ? `${LABEL[main[c.dataIndex].m]}: ${money(c.raw)}` : `${c.dataset.label}: ${money(c.raw)}`) } } },
-        scales: { x: { offset: true, ticks: { color: (c) => (projAt.has(yrs[c.index]) ? MUTED : INK) }, grid: { color: th.grid } }, y: { beginAtZero: yMin === 0, min: yMin || undefined, ticks: { color: th.tick, callback: (n) => short(n) }, grid: { color: th.grid } } } } }));
+        scales: { x: { offset: true, ticks: { color: (c) => (projAt.has(yrs[c.index]) ? MUTED : INK) }, grid: { color: th.grid } }, y: { beginAtZero: yMin === 0, min: yMin || undefined, ticks: { color: th.tick, callback: (n) => tickFmt(n) }, grid: { color: th.grid } } } } });
   }
   /* ---------- A line far above the years either side of it (e.g. 2025 Building Permits) ----------
      Along the Actual / Projected line (then the newest year's figure), a line whose amount in one year is at least
@@ -1566,11 +1581,11 @@
     const f = sorters[T.sort] || sorters.sel;
     list.sort((a, b) => { const x = f(a), y = f(b); return (x < y ? -1 : x > y ? 1 : 0) * T.dir; });
     const th = (id, label, cls = '') => `<th scope="col" class="${cls}" aria-sort="${T.sort === id ? (T.dir > 0 ? 'ascending' : 'descending') : 'none'}"><button type="button" data-sort="${id}">${label}</button></th>`;
-    const body = list.slice(0, T.shown).map((e) => {
+    const body = list.slice(0, T.shown).map((e, i) => {
       const d = val(e, 'sel') - val(e, 'cmp');
       const sub = [e.code, showBureau ? bureauName(e.bureau) : ''].filter(Boolean).map(esc).join(' · ');
       const draw = /^Fund Balance Reserve/i.test(e.name) && /-499000$/.test(e.code) ? `<span class="sub">${esc(drawLineLabel(e.sel ? k : S.c, (e.sel || e.cmp).v))}</span>` : lineTag(e.ai) ? `<span class="sub line-tag">${esc(lineTag(e.ai))}</span>` : '';
-      return `<tr><td>${esc(e.name)}<span class="sub">${sub}</span>${draw}</td><td class="hide-sm">${esc(D.categories[e.cat])}</td>
+      return `<tr><td><button type="button" class="li-toggle" data-li="${i}" aria-expanded="false" aria-controls="li-hist-${i}">${esc(e.name)}</button><span class="sub">${sub}</span>${draw}</td><td class="hide-sm">${esc(D.categories[e.cat])}</td>
         ${S.c ? `<td class="num">${e.cmp ? src(money(e.cmp.v), S.c, e.cmp.d, e.cmp.p) : '—'}</td>` : ''}<td class="num">${e.sel ? src(money(e.sel.v), k, e.sel.d, e.sel.p) : '—'}${S.c && d !== 0 ? `<span class="chg-sm ${d > 0 ? 'up' : 'down'}" aria-label="Change from ${esc(seriesLabel(S.c))}: ${money(d)}">${money(d)}</span>` : ''}</td>
         ${S.c ? `<td class="num hide-sm"><span class="${d > 0 ? 'up' : d < 0 ? 'down' : 'flat'}">${d === 0 ? '—' : money(d)}</span></td>` : ''}</tr>`;
     }).join('');
@@ -1584,10 +1599,62 @@
         <input type="search" id="li-search" placeholder="Search line items, account numbers…" value="${esc(T.q)}" autocomplete="off">
         <button type="button" class="btn btn-outline export-btn" data-export>Export this view (CSV)</button>
         <span class="count" aria-live="polite">${q ? `${list.length.toLocaleString()} matching of ${all.length.toLocaleString()} line items` : lineCountText(selRows, cmpRows, all)}</span></div>
+      <p class="hint li-hint">Select a line's name to see it year by year.</p>
       <div class="table-scroll"><table class="table"><thead><tr>${th('name', 'Line item and account')}${th('cat', 'Category', 'hide-sm')}${S.c ? th('cmp', esc(seriesLabel(S.c)), 'num') : ''}${th('sel', esc(seriesLabel(k)), 'num')}${S.c ? th('chg', 'Change', 'num hide-sm') : ''}</tr></thead>
         <tbody>${body || '<tr><td colspan="5" class="empty">No matching line items.</td></tr>'}</tbody>
         <tfoot><tr><td>Total${q ? ' (matching)' : ''}</td><td class="hide-sm"></td>${S.c ? `<td class="num">${fig(fCmp)}</td>` : ''}<td class="num">${fig(fSel)}</td>${S.c ? `<td class="num hide-sm">${money(ts - tc)}</td>` : ''}</tr></tfoot></table></div>
       ${left > 0 ? `<button type="button" class="btn btn-outline more" data-more>Show ${Math.min(PAGE_SIZE, left)} more</button>` : ''}`;
+  }
+  /* ---------- A line item's history, unfolded under its name in the line-item table ----------
+     The same line (account code in the same fund) in every year: one figure per year by the site's own rules (Actual,
+     then Projected, then Proposed and Revised, then the city's projections), summed where the book prints the line
+     more than once. Drawn like Totals by Year (trendChart), with the values and their PDF pages in a table. */
+  function lineHistoryPoints(e) {
+    const kindOk = (r) => isRevenue(r) === (S.k === 'revenue');
+    const at = (y, m) => {
+      const kk = key(y, m), l = rows(kk).filter((r) => r.code === e.code && r.fund === e.fund && kindOk(r));
+      return { y, m, v: l.length ? sum(l) : null, t: l.length ? { v: sum(l), k: kk, ...firstPage(l) } : null };
+    };
+    const pts = [];
+    for (const y of years().slice().sort((a, b) => a - b)) for (const m of ORDER) if (series(key(y, m))) pts.push(at(y, m));
+    for (const y of projectionYears()) pts.push(at(y, 'projection'));
+    return pts;
+  }
+  // What the books say about this line: the "stands out" sentence for a year it towers over its neighbours, and any line note.
+  function lineHistoryNotes(e) {
+    const spikes = lineSpikes(S.k).filter((s) => s.code === e.code && s.fund === e.fund);
+    const seen = new Set(spikes.map((s) => s.k));
+    const out = spikes.map((s) => `<p class="trend-spike"><strong>${esc(String(parseKey(s.k).y))} stands out:</strong> ${spikeSentence(s, S.k)}.${spikeContext(s)}</p>`);
+    for (const n of CH?.line_notes || []) {
+      if (n.account !== e.code || seen.has(key(n.year, n.figure))) continue;
+      out.push(`<p class="trend-spike"><strong>${esc(String(n.year))}:</strong> ${esc(n.text)} <span class="wc-srcnote">${srcDoc('Budget book', n.d, n.p)}</span></p>`);
+    }
+    return out.join('');
+  }
+  function lineHistoryHTML(e, pts) {
+    const rowsHtml = pts.map((p) => `<tr${p.m === 'projection' ? ' class="proj-row"' : ''}><th scope="row">${p.y}</th><td>${LABEL[p.m]}</td><td class="num">${p.t ? src(money(p.v), p.t.k, p.t.d, p.t.p) : '—'}</td></tr>`).join('');
+    return `<div class="li-hist-body" role="group" aria-label="History of ${esc(e.name)}">
+      <ul class="trend-legend" aria-hidden="true">${trendLegend(pts)}</ul>
+      <div class="chart-box short"><canvas role="img" aria-label="${esc(e.name)} by year, ${pts[0].y} to ${pts[pts.length - 1].y}. Solid line: actual. Dashed line: projected. Hollow diamond: proposed. Solid dot: revised. The table below has the values."></canvas></div>
+      <p class="trend-axis"></p>${lineHistoryNotes(e)}
+      <details class="values"><summary>Show values</summary><div class="table-scroll"><table class="table"><thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Amount</th></tr></thead><tbody>${rowsHtml}</tbody></table></div></details></div>`;
+  }
+  function closeLineHistory(holder) {
+    closeHist();
+    holder.querySelectorAll('tr.li-hist').forEach((r) => r.remove());
+    holder.querySelectorAll('.li-toggle[aria-expanded="true"]').forEach((b) => b.setAttribute('aria-expanded', 'false'));
+  }
+  // Open (or, on a second click, close) the history of the line in the toggle's row; one is open at a time and focus stays on the toggle.
+  function toggleLineHistory(holder, btn, e) {
+    const wasOpen = btn.getAttribute('aria-expanded') === 'true';
+    closeLineHistory(holder);
+    if (wasOpen) return;
+    const tr = btn.closest('tr'), pts = lineHistoryPoints(e);
+    if (!pts.some((p) => p.v != null)) return;
+    tr.insertAdjacentHTML('afterend', `<tr class="li-hist" id="li-hist-${btn.dataset.li}"><td colspan="${tr.cells.length}">${lineHistoryHTML(e, pts)}</td></tr>`);
+    btn.setAttribute('aria-expanded', 'true');
+    const box = tr.nextElementSibling, cv = box.querySelector('canvas');
+    if (window.Chart) histChart = trendChart(cv, pts, box.querySelector('.trend-axis'), true);
   }
   /* CSV of the line items matching the search (every row, in the table's order), built in the browser. Plain
      ASCII minus signs, so spreadsheets read the numbers; source pages are the budget-book PDF pages. */
@@ -1611,8 +1678,11 @@
     const holder = $('li-holder');
     if (!holder) return;
     const paint = (focus) => {
+      closeLineHistory(holder); // a new table closes the open history (and frees its chart)
       holder.innerHTML = lineTable(selRows, cmpRows, showBureau);
       const s = $('li-search');
+      const shown = lastList.slice(0, T.shown);
+      holder.querySelectorAll('.li-toggle').forEach((b) => b.addEventListener('click', () => toggleLineHistory(holder, b, shown[+b.dataset.li])));
       s.addEventListener('input', (e) => { T.q = e.target.value; T.shown = PAGE_SIZE; paint(true); });
       holder.querySelectorAll('[data-sort]').forEach((b) => b.addEventListener('click', () => {
         const id = b.dataset.sort;

@@ -927,6 +927,31 @@ a.status:hover { text-decoration: underline; text-underline-offset: 3px; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23a9b4ac' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); } }
 .hint, .lede-sm { text-wrap: pretty; }
 
+/* Line-item history: the line's name in the table is a quiet disclosure toggle (a marker like the "Show values" summaries);
+   it unfolds a full-width row under it, ruled by the table's hairlines, with no box, shadow or fill (app.js lineHistory). */
+.li-toggle { display: inline-block; appearance: none; background: none; border: 0; margin: 0; padding: 0 0 0 20px; text-indent: -20px; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+/* the same chevron as the bureau "What does it do" summaries, in ink so it reads as "this opens" */
+.li-toggle::before { content: ""; display: inline-block; width: 7px; height: 7px; margin: 0 9px 2px 2px; text-indent: 0; border-right: 2px solid var(--fg); border-bottom: 2px solid var(--fg); transform: rotate(-45deg); transition: transform .15s; vertical-align: middle; }
+.li-toggle[aria-expanded="true"]::before { transform: rotate(45deg); margin-bottom: 5px; }
+.li-toggle:hover { text-decoration: underline; text-underline-offset: 3px; }
+.li-hint { margin: 4px 0 8px; font-size: 14px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .li-toggle::before { transition: none; } }
+.li-toggle:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 0; }
+.table tbody tr.li-hist:hover { background: none; }
+.li-hist > td { padding: 8px 0 24px 20px; }
+.li-hist .trend-legend { justify-content: flex-start; }
+.li-hist .trend-spike { color: var(--muted); }
+.li-hist .trend-spike strong { color: var(--fg); }
+.li-hist .table td, .li-hist .table th { padding: 8px 16px; vertical-align: baseline; } /* year, figure and amount on one line */
+/* width 0 + min-width 100%: the history never widens the line table, so its chart follows the column when the window resizes */
+.li-hist .li-hist-body, .li-hist .chart-box { width: 0; min-width: 100%; }
+@media (max-width: 767px) {
+  .li-toggle { position: relative; }
+  .li-toggle::after { content: ""; position: absolute; inset: -13px -6px; } /* an invisible 44px hit area; nothing visible changes */
+  .li-hist > td { padding-left: 0; }
+  /* phones: the amount link is a 44px target centred in its cell, so centre the year and figure with it */
+  .li-hist .table th, .li-hist .table td { vertical-align: middle; padding-top: 0; padding-bottom: 0; }
+}
 /* How the City budget is made (#/budget-calendar): the charter's budget calendar as a timeline, after a printed
    budget-process chart. One ordered list in time order (screen readers read it as a list); the month band, its
    square month labels and the step markers are drawn in CSS and hidden from screen readers. Wide columns (container

@@ -61,7 +61,7 @@ They work with a keyboard (Tab moves between them; arrow keys change the Spendin
 
 **Departments and bureaus.** Click a department to open its page: what the department does (quoted from the City's own descriptions), what changed, a comparison with another year, its bureaus, its staff (City only), its spending categories and every line item. City departments and bureaus follow the City's 2027 organization chart in every year, so you can follow one office over time. County departments are grouped as the County's books group them (General Government, Courts and Row Offices, Corrections, Human Services); offices headed by an elected official are marked "Elected office".
 
-**Line items.** Search by name or account number, sort by any column, and press **Export this view (CSV)** to download every matching line with its source page.
+**Line items.** Search by name or account number, sort by any column, click a line's name to see that line across the years (with a link to the book page for each figure), and press **Export this view (CSV)** to download every matching line with its source page.
 
 **What changed** (in the header) explains the newest budget against the year before: the change in spending and income, the largest line-item changes, money and staff **moved into or out of the General Fund** (the City's fees-paid funds and the tax-paid General Fund are kept apart, so every move between them is called out), budgeted positions, and what the revised proposal changed. Where one line is far above the years either side of it, the page names it and says what the change would be without it.
 
