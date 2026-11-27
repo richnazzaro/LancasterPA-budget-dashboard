@@ -6,10 +6,13 @@
  *   #/department/<dept>/bureau/<unit>         one bureau (org-chart unit)
  *   #/changes                                 what changed in the newest year (changes.json, scripts/changes.py)
  *   #/terms                                   funds and terms: which funds are tax-funded, what each figure word means
+ *   #/budget-calendar                         how the City budget is made: the Home Rule Charter's budget calendar (City only)
  * Departments and bureaus follow the city's 2027 org chart (budget.json `org` block, built by
  * scripts/org_structure.py): every line's org code maps to one unit, and each unit to one department.
  * Older bureau links (#/department/<dept>/bureau/<fund--printed group>) redirect to the unit.
- * Shared query: y=year m=measure c=compare k=revenue f=fund
+ * Shared query: y=year m=measure c=compare k=revenue f=fund. The Budget year select sets y and m together (e.g.
+ * y=2026&m=amended); Compare with sets c (<year>-<measure>, e.g. c=2026-projected, or c=none). Addresses made before the
+ * selects (…?y=2027&m=proposed&c=2026-projected) use the same parameters, so they still open the same view.
  * Projections (budget.json `projection`, the city's multi-year projections book): years after the newest year, drawn
  * at the end of the multi-year charts and tables as "Projection". They are not in D.series, so they are never a
  * selectable year and never reach the headline, deck or What changed; series(k) and rows(k) still read them.
@@ -17,11 +20,16 @@
 (() => {
   'use strict';
 
-  const LABEL = { proposed: 'Proposed', revised: 'Revised', projected: 'Projected', actual: 'Actual', budget: 'Budget', projection: 'Projection' };
+  const LABEL = { proposed: 'Proposed', revised: 'Revised', projected: 'Projected', actual: 'Actual', budget: 'Budget', projection: 'Projection', adopted: 'Adopted', amended: 'Amended' };
+  // The one kind of figure per year that the multi-year charts and tables draw (and the default figure of a year).
   const ORDER = ['actual', 'projected', 'budget', 'proposed', 'revised'];
+  // Every figure a year can be picked as in Budget year / Compare with, newest first within a year. A year's budget as
+  // passed (budget.json: Amended where the next book prints it, else Adopted; never both) is selectable but never charted.
+  const PICK_ORDER = ['revised', 'proposed', 'actual', 'projected', 'budget', 'amended', 'adopted'];
   const STATUS = {
     proposed: 'Proposed, not adopted', revised: 'Revised proposal, not adopted',
     projected: 'Projected year-end estimate', actual: 'Actual spending', budget: 'Budget',
+    adopted: 'Adopted budget', amended: 'Amended budget',
   };
   const CAT_ORDER = ['Salaries & Wages', 'Benefits', 'Operating', 'Equipment & Capital', 'Debt, Transfers & Allocations', 'Revenue', 'Uncoded'];
   // Colors are read from CSS variables at start-up (see loadTokens), so branding lives in styles.css.
@@ -230,8 +238,11 @@
   const isReserve = () => !!D.reserve && S.f === D.reserve.name;
 
   const years = () => [...new Set(Object.values(D.series).map((s) => s.year))].sort((a, b) => b - a);
-  const measuresFor = (y) => ORDER.filter((m) => series(key(y, m)));
-  const defaultMeasure = (y) => { const ms = measuresFor(y); return ms.includes('revised') ? 'revised' : ms.includes('proposed') ? 'proposed' : ms[0]; };
+  const measuresFor = (y) => ORDER.filter((m) => series(key(y, m))); // the year's charted kind(s)
+  const figuresFor = (y) => PICK_ORDER.filter((m) => D.series[key(y, m)]); // everything the Budget year select offers for it
+  const defaultMeasure = (y) => { const ms = measuresFor(y); return ms.includes('revised') ? 'revised' : ms.includes('proposed') ? 'proposed' : ms[0] || figuresFor(y)[0]; };
+  // Every selectable figure, newest year first, then PICK_ORDER within the year: "2027 Revised", "2027 Proposed", "2026 Projected", …
+  const figureKeys = () => Object.keys(D.series).sort((a, b) => parseKey(b).y - parseKey(a).y || PICK_ORDER.indexOf(parseKey(a).m) - PICK_ORDER.indexOf(parseKey(b).m));
   function defaultCompare(y, m) {
     return [key(y - 1, m), ...ORDER.map((x) => key(y - 1, x))].find((k) => series(k)) || '';
   }
@@ -248,6 +259,7 @@
     if (parts[0] === 'changes') r = { name: 'changes' };
     else if (parts[0] === 'about') r = { name: 'about' };
     else if (parts[0] === 'terms') r = { name: 'terms' };
+    else if (parts[0] === 'budget-calendar') r = { name: 'calendar' };
     else if (parts[0] === 'department' && parts[1]) {
       r = parts[2] === 'bureau' && parts[3] ? { name: 'bureau', dept: parts[1], bureau: parts[3] } : { name: 'dept', dept: parts[1] };
     } else if (parts.length && location.hash.startsWith('#/')) r = { name: 'missing' }; // any other path is not a page
@@ -256,9 +268,12 @@
   function applyQuery(q) {
     const ys = years();
     S.y = ys.includes(+q.get('y')) ? +q.get('y') : ys.includes(D.newest_year) ? D.newest_year : ys[0];
-    const ms = measuresFor(S.y);
-    S.m = ms.includes(q.get('m')) ? q.get('m') : defaultMeasure(S.y);
-    const c = (q.get('c') || '').replace('-', '|');
+    const ms = figuresFor(S.y);
+    // A year's budget figure is Amended or Adopted, never both: an address naming the other one opens the one shown.
+    const qm = ['adopted', 'amended'].includes(q.get('m')) && !ms.includes(q.get('m')) ? ms.find((m) => m === 'adopted' || m === 'amended') : q.get('m');
+    S.m = ms.includes(qm) ? qm : defaultMeasure(S.y);
+    let c = (q.get('c') || '').replace('-', '|');
+    if (!D.series[c] && /\|(adopted|amended)$/.test(c)) { const y = parseKey(c).y; c = key(y, figuresFor(y).find((m) => m === 'adopted' || m === 'amended') || parseKey(c).m); }
     S.c = q.has('c') ? (series(c) && c !== key(S.y, S.m) ? c : '') : defaultCompare(S.y, S.m);
     S.k = q.get('k') === 'revenue' ? 'revenue' : 'expense';
     S.f = q.get('f') === 'all' ? '' : (D.funds.includes(q.get('f')) || extraFundViews().includes(q.get('f'))) ? q.get('f') : DEFAULT_FUND; // opens on the default fund unless f=all
@@ -292,57 +307,75 @@
 
   /* The one Fund list, used by every view: "All funds" (on a department page only while it is the choice), the funds that
      have lines in what is shown (plus the current choice), and the Reserve Fund view where the page allows it. */
-  function fundOptions(present, scope) {
-    const opt = (v, label, on) => `<option value="${esc(v)}"${on ? ' selected' : ''}>${esc(label)}</option>`;
-    return (!scope || !S.f ? opt('', 'All funds', !S.f) : '')
-      + D.funds.map((f, i) => (present.has(i) || f === S.f ? opt(f, fn(f), f === S.f) : '')).join('')
-      + (scope ? '' : extraFundViews().map((f) => opt(f, f, f === S.f)).join(''));
+  function fundChoices(present, scope) {
+    return [...(!scope || !S.f ? [['', 'All funds']] : []),
+      ...D.funds.filter((f, i) => present.has(i) || f === S.f).map((f) => [f, fn(f)]),
+      ...(scope ? [] : extraFundViews().map((f) => [f, f]))];
+  }
+  const fundOptions = (present, scope) => fundChoices(present, scope).map(([v, label]) => `<option value="${esc(v)}"${v === S.f ? ' selected' : ''}>${esc(label)}</option>`).join('');
+
+  /* One tab-group field for the controls (Spending / Income, Show first): square segmented buttons named by their visible
+     label, as a radio group: only the chosen button is in the Tab order; arrow keys (and Home / End) move the choice. */
+  const tabField = (name, label, items, cur, extra = '') => `<div class="field field-tabs"><span class="field-label" id="lbl-${name}">${label}</span><div class="tabs" role="radiogroup" aria-labelledby="lbl-${name}">${items.map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === cur}" tabindex="${v === cur ? 0 : -1}" data-tab="${name}" data-v="${v}">${esc(l)}</button>`).join('')}</div>${extra}</div>`;
+  /* A labelled select (Budget year, Compare with, Fund). `note` is a short line under it, read with it (aria-describedby). */
+  const selField = (id, sel, label, opts, note = '') => `<div class="field"><label class="field-label" for="${id}">${label}</label><select id="${id}" data-sel="${sel}"${note ? ` aria-describedby="${id}-note"` : ''}>${opts}</select>${note ? `<p class="field-note" id="${id}-note">${note}</p>` : ''}</div>`;
+  /* Year-and-figure options grouped by year (<optgroup label="2027">), each option named in full ("2027 Revised") so it
+     reads the same with or without the group. `off`: a key listed but not choosable, with the reason in its name. */
+  function figureOptions(list, cur, { none = false, off = null, offWhy = '', label = (x) => seriesLabel(x) } = {}) {
+    const groups = [];
+    for (const x of list) { const y = parseKey(x).y; if (!groups.length || groups[groups.length - 1].y !== y) groups.push({ y, ks: [] }); groups[groups.length - 1].ks.push(x); }
+    return (none ? `<option value="none"${!cur ? ' selected' : ''}>No comparison</option>` : '')
+      + groups.map((g) => `<optgroup label="${g.y}">${g.ks.map((x) => `<option value="${x}"${x === cur ? ' selected' : ''}${x === off ? ' disabled' : ''}>${esc(label(x))}${x === off ? ` (${offWhy})` : ''}</option>`).join('')}</optgroup>`).join('');
   }
 
-  /* One tab-group field for every controls panel (Figure, Show): square segmented buttons named by their visible label. */
-  const tabField = (name, label, items, cur, extra = '') => `<div class="field field-wide"><span class="field-label" id="lbl-${name}">${label}</span><div class="tabs" role="radiogroup" aria-labelledby="lbl-${name}">${items.map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === cur}" data-tab="${name}" data-v="${v}">${esc(l)}</button>`).join('')}</div>${extra}</div>`;
-
+  /* The Reserve Fund: Budget year lists its balances (year and figure, e.g. "2027 Revised", "2025 Actual (unaudited)");
+     there is no Compare with, because each balance is shown with its change from the year before. */
+  const resCur = () => resFind(S.y, S.m) || resFind(S.y, ORDER.find((m) => resFind(S.y, m)));
   function reserveFiltersHTML() {
-    const ys = [...new Set(D.reserve.entries.map((e) => e.year))].sort((a, b) => b - a);
-    const ms = ORDER.filter((m) => resFind(S.y, m));
+    const ks = D.reserve.entries.map((e) => key(e.year, e.measure)).sort((a, b) => parseKey(b).y - parseKey(a).y || PICK_ORDER.indexOf(parseKey(a).m) - PICK_ORDER.indexOf(parseKey(b).m));
+    const e = resCur(), cur = e ? key(e.year, e.measure) : '';
+    const lbl = (x) => resLabel(resFind(parseKey(x).y, parseKey(x).m));
     const ym = measuresFor(S.y)[0], funds = fundOptions(new Set(ym ? rows(key(S.y, ym)).map((r) => r.fund) : D.funds.map((f, i) => i)), null);
-    return `<div class="filters">
-        <div class="field"><label class="field-label" for="f-y">Fiscal year</label><select id="f-y" data-sel="y">${ys.map((y) => `<option value="${y}" ${y === S.y ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
-        <div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select>${defineFund()}</div>
-      </div>
-      ${ms.length > 1 ? `<div class="filters">${tabField('m', 'Figure', ms.map((m) => [m, LABEL[m]]), S.m, defineFigures())}</div>` : ''}`;
+    return selField('f-y', 'ym', 'Budget year', figureOptions(ks, cur, { label: lbl })) + selField('f-f', 'f', 'Fund', funds);
   }
 
-  /* Short plain definitions beside the controls. A <details> works on touch and with screen readers (no hover or title). */
-  const DEFINE_CITY = [['Proposed', 'the administration\'s first budget proposal.'], ['Revised', 'the revised proposal.'], ['Neither is adopted.', ''],
-    ['Projected', 'the city\'s year-end estimate.'], ['Actual', 'what was spent, reported in the budget book two years later.']];
-  const DEFINE_COUNTY = [['Budget', 'the County\'s budget for the year, from its own budget books. The newest year is the budget the County passed for it; earlier years are as the next book prints them.'],
-    ['Actual', 'what the County\'s audited annual report says it received and spent. Shown only for 2023 to 2025, by fund, revenue source and function.']];
-  const defineList = () => (isCounty() ? DEFINE_COUNTY : DEFINE_CITY);
-  const defineFigures = () => `<details class="define"><summary>What do these mean?</summary><ul>${defineList().map(([a, b]) => (b ? `<li><strong>${a}:</strong> ${b}</li>` : `<li class="aside">${a}</li>`)).join('')}</ul><p class="define-more"><a href="${termHref('terms-figures')}">All the figure words →</a></p></details>`;
-  const defineFund = () => (isCounty() ? `<details class="define"><summary>What is a fund?</summary><p>A fund is a separate account the County keeps for a purpose. The General Fund pays for most County services and is paid for mostly by property taxes. The others, such as Children &amp; Youth, Aging, Behavioral Health and Liquid Fuels, take in their own grants and transfers and are not mixed with it. The County prints the fund letters without names; the names here come from the County's audited report.${D.reserve ? ` The ${esc(D.reserve.name)} is the General Fund's accumulated balance, which covers its budget gap.` : ''}</p><p class="define-more"><a href="${termHref('terms-funds')}">Every fund, and which are paid for by taxes →</a></p></details>`
-    : `<details class="define"><summary>What is a fund?</summary><p>A fund is a separate account the city keeps for a purpose. The General Fund pays for most city services and is paid for mostly by taxes; others, such as water, sewer, stormwater and trash, are paid for by their own fees and are not mixed with it. The Reserve Fund is the General Fund's savings balance.</p><p class="define-more"><a href="${termHref('terms-funds')}">Every fund, and which are paid for by taxes →</a></p></details>`);
-
-  /* One controls component for every page (home with any fund, the Reserve Fund, department and bureau pages, What changed):
-     a one-line strip (the year's status stamp, then "Viewing …") with a "Change view" / "Close" button, and the fields
-     below it. Closed by default on every screen size so content comes first; the visitor's last choice is remembered
-     (localStorage may be blocked). */
-  let ctlOpen = null;
-  const controlsOpen = () => {
-    if (ctlOpen == null) {
-      try { const v = localStorage.getItem('controlsOpen'); if (v === '1' || v === '0') ctlOpen = v === '1'; } catch (e) { /* no storage */ }
-    }
-    return ctlOpen ?? false;
-  };
-  function setControls(open) {
-    ctlOpen = open;
-    try { localStorage.setItem('controlsOpen', open ? '1' : '0'); } catch (e) { /* the choice lasts for this visit */ }
+  /* "What do these mean?": one explainer for the figures and the funds, the last of the controls. Its toggle opens a panel
+     the width of the pinned controls bar, laid over the page under it, with the definitions in columns that reflow to the
+     width (one column on phones): "Figures", then "Funds". The wording is the Funds and terms page's own (figureWords,
+     FUND_INFO, FUND_INTRO, balanceWord), not a copy. The figure in Budget year is marked "shown", the one in Compare with
+     "comparing" and the chosen fund "selected" (in words, in bold and with a rule, not by colour alone). It closes with
+     the toggle, with Escape (focus returns to the toggle) and when focus leaves the controls. */
+  let explainOpen = false;
+  const EXPLAIN_FIGURES = { city: ['actual', 'projected', 'proposed', 'revised', 'amended', 'adopted', 'projection', 'calculated'], county: ['budget', 'actual', 'calculated'] };
+  function explainHTML({ shown = [], comparing = [], funds = [] } = {}) {
+    const item = (title, text, tags) => `<div class="explain-item${tags.length ? ' is-on' : ''}"><dt>${title}${tags.map((t) => ` <span class="explain-tag">${t}</span>`).join('')}</dt><dd>${text}</dd></div>`;
+    const ids = EXPLAIN_FIGURES[ENT].filter((id) => id !== 'projection' || projectionYears().length);
+    const words = figureWords();
+    const figs = ids.map((id) => words.find((w) => w[0] === id)).filter(Boolean)
+      .map(([id, t, d]) => item(t, d, [shown.includes(id) && 'shown', comparing.includes(id) && 'comparing'].filter(Boolean))).join('');
+    const bal = balanceWord();
+    const fundItems = funds.filter((f) => f).map((f) => {
+      if (bal && f === D.reserve.name) return item(esc(f), bal[2], f === S.f ? ['selected'] : []);
+      const [paid, text] = fundInfo(f);
+      return item(esc(fn(f)), `<strong>${esc(paid)}.</strong> ${esc(text)}`, f === S.f ? ['selected'] : []);
+    }).join('');
+    return `<div class="controls-define"><button type="button" class="explain-toggle" id="explain-toggle" aria-expanded="${explainOpen}" aria-controls="explain">What do these mean?</button></div>
+      <div class="explain" id="explain" role="region" aria-label="What these mean" tabindex="0"${explainOpen ? '' : ' hidden'}>
+        <h2 class="explain-h">Figures</h2><dl class="explain-grid">${figs}</dl>
+        <h2 class="explain-h">Funds</h2><p class="explain-intro">${FUND_INTRO}</p>${fundItems ? `<dl class="explain-grid">${fundItems}</dl>` : ''}
+        <p class="define-more"><a href="${eh('terms')}">More in Funds and terms →</a></p></div>`;
   }
-  function controlsWrap(inner, summary, stamp = statusHTML()) {
-    const open = controlsOpen();
-    return `<div class="controls"><div class="controls-bar"><p class="controls-sum" id="controls-sum">${stamp}${summary}</p>
-        <button type="button" class="btn btn-outline controls-btn" data-toggle-controls aria-expanded="${open}" aria-controls="controls-panel">${open ? 'Close' : 'Change view'}</button></div>
-      <div class="controls-panel" id="controls-panel"${open ? '' : ' hidden'}>${inner}</div></div>`;
+  const mOf = (k) => (k ? parseKey(k).m : null);
+
+  /* One controls component for every page (home with any fund, the Reserve Fund, department and bureau pages, What changed),
+     always open: the year's status stamp, then one group named "View" holding, in Tab order, Budget year, Compare with,
+     Fund and the Spending / Income tabs (each where the page has it), then the short definitions. A change re-draws the
+     page, keeps focus on the control and is announced in one sentence (announceView). The whole bar stays pinned at the
+     top of the main column while the page scrolls (.controls in styles.css; pinControls measures it). */
+  function controlsWrap(fields, stamp = statusHTML(), explain = '') {
+    return `<div class="controls" id="controls">${stamp ? `<p class="controls-stamp">${stamp}</p>` : ''}
+      <fieldset class="controls-fields"><legend class="sr-only">View</legend>${fields}</fieldset>
+      ${explain}</div>`;
   }
   const kindWordPlain = () => (S.k === 'revenue' ? 'Income' : 'Spending');
 
@@ -353,46 +386,64 @@
   }
 
   function filtersHTML({ fund = true, scope = null } = {}) {
-    if (isReserve() && isCounty()) return controlsWrap(cbFiltersHTML(), `Viewing ${S.y} · ${esc(D.reserve.name)}`, `<a class="status" href="${termHref('term-balance')}" title="What this means">${S.y}: Budget and Actual balances<span class="sr-only"> (what this means)</span></a>`);
+    const allFunds = () => fundChoices(new Set(measuresFor(S.y)[0] ? rows(key(S.y, measuresFor(S.y)[0])).map((r) => r.fund) : D.funds.map((f, i) => i)), null).map(([v]) => v);
+    if (isReserve() && isCounty()) return controlsWrap(cbFiltersHTML(), `<a class="status" href="${termHref('term-balance')}" title="What this means">${S.y}: Budget and Actual balances<span class="sr-only"> (what this means)</span></a>`, explainHTML({ shown: ['budget', 'actual'], funds: allFunds() }));
     if (isReserve()) {
-      const e = resFind(S.y, S.m);
+      const e = resCur();
       const stamp = e ? `<a class="status${e.measure === 'proposed' || e.measure === 'revised' ? ' not-adopted' : ''}" href="${termHref('term-balance')}" title="What this means">${e.year}: ${esc(RES_STATUS[e.measure])}<span class="sr-only"> (what this means)</span></a>` : '';
-      return controlsWrap(reserveFiltersHTML(), `Viewing ${S.y}${S.m ? ' ' + esc(LABEL[S.m]) : ''} · ${esc(D.reserve.name)}`, stamp);
+      return controlsWrap(reserveFiltersHTML(), stamp, explainHTML({ shown: e ? [e.measure] : [], funds: allFunds() }));
     }
-    const k = key(S.y, S.m);
-    const yrs = years().map((y) => `<option value="${y}" ${y === S.y ? 'selected' : ''}>${y}</option>`).join('');
-    const opts = Object.keys(D.series).filter((x) => x !== k)
-      .sort((a, b) => parseKey(b).y - parseKey(a).y || ORDER.indexOf(parseKey(a).m) - ORDER.indexOf(parseKey(b).m));
-    const cmp = `<option value="none" ${!S.c ? 'selected' : ''}>No comparison</option>` + opts.map((x) => `<option value="${x}" ${x === S.c ? 'selected' : ''}>${esc(seriesLabel(x))}</option>`).join('');
+    const k = key(S.y, S.m), all = figureKeys();
+    // Compare with lists the same figures; the one shown as Budget year stays listed but cannot be picked.
+    const cmp = figureOptions(all, S.c, { none: true, off: k, offWhy: 'the budget year shown' });
     // Home offers every fund plus "All funds" and the Reserve Fund. A department page offers only the funds it has lines in
     // (and the current choice, so the control never disagrees with the page).
     const sr = scope ? scopeRows(scope) : null;
     const present = new Set((sr || rows(k)).map((r) => r.fund));
-    const funds = fundOptions(present, scope);
+    const funds = fundOptions(present, scope), fundList = fundChoices(present, scope).map(([v]) => v);
     // Offer Spending / Income only where the page has both kinds of lines.
     const kinds = sr ? ['expense', 'revenue'].filter((kd) => kd === S.k || sr.some((r) => (kd === 'revenue') === isRevenue(r))) : ['expense', 'revenue'];
     const kindTabs = kinds.length > 1
       ? tabField('k', 'Show', [['expense', 'Spending'], ['revenue', 'Income']], S.k) : '';
     const showFund = fund && (!scope || [...present].length + (S.f && !present.has(D.funds.indexOf(S.f)) ? 1 : 0) > 1 || !S.f);
-    const inner = `<div class="filters">
-        <div class="field"><label class="field-label" for="f-y">Fiscal year</label><select id="f-y" data-sel="y">${yrs}</select></div>
-        <div class="field"><label class="field-label" for="f-c">Compare with</label><select id="f-c" data-sel="c">${cmp}</select>${defineFigures()}</div>
-        ${showFund ? `<div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f"${scope ? ' aria-describedby="f-f-note"' : ''}>${funds}</select>${scope ? `<p class="field-note" id="f-f-note">Only the funds this ${scope.unit != null ? 'bureau' : 'department'} uses are listed.</p>` : ''}${defineFund()}</div>` : ''}
-      </div>
-      <div class="filters">
-        ${measuresFor(S.y).length > 1 ? tabField('m', 'Figure', measuresFor(S.y).map((m) => [m, LABEL[m]]), S.m, defineFigures()) : ''}
-        ${kindTabs}
-      </div>`;
-    const parts = [`Viewing ${esc(seriesLabel(k))}`, S.c ? `compared with ${esc(seriesLabel(S.c))}` : 'no comparison'];
-    if (fund) parts.push(esc(fn(S.f) || 'All funds'));
-    parts.push(kindWordPlain());
-    return controlsWrap(inner, parts.join(' · '));
+    const fields = selField('f-y', 'ym', 'Budget year', figureOptions(all, k))
+      + selField('f-c', 'c', 'Compare with', cmp)
+      + (showFund ? selField('f-f', 'f', 'Fund', funds, scope ? `Only the funds this ${scope.unit != null ? 'bureau' : 'department'} uses are listed.` : '') : '')
+      + kindTabs;
+    return controlsWrap(fields, statusHTML(), explainHTML({ shown: [S.m], comparing: [mOf(S.c)], funds: showFund ? fundList : [...present].map((i) => D.funds[i]) }));
+  }
+
+  /* One sentence for the live region after a control changes: "Showing 2027 Revised compared with 2026 Projected, General
+     Fund, spending." It names only what this page's controls offer (no Fund on a bureau page, no kind on the Reserve Fund). */
+  function viewSentence() {
+    if (route.name === 'home' && isReserve()) {
+      const e = isCounty() ? null : resCur();
+      return `Showing the ${D.reserve.name}, ${e ? resLabel(e) : S.y}.`;
+    }
+    const parts = [`Showing ${seriesLabel(key(S.y, S.m))}${S.c ? ` compared with ${seriesLabel(S.c)}` : ', no comparison'}`];
+    if ($('f-f')) parts.push(fn(S.f) || 'All funds');
+    if ($('view').querySelector('[data-tab="k"]')) parts.push(`${kindWordPlain().toLowerCase()}${route.name === 'changes' ? ' first' : ''}`);
+    return `${parts.join(', ')}.`;
+  }
+  let announceTimer = null;
+  function announceView() {
+    const el = $('view-status'); if (!el) return;
+    el.textContent = '';
+    clearTimeout(announceTimer);
+    announceTimer = setTimeout(() => { el.textContent = viewSentence(); }, 100); // emptied first, so the same sentence is read again
   }
 
   function onFilter(name, v) {
     const over = {};
-    if (name === 'y') {
-      const ms = measuresFor(+v);
+    if (name === 'ym') {
+      // Budget year (year and figure). Compare with follows the usual default unless the visitor chose one, which stays
+      // (unless it is now the figure shown).
+      const { y, m } = parseKey(v), nk = key(y, m);
+      const chosen = S.c !== defaultCompare(S.y, S.m);
+      over.y = y; over.m = m;
+      over.c = chosen && S.c !== nk ? S.c : defaultCompare(y, m);
+    } else if (name === 'y') {
+      const ms = figuresFor(+v);
       over.y = +v; over.m = ms.includes(S.m) ? S.m : defaultMeasure(+v);
       over.c = defaultCompare(+v, over.m);
     } else if (name === 'm') {
@@ -404,10 +455,16 @@
     } else if (name === 'f') {
       over.f = v;
     }
-    // The page re-renders; keep keyboard focus on the control that was used (a select keeps its id).
+    // The page re-renders; keep keyboard focus on the control that was used (a select keeps its id; a tab group puts it
+    // on the chosen button), then say what is shown now.
     const id = document.activeElement?.id;
     navigate(currentHash()(over), true);
-    if (id && name !== 'm' && name !== 'k') $(id)?.focus({ preventScroll: true });
+    const a = document.activeElement;
+    if (!a || a === document.body || !$('view').contains(a)) {
+      if (id && $(id)) $(id).focus({ preventScroll: true });
+      else $('view').querySelector(`[data-tab="${name}"][aria-checked="true"]`)?.focus({ preventScroll: true });
+    }
+    announceView();
   }
 
   function destroyCharts() { charts.forEach((c) => c.destroy()); charts = []; closeHist(); }
@@ -708,6 +765,33 @@
     }
     return out;
   }
+  /* Home Rule Charter § 8.08, the 6% limit on tax revenue (budget.json `tax_limit`, scripts/tax_limit.py; City only).
+     Each budget made under the charter is tested in the build: its General Fund tax revenue (the lines counted in
+     data/tax_limit_lines.csv) against the same book's figure for the year before (config/tax_limit.json). Over the limit:
+     ink with a ▲ sign over a 1px ink rule, not ledger red (a legal threshold passed, not a shortfall; never color alone).
+     Within it: one calm muted line. Years before the charter's first budget have no test and show nothing. Every flag
+     links to the test on How the City budget is made. */
+  const TLIM = () => (!isCounty() && D.tax_limit) || null;
+  function tlTest(y, m) {
+    const T = TLIM(); if (!T) return null;
+    const ts = T.tests.filter((t) => t.year === y);
+    return ts.find((t) => t.measure === m) || ts.find((t) => t.newest) || null; // an earlier year: its budget as tested
+  }
+  const tlLabel = (t) => (t.year === D.newest_year ? `${t.year} ${LABEL[t.measure]}` : `${t.year} budget`);
+  const tlBase = (t) => `${t.base.year} ${LABEL[t.base.measure]}`;
+  const tlScope = () => !S.f || S.f === DEFAULT_FUND; // the General Fund or All funds, where the taxes are
+  const tlCite = (s) => (CFG.budget_calendar ? cites(s) : `(§&nbsp;${esc(s)})`);
+  const tlSec = (s) => (CFG.budget_calendar ? cite(s, s) : esc(s)); // "Section 13.14", the number linked
+  function taxLimitFlag(t) {
+    if (!t) return '';
+    const T = TLIM(), pct = fmtPct(t.change_pct, true);
+    const more = CFG.budget_calendar ? ` <a class="tl-more" href="${esc(eh('budget-calendar?s=cal-limit-test'))}">How this is worked out</a>` : '';
+    if (!t.over) return `<p class="tl-flag tl-within">${esc(tlLabel(t))}: within the ${T.limit_pct}% tax revenue limit, ${pct} from ${esc(tlBase(t))}.${more}</p>`;
+    const tr = T.transition && T.transition.budget_years.includes(t.year)
+      ? `<p class="tl-note">Section ${tlSec(T.transition.section)} may waive the limit for budgets adopted in the charter's first two years, if passed by a simple majority of Council. This site does not say whether it applies to this budget.</p>` : '';
+    return `<div class="tl-flag tl-over"><p class="tl-head"><span class="tl-sign" aria-hidden="true">▲</span> Exceeds the ${T.limit_pct}% tax revenue limit</p>
+      <p class="tl-sub">Needs a Council waiver vote, majority of the whole Council plus one ${tlCite(T.section)}. In the ${esc(tlLabel(t).replace(/ budget$/, ''))} budget, General Fund tax revenue is up ${fmtPct(t.change_pct)} from ${esc(tlBase(t))}.${more}</p>${tr}</div>`;
+  }
   function incomeHighlights(k, scope = {}) {
     if (S.k !== 'revenue' || !series(k)) return '';
     const f = D.funds.indexOf(S.f), all = f < 0;
@@ -838,7 +922,7 @@
       ? `<div class="table-scroll"><table class="table"><thead><tr><th scope="col">Line</th><th scope="col" class="num">Amount</th></tr></thead><tbody>${e.lines.map((l) => `<tr><td>${esc(resLineLabel(l, e))}</td><td class="num">${srcDoc(money(l.v), e.doc, l.p)}</td></tr>`).join('')}</tbody></table></div>`
       : `<p class="panel-note" style="margin:0 0 12px">For actual years the city's budget book prints only the closing balance.</p><div class="table-scroll"><table class="table"><tbody><tr><td>${esc(resLineLabel(end, e))}</td><td class="num">${srcDoc(money(end.v), e.doc, end.p)}</td></tr></tbody></table></div>`;
     return `<header class="page-head"><h1 id="page-h" tabindex="-1">${esc(name)}: ${esc(resLabel(e))}</h1>
-        <p class="big-total" aria-live="polite"><span class="big-label">Year-end balance</span> ${srcDoc(money(end.v), e.doc, end.p)}</p>
+        <p class="big-total"><span class="big-label">Year-end balance</span> ${srcDoc(money(end.v), e.doc, end.p)}</p>
         ${ch && ch.p != null ? `<p class="deck"><span class="${ch.d < 0 ? 'down' : ch.d > 0 ? 'up' : 'flat'}">${ch.d < 0 ? 'Down' : ch.d > 0 ? 'Up' : 'No change'} ${mny(Math.abs(ch.d))} (${fmtPct(Math.abs(ch.p))})</span> from ${esc(ch.from)}.</p>` : ''}
         ${notices.map((n) => `<div class="notice" role="note">${n}</div>`).join('')}${resGap}</header>
       ${filtersHTML()}
@@ -892,10 +976,7 @@
   function cbFiltersHTML() {
     const ys = cbYears().slice().reverse();
     const ym = measuresFor(S.y)[0], funds = fundOptions(new Set(ym ? rows(key(S.y, ym)).map((r) => r.fund) : D.funds.map((f, i) => i)), null);
-    return `<div class="filters">
-        <div class="field"><label class="field-label" for="f-y">Fiscal year</label><select id="f-y" data-sel="y">${ys.map((y) => `<option value="${y}" ${y === S.y ? 'selected' : ''}>${y}</option>`).join('')}</select></div>
-        <div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select>${defineFund()}</div>
-      </div>`;
+    return selField('f-y', 'y', 'Budget year', ys.map((y) => `<option value="${y}"${y === S.y ? ' selected' : ''}>${y}</option>`).join('')) + selField('f-f', 'f', 'Fund', funds);
   }
   function cbLineLabel(l) {
     const est = isEst(l) ? 'estimated, ' : '';
@@ -929,8 +1010,8 @@
     const name = D.reserve.name, ys = cbYears(), y = ys.includes(S.y) ? S.y : ys[ys.length - 1];
     const b = cbFind(y, 'budget'), a = cbFind(y, 'actual'), bEnd = cbLine(b, 'ending'), aEnd = cbLine(a, 'ending');
     document.title = pageTitle(`${name} ${y}`);
-    const big = b ? `<p class="big-total" aria-live="polite"><span class="big-label">Budget: planned balance at ${usDate(bEnd.as_of)}</span> ${srcDoc(money(bEnd.v), b.doc, bEnd.p)}</p>`
-      : aEnd ? `<p class="big-total" aria-live="polite"><span class="big-label">Actual: audited balance at ${usDate(aEnd.as_of)}</span> ${srcDoc(money(aEnd.v), a.doc, aEnd.p)}</p>` : '';
+    const big = b ? `<p class="big-total"><span class="big-label">Budget: planned balance at ${usDate(bEnd.as_of)}</span> ${srcDoc(money(bEnd.v), b.doc, bEnd.p)}</p>`
+      : aEnd ? `<p class="big-total"><span class="big-label">Actual: audited balance at ${usDate(aEnd.as_of)}</span> ${srcDoc(money(aEnd.v), a.doc, aEnd.p)}</p>` : '';
     let deck = '';
     if (b) {
       const sur = cbLine(b, 'surplus'), st = cbLine(b, 'beginning');
@@ -1153,17 +1234,20 @@
     // Where the "What changed" panel is shown, its tiles carry the tax changes; otherwise the income highlights
     // (tax changes, largest income changes) sit under the total.
     const wc = homeChangesHTML(), hl = wc ? '' : incomeHighlights(k);
+    // Without the What changed panel (an earlier year), the Income view says how that year's budget stood against the
+    // 6% tax revenue limit (none before the charter's first budget).
+    const tl = !wc && S.k === 'revenue' && tlScope() ? taxLimitFlag(tlTest(S.y, S.m)) : '';
     return `<header class="page-head"><h1 id="page-h">${esc(scope)} ${kindWord}: ${esc(seriesLabel(k))}</h1>
-        <p class="big-total" aria-live="polite"><span class="big-label">${esc(scope)} ${kindWord}</span> ${totalHTML}</p>${flagNote}
-        ${deck || `${heroDelta(k, total, cmp)}${S.k === 'revenue' ? '' : drawNote(k)}`}${countyGapNote(k, !!deck)}${hl}</header>
+        <p class="big-total"><span class="big-label">${esc(scope)} ${kindWord}</span> ${totalHTML}</p>${flagNote}
+        ${deck || `${heroDelta(k, total, cmp)}${S.k === 'revenue' ? '' : drawNote(k)}`}${countyGapNote(k, !!deck)}${hl}${tl}</header>
       <div class="home-flow">${filtersHTML()}
-      <div class="overview${wc ? '' : ' overview-single'}">${trendHTML({}, 'Totals by Year')}${wc}</div></div>
+      <div class="overview${wc ? '' : ' overview-single'}">${trendHTML({}, 'Totals by Year')}${wc}</div>
       <section class="panel" id="sec-departments" tabindex="-1" aria-labelledby="dep-t"><h2 class="panel-title" id="dep-t">${isCounty() ? 'Departments by Group' : 'Departments'}</h2>
         <p class="panel-note">${isCounty() ? 'The County\'s departments are grouped as in its budget book. Select a group to see its departments.' : 'Select a department to see its detailed breakdown.'} Amounts open the source page in the budget book.</p>
         ${ledger}${gapNotes(ledgerNotes)}</section>
       <section class="panel" aria-labelledby="re-title"><h2 class="panel-title" id="re-title">Income vs. Spending by Fund: ${esc(seriesLabel(k))}</h2>
         <div class="chart-box"><canvas id="re-chart" role="img" aria-label="Income and spending by fund"></canvas></div>
-        <div class="table-scroll"><table class="table" id="re-table"></table></div></section>${actualsHTML()}${contextHTML()}`;
+        <div class="table-scroll"><table class="table" id="re-table"></table></div></section>${actualsHTML()}${contextHTML()}</div>`;
   }
 
 
@@ -1433,7 +1517,7 @@
     const staff = staffHTML(scope);
     const nav = [hasChanges && ['sec-changes', 'What changed'], cats.length && ['sec-compare', 'Compare'], hasBureaus && ['sec-bureaus', isCounty() ? 'Departments' : 'Bureaus'], staff && ['sec-staff', 'Staff'], cats.length && ['sec-categories', 'Categories'], ['sec-lines', 'Line items']].filter(Boolean);
     html += jumpNav(nav);
-    html += `<div class="entity-flow"><div class="dept-filters">${filtersHTML({ fund: !!deptPicker, scope })}</div>${changes}${compare}${bureauList}${staff}`;
+    html += `<div class="entity-flow">${filtersHTML({ fund: !!deptPicker, scope })}${changes}${compare}${bureauList}${staff}`;
     html += categorySection(`${title} ${seriesLabel(k)} ${kindWord} Breakdown`, cats.map(withColor), { k, secId: 'sec-categories' });
     html += `<section class="panel" id="sec-lines" tabindex="-1" aria-labelledby="li-t"><h2 class="total-label" id="li-t">Line Items</h2><div id="li-holder"></div></section></div>`;
     return { html, cats };
@@ -1908,7 +1992,9 @@
       const pf = wcTotal(rc.from, rk), pt = wcTotal(rc.to, rk);
       tiles.push(['Revision vs. proposal', deltaHTML(vOf(pt) - vOf(pf), vOf(pf), mny), `Proposed ${fx(pf, rk)} → Revised ${fx(pt, rk)}`]);
     }
-    return `<ul class="wc-tiles">${tiles.map(([h, big, sub]) => `<li class="wc-tile"><h2 class="wc-tile-h">${h}</h2><p class="wc-tile-v">${big}</p><p class="wc-tile-s">${sub}</p></li>`).join('')}</ul>${foot ? gapNotes(notes) : ''}`;
+    // The 6% tax revenue limit for the figure being read (Proposed or Revised), General Fund or All funds.
+    const tl = tlScope() ? taxLimitFlag(tlTest(parseKey(c.to).y, parseKey(c.to).m)) : '';
+    return `<ul class="wc-tiles">${tiles.map(([h, big, sub]) => `<li class="wc-tile"><h2 class="wc-tile-h">${h}</h2><p class="wc-tile-v">${big}</p><p class="wc-tile-s">${sub}</p></li>`).join('')}</ul>${tl}${foot ? gapNotes(notes) : ''}`;
   }
 
   function shiftCard(s, c) {
@@ -2121,21 +2207,20 @@
     return { html: `<header class="page-head wc-head">${h1}<p class="wc-lede">${lede}</p>${badgeHTML(c)}${start}</header>${changesFiltersHTML(c)}${tiles}${table}` };
   }
 
+  /* What changed is always about the newest year: its Budget year lists only that year's figures (Revised, Proposed), and
+     Compare with lists the comparisons changes.json holds for the chosen one. */
   function changesFiltersHTML(c) {
     const to = key(D.newest_year, S.m);
-    const opts = Object.keys(CH.comparisons).filter((x) => x.startsWith(`${to}~`)).map((x) => x.split('~')[1]);
-    const ms = measuresFor(D.newest_year);
+    const opts = Object.keys(CH.comparisons).filter((x) => x.startsWith(`${to}~`)).map((x) => x.split('~')[1])
+      .sort((a, b) => parseKey(b).y - parseKey(a).y || PICK_ORDER.indexOf(parseKey(a).m) - PICK_ORDER.indexOf(parseKey(b).m));
+    const ms = figuresFor(D.newest_year).filter((m) => Object.keys(CH.comparisons).some((x) => x.startsWith(`${key(D.newest_year, m)}~`)));
     const present = new Set(Object.keys(c.scopes).filter((x) => x !== 'all').map((f) => D.funds.indexOf(f)));
     const funds = fundOptions(present, null);
-    // Same order as every other page: selects (Compare with, Fund), then the Figure and Spending / Income tabs.
-    const inner = `<div class="filters">
-        <div class="field"><label class="field-label" for="f-c">Compare with</label><select id="f-c" data-sel="c">${opts.map((x) => `<option value="${x}" ${x === c.from ? 'selected' : ''}>${esc(seriesLabel(x))}</option>`).join('')}</select>${defineFigures()}</div>
-        <div class="field"><label class="field-label" for="f-f">Fund</label><select id="f-f" data-sel="f">${funds}</select>${defineFund()}</div>
-      </div><div class="filters">
-        ${ms.length > 1 ? tabField('m', `Figure (${D.newest_year})`, ms.map((m) => [m, LABEL[m]]), S.m) : ''}
-        ${isReserve() ? '' : tabField('k', 'Show first', [['expense', 'Spending'], ['revenue', 'Income']], S.k)}
-      </div>`;
-    return controlsWrap(inner, `Viewing ${esc(seriesLabel(c.to))} · compared with ${esc(seriesLabel(c.from))} · ${esc(fn(S.f) || 'All funds')}${isReserve() ? '' : ` · ${kindWordPlain()} first`}`);
+    const fields = selField('f-y', 'ym', 'Budget year', figureOptions(ms.map((m) => key(D.newest_year, m)), c.to), `What changed covers ${D.newest_year} only.`)
+      + selField('f-c', 'c', 'Compare with', figureOptions(opts, c.from))
+      + selField('f-f', 'f', 'Fund', funds)
+      + (isReserve() ? '' : tabField('k', 'Show first', [['expense', 'Spending'], ['revenue', 'Income']], S.k));
+    return controlsWrap(fields, statusHTML(), explainHTML({ shown: [mOf(c.to)], comparing: [mOf(c.from)], funds: fundChoices(present, null).map(([v]) => v) }));
   }
 
   function changesPage() {
@@ -2302,15 +2387,6 @@
       <p>${link('See everything that changed →')}</p></section>`;
   }
 
-  /* ---------- margin notes (wide screens): what the words mean, and where the problems are ---------- */
-  function renderMargin() {
-    const m = $('margin'); if (!m) return;
-    m.innerHTML = `<h2 class="margin-h">Reading notes</h2>
-      <dl>${defineList().filter(([, b]) => b).map(([a, b]) => `<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl>
-      <p>Every amount links to its page in ${isCounty() ? 'the County\'s' : 'the city\'s'} ${isCounty() ? 'books' : 'budget book'}.</p>
-      <p>${knownLink()}</p>`;
-  }
-
   /* ---------- contents rail: where you are, and the sections of this page ---------- */
   let railScroll = null;
   function renderRail(here, onUnit) {
@@ -2363,7 +2439,7 @@
     const { r, q, ent } = parseHash();
     if (ent !== ENT) { if (await loadEntity(ent)) onRoute(true); return; } // the other entity: load it, then draw this address
     route = r;
-    if (scroll) aboutOpen = false;
+    if (scroll) { aboutOpen = false; explainOpen = false; const ls = $('view-status'); if (ls) ls.textContent = ''; } // a new page: the last control announcement no longer applies
     if (q.get('c') === 'none') { applyQuery(q); S.c = ''; } else applyQuery(q);
     if (route.name !== 'home' && (route.name !== 'changes' || isCounty()) && isReserve()) S.f = DEFAULT_FUND; // the reserve has no departments or bureaus (and the County's no What changed page)
     if (route.name === 'changes' && S.y !== D.newest_year) { S.y = D.newest_year; S.m = defaultMeasure(S.y); S.c = defaultCompare(S.y, S.m); }
@@ -2376,6 +2452,7 @@
     else if (route.name === 'dept') page = deptPage();
     else if (route.name === 'about') page = { html: '<header class="page-head"><h1 id="page-h" tabindex="-1">About the data</h1></header>', after: () => { const t = q.get('s') && $(q.get('s')); if (t) { if (t.tagName === 'DETAILS') t.open = true; t.scrollIntoView(); } } };
     else if (route.name === 'terms') page = termsPage(q);
+    else if (route.name === 'calendar') page = calendarPage();
     else if (route.name === 'missing') page = notFound('Page');
     else page = bureauPage();
     if (page.redirect) { navigate(page.redirect, true); return; }
@@ -2386,14 +2463,15 @@
     $('about').hidden = route.name !== 'about';
     document.body.classList.toggle('about-page', route.name === 'about');
     document.body.classList.toggle('terms-page', route.name === 'terms');
+    document.body.classList.toggle('calendar-page', route.name === 'calendar');
     page.after?.();
     // Mark where the reader is in the contents.
-    const here = route.name === 'changes' ? 'changes' : route.name === 'about' ? 'about' : route.name === 'terms' ? 'terms' : route.name === 'home' ? (isReserve() ? 'reserve' : 'home') : 'home';
+    const here = route.name === 'changes' ? 'changes' : route.name === 'about' ? 'about' : route.name === 'terms' ? 'terms' : route.name === 'calendar' ? 'calendar' : route.name === 'home' ? (isReserve() ? 'reserve' : 'home') : 'home';
     const onUnit = route.name === 'dept' || route.name === 'bureau';
     document.querySelectorAll('#site-nav a').forEach((a) => { if (a.dataset.nav === here && !onUnit) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    pinControls();
     renderRail(here, onUnit);
     renderSwitch();
-    renderMargin();
     // The rail's "What changed" link keeps the fund (the Reserve Fund included: that page says it shows the General Fund),
     // the figure and the comparison, and Spending / Income; from an earlier year it opens the newest year's defaults.
     const wcLink = document.querySelector('#site-nav a[data-nav="changes"]');
@@ -2401,7 +2479,7 @@
       const nm = defaultMeasure(D.newest_year);
       wcLink.setAttribute('href', changesHash(S.y === D.newest_year ? {} : { y: D.newest_year, m: nm, c: defaultCompare(D.newest_year, nm) }));
     }
-    const jumpTo = (route.name === 'changes' || route.name === 'terms') && q.get('s') ? $(q.get('s')) : null; // e.g. "How this is counted" from the Overview
+    const jumpTo = (route.name === 'changes' || route.name === 'terms' || route.name === 'calendar') && q.get('s') ? $(q.get('s')) : null; // e.g. "How this is counted" from the Overview
     if (scroll && jumpTo) {
       jumpTo.scrollIntoView();
       jumpTo.focus({ preventScroll: true });
@@ -2418,6 +2496,37 @@
     const h = $('page-h'); if (!h || h.previousElementSibling?.id === 'page-eyebrow') return;
     const p = document.createElement('p'); p.className = 'eyebrow'; p.id = 'page-eyebrow'; p.textContent = CFG.entity.short;
     h.before(p); h.setAttribute('aria-describedby', 'page-eyebrow');
+  }
+
+  /* The pinned controls bar. --pin-h on <html> is how much of the bar stays on screen once pinned (0 where a page has no
+     controls); html's scroll-padding-top uses it, so in-page jumps and keyboard focus land below the bar. On phones the
+     status stamp scrolls away and the controls under it stay (top: -stamp height). A ResizeObserver keeps the numbers
+     right when the bar wraps or the window changes; .is-stuck draws the ink rule under the bar once it is pinned. */
+  let pinObserver = null, pinScroll = null;
+  function pinControls() {
+    pinObserver?.disconnect(); pinObserver = null;
+    if (pinScroll) { window.removeEventListener('scroll', pinScroll); pinScroll = null; }
+    const root = document.documentElement, bar = $('controls');
+    if (!bar) { root.style.setProperty('--pin-h', '0px'); return; }
+    const measure = () => {
+      const stamp = bar.querySelector('.controls-stamp');
+      bar.style.setProperty('--stamp-h', `${stamp ? stamp.offsetHeight + parseFloat(getComputedStyle(stamp).marginBottom) : 0}px`);
+      const top = parseFloat(getComputedStyle(bar).top) || 0;
+      root.style.setProperty('--pin-h', `${Math.ceil(bar.offsetHeight + top)}px`);
+      pinScroll?.();
+    };
+    pinScroll = () => { const top = parseFloat(getComputedStyle(bar).top) || 0; bar.classList.toggle('is-stuck', window.scrollY > 0 && bar.getBoundingClientRect().top <= top + 1); };
+    window.addEventListener('scroll', pinScroll, { passive: true });
+    pinObserver = new ResizeObserver(measure);
+    pinObserver.observe(bar);
+    measure();
+  }
+  function setExplain(open, focusToggle = false) {
+    explainOpen = open;
+    const t = $('explain-toggle'), p = $('explain'); if (!t || !p) return;
+    t.setAttribute('aria-expanded', String(open)); p.hidden = !open;
+    if (open) p.scrollTop = 0;
+    if (focusToggle) t.focus();
   }
 
   /* Compare panel: switch between "this year vs. comparison" and "over time" without re-rendering. */
@@ -2446,6 +2555,7 @@
       else if (sel.dataset.sel) onFilter(sel.dataset.sel, sel.value);
     });
     view.addEventListener('click', (e) => {
+      if (e.target.closest('#explain-toggle')) { setExplain(!explainOpen); return; }
       // In-page jump (e.g. "How this is counted"): scroll if the target is on this page, else follow the link.
       const jump = e.target.closest('[data-scroll]');
       if (jump && $(jump.dataset.scroll) && !$(jump.dataset.scroll).closest('#about')) {
@@ -2458,20 +2568,17 @@
       }
       const pt = e.target.closest('[data-pane-tab]');
       if (pt) { setPane(pt.dataset.paneTab); return; }
-      const tog = e.target.closest('[data-toggle-controls]');
-      if (tog) {
-        const open = tog.getAttribute('aria-expanded') !== 'true';
-        setControls(open);
-        tog.setAttribute('aria-expanded', String(open)); tog.textContent = open ? 'Close' : 'Change view';
-        const panel = $('controls-panel'); if (panel) panel.hidden = !open;
-        return;
-      }
       const tab = e.target.closest('[data-tab]');
       if (tab) { onFilter(tab.dataset.tab, tab.dataset.v); return; }
       const card = e.target.closest('[data-go]');
       if (card && !e.target.closest('a')) navigate(card.dataset.go);
     });
     view.addEventListener('toggle', (e) => { if (e.target.classList?.contains('org-about')) aboutOpen = e.target.open; }, true);
+    // "What do these mean?": Escape closes it and returns focus to its toggle; so does leaving the controls (by Tab or a
+    // click elsewhere), so the open panel never covers the part of the page in use.
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && explainOpen && !e.defaultPrevented) { e.preventDefault(); setExplain(false, true); } });
+    view.addEventListener('focusout', (e) => { if (explainOpen && e.target.closest('#controls') && e.relatedTarget && !e.relatedTarget.closest('#controls')) setExplain(false); });
+    document.addEventListener('pointerdown', (e) => { if (explainOpen && !e.target.closest('#controls')) setExplain(false); });
     // Name every data table and give sideways-scrolling regions a keyboard stop and a label.
     let a11yQueued = false;
     const a11yPass = () => {
@@ -2504,11 +2611,13 @@
         if (o) { setPane(o.dataset.paneTab); o.focus(); }
         return;
       }
+      // Spending / Income (a radio group): arrow keys move the choice, Home / End go to the first / last.
       const b = e.target.closest('[data-tab]');
-      if (!b || !['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
+      if (!b || !['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(e.key)) return;
       const btns = [...b.parentElement.querySelectorAll('button')], i = btns.indexOf(b);
-      const n = btns[(i + (e.key === 'ArrowRight' ? 1 : -1) + btns.length) % btns.length];
-      e.preventDefault(); onFilter(n.dataset.tab, n.dataset.v);
+      const n = e.key === 'Home' ? btns[0] : e.key === 'End' ? btns[btns.length - 1]
+        : btns[(i + (e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : -1) + btns.length) % btns.length];
+      e.preventDefault(); if (n === b) return; onFilter(n.dataset.tab, n.dataset.v);
       requestAnimationFrame(() => $('view').querySelector(`[data-tab="${n.dataset.tab}"][data-v="${n.dataset.v}"]`)?.focus());
     });
   }
@@ -2667,21 +2776,22 @@
     const yrsOf = (m) => Object.values(D.series).filter((x) => x.measure === m).map((x) => x.year).sort((a, b) => a - b);
     const actualYears = yrsOf('actual'), projYears = yrsOf('projected');
     const figs = (b) => Object.values(D.series).filter((s) => s.year + D.rule[s.measure].book_offset === b.year && D.docs[Array.isArray(s.doc) ? s.doc[0] : s.doc] === b.doc)
-      .sort((a, c) => a.year - c.year || ORDER.indexOf(a.measure) - ORDER.indexOf(c.measure)).map((s) => `${s.year} ${LABEL[s.measure].toLowerCase()}`);
+      .sort((a, c) => a.year - c.year || PICK_ORDER.indexOf(c.measure) - PICK_ORDER.indexOf(a.measure)).map((s) => `${s.year} ${LABEL[s.measure].toLowerCase()}`);
     const bookName = (b) => `${b.year} ${/revised|proposed/i.test(b.doc) ? 'Revised Proposed Budget' : 'Adopted Budget'}`;
     const nameOf = Object.fromEntries(D.books.map((b) => [b.doc, bookName(b)]));
     const books = used.map((b) => { const f = figs(b); const href = `${CFG.paths.pdfs}${encodeURIComponent(b.doc)}`; return `<li><a href="${href}" target="_blank" rel="noopener">${esc(bookName(b))}</a> (<a href="${href}" download>download PDF</a>): ${f.length ? 'supplies ' + f.join(', ') : 'no figures under the selection rule'}.</li>`; }).join('');
     const issues = D.known_issues.map((i) => `<li>${esc(nameOf[i.source_doc] || i.source_doc.replace(/\.pdf$/i, ''))}: ${esc(scrubPages(i.note))}</li>`).join('');
     $('about-body').innerHTML = `
       <h2 class="about-h">Sources</h2>
-      <p>Every figure comes from ${esc(CFG.entity.possessive)} published budget books. Each book reports several years side by side; this site picks <strong>one kind of figure per year</strong>:</p>
+      <p>Every figure comes from ${esc(CFG.entity.possessive)} published budget books. Each book reports several years side by side; this site picks <strong>one main kind of figure per year</strong>, which the multi-year charts and tables draw:</p>
       <ul>
         <li><strong>${actualYears[0]}–${actualYears[actualYears.length - 1]}: Actual</strong>, the audited spending reported in the budget book published two years later.</li>
         ${projYears.length ? `<li><strong>${projYears.join(', ')}: Projected</strong>, the city's year-end estimate (the revised projection when present) from the next year's book. The actual for ${projYears.length > 1 ? 'these years is' : 'this year is'} not published yet.</li>` : ''}
         <li><strong>${D.newest_year}: Proposed and Revised</strong>, both from the ${D.newest_year} book, so you can compare what changed between them. Neither is an adopted budget.</li>
         ${projectionYears().length ? `<li><strong>${projectionYears().join(' and ')}: Projection</strong>, the city's own multi-year estimates made with the ${D.projection.after_year} budget, from its ${srcDoc(esc(projBook()), D.projection.doc, 1)}. They appear only at the end of the multi-year charts and tables (Totals by Year and the Staff salaries table), drawn lighter and labelled “Projection”; they are never the year you pick, and the headline, the change sentence and What changed stay on ${D.newest_year}.</li>` : ''}
       </ul>
-      <p>Adopted and amended budgets, year-to-date columns and an older book's own-year proposal are not shown.</p>
+      ${(() => { const am = yrsOf('amended'), ad = yrsOf('adopted'); return am.length || ad.length ? `<p>Each year also has <strong>one budget figure</strong> you can pick in Budget year or Compare with: the <strong>Amended</strong> budget where the next year's book prints one${am.length ? ` (${rangeText(am)})` : ''}, otherwise the <strong>Adopted</strong> budget${ad.length ? ` (${rangeText(ad)})` : ''}; never both. It is not drawn on the multi-year charts.</p>` : ''; })()}
+      <p>Year-to-date columns and an older book's own-year proposal are not shown.</p>
       ${D.projection ? (() => {
         const P = D.projection, page = (P.assumptions[0] || {}).p;
         return `<h2 class="about-h">Projections</h2>
@@ -2693,6 +2803,7 @@
       <p>Books in use:</p><ul>${books}${D.projection ? (() => { const href = `${CFG.paths.pdfs}${encodeURIComponent(D.docs[D.projection.doc])}`; return `<li><a href="${href}" target="_blank" rel="noopener">${esc(D.projection.years.join('–'))} Budget Projections</a> (<a href="${href}" download>download PDF</a>): supplies ${D.projection.years.map((y) => `${y} projection`).join(', ')}.</li>`; })() : ''}</ul>
       <p>Years appear as soon as the books that report them have been processed.</p>
       <p>Not sure what a word or fund means? See <a href="${eh('terms')}">Funds and terms</a>.</p>
+      ${CFG.budget_calendar ? `<p>Who prepares and approves the budget, and by when: <a href="${eh('budget-calendar')}">How the City budget is made</a>, the budget calendar in the City's ${esc(CFG.budget_calendar.charter_title)}.</p>` : ''}
       <h2 class="about-h">Departments and bureaus</h2>
       <p>Departments and bureaus follow the city's <a href="${CFG.paths.pdfs}${encodeURIComponent(O.chart_doc)}" target="_blank" rel="noopener">2027 organizational chart</a>. Each budget line belongs to a bureau by its account number, so older years are grouped the same way even where the budget book printed them under another department or name (for example, Human Resources is shown under Executive in every year). Budget groups that are not a bureau, such as city-wide insurance, benefits and debt service or fee revenue, are shown as a separate “department-wide” group. Descriptions of what each department and bureau does are quoted from the city's <a href="${CFG.paths.pdfs}${encodeURIComponent(O.desc_doc)}" target="_blank" rel="noopener">2027 organization descriptions</a>.</p>
       <h2 class="about-h">Validation</h2>
@@ -2716,7 +2827,7 @@
   /* ---------- Funds and terms: the reference page (#/terms, #/county/terms) ----------
      What each fund is paid for with (taxes or something else) and what every figure word on the site means. One page per
      entity; the fund rows follow D.funds, so a fund the data does not have is not listed. Opened from the "What do these
-     mean?" and "What is a fund?" toggles, from the status stamp, from About and from the contents. */
+     mean?" panel under the controls, from the status stamp, from About and from the contents. */
   const FUND_INFO = {
     city: {
       'General Fund': ['Mostly taxes', 'The city\'s everyday budget: police, fire, streets, parks and administration. Paid for mostly by taxes (real estate, earned income, local services and real estate transfer taxes), plus fees, licenses and other city income. Every other fund below is kept apart from it.'],
@@ -2741,50 +2852,260 @@
   };
   const rangeText = (ys) => (ys.length === 1 ? String(ys[0]) : `${ys[0]}–${ys[ys.length - 1]}`);
   const fundYears = (i) => rangeText([...new Set(Object.values(D.series).filter((x) => x.funds.includes(i)).map((x) => x.year))].sort((a, b) => a - b));
-  const termDl = (items) => `<dl class="terms-dl">${items.map(([id, t, d]) => `<dt id="term-${id}" tabindex="-1">${t}</dt><dd>${d}</dd>`).join('')}</dl>`;
-  function termsPage(q) {
-    const info = FUND_INFO[ENT], other = isCounty() ? 'city' : 'county';
-    document.title = pageTitle('Funds and terms');
+  const termDl = (items, cls = '') => `<dl class="terms-dl${cls}">${items.map(([id, t, d]) => `<dt id="term-${id}" tabindex="-1">${t}</dt><dd>${d}</dd>`).join('')}</dl>`;
+  /* The wording shared by this page and the controls' "What do these mean?" panel (explainHTML): one copy of each. */
+  const FUND_INTRO = 'A fund is a separate account kept for a purpose. Money in one fund is not mixed with another, so a fund paid for by fees can only be spent on its own service. Only the General Fund is paid for mostly by taxes.';
+  const fundInfo = (f) => FUND_INFO[ENT][f] || ['See the books', 'The books do not describe this fund.'];
+  // The Reserve Fund (City) or General Fund Balance (County): [id, name, definition], or null where the data has none.
+  function balanceWord() {
+    if (!D.reserve) return null;
+    const open = `<a href="${eh(`?f=${encodeURIComponent(D.reserve.name)}`)}">Open the ${esc(D.reserve.name)}</a>.`;
+    return ['balance', esc(D.reserve.name), isCounty()
+      ? `The General Fund's accumulated balance: what it has kept over the years, which is how the County covers a budget gap. It is the General Fund's own savings, so it is tax-funded in the same way. The page shows two measures side by side and never adds them together: <strong>Budget</strong> (the budget resolution's estimate) and <strong>Actual</strong> (the audited balance at December 31). ${open}`
+      : `The General Fund's savings: the balance it carries from year to year, not a separate fund with spending of its own. When the General Fund spends more than it takes in, the difference is drawn from it. Because it is the General Fund's own savings, it is tax-funded in the same way. ${open}`];
+  }
+  // Every figure word: [id, label, definition]. The page lists them all; the controls' panel the ones its entity uses.
+  function figureWords() {
     const yrsOf = (m) => Object.values(D.series).filter((x) => x.measure === m).map((x) => x.year).sort((a, b) => a - b);
     const yr = (m) => (yrsOf(m).length ? rangeText(yrsOf(m)) : '');
-    const fundRows = D.funds.map((f, i) => {
-      const [paid, text] = info[f] || ['See the books', 'The books do not describe this fund.'];
-      const label = f === 'General Fund' ? 'General Fund' : esc(fn(f));
-      return `<tr><th scope="row">${label}<span class="ctx-note">In the data: ${fundYears(i)}</span></th><td><strong>${esc(paid)}</strong></td><td>${esc(text)}</td></tr>`;
-    }).join('');
-    const balance = isCounty() && D.reserve
-      ? `<dt id="term-balance" tabindex="-1">${esc(D.reserve.name)}</dt><dd>The General Fund's accumulated balance: what it has kept over the years, which is how the County covers a budget gap. It is the General Fund's own savings, so it is tax-funded in the same way. The page shows two measures side by side and never adds them together: <strong>Budget</strong> (the budget resolution's estimate) and <strong>Actual</strong> (the audited balance at December 31). <a href="${eh(`?f=${encodeURIComponent(D.reserve.name)}`)}">Open the ${esc(D.reserve.name)}</a>.</dd>`
-      : D.reserve
-        ? `<dt id="term-balance" tabindex="-1">${esc(D.reserve.name)}</dt><dd>The General Fund's savings: the balance it carries from year to year, not a separate fund with spending of its own. When the General Fund spends more than it takes in, the difference is drawn from it. Because it is the General Fund's own savings, it is tax-funded in the same way. <a href="${eh(`?f=${encodeURIComponent(D.reserve.name)}`)}">Open the ${esc(D.reserve.name)}</a>.</dd>`
-        : '';
     const income = ['income', 'Income', `Money coming in from outside ${isCounty() ? 'the County' : 'the City'}: taxes, fees and charges for services, fines, grants, state and federal payments, interest and rent. The budget books also list as revenue some money that is not coming in, and the site leaves it out of income: <strong>money drawn from savings</strong>${isCounty() ? ' (the County\'s budget books list none)' : ' (the “Fund Balance Reserve” lines)'} and <strong>transfers</strong> from ${ownFunds()} other funds. What ${ownFunds()} funds <strong>charge one another</strong> for services (${isCounty() ? 'indirect costs' : 'administration, Treasury, IT and similar'}) is income of the fund that is paid, and is marked on its lines, but is left out of the All funds total so the same money is not counted twice. Spending is shown as printed, including transfers out. Each kept-out line is listed, with the book's own explanation, in <code>data/income_rules.csv</code>.`];
     const calc = ['calculated', `<span class="calc-tag">calculated</span>`, `This site's own sum of line items, shown where the book prints no total for exactly what you are looking at (for example all funds together, or a search result). A total the book does print is shown as printed, with a link to its page. Details are under <a href="${eh('about?s=about-totals')}">Printed and calculated totals</a> in About the data.`];
-    const words = isCounty()
+    return isCounty()
       ? [['budget', 'Budget', `The County's budget for the year, from its own budget books. The newest year (${D.newest_year}) is the budget the County passed${CFG.adopted ? `, ${esc(CFG.adopted.text)}` : ''}. Earlier years are as the next book prints them. The books do not say whether those are the original or an amended budget, so the site calls them Budget.`],
         ['actual', 'Actual', `What the County's audited annual report says it received and spent, shown only for ${D.actuals ? rangeText(D.actuals.years) : 'some years'}, by fund, revenue source and function. Actual and Budget are counted differently, so they are shown side by side and never combined.`],
         income, calc]
-      : [['actual', 'Actual', `What was spent or received, reported in the budget book published two years later (${yr('actual')}). It is the figure that really happened, not a plan.`],
-        ['projected', 'Projected', `The city's year-end estimate for a year that is not finished (${yr('projected')}). The actual is not published yet.`],
-        ['proposed', 'Proposed', `The mayor's first budget proposal for ${D.newest_year}. It is a proposal, not an adopted budget.`],
-        ['revised', 'Revised', `The mayor's revised proposal for ${D.newest_year}, which replaced the first one. It is also a proposal, not an adopted budget. What changed compares Revised with the year before.`],
-        ['projection', 'Projection', `The city's own multi-year estimate for the years after the newest budget${projectionYears().length ? ` (${rangeText(projectionYears())})` : ''}, from its separate projections book. It is drawn lighter at the end of the multi-year charts and tables, and is never the headline figure.`],
+      : [['actual', 'Actual', `What was spent or received, reported in the budget book published two years later. It is the figure that really happened, not a plan.`],
+        ['projected', 'Projected', `The city's year-end estimate for a year that is not finished. The actual is not published yet.`],
+        ['proposed', 'Proposed', `The mayor's first budget proposal. It is a proposal, not an adopted budget.`],
+        ['revised', 'Revised', `A second presentation of a proposed budget, it is still a proposal and is not an adopted budget.`],
+        ['adopted', 'Adopted', `The budget City Council passed before the year began, as the next year's budget book prints it.${yr('adopted') ? ` It is the budget figure for ${yr('adopted')}, where the books print no Amended figure.` : ''}`],
+        ['amended', 'Amended', `The adopted budget with the changes made to it during the year, as the next year's budget book prints it.`],
+        ['projection', 'Projection', `The city's own multi-year estimate for the years after the newest budget as required by Home Rule.`],
         income, calc];
+  }
+  function termsPage(q) {
+    const other = isCounty() ? 'city' : 'county';
+    document.title = pageTitle('Funds and terms');
+    const fundRows = D.funds.map((f, i) => {
+      const [paid, text] = fundInfo(f);
+      const label = f === 'General Fund' ? 'General Fund' : esc(fn(f));
+      return `<tr><th scope="row">${label}<span class="ctx-note">In the data: ${fundYears(i)}</span></th><td><strong>${esc(paid)}</strong></td><td>${esc(text)}</td></tr>`;
+    }).join('');
+    const bal = balanceWord();
     const notShown = isCounty()
       ? `<dt id="term-adopted" tabindex="-1">Adopted and Amended</dt><dd>The County's books do not label their figures this way, so the site does not either. The ${D.newest_year} Budget is the budget the Commissioners adopted${CFG.adopted ? ` (${esc(CFG.adopted.text)})` : ''}, and the site says so beside it.</dd>`
-      : `<dt id="term-adopted" tabindex="-1">Adopted and Amended (not shown)</dt><dd><strong>Adopted</strong> is the budget City Council approved before the year began; <strong>Amended</strong> is that budget after changes during the year. The books print both, and this site leaves them out on purpose. Each year shows one kind of figure, so every total compares like with like and nothing is counted twice: Actual where the year is over, the city's own estimate where it is not, and a proposal for the year ahead. The adopted and amended columns are still in the PDFs.</dd>`;
+      : `<dt id="term-not-shown" tabindex="-1">Not shown</dt><dd>Year-to-date columns, and an older book's own proposal for its year, are left out: they are partial or superseded figures. They are still in the PDFs.</dd>`;
     const html = `<header class="page-head"><h1 id="page-h" tabindex="-1">Funds and terms</h1>
         <p class="lede-sm">Which of ${esc(CFG.entity.possessive)} funds are paid for by taxes and which are not, and what each figure word on this site means.</p></header>
       <section class="panel" id="terms-funds" tabindex="-1" aria-labelledby="tf-t"><h2 class="panel-title" id="tf-t">Funds</h2>
-        <p class="hint" style="margin-top:0">A fund is a separate account kept for a purpose. Money in one fund is not mixed with another, so a fund paid for by fees can only be spent on its own service. Only the General Fund is paid for mostly by taxes.</p>
+        <p class="hint" style="margin-top:0">${FUND_INTRO}</p>
         <div class="table-scroll"><table class="table terms-table"><thead><tr><th scope="col">Fund</th><th scope="col">Paid for by</th><th scope="col">What it is</th></tr></thead><tbody>${fundRows}</tbody></table></div>
-        ${balance ? `<dl class="terms-dl terms-after">${balance}</dl>` : ''}</section>
+        ${bal ? termDl([bal], ' terms-after') : ''}</section>
       <section class="panel" id="terms-figures" tabindex="-1" aria-labelledby="tw-t"><h2 class="panel-title" id="tw-t">Figure words</h2>
-        <p class="hint" style="margin-top:0">${isCounty() ? 'Every figure on the County pages is one of these.' : 'Every year on the City pages shows one of these kinds of figure.'} The year's kind is shown in the stamp above the controls.</p>
-        ${termDl(words)}<dl class="terms-dl">${notShown}</dl></section>
+        <p class="hint" style="margin-top:0">${isCounty() ? 'Every figure on the County pages is one of these.' : 'Every figure you can pick on the City pages is one of these.'} The figure in view is named in the stamp above the controls.</p>
+        ${termDl(figureWords())}<dl class="terms-dl">${notShown}</dl></section>
       <p class="hint">${isCounty() ? 'Looking for the City?' : 'Looking for the County?'} <a href="#/${other === 'county' ? 'county/' : ''}terms">See the ${esc(BASE.entities[other].entity.short)} funds and terms</a>. Sources and how the figures are checked: <a href="${eh('about')}">About the data</a>.</p>`;
     return { html };
   }
   const termHref = (id) => eh(`terms?s=${id}`);
+
+  /* ---------- How the City budget is made (#/budget-calendar) ----------
+     The City's budget calendar under its Home Rule Charter, drawn as a month-by-month timeline, then the rules behind it.
+     Every statement cites its charter section, linked to the charter PDF at the page that prints it. The PDF and the
+     City's 2024 audited statements (the rules before 2025) are named in config.json `entities.city.budget_calendar`;
+     an entity without that block (the County) gets a one-line note instead and no nav link. CHARTER_PAGE maps each
+     section to its PDF page (the charter's PDF page numbers equal its printed "Page | N"); a subsection not listed uses
+     its section's page. OLD_RULES_PAGE: the audited statements' pages for the old form of government and budget rules. */
+  const CHARTER_PAGE = {
+    cover: 1, '8.01': 35, '8.02': 35, '8.03': 35, '8.04': 35,
+    '8.04(a)': 36, '8.04(b)': 36, '8.04(c)': 36, '8.04(d)': 36, '8.04(e)': 36, '8.04(f)': 36, '8.05': 36, '8.05(a)': 36,
+    '8.05(b)': 37, '8.05(c)': 37, '8.05(d)': 37, '8.05(e)': 37, '8.05(f)': 37,
+    '8.05(g)': 38, '8.05(h)': 38, '8.06': 38,
+    '8.07': 39, '8.08': 39, '8.09': 40, '8.10': 40, '8.10(a)': 40,
+    '8.10(b)': 41, '8.10(c)': 41, '8.10(d)': 41, '8.11': 41, '8.11(a)': 41, '8.11(b)': 42,
+    '13.02': 58, '13.14': 61,
+  };
+  const OLD_RULES_PAGE = { government: 42, budget: 58 };
+  const charterPage = (s) => CHARTER_PAGE[s] ?? CHARTER_PAGE[s.replace(/\(.*$/, '')];
+  // A charter citation: the section number is the link, quiet like every source link, opening the PDF at its page.
+  const cite = (s, text) => {
+    const B = CFG.budget_calendar, label = text || `§ ${s}`;
+    return `<a class="src cite" href="${esc(B.charter_url)}#page=${charterPage(s)}" target="_blank" rel="noopener" title="Read it in the ${esc(B.charter_title)}" aria-label="${esc(label)}: open the ${esc(B.charter_title)} at that page">${esc(label).replace(/^§ /, '§&nbsp;')}</a>`;
+  };
+  const cites = (...ss) => `<span class="cites">(${ss.map((s) => cite(s)).join(', ')})</span>`;
+  /* The timeline's steps, in time order. month: the band label (Jan–Dec, shown only when it changes from the step before;
+     null for a step the charter ties to another step rather than a date); deadline: a date the charter requires;
+     when: the date or timing in words; who: who acts; missed: what the charter says happens otherwise. */
+  const calSteps = () => [
+    { month: 'Jun', deadline: true, when: 'By June 30', at: '8.09(a)', title: 'Capital program due', who: ['Mayor'],
+      body: `The Mayor sends Council a five-year capital program: major projects for City buildings, infrastructure and equipment, with cost estimates and how each would be paid for ${cites('8.09(a)', '8.09(b)')}.` },
+    { month: 'Sep', deadline: true, when: 'By Sept 30', at: '8.10(d)', title: 'Council adopts the capital program', who: ['Council', 'Public'],
+      body: `After a public hearing 15 to 30 days after its notice, with a public question period ${cites('8.10(a)')}, Council adopts the program, with or without changes ${cites('8.10(c)')}.`,
+      missed: `The Mayor's original capital program becomes the official one ${cites('8.10(d)')}.` },
+    { month: 'Oct', deadline: true, when: 'By Council\'s last scheduled October meeting', at: '8.02(b)', title: 'The Mayor presents the budget', who: ['Mayor'],
+      body: `A balanced budget for the next year, the ordinance to enact it and a budget message ${cites('8.02(b)')}. If it raises tax revenue more than 6%, it includes a proposed waiver ${cites('8.02(c)')}. <a href="${eh('budget-calendar')}" data-scroll="cal-mayor">What must be in it</a>` },
+    { month: 'Nov', deadline: true, when: 'By the first Council meeting in November', at: '8.02(d)', title: 'Vote on a 6% waiver, if one is proposed', who: ['Council'],
+      body: `Council considers it at a public meeting ${cites('8.02(d)')}. It passes only with a majority of the whole Council plus one ${cites('8.08')}. <a href="${eh('budget-calendar')}" data-scroll="cal-limit">The 6% limit</a>`,
+      missedLabel: 'If it does not pass', missed: `General Fund tax revenue may not rise more than 6% over the year before ${cites('8.08')}.` },
+    { month: null, when: '7 to 30 days after the notice', title: 'Public hearings and questions', who: ['Council', 'Public'],
+      body: `Council publishes a summary of the budget and a notice saying where to read it, when the hearings are and how to ask questions. Hearings are never on a regular Council meeting date ${cites('8.05(a)')}.` },
+    { month: null, when: 'At least 7 days before adoption', title: 'Answers published, changes made', who: ['Mayor', 'Council'],
+      body: `The Mayor publishes the public's questions with answers ${cites('8.05(c)')}. From 7 days after the hearings Council may adopt the budget, with or without changes; changes may not raise spending above estimated revenue ${cites('8.05(d)')}.` },
+    { month: 'Dec', deadline: true, when: 'By Dec 15', at: '8.05(e)', title: 'Council adopts the budget', who: ['Council'],
+      body: `Council adopts the budget ordinance ${cites('8.05(e)')} and every budget-related tax ordinance ${cites('8.05(h)')}.`,
+      missed: `The Mayor's proposed budget becomes the official budget for the year ${cites('8.05(e)')}.` },
+    { month: 'Dec', deadline: true, when: 'Within 10 days; override by Dec 31', at: '8.05(g)', title: 'The Mayor signs or vetoes', who: ['Mayor', 'Council'],
+      body: `The Mayor signs the budget and tax ordinances or returns them with objections, and may veto single line items ${cites('8.05(f)')}. Council may override a veto with a majority plus one of its members, by December 31 ${cites('8.05(g)')}.` },
+    { month: 'Jan', newYear: true, when: 'Jan 1', title: 'The budget year begins', who: ['Mayor', 'Council'],
+      body: `The City's fiscal year is January 1 to December 31 ${cites('8.01')}. The Mayor reports budget against spending every month, and Council reviews it in public every quarter ${cites('8.11(a)', '8.11(b)')}.` },
+    { month: 'Feb', deadline: true, when: 'By Feb 15, only after a municipal election year', at: '8.06(a)', title: 'A revised budget, if any', who: ['Mayor', 'Council'],
+      body: `In the year after a municipal election, the Mayor and/or Council may revise the budget and tax levies; the revision replaces the budget then in effect ${cites('8.06(a)', '8.06(b)')}.` },
+  ];
+  const WHO_TAG = (w) => `<span class="cal-who-tag">${esc(w)}</span>`;
+  function calTimeline() {
+    let prev = null;
+    const items = calSteps().map((s) => {
+      const showMonth = s.month && s.month !== prev; if (s.month) prev = s.month;
+      const cls = ['cal-step', s.deadline ? 'is-deadline' : '', s.newYear ? 'is-new-year' : '', showMonth ? 'has-month' : ''].filter(Boolean).join(' ');
+      return `<li class="${cls}">
+        <div class="cal-band" aria-hidden="true">${showMonth ? `<span class="cal-month">${s.month}</span>` : ''}</div>
+        <p class="cal-when">${s.deadline ? `<span class="cal-deadline-tag">Deadline</span> ` : ''}<span class="cal-when-text">${esc(s.when)}</span>${s.at ? ` ${cite(s.at)}` : ''}</p>
+        <h3 class="cal-title">${esc(s.title)}</h3>
+        <p class="cal-who"><span class="sr-only">Who acts: </span>${s.who.map(WHO_TAG).join(' ')}</p>
+        <p class="cal-body">${s.body}</p>
+        ${s.missed ? `<p class="cal-missed"><strong>${esc(s.missedLabel || 'If it is missed')}:</strong> ${s.missed}</p>` : ''}
+      </li>`;
+    }).join('');
+    return `<ol class="cal-line" aria-label="The budget calendar, in time order">${items}</ol>`;
+  }
+  /* The 6% test for each City budget made under the charter (budget.json `tax_limit`, scripts/tax_limit.py): the budget
+     and its General Fund tax revenue, the same book's figure for the year before, the change and the status. The sums
+     are this site's own (calculated); each links to the book page that prints its lines. */
+  function calLimitTest() {
+    const T = TLIM();
+    if (!T || !T.tests.length) return '';
+    const amt = (x) => `${srcDoc(money(x.value), x.doc, Math.min(...x.lines.map((l) => l[3])))}`;
+    const rowsH = T.tests.slice().sort((a, b) => a.year - b.year || ORDER.indexOf(a.measure) - ORDER.indexOf(b.measure)).map((t) => `<tr${t.over ? ' class="tl-row-over"' : ''}>
+        <th scope="row">${esc(tlLabel(t))}</th><td class="num" data-label="Tax revenue, calculated"><span>${amt(t)}</span></td><td class="num" data-label="Year before, calculated"><span><span class="tl-base-l">${esc(tlBase(t))}</span> ${amt(t.base)}</span></td>
+        <td class="num" data-label="Change"><span>${fmtPct(t.change_pct, true)}</span></td>
+        <td data-label="Against the limit"><span>${t.over ? `<span class="tl-sign" aria-hidden="true">▲</span> <strong>Exceeds</strong>: needs a waiver` : 'Within'}</span></td></tr>`).join('');
+    const counted = T.lines.filter((l) => l[2]), left = T.lines.filter((l) => !l[2]);
+    const yrs = rangeText([...new Set(T.tests.map((t) => t.year))]);
+    return `<div class="tl-test" id="cal-limit-test" tabindex="-1">
+        <h3 class="cal-h3">The City's budgets against the limit</h3>
+        <p>Each budget made under the charter (${yrs}), its General Fund tax revenue against the year before as printed in the same budget book: ${counted.length === 4 ? 'the four' : 'the'} taxes the City levies, ${andList(counted.map((l) => esc(l[1])))}.</p>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="The City's budgets against the 6% limit, scrollable"><table class="table tl-table" aria-label="The City's budgets against the ${T.limit_pct}% tax revenue limit">
+          <thead><tr><th scope="col">Budget</th><th scope="col" class="num">Tax revenue<span class="calc-tag calc-head">calculated</span></th><th scope="col" class="num">Year before<span class="calc-tag calc-head">calculated</span></th><th scope="col" class="num">Change</th><th scope="col">Against the ${T.limit_pct}% limit</th></tr></thead>
+          <tbody>${rowsH}</tbody></table></div>
+        <p class="cal-note">Year before: the same book's Projected figure for that year (its revised projection where it prints one), the figure this site compares a new budget with. Amounts open the page of the budget book that prints the lines. A budget over the limit needs Council's waiver vote, majority of the whole Council plus one ${cites(T.section)}; this site does not track the votes.${T.transition ? ` For ${rangeText(T.transition.budget_years)}, see § 13.14 above.` : ''} Budgets before ${T.first_year} were made before the charter and are not tested.</p>
+        <details class="values tl-lines"><summary>Which lines count</summary><ul>${counted.map((l) => `<li><strong>${esc(l[1])}</strong> (${esc(l[0])}): counted. ${esc(l[3])}</li>`).join('')}${left.map((l) => `<li><strong>${esc(l[1])}</strong> (${esc(l[0])}): not counted. ${esc(l[3])}</li>`).join('')}</ul></details>
+      </div>`;
+  }
+  function calendarPage() {
+    document.title = pageTitle('How the City budget is made');
+    const B = CFG.budget_calendar;
+    if (!B) {
+      return { html: `<header class="page-head"><h1 id="page-h" tabindex="-1">How the City budget is made</h1></header>
+        <p class="lede-sm">This page covers the City of Lancaster's budget calendar; the County's has not been researched for this site. <a href="#/budget-calendar">See the City's budget calendar</a>.</p>` };
+    }
+    const oldLink = (text, page) => `<a class="src cite" href="${esc(B.old_rules_url)}#page=${page}" target="_blank" rel="noopener" title="Read it in the City's ${esc(B.old_rules_title)}" aria-label="${esc(text)}: open the City's ${esc(B.old_rules_title)} at that page">${text}</a>`;
+    const proj = projectionYears();
+    const html = `<header class="page-head"><h1 id="page-h" tabindex="-1">How the City budget is made</h1>
+        <p class="lede-sm">Who prepares the City's budget, who approves it, and by when, under the City's ${esc(B.charter_title)}. Every rule here links to the page that sets it out.</p></header>
+      <section class="panel" id="cal-year" tabindex="-1" aria-labelledby="cal-year-t"><h2 class="panel-title" id="cal-year-t">The budget calendar</h2>
+        <p class="cal-lead"><strong>The fiscal year is the calendar year,</strong> January 1 to December 31 ${cites('8.01')}, so each year's budget is made during the year before it. The Mayor proposes; City Council changes and adopts; the public can read, ask and be heard along the way.</p>
+        <div class="cal-wrap">${calTimeline()}</div>
+        <ul class="cal-key">
+          <li><span class="cal-deadline-tag">Deadline</span> A date the charter sets. Where it says what happens if the date is missed, the step says so.</li>
+          <li><span class="cal-who-tag">Mayor</span> <span class="cal-who-tag">Council</span> <span class="cal-who-tag">Public</span> Who acts at that step.</li>
+          <li>Steps with no month have no fixed date: the charter ties them to another step instead.</li>
+        </ul>
+      </section>
+      <section class="panel" id="cal-mayor" tabindex="-1" aria-labelledby="cal-mayor-t"><h2 class="panel-title" id="cal-mayor-t">The Mayor's budget</h2>
+        <p>The Mayor, with the Director of Administrative Services, prepares the budget each year ${cites('8.02(a)')}. By Council's last scheduled meeting in October, the Mayor must send Council a <strong>balanced budget</strong> for the next year, the <strong>ordinance</strong> to enact it and a <strong>budget message</strong> ${cites('8.02(b)')}.</p>
+        <h3 class="cal-h3">The budget message must explain</h3>
+        <ul class="cal-list">
+          <li>The revenues and spending in the proposed budget, and the major changes from the current year and the year before ${cites('8.03(a)')}.</li>
+          <li>The proposed programs, and any that are new, expanded or abolished ${cites('8.03(b)')}.</li>
+          <li>The City's debt position ${cites('8.03(c)')}.</li>
+          <li>Anything else that tells Council and the public the City's goals ${cites('8.03(d)')}.</li>
+        </ul>
+        <h3 class="cal-h3">The budget must show</h3>
+        <ul class="cal-list">
+          <li>A complete financial plan of every City fund (the General Fund, other governmental funds and proprietary funds), following generally accepted accounting principles ${cites('8.04')}.</li>
+          <li>A general summary first ${cites('8.04(a)')}.</li>
+          <li>Every fund's estimated revenues in detail, with the existing and proposed tax rates and levies, assessments, fees and charges ${cites('8.04(b)')}.</li>
+          <li>All proposed spending, fund by fund, by office and department ${cites('8.04(c)')}.</li>
+          <li>Revenues equal to or above spending in each fund. A fund may use its unrestricted balance, under a fund balance policy adopted by Council ${cites('8.04(d)')}.</li>
+          <li>Actual and estimated figures for the current year, and actual figures for the four years before it ${cites('8.04(e)')}.</li>
+          <li>Estimated revenues and spending for <strong>two more years</strong>, fund by fund, by office and department ${cites('8.04(f)')}.</li>
+        </ul>
+        <p class="cal-note">That last rule is why the City publishes estimates for the two years after the budget year.${proj.length ? ` This site shows the City's ${rangeText(proj)} estimates as <a href="${termHref('term-projection')}">Projection</a> at the end of its multi-year charts and tables.` : ''}</p>
+      </section>
+      <section class="panel" id="cal-limit" tabindex="-1" aria-labelledby="cal-limit-t"><h2 class="panel-title" id="cal-limit-t">The 6% limit on tax revenue</h2>
+        <p>The City may not raise its <strong>General Fund tax revenue</strong>, all sources together, by more than <strong>6%</strong> over the year before ${cites('8.08')}.</p>
+        <p><strong>What counts:</strong> all taxes the City is allowed to levy. <strong>What does not:</strong> fees, regular income, grants, one-time sources, money from borrowing or revenue set aside for debt payments, proceeds from selling assets, departmental and utility fees, and other restricted revenue ${cites('8.08')}.</p>
+        <h3 class="cal-h3">Going above it</h3>
+        <ol class="cal-list">
+          <li>The Mayor's proposed budget includes a proposed Council resolution to waive the limit ${cites('8.02(c)')}.</li>
+          <li>Council considers it at a public meeting by its first meeting in November ${cites('8.02(d)')}.</li>
+          <li>It passes only with a majority of the whole Council plus one ${cites('8.02(c)', '8.08')}.</li>
+          <li>Tax revenue above the 6% limit is left out when the next year's limit is worked out ${cites('8.08')}.</li>
+        </ol>
+        <h3 class="cal-h3">An example, with made-up round numbers</h3>
+        <dl class="cal-example">
+          <div><dt>Last year's General Fund tax revenue</dt><dd>$30.0M</dd></div>
+          <div><dt>6% of that</dt><dd>$1.8M</dd></div>
+          <div><dt>Most it can be this year without a waiver</dt><dd>$31.8M</dd></div>
+          <div><dt>With a waiver, say</dt><dd>$33.0M</dd></div>
+          <div><dt>Left out when next year's limit is worked out</dt><dd>$1.2M</dd></div>
+        </dl>
+        <p class="cal-note">An illustration only; these are not the City's figures. The City's own budgets are tested below.</p>
+        <h3 class="cal-h3">The charter's first two years</h3>
+        <blockquote class="cal-quote"><p>“For two (2) years following the effective date of this Charter, the revenue limitations established under § 8.08 of this Charter shall be waived upon enactment of the annual budget ordinance as approved by a majority vote of Council.”</p><footer>${cite('13.14')}</footer></blockquote>
+        <p class="cal-note">The charter took effect on January 1, 2025 ${cites('13.02')}. Section 13.14 does not name the budget years it covers, so this site does not say which they are.</p>
+        ${calLimitTest()}
+      </section>
+      <section class="panel" id="cal-council" tabindex="-1" aria-labelledby="cal-council-t"><h2 class="panel-title" id="cal-council-t">Council's deadlines</h2>
+        <dl class="terms-dl cal-dl">
+          <dt>7 to 30 days after its notice</dt><dd>Council holds one or more public hearings on the budget, never on a regular Council meeting date, at times meant to let the most people take part, with a public question period ${cites('8.05(a)')}.</dd>
+          <dt>At least 7 days before adoption</dt><dd>The Mayor or a designee publishes a summary of the public's questions with answers, grouped by topic ${cites('8.05(c)')}.</dd>
+          <dt>No earlier than 7 days after the hearings</dt><dd>Council may adopt the budget with or without changes. It may add, raise, cut or remove programs and line items, except spending required by law or for debt service, but no change may raise spending above total estimated revenue. If the changes move the Mayor's spending by more than 10% in total, or more than 25% on any one item, the changed budget must be published for public inspection for at least 10 days before it can be enacted ${cites('8.05(d)')}.</dd>
+          <dt>By December 15</dt><dd>Council adopts the budget ordinance ${cites('8.05(e)')} and all budget-related tax ordinances ${cites('8.05(h)')}. <span class="cal-missed"><strong>If Council misses it:</strong> the budget the Mayor proposed becomes the City's official budget for the year ${cites('8.05(e)')}.</span></dd>
+          <dt>Within 10 days of receiving them</dt><dd>The Mayor signs the budget and tax ordinances, or returns them to Council with objections. The Mayor may veto the whole amended budget or single line items ${cites('8.05(f)')}.</dd>
+          <dt>By December 31</dt><dd>From the third day after a veto, Council may override it by a vote of a majority plus one of its current members ${cites('8.05(g)')}.</dd>
+          <dt>By September 30 (capital program)</dt><dd>Council adopts the capital program and budget, after a hearing 15 to 30 days after its notice ${cites('8.10(a)', '8.10(d)')}. <span class="cal-missed"><strong>If Council misses it:</strong> the Mayor's original capital program becomes the official one, and its part for the next year goes into that year's budget ${cites('8.10(d)')}.</span></dd>
+        </dl>
+      </section>
+      <section class="panel" id="cal-public" tabindex="-1" aria-labelledby="cal-public-t"><h2 class="panel-title" id="cal-public-t">When you can take part</h2>
+        <ul class="cal-list">
+          <li><strong>Read the proposed budget.</strong> It is available from the first business day after Council introduces it, online and elsewhere as Council decides ${cites('8.05(a)')}, and at City Hall during business hours ${cites('8.05(b)')}.</li>
+          <li><strong>Speak at a budget hearing.</strong> Hearings come 7 to 30 days after Council's notice, never on a regular Council meeting date ${cites('8.05(a)')}.</li>
+          <li><strong>Ask a question,</strong> at the hearing's question period or in writing; the notice says how ${cites('8.05(a)')}.</li>
+          <li><strong>Read the answers.</strong> The Mayor publishes them at least 7 days before Council adopts the budget ${cites('8.05(c)')}.</li>
+          <li><strong>See big changes before they pass.</strong> Changes of more than 10% in total or 25% on one item are published for at least 10 days first ${cites('8.05(d)')}.</li>
+          <li><strong>Watch a 6% waiver vote,</strong> held at a public meeting ${cites('8.02(d)')}.</li>
+          <li><strong>Speak on the capital program</strong> at its hearing, 15 to 30 days after its notice, with a question period ${cites('8.10(a)')}, and read the answers at least 7 days before it is adopted ${cites('8.10(b)')}.</li>
+          <li><strong>Follow the money during the year</strong> at the monthly reports and quarterly reviews, both at advertised public meetings ${cites('8.11(a)', '8.11(b)')}.</li>
+        </ul>
+        <p class="cal-note">Dates and places are in the notices Council publishes, in the ways set by the City's Administrative Code ${cites('8.05(a)')}. This site does not list them.</p>
+      </section>
+      <section class="panel" id="cal-during" tabindex="-1" aria-labelledby="cal-during-t"><h2 class="panel-title" id="cal-during-t">During the budget year</h2>
+        <ul class="cal-list">
+          <li><strong>Monthly reports.</strong> Within 21 days of each month's end, the Mayor gives Council, at an advertised public meeting, and makes public a cash flow report and a statement of revenues and spending by department, bureau and line item: the amount budgeted, the amount collected or spent so far and the percent ${cites('8.11(a)')}.</li>
+          <li><strong>Quarterly reviews.</strong> After each quarter the Mayor and department heads appear before Council at an advertised public meeting to review programs, revenues and spending ${cites('8.11(b)')}.</li>
+          <li><strong>Changes after adoption.</strong> Council may make emergency appropriations for a sudden danger to life or property ${cites('8.07(a)')}; add spending when revenue comes in above the estimates ${cites('8.07(b)')}; and cut appropriations, except debt service, when the Mayor reports that revenue will fall short ${cites('8.07(c)')}.</li>
+          <li><strong>A revised budget after an election.</strong> In the year after a municipal election, the Mayor and/or Council may revise the budget and tax levies within 45 days of the year's start; it must be adopted by February 15 and replaces the budget then in effect ${cites('8.06(a)', '8.06(b)')}. This is not the <a href="${termHref('term-revised')}">Revised</a> figure on this site, which is the Mayor's revised proposal before the budget is adopted.</li>
+        </ul>
+      </section>
+      <section class="panel" id="cal-before" tabindex="-1" aria-labelledby="cal-before-t"><h2 class="panel-title" id="cal-before-t">Before 2025</h2>
+        <p>Voters approved the ${esc(B.charter_title)} on ${cite('cover', 'November 5, 2024')}, and it took effect on January 1, 2025 ${cites('13.02')}.</p>
+        <p>Through 2024 the City ran under the Optional Third Class City Charter Law (${oldLink(`City's ${esc(B.old_rules_title)}`, OLD_RULES_PAGE.government)}). Under those rules the proposed budget went to City Council before November 30, and Council had to approve it by the end of December (${oldLink('the same statements', OLD_RULES_PAGE.budget)}).</p>
+        <p>The budget books on this site for 2022, 2023 and 2024 were made under those earlier rules.</p>
+      </section>
+      <p class="hint">The details of notices and hearings are set in the City's Administrative Code, which this page does not cover. Words used on this site: <a href="${eh('terms')}">Funds and terms</a>. Where the figures come from: <a href="${eh('about')}">About the data</a>.</p>`;
+    return { html };
+  }
 
 
   /* Theme: follows the device until the visitor clicks the toggle; then an explicit choice is saved and set as
@@ -2855,9 +3176,10 @@
     $('footer-text').textContent = CFG.footer;
     if (CFG.tagline) $('tagline').textContent = CFG.tagline;
     if (CFG.contact_email) $('footer-contact').innerHTML = `Questions or corrections: <a href="mailto:${esc(CFG.contact_email)}">${esc(CFG.contact_email)}</a>`;
-    const nav = { home: eh(''), changes: eh('changes'), reserve: eh(`?f=${encodeURIComponent(D.reserve?.name || 'Reserve Fund')}`), about: eh('about'), terms: eh('terms') };
+    const nav = { home: eh(''), changes: eh('changes'), reserve: eh(`?f=${encodeURIComponent(D.reserve?.name || 'Reserve Fund')}`), about: eh('about'), terms: eh('terms'), calendar: eh('budget-calendar') };
     document.querySelectorAll('#site-nav a[data-nav]').forEach((a) => {
       a.setAttribute('href', nav[a.dataset.nav]);
+      if (a.dataset.nav === 'calendar') a.closest('li').hidden = !CFG.budget_calendar; // the budget calendar is researched for the City only
       if (a.dataset.nav === 'reserve') { a.closest('li').hidden = !D.reserve; if (D.reserve) a.textContent = D.reserve.name; } // the City's Reserve Fund, the County's General Fund Balance
     });
     jumpIndexReset();
@@ -2865,7 +3187,7 @@
   const jumpIndexReset = () => { jumpIndex = null; const i = $('jump-input'); if (i) i.value = ''; };
   /* City / County tabs: each opens the same kind of page in the other entity (the overview, What changed or About). */
   function renderSwitch() {
-    const tail = route.name === 'changes' ? 'changes' : route.name === 'about' ? 'about' : route.name === 'terms' ? 'terms' : '';
+    const tail = route.name === 'changes' ? 'changes' : route.name === 'about' ? 'about' : route.name === 'terms' ? 'terms' : route.name === 'calendar' ? 'budget-calendar' : '';
     document.querySelectorAll('#entity-switch a').forEach((a) => {
       const county = a.dataset.entity === 'county';
       a.setAttribute('href', `#/${county ? 'county/' : ''}${tail}`);
@@ -2881,6 +3203,8 @@
       return;
     }
     SITE = BASE.site_title;
+    // The controls used to fold behind "Change view" and remembered that as `controlsOpen`; they are always open now.
+    try { localStorage.removeItem('controlsOpen'); } catch (e) { /* no storage */ }
     // A bare address opens the entity the visitor last chose; any #/... address says which one it means.
     if (!location.hash || location.hash === '#') {
       let saved = null;

@@ -39,6 +39,7 @@
         <li><a href="#/changes" data-nav="changes">What changed</a></li>
         <li><a href="#/?f=Reserve%20Fund" data-nav="reserve">Reserve Fund</a></li>
         <li><a href="#/terms" data-nav="terms">Funds and terms</a></li>
+        <li><a href="#/budget-calendar" data-nav="calendar">Home Rule and the Budget</a></li>
         <li><a href="#/about" data-nav="about">About the data</a></li>
       </ul></nav>
       <div class="jump-search" role="search">
@@ -55,12 +56,12 @@
 
   <main id="main" tabindex="-1" class="container page">
     <div id="view"><p class="muted center">Loading budget…</p></div>
+    <p class="sr-only" id="view-status" aria-live="polite" aria-atomic="true"></p>
 
     <section class="panel about" id="about" aria-labelledby="about-title" hidden>
       <h2 class="panel-title-left" id="about-title">About the data</h2>
       <div id="about-body"></div>
     </section>
-    <aside class="margin" id="margin" aria-label="Reading notes"></aside>
   </main>
 
   <footer class="site-footer" id="site-footer" hidden>
