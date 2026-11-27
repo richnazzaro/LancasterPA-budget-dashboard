@@ -200,6 +200,27 @@ select { appearance: none; width: 100%; height: 40px; background: var(--card) ur
 .legend-list a:hover .nm { text-decoration: underline; }
 .legend-list .body { min-width: 0; }
 
+/* Side pie: a pie to the right of a ruled list (Departments, Spending by Bureau, the fund table). The list's swatches
+   (.pie-key) are its key. Flex wrap decides the layout from the space the section actually has (the rail narrows it):
+   when the list and pie don't both fit, the pie wraps onto its own line, and wrap-reverse puts that line above the list. */
+.with-pie { display: flex; flex-wrap: wrap-reverse; align-items: flex-end; gap: 24px 40px; } /* flex-end = top under wrap-reverse */
+.with-pie > :not(.side-pie) { flex: 1 1 620px; min-width: 0; } /* 620px: the widest list (Departments with a comparison) fits */
+.side-pie { flex: 1 1 200px; min-width: 0; max-width: 280px; margin: 0; } /* both grow evenly; the pie stays 200-280px */
+.side-pie-box { position: relative; width: 100%; aspect-ratio: 1; overflow: hidden; } /* overflow keeps the canvas from stretching it past square */
+.side-pie figcaption { margin-top: 12px; font-size: 13px; line-height: 18px; color: var(--muted); text-align: center; }
+.pie-key { display: inline-block; flex: none; width: 12px; height: 12px; margin-right: 10px; vertical-align: 1px; }
+.with-pie tbody th[scope="row"] { white-space: normal; } /* long names wrap so every column fits beside the pie */
+/* Swatch + name in a table cell: a wrapped name stays to the right of its swatch, which sits centred on the first line. */
+.keyed { display: flex; align-items: flex-start; }
+.keyed > .pie-key { margin-top: calc((1lh - 12px) / 2); }
+@media (max-width: 767px) {
+  .side-pie { max-width: 220px; }
+  /* The fund table already fills a phone; its swatch sits above the fund name so it adds no width. */
+  #re-wrap .keyed { flex-direction: column; gap: 6px; }
+  #re-wrap .keyed > .pie-key { margin: 0; }
+}
+@media (forced-colors: active) { .pie-key { forced-color-adjust: none; } }
+
 .chart-box { position: relative; height: 360px; }
 .chart-box.short { height: 220px; }
 .chart-scroll { overflow-x: auto; }

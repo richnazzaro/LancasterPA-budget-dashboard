@@ -1078,16 +1078,46 @@
   }
   const allCalc = (ts) => ts.every((t) => !t || !t.x);
 
+  /* Side pie: a pie to the right of a ruled list (departments, bureaus, funds). Slice i is the list's row i, and each
+     row carries the slice's swatch, so the list is the pie's key. Rows past PIE_SLICES fold into one grey slice.
+     items: [{ label, v, href }] in the list's order. Swatches use the CSS variables, so they follow the theme. */
+  const pieVar = (i) => (i < PIE_SLICES ? `--cat-${(i % 8) + 1}` : '--cat-other');
+  const pieKey = (i) => `<i class="pie-key" aria-hidden="true" style="background:var(${pieVar(i)})"></i>`;
+  const pieTotal = (items) => items.reduce((t, x) => t + Math.max(0, x.v), 0);
+  function sidePieHTML(id, caption, items) {
+    const total = pieTotal(items);
+    if (items.length < 2 || total <= 0) return '';
+    const desc = items.filter((x) => x.v > 0).map((x) => `${x.label} ${((x.v / total) * 100).toFixed(1)}%`).join(', ');
+    return `<figure class="side-pie"><div class="side-pie-box"><canvas id="${id}" role="img" aria-label="${esc(`${caption}: ${desc}. The list beside it has the amounts.`)}"></canvas></div><figcaption>${esc(caption)}</figcaption></figure>`;
+  }
+  function drawSidePie(id, items) {
+    const cv = $(id);
+    if (!cv || !window.Chart) return;
+    const th = chartTheme(), total = pieTotal(items);
+    const data = items.slice(0, PIE_SLICES).map((x, i) => ({ ...x, v: Math.max(0, x.v), c: PALETTE[i % PALETTE.length] }));
+    const rest = items.slice(PIE_SLICES);
+    if (rest.length) data.push({ label: `All other (${rest.length})`, v: pieTotal(rest), c: OTHER_COLOR });
+    const at = (els) => (els.length ? data[els[0].index] : null);
+    charts.push(new Chart(cv, {
+      type: 'pie',
+      data: { labels: data.map((d) => d.label), datasets: [{ data: data.map((d) => d.v), backgroundColor: data.map((d) => d.c), borderColor: BG, borderWidth: 2 }] },
+      options: { responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
+        onClick: (_ev, els) => { const x = at(els); if (x && x.href) navigate(x.href); },
+        onHover: (ev, els) => { const x = at(els); ev.native.target.style.cursor = x && x.href ? 'pointer' : 'default'; },
+        plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { label: (c) => `${c.label}: ${money(c.raw)} (${((c.raw / total) * 100).toFixed(1)}%)` } } } },
+    }));
+  }
+
   /* Department / bureau cards: name, share of the whole, and selected-vs-comparison bars. The whole card links.
      Each item's sel/cmp is a total from totalOf(). */
-  function cardList(items, { total, k, shareOf, level, notes }) {
+  function cardList(items, { total, k, shareOf, level, notes, keys = false }) {
     const max = Math.max(1, ...items.flatMap((i) => [Math.abs(i.sel?.v || 0), Math.abs(i.cmp?.v || 0)]));
     const bar = (t, cls, label, what) => `<div><div class="bar-label ${cls}"><span>${esc(label)}</span><span>${t ? fig(t, { notes, what }) : '<span class="missing">No figures</span>'}</span></div>
         <div class="track"><div class="fill ${cls}" style="width:${t ? Math.max(0, (t.v / max) * 100) : 0}%"></div></div></div>`;
-    return items.map((it) => {
+    return items.map((it, n) => {
       const sh = total > 0 && it.sel ? (it.sel.v / total) * 100 : null;
       const share = sh == null ? '' : `<span class="share">(${sh > 0 && sh < 0.1 ? '<0.1' : sh.toFixed(1)}% of ${esc(shareOf)})</span>`;
-      return `<li class="card" data-go="${esc(it.href)}"><div class="card-top"><h${level}><a href="${esc(it.href)}">${esc(it.name)}</a>${share}${it.elected ? `<span class="elected-tag">${esc(it.elected.label)}</span>` : ''}</h${level}>
+      return `<li class="card" data-go="${esc(it.href)}"><div class="card-top"><h${level}><a href="${esc(it.href)}">${keys ? pieKey(n) : ''}${esc(it.name)}</a>${share}${it.elected ? `<span class="elected-tag">${esc(it.elected.label)}</span>` : ''}</h${level}>
         <svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></div>
         <div class="bars">${S.c ? bar(it.cmp, 'cmp', seriesLabel(S.c), it.name) : ''}${bar(it.sel, 'sel', seriesLabel(k), it.name)}</div></li>`;
     }).join('');
@@ -1095,15 +1125,15 @@
 
   /* Department ledger: department, comparison, selected figure, signed change and share, as one ruled table.
      Amounts keep their PDF links; the whole row opens the department. The footer is the total shown at the top. */
-  function ledgerHTML(items, { total, cmpTotal, k, notes }) {
+  function ledgerHTML(items, { total, cmpTotal, k, notes, keys = false }) {
     // A column of departments regrouped to the 2027 org chart is usually all calculated: say so once, in its head.
     const selCalc = allCalc(items.map((i) => i.sel)), cmpCalc = allCalc(items.map((i) => i.cmp));
     const head = (label, calc) => `${esc(label)}${calc ? `<span class="calc-tag calc-head">calculated</span>` : ''}`;
-    const body = items.map((i) => {
+    const body = items.map((i, n) => {
       const sel = i.sel?.v || 0, cmp = i.cmp?.v || 0;
       const sh = total.v > 0 && i.sel ? (sel / total.v) * 100 : null;
       const cell = (t, calc) => (t ? fig(t, { tag: !calc, notes, what: `${i.name} ${kindWordPlain().toLowerCase()}` }) : '<span class="missing">No figures</span>');
-      return `<tr data-go="${esc(i.href)}"><th scope="row"><a href="${esc(i.href)}">${esc(i.name)}</a></th>${S.c ? `<td class="num hide-sm">${cell(i.cmp, cmpCalc)}</td>` : ''}<td class="num">${cell(i.sel, selCalc)}</td>${S.c ? `<td class="num">${deltaHTML(sel - cmp, cmp, mny)}</td>` : ''}<td class="num hide-sm">${sh == null ? '' : (sh > 0 && sh < 0.1 ? '<0.1' : sh.toFixed(1)) + '%'}</td></tr>`;
+      return `<tr data-go="${esc(i.href)}"><th scope="row">${keys ? `<span class="keyed">${pieKey(n)}<a href="${esc(i.href)}">${esc(i.name)}</a></span>` : `<a href="${esc(i.href)}">${esc(i.name)}</a>`}</th>${S.c ? `<td class="num hide-sm">${cell(i.cmp, cmpCalc)}</td>` : ''}<td class="num">${cell(i.sel, selCalc)}</td>${S.c ? `<td class="num">${deltaHTML(sel - cmp, cmp, mny)}</td>` : ''}<td class="num hide-sm">${sh == null ? '' : (sh > 0 && sh < 0.1 ? '<0.1' : sh.toFixed(1)) + '%'}</td></tr>`;
     }).join('');
     const foot = (t) => fig(t, { notes, what: `${fn(S.f) || CFG.entity.short} ${kindWordPlain().toLowerCase()}` });
     return `<div class="table-scroll"><table class="table ledger" aria-label="${isCounty() ? 'Groups' : 'Departments'}"><thead><tr><th scope="col">${isCounty() ? 'Group' : 'Department'}</th>${S.c ? `<th scope="col" class="num hide-sm">${head(seriesLabel(S.c), cmpCalc)}</th>` : ''}<th scope="col" class="num">${head(seriesLabel(k), selCalc)}</th>${S.c ? '<th scope="col" class="num">Change</th>' : ''}<th scope="col" class="num hide-sm">Share</th></tr></thead>
@@ -1217,6 +1247,7 @@
     return html + notes.join('') + '</section>';
   }
 
+  let homePies = []; // [canvas id, items] for the side pies homeView laid out; drawn after render
   function homeView() {
     if (isReserve()) return reserveView();
     const k = key(S.y, S.m);
@@ -1232,7 +1263,10 @@
     const items = [...keys].map((d) => ({ id: d, name: O.departments[d].name, href: deptHash(d), sel: selMap.get(d), cmp: cmpMap.get(d) }))
       .sort((a, b) => (b.sel?.v || 0) - (a.sel?.v || 0) || (b.cmp?.v || 0) - (a.cmp?.v || 0));
     const ledgerNotes = new Map();
-    const ledger = items.length ? ledgerHTML(items, { total, cmpTotal: cmp, k, notes: ledgerNotes }) : '<p class="empty">No lines for this selection.</p>';
+    const depPie = items.map((i) => ({ label: i.name, v: i.sel?.v || 0, href: i.href }));
+    const depPieHTML = sidePieHTML('pie-dep', `Share of ${seriesLabel(k)} ${kindWord.toLowerCase()} by ${isCounty() ? 'group' : 'department'}`, depPie);
+    homePies = depPieHTML ? [['pie-dep', depPie]] : [];
+    const ledger = items.length ? ledgerHTML(items, { total, cmpTotal: cmp, k, notes: ledgerNotes, keys: !!depPieHTML }) : '<p class="empty">No lines for this selection.</p>';
     const totalHTML = fig(total, { notes, what });
     const flagNote = gapNotes(notes) + (total.x ? '' : missingNote(k, { fund: S.f }));
     // The deck says what a resident came to learn: up or down, by how much, and what covers it. It sits under the total.
@@ -1258,10 +1292,10 @@
       <div class="overview${wc ? '' : ' overview-single'}">${trendHTML({}, 'Totals by Year')}${wc}</div>
       <section class="panel" id="sec-departments" tabindex="-1" aria-labelledby="dep-t"><h2 class="panel-title" id="dep-t">${isCounty() ? 'Departments by Group' : 'Departments'}</h2>
         <p class="panel-note">${isCounty() ? 'The County\'s departments are grouped as in its budget book. Select a group to see its departments.' : 'Select a department to see its detailed breakdown.'} Amounts open the source page in the budget book.</p>
-        ${ledger}${gapNotes(ledgerNotes)}</section>
+        ${depPieHTML ? `<div class="with-pie">${ledger}${depPieHTML}</div>` : ledger}${gapNotes(ledgerNotes)}</section>
       <section class="panel" aria-labelledby="re-title"><h2 class="panel-title" id="re-title">Income vs. Spending by Fund: ${esc(seriesLabel(k))}</h2>
         <div class="chart-box"><canvas id="re-chart" role="img" aria-label="Income and spending by fund"></canvas></div>
-        <div class="table-scroll"><table class="table" id="re-table"></table></div></section>${actualsHTML()}${contextHTML()}</div>`;
+        <div class="with-pie" id="re-wrap"><div class="table-scroll"><table class="table" id="re-table"></table></div></div></section>${actualsHTML()}${contextHTML()}</div>`;
   }
 
 
@@ -1330,7 +1364,7 @@
     const all = rows(k);
     const data = [...new Set(all.map((r) => r.fund))].map((fi) => {
       const fr = all.filter((r) => r.fund === fi), rl = fr.filter((r) => isIncome(r)), el = fr.filter((r) => !isRevenue(r));
-      return { fund: fn(D.funds[fi]), rev: rl.length ? totalOf(rl, k) : null, exp: el.length ? totalOf(el, k) : null };
+      return { raw: D.funds[fi], fund: fn(D.funds[fi]), rev: rl.length ? totalOf(rl, k) : null, exp: el.length ? totalOf(el, k) : null };
     }).sort((a, b) => (b.exp?.v || 0) - (a.exp?.v || 0));
     const vo = (t) => (t ? t.v : 0);
     const th = chartTheme();
@@ -1352,12 +1386,17 @@
     const dcell = (n) => { const r = Math.round(n); return `<span class="${r > 0 ? 'up' : r < 0 ? 'down neg' : 'flat'}">${money(n)}</span>`; };
     const allRev = all.filter((r) => isIncome(r, true)), allExp = all.filter((r) => !isRevenue(r));
     const tRev = totalOf(allRev, k), tExp = totalOf(allExp, k);
+    // Pie beside the fund table: each fund's share of the spending (or income, on the Income tab) of all the funds listed.
+    const pieItems = data.map((d) => ({ label: d.fund, v: vo(S.k === 'revenue' ? d.rev : d.exp), href: homeHash({ f: d.raw }) }));
+    const fundPie = sidePieHTML('pie-fund', `Share of ${seriesLabel(k)} ${S.k === 'revenue' ? 'income' : 'spending'} by fund`, pieItems);
+    if (fundPie) $('re-wrap').insertAdjacentHTML('beforeend', fundPie);
     $('re-table').innerHTML = `<thead><tr><th scope="col">Fund</th><th scope="col" class="num">Income</th><th scope="col" class="num">Spending</th><th scope="col" class="num">Income minus spending</th></tr></thead>
-      <tbody>${data.map((d) => `<tr><th scope="row">${esc(d.fund)}</th><td class="num">${cell(d, d.rev, 'income')}</td><td class="num">${cell(d, d.exp, 'spending')}</td><td class="num">${dcell(vo(d.rev) - vo(d.exp))}</td></tr>`).join('')}</tbody>
+      <tbody>${data.map((d, n) => `<tr><th scope="row">${fundPie ? `<span class="keyed">${pieKey(n)}<span>${esc(d.fund)}</span></span>` : esc(d.fund)}</th><td class="num">${cell(d, d.rev, 'income')}</td><td class="num">${cell(d, d.exp, 'spending')}</td><td class="num">${dcell(vo(d.rev) - vo(d.exp))}</td></tr>`).join('')}</tbody>
       <tfoot><tr><td>All funds</td><td class="num">${fig(tRev)}</td><td class="num">${fig(tExp)}</td><td class="num">${dcell(tRev.v - tExp.v)}</td></tr></tfoot>`;
     const chg = all.filter((r) => isRevenue(r) && nonIncome(r.ai) === 'charge' && r.v);
     const reNote = chg.length ? `<p class="panel-note" style="margin-top:12px">Each fund's income includes what it charges ${ownFunds()} other funds for services; the All funds total leaves out that ${src(mny(sum(chg)), k, firstPage(chg).d, firstPage(chg).p)}, because the paying fund's income already counts it. <a href="${termHref('term-income')}">What counts as income</a></p>` : '';
-    $('re-table').parentElement.insertAdjacentHTML('afterend', gapNotes(notes) + reNote);
+    $('re-wrap').insertAdjacentHTML('afterend', gapNotes(notes) + reNote);
+    if (fundPie) drawSidePie('pie-fund', pieItems);
   }
 
   /* ---------- department / bureau pages ---------- */
@@ -1766,7 +1805,7 @@
       : `No ${S.k === 'revenue' ? 'revenue' : 'expense'} lines for this department in ${esc(seriesLabel(k))}.`;
     // Bureau list: only for departments that have bureaus on the org chart. Several budget groups can make up one
     // bureau; budget groups that are not a bureau form one "department-wide" card, listed last.
-    let bureauList = '';
+    let bureauList = '', bureauPie = [], bureauPieHTML = '';
     const cardNotes = new Map();
     if (dept.bureaus) {
       const cmpUnits = S.c ? groupTotals(cmpRows, (r) => r.unit, S.c) : new Map();
@@ -1775,16 +1814,18 @@
         .sort((a, b) => (O.units[a.id].kind === 'department-wide') - (O.units[b.id].kind === 'department-wide') || (b.sel?.v || 0) - (a.sel?.v || 0) || (b.cmp?.v || 0) - (a.cmp?.v || 0));
       const hasWide = ids.some((u) => O.units[u].kind === 'department-wide');
       if (items.length > 1) {
+        bureauPie = items.map((i) => ({ label: i.name, v: i.sel?.v || 0, href: i.href }));
+        bureauPieHTML = sidePieHTML('pie-bureau', `Share of ${name} ${seriesLabel(k)} ${S.k === 'revenue' ? 'income' : 'spending'} by ${isCounty() ? 'department' : 'bureau'}`, bureauPie);
         const note = (isCounty() ? 'Departments as the County\'s 2026 budget book groups them. Select one to see its line items.' : 'Bureaus as on the city\'s 2027 org chart. Select one to see its line items.')
           + (hasWide ? ` “${unitLabel(ids.find((u) => O.units[u].kind === 'department-wide'))}” collects budget groups that are not a bureau.` : '');
         bureauList = `<section class="bureau-list" id="sec-bureaus" tabindex="-1" aria-labelledby="bl-t"><h2 class="list-title" id="bl-t">${S.k === 'revenue' ? 'Income by' : 'Spending by'} ${isCounty() ? 'Department' : 'Bureau'}</h2><p class="hint hint-top">${esc(note)} Amounts open the source page in the budget book.</p>
-          <ul class="cards" aria-labelledby="bl-t">${cardList(items, { total: totalOf(selRows, k).v, k, shareOf: `${name} ${S.k === 'revenue' ? 'revenue' : 'spending'}`, level: 3, notes: cardNotes })}</ul>${gapNotes(cardNotes)}</section>`;
+          ${bureauPieHTML ? '<div class="with-pie">' : ''}<ul class="cards" aria-labelledby="bl-t">${cardList(items, { total: totalOf(selRows, k).v, k, shareOf: `${name} ${S.k === 'revenue' ? 'revenue' : 'spending'}`, level: 3, notes: cardNotes, keys: !!bureauPieHTML })}</ul>${bureauPieHTML ? `${bureauPieHTML}</div>` : ''}${gapNotes(cardNotes)}</section>`;
       }
     }
     document.title = pageTitle(`${name} ${seriesLabel(k)}`);
     const about = aboutHTML('What does this department do?', dept.desc);
     const v = entityView({ title: name, subtitle, selRows, cmpRows, crumbs: [{ label: 'Home', href: homeHash() }, { label: name }], bureauList, changes: deptChangesHTML(di), deptPicker: picker, scope: { dept: di }, about });
-    return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats); mountLines(selRows, cmpRows, true); } };
+    return { ...v, after: () => { entityCharts(selRows, cmpRows, v.cats); if (bureauPieHTML) drawSidePie('pie-bureau', bureauPie); mountLines(selRows, cmpRows, true); } };
   }
 
   /* County: a department headed by (or serving) elected officials, from data/county/elected_offices.csv. The sentence links
@@ -2461,7 +2502,7 @@
     destroyCharts();
     notesShown = new Set();
     let page;
-    if (route.name === 'home') page = { html: homeView(), after: () => { if (isReserve()) drawReserve(); else { drawTrend(); revExpAfter(); drawContext(); } } };
+    if (route.name === 'home') page = { html: homeView(), after: () => { if (isReserve()) drawReserve(); else { drawTrend(); revExpAfter(); drawContext(); homePies.forEach(([id, items]) => drawSidePie(id, items)); } } };
     else if (route.name === 'changes') page = changesPage();
     else if (route.name === 'dept') page = deptPage();
     else if (route.name === 'about') page = { html: '<header class="page-head"><h1 id="page-h" tabindex="-1">About the data</h1></header>', after: () => { const t = q.get('s') && $(q.get('s')); if (t) { if (t.tagName === 'DETAILS') t.open = true; t.scrollIntoView(); } } };
