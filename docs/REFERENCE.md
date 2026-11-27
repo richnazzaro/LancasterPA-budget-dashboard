@@ -89,8 +89,8 @@ The page shell. `app.js` replaces the wordmark, tagline, description, footer and
 All colors live in three blocks at the top of the file; the charts read them from there (`loadTokens()` in `app.js`), so no color is set in JavaScript.
 
 - `:root { … }` ([L17](../web/styles.css#L17)): the light theme, plus the fonts;
-- `:root[data-theme="dark"] { … }` ([L54](../web/styles.css#L54)): dark, when chosen with the header toggle;
-- `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { … } }` ([L67](../web/styles.css#L67)): the same dark values, for visitors who have not chosen (the site follows their device).
+- `:root[data-theme="dark"] { … }` ([L55](../web/styles.css#L55)): dark, when chosen with the header toggle;
+- `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { … } }` ([L68](../web/styles.css#L68)): the same dark values, for visitors who have not chosen (the site follows their device).
 
 **Change a dark value in both dark blocks** (they hold identical values). Keep text at 4.5:1 contrast on `--bg` and chart marks, borders that identify a control and the focus ring at 3:1, in both themes (DESIGN.md, "The Contrast Rule"). The comment above `:root` gives the reasoning and the measured ratios.
 
@@ -139,31 +139,32 @@ All colors live in three blocks at the top of the file; the charts read them fro
 | `--cal-deadline-fg` | `#fff` | `#0d1410` | Text on the "Deadline" label (8.2:1 / 9.5:1) | |
 | `--font` | `"Source Sans 3", ui-sans-serif, system-ui, …, sans-serif` | (same) | Body, labels, tables, controls | `Chart.defaults.font.family` in `boot()` |
 | `--serif` | `"Source Serif 4", Georgia, "Times New Roman", serif` | (same) | Headlines, big figures, deck sentence, running head, department names | |
+| `--rail-w` | `260px` | (same) | Width of the left contents rail on wide screens (1100px and up). It fits the 26px wordmark on two lines and the longest rail entries on one line; measure them before narrowing it further. | |
 
 Other colors outside the token blocks:
 - **Printing How the budget is made** (`Printing the budget calendar`, at the end of the file): a `@media print` `:root:has(body.calendar-page)` block repeats the light values of the main tokens, so the page prints as paper and ink even when the screen is dark. Change it with the light tokens.
-- **Dropdown chevron** ([L136](../web/styles.css#L136)): drawn in the `select` background image, light `%234a524d` (#4a524d), dark `%23a9b4ac` (#a9b4ac) in both dark rules at the end of the file ([L956](../web/styles.css#L956)).
+- **Dropdown chevron** ([L137](../web/styles.css#L137)): drawn in the `select` background image, light `%234a524d` (#4a524d), dark `%23a9b4ac` (#a9b4ac) in both dark rules at the end of the file ([L957](../web/styles.css#L957)).
 
 ### Type sizes (main ones)
 
 | Element | Rule | Current |
 |---|---|---|
-| Body text | `body {` ([L85](../web/styles.css#L85)) | 16px / 1.5, `--font`, tabular figures |
-| Site name | `.wordmark {` ([L102](../web/styles.css#L102)) | serif 24px bold |
-| Running head above headings ("City of Lancaster") | `.eyebrow {` ([L953](../web/styles.css#L953)) | serif 18px semibold, `--sel-ink` |
-| Page heading | `.page-head h1 {` ([L126](../web/styles.css#L126)) | serif 56px (44px under 1024px, 32px on phones) |
-| Deck sentence ("Up $5.0M (6.0%) …") | `.deck {` ([L843](../web/styles.css#L843)) | serif 26px semibold |
-| Big total | `.big-total {` ([L847](../web/styles.css#L847)) | serif 44px, `--sel-ink`; label `.big-total .big-label` 13px uppercase |
-| Department name | `.dept-name {` ([L183](../web/styles.css#L183)) | serif 52px |
+| Body text | `body {` ([L86](../web/styles.css#L86)) | 16px / 1.5, `--font`, tabular figures |
+| Site name | `.wordmark {` ([L103](../web/styles.css#L103)) | serif 24px bold |
+| Running head above headings ("City of Lancaster") | `.eyebrow {` ([L954](../web/styles.css#L954)) | serif 18px semibold, `--sel-ink` |
+| Page heading | `.page-head h1 {` ([L127](../web/styles.css#L127)) | serif 56px (44px under 1024px, 32px on phones) |
+| Deck sentence ("Up $5.0M (6.0%) …") | `.deck {` ([L844](../web/styles.css#L844)) | serif 26px semibold |
+| Big total | `.big-total {` ([L848](../web/styles.css#L848)) | serif 44px, `--sel-ink`; label `.big-total .big-label` 13px uppercase |
+| Department name | `.dept-name {` ([L184](../web/styles.css#L184)) | serif 52px |
 | Chart text | `Chart.defaults.font.size` in `app.js` ([L3297](../web/app.js#L3297)) | 13px |
 
 ### Breakpoints
 
 | Width | What changes | Search for |
 |---|---|---|
-| 1280px and up | About sections two to a row | `min-width: 1280px` ([L834](../web/styles.css#L834)) |
+| 1280px and up | About sections two to a row | `min-width: 1280px` ([L835](../web/styles.css#L835)) |
 | 1099px and down | Header is a top bar; the sections are one row (16px apart, fits from about 750px; narrower it scrolls sideways) | `max-width: 1099px` |
-| 1100px and up | Header becomes the 300px contents rail; main column `max-width: 1360px` | `min-width: 1100px` ([L746](../web/styles.css#L746)) |
+| 1100px and up | Header becomes the contents rail (`--rail-w`, 260px; 26px wordmark, 24px side padding); main column `max-width: 1360px` | `min-width: 1100px` ([L747](../web/styles.css#L747)) |
 | 1024px and up / 1023px and down | Bureau cards and What changed tiles two to a row; smaller page headings and big totals below | `min-width: 1024px`, `max-width: 1023px` |
 | 767px and down | Phone layout (stacked tables, "On this page" outline, 46px tabs; the pinned controls in two rows of two, the status stamp scrolling away, field notes read by screen readers only) | `max-width: 767px` |
 | 1024px and up | "What do these mean?" ends the row of controls; below 1024px it sits on its own line under them | `.controls-define` inside `min-width: 1024px` |
@@ -265,8 +266,8 @@ Each row names the function that writes the text; search for it in `web/app.js`.
 | Wordmark, tagline, footer, contact line ("Questions or corrections: …"), nav links | `applyChrome()` ([L3252](../web/app.js#L3252)) |
 | City / County tab links (each opens the same kind of page in the other entity) | `renderSwitch()` ([L3270](../web/app.js#L3270)) |
 | Status stamp ("2027: Revised proposal, not adopted"), above the controls | `statusHTML()` ([L300](../web/app.js#L300)), `STATUS` |
-| Controls (wide screens: stamp, then Budget year, Compare with, Fund, Spending / Income, then "What do these mean?"; phones: a compact 45px summary that expands on tap and closes on scroll; pinned while scrolling) | `controlsWrap()` ([L386](../web/app.js#L386)), `filtersHTML()` ([L402](../web/app.js#L402)), `reserveFiltersHTML()` ([L334](../web/app.js#L334)), `cbFiltersHTML()` ([L990](../web/app.js#L990)), `changesFiltersHTML()` ([L2267](../web/app.js#L2267)), `onFilter()` ([L450](../web/app.js#L450)), `pinControls()` ([L2561](../web/app.js#L2561)); look: `.controls` (sticky, `.is-stuck`), `.controls-compact`, `.controls-body`, `.controls-stamp`, `.controls-fields`, `.controls-define` in `styles.css` ([L399](../web/styles.css#L399)), and `html { scroll-padding-top: var(--pin-h) }` |
-| "What do these mean?" panel (Figures and Funds, the "shown" / "comparing" / "selected" markers) | `explainHTML()` ([L352](../web/app.js#L352)), `EXPLAIN_FIGURES`, `setExplain()`; wording from `figureWords()`, `FUND_INTRO`, `FUND_INFO`, `balanceWord()`; look: `.explain-toggle`, `.explain`, `.explain-h`, `.explain-grid` (columns `repeat(auto-fit, minmax(16rem, 1fr))`), `.explain-item`, `.explain-tag` in `styles.css` ([L426](../web/styles.css#L426)) |
+| Controls (wide screens: stamp, then Budget year, Compare with, Fund, Spending / Income, then "What do these mean?"; phones: a compact 45px summary that expands on tap and closes on scroll; pinned while scrolling) | `controlsWrap()` ([L386](../web/app.js#L386)), `filtersHTML()` ([L402](../web/app.js#L402)), `reserveFiltersHTML()` ([L334](../web/app.js#L334)), `cbFiltersHTML()` ([L990](../web/app.js#L990)), `changesFiltersHTML()` ([L2267](../web/app.js#L2267)), `onFilter()` ([L450](../web/app.js#L450)), `pinControls()` ([L2561](../web/app.js#L2561)); look: `.controls` (sticky, `.is-stuck`), `.controls-compact`, `.controls-body`, `.controls-stamp`, `.controls-fields`, `.controls-define` in `styles.css` ([L400](../web/styles.css#L400)), and `html { scroll-padding-top: var(--pin-h) }` |
+| "What do these mean?" panel (Figures and Funds, the "shown" / "comparing" / "selected" markers) | `explainHTML()` ([L352](../web/app.js#L352)), `EXPLAIN_FIGURES`, `setExplain()`; wording from `figureWords()`, `FUND_INTRO`, `FUND_INFO`, `balanceWord()`; look: `.explain-toggle`, `.explain`, `.explain-h`, `.explain-grid` (columns `repeat(auto-fit, minmax(16rem, 1fr))`), `.explain-item`, `.explain-tag` in `styles.css` ([L427](../web/styles.css#L427)) |
 | Field labels: Budget year, Compare with, Fund, Show (Spending / Income), "No comparison", "(the budget year shown)", "Only the funds this department uses are listed.", "What changed covers 2027 only." | `filtersHTML()`, `changesFiltersHTML()`, `figureOptions()` |
 | Live sentence after a change ("Showing 2027 Revised compared with 2026 Projected, General Fund, spending.") | `viewSentence()` ([L432](../web/app.js#L432)); the region is `<p id="view-status" aria-live="polite">` in `index.html` |
 | Fund list order (All funds, General Fund, other funds, Reserve Fund last) and "Only the funds this department uses are listed." | `fundChoices()` ([L310](../web/app.js#L310); `fundOptions()` turns it into the list's options, and the "What do these mean?" panel defines the same funds), `filtersHTML()` |
@@ -303,8 +304,8 @@ Each row names the function that writes the text; search for it in `web/app.js`.
 | Staff section (Budgeted positions, Salaries and wages, position titles) | `staffHTML()` ([L1461](../web/app.js#L1461)) |
 | Category table | `categorySection()` ([L1416](../web/app.js#L1416)) |
 | Line items: count ("97 line items (1 only in 2026 Projected)"), headers, the search box ("Search line items, account numbers…"), "Show 20 more" | `lineCountText()` ([L1621](../web/app.js#L1621)), `lineTable()` ([L1626](../web/app.js#L1626)) |
-| A line item's history: the line's name is a toggle (`.li-toggle`, an ink chevron like the bureau "What does it do" summary: pointing right closed, down open; a muted hint above the table, `.li-hint`: "Select a line's name to see it year by year.") that unfolds a full-width row (`tr.li-hist`) under it: a small line chart (legend, "The vertical axis starts at …, not zero."), the "stands out" note and any line note, and a "Show values" table (Year, Figure, Amount; every Amount links to its PDF page). Figures are the line's rows (same account code and fund) per year by the site's own rule: Actual, Projected, Proposed and Revised, then Projection (County: Budget); a year with no row shows —. One row open at a time; re-sorting, searching or "Show more" closes it | `lineHistoryPoints()` ([L1665](../web/app.js#L1665)), `lineHistoryNotes()` ([L1677](../web/app.js#L1677)), `lineHistoryHTML()` ([L1687](../web/app.js#L1687)), `toggleLineHistory()` ([L1701](../web/app.js#L1701)), `closeLineHistory()` ([L1695](../web/app.js#L1695)), `mountLines()` ([L1730](../web/app.js#L1730)); styles `.li-toggle`, `.li-hist` ([L970](../web/styles.css#L970)) |
-| A line item's history: the line's name is a toggle (`.li-toggle`, an ink chevron like the bureau "What does it do" summary: pointing right closed, down open; a muted hint above the table, `.li-hint`: "Select a line's name to see it year by year.") that unfolds a full-width row (`tr.li-hist`) under it: a small line chart (legend, "The vertical axis starts at …, not zero."), the "stands out" note and any line note, and a "Show values" table (Year, Figure, Amount; every Amount links to its PDF page). Figures are the line's rows (same account code and fund) per year by the site's own rule: Actual, Projected, Proposed and Revised, then Projection (County: Budget); a year with no row shows —. One row open at a time; re-sorting, searching or "Show more" closes it | `lineHistoryPoints()` ([L1665](../web/app.js#L1665)), `lineHistoryNotes()` ([L1677](../web/app.js#L1677)), `lineHistoryHTML()` ([L1687](../web/app.js#L1687)), `toggleLineHistory()` ([L1701](../web/app.js#L1701)), `closeLineHistory()` ([L1695](../web/app.js#L1695)), `mountLines()` ([L1730](../web/app.js#L1730)); styles `.li-toggle`, `.li-hist` ([L970](../web/styles.css#L970)) |
+| A line item's history: the line's name is a toggle (`.li-toggle`, an ink chevron like the bureau "What does it do" summary: pointing right closed, down open; a muted hint above the table, `.li-hint`: "Select a line's name to see it year by year.") that unfolds a full-width row (`tr.li-hist`) under it: a small line chart (legend, "The vertical axis starts at …, not zero."), the "stands out" note and any line note, and a "Show values" table (Year, Figure, Amount; every Amount links to its PDF page). Figures are the line's rows (same account code and fund) per year by the site's own rule: Actual, Projected, Proposed and Revised, then Projection (County: Budget); a year with no row shows —. One row open at a time; re-sorting, searching or "Show more" closes it | `lineHistoryPoints()` ([L1665](../web/app.js#L1665)), `lineHistoryNotes()` ([L1677](../web/app.js#L1677)), `lineHistoryHTML()` ([L1687](../web/app.js#L1687)), `toggleLineHistory()` ([L1701](../web/app.js#L1701)), `closeLineHistory()` ([L1695](../web/app.js#L1695)), `mountLines()` ([L1730](../web/app.js#L1730)); styles `.li-toggle`, `.li-hist` ([L971](../web/styles.css#L971)) |
+| A line item's history: the line's name is a toggle (`.li-toggle`, an ink chevron like the bureau "What does it do" summary: pointing right closed, down open; a muted hint above the table, `.li-hint`: "Select a line's name to see it year by year.") that unfolds a full-width row (`tr.li-hist`) under it: a small line chart (legend, "The vertical axis starts at …, not zero."), the "stands out" note and any line note, and a "Show values" table (Year, Figure, Amount; every Amount links to its PDF page). Figures are the line's rows (same account code and fund) per year by the site's own rule: Actual, Projected, Proposed and Revised, then Projection (County: Budget); a year with no row shows —. One row open at a time; re-sorting, searching or "Show more" closes it | `lineHistoryPoints()` ([L1665](../web/app.js#L1665)), `lineHistoryNotes()` ([L1677](../web/app.js#L1677)), `lineHistoryHTML()` ([L1687](../web/app.js#L1687)), `toggleLineHistory()` ([L1701](../web/app.js#L1701)), `closeLineHistory()` ([L1695](../web/app.js#L1695)), `mountLines()` ([L1730](../web/app.js#L1730)); styles `.li-toggle`, `.li-hist` ([L971](../web/styles.css#L971)) |
 | "Export this view (CSV)": columns and file name | `exportCSV()` ([L1714](../web/app.js#L1714)) |
 
 **What changed (`#/changes`)**
