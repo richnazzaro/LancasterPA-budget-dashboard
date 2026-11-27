@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 """Build the dashboard's JSON from every data/processed/budget_long_*.csv.
 
-Which figure is shown (the project's selection rule): ONE kind of figure per year.
+Which figure is shown (the project's selection rule): ONE main kind of figure per year.
   * Newest year (the newest book's own year): "proposed" (the original proposal)
     and "revised" (proposed_revised), when the book has them.
   * Any earlier year with an audited actual in the book two years later: "actual" only.
   * The year before the newest, which has no actual yet: "projected" only, from
     the next book (projected_revised preferred).
-  * Adopted, amended, year-to-date and older books' own-year proposals are never shown.
+  The main kind is what the multi-year charts and tables draw.
+Plus ONE budget figure per year (owner, 2026-11-27), selectable in Budget year / Compare with but never
+drawn on the charts: "amended" when the next book prints an amended column for the year, otherwise
+"adopted" (never both). Decided from the data (BUDGET_MEASURES), not by year.
+  * Year-to-date columns and older books' own-year proposals are never shown.
 
 Figures are copied exactly as extracted: nothing is rounded, filled or adjusted.
 When a non-designated book carries the same account/year/measure with a
@@ -55,12 +59,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import income_rules
+import tax_limit
 
 from changes import build_changes
 from org_structure import build_org
 
 ROOT = Path(__file__).resolve().parent.parent
-MEASURES = ["actual", "projected", "proposed", "revised"]
+MEASURES = ["actual", "projected", "proposed", "revised", "amended", "adopted"]
 PROJECTION = "projection"  # doc_type of the multi-year projections book; never a measure in `series`
 PROPOSED_MEASURES = {"proposed", "revised"}  # shown only for the newest year
 # measure -> (book offset from the figure's fiscal year, source columns in preference order)
@@ -69,7 +74,11 @@ RULE = {
     "revised": (0, ["proposed_revised"]),
     "projected": (1, ["projected_revised", "projected"]),
     "actual": (2, ["actual"]),
+    "amended": (1, ["amended"]),
+    "adopted": (1, ["adopted"]),
 }
+# The year's budget figure, in preference order: Amended where the book prints it, else Adopted (one per year).
+BUDGET_MEASURES = ["amended", "adopted"]
 COLUMN_TO_MEASURE = {c: m for m, (_, cols) in RULE.items() for c in cols}
 FUND_ALIASES = {  # words used in printed roll-up labels -> fund names in the CSVs
     "general fund": "General Fund",
@@ -210,7 +219,8 @@ def build(processed: Path, out: Path) -> dict:
         _, _, row, book, amount = pool[0]
         picks[(fy, measure)].append((code, row, book, amount, cands))
 
-    # One kind per year: proposed/revised for the newest year, else actual, else projected.
+    # One main kind per year: proposed/revised for the newest year, else actual, else projected;
+    # plus the year's budget figure: amended where printed, else adopted.
     kept = set()
     for fy in {fy for fy, _ in picks}:
         have = {m for f, m in picks if f == fy}
@@ -220,6 +230,9 @@ def build(processed: Path, out: Path) -> dict:
             kept.add((fy, "actual"))
         elif "projected" in have:
             kept.add((fy, "projected"))
+        budget_fig = next((m for m in BUDGET_MEASURES if m in have), None)
+        if budget_fig:
+            kept.add((fy, budget_fig))
 
     # Pass 2: intern what is kept, log disagreements between books.
     series = defaultdict(lambda: {"a": [], "v": [], "p": [], "d": [], "c": []})
@@ -286,6 +299,9 @@ def build(processed: Path, out: Path) -> dict:
         "accounts": [list(a) for a in accounts.items],
         # Revenue accounts that are not income: {account index: draw | transfer | charge} (data/income_rules.csv).
         "not_income": income_rules.not_income(accounts.items, funds.items, cats.items),
+        # Home Rule Charter § 8.08: each budget made under the charter tested against the 6% tax revenue limit
+        # (scripts/tax_limit.py; config/tax_limit.json, data/tax_limit_lines.csv). Sums are calculated.
+        "tax_limit": tax_limit.build(designated, RULE, docs),
         "series": out_series,
         "printed": printed,
         "known_issues": known_issues,

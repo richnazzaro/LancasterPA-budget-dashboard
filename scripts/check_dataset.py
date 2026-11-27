@@ -3,10 +3,11 @@
 
 1. Every series total per fund and revenue/expense equals the sum of the chosen
    column in the designated book's budget_long CSV (exact, to the dollar).
-2. One kind of figure per year: the newest year has "proposed" and "revised" (both
+2. One main kind of figure per year: the newest year has "proposed" and "revised" (both
    when the newest book has both columns); every earlier year has "actual" when any
-   book reports an audited actual for it, otherwise "projected"; never adopted,
-   amended or year-to-date.
+   book reports an audited actual for it, otherwise "projected"; never year-to-date.
+   Plus one budget figure per year (selectable, not charted): "amended" when the next
+   book prints an amended column for the year, otherwise "adopted"; never both.
 3. Printed totals: every section, department and fund total the books print equals the validation CSV, its
    line sum and rounding flag re-add from budget_long ($5 for a section, $0.50 per line for a roll-up), and the
    totals the site can display are matched to them; every flag that shows is listed (failures: value, sum, flag).
@@ -38,7 +39,11 @@
    every printed section and fund total equals the validation CSV, its line sum and flag re-add from budget_long;
    each fund's printed Surplus/(Deficit) equals the CSV and its printed Total Revenue less Total Expense; the
    assumptions equal the extracted assumptions page.
-Exits 1 on any failure of checks 1, 2, 3, 4, 6, 7, 8, 9 and the CSV part of 5. Standard library only.
+10. Home Rule 6% tax revenue limit (budget.json `tax_limit`, scripts/tax_limit.py): every budget made under the charter
+   is re-tested from the budget_long CSVs (the counted tax lines of data/tax_limit_lines.csv, the same book's
+   preceding-year figure) and must match the JSON (amounts, baseline, change, over/within); a General Fund tax revenue
+   line the CSV does not list fails.
+Exits 1 on any failure of checks 1, 2, 3, 4, 6, 7, 8, 9, 10 and the CSV part of 5. Standard library only.
 Usage: python3 scripts/check_dataset.py [--entity city|county]
   --entity county checks web/data/county/ against data/processed/county/ (scripts/check_county.py).
 """
@@ -52,6 +57,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 import income_rules
+import tax_limit
 from changes import counts_as_income
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -910,6 +916,12 @@ def main() -> int:
     for sr in budget["series"].values():
         by_year[sr["year"]].add(sr["measure"])
     bad_years = 0
+    # The year's budget figure comes from the next book only (its adopted / amended columns for the prior year).
+    year_of_doc = {b["doc"]: b["year"] for b in budget["books"] if b["used"]}
+    budget_cols = defaultdict(set)  # fiscal year -> adopted / amended columns printed by the book a year later
+    for (fy, c, _fund, _kind, doc) in raw:
+        if c in ("adopted", "amended") and year_of_doc.get(doc) == int(fy) + 1:
+            budget_cols[int(fy)].add(c)
     for y, got in sorted(by_year.items()):
         if y == newest:
             want = {"proposed", "revised"} & {m for m, c in (("proposed", "proposed"), ("revised", "proposed_revised")) if c in raw_cols[str(y)]}
@@ -917,6 +929,7 @@ def main() -> int:
             want = {"actual"}
         else:
             want = {"projected"}
+        want |= {"amended"} if "amended" in budget_cols[y] else {"adopted"} if "adopted" in budget_cols[y] else set()
         ok = got == want
         bad_years += not ok
         print(f"{'ok  ' if ok else 'FAIL'} {y}: shows {', '.join(sorted(got))}" + ("" if ok else f" (expected {', '.join(sorted(want))})"))
@@ -932,6 +945,7 @@ def main() -> int:
     failures += check_summaries(budget)
     failures += check_spikes(budget)
     failures += check_projection(budget)
+    failures += tax_limit.check(budget)
 
     print(f"\n{failures} series mismatches")
     return 1 if failures else 0

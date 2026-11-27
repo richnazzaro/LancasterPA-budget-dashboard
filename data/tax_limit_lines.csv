@@ -1,0 +1,10 @@
+entity,code,name,counts,reason
+city,400000,City Real Estate Taxes,yes,"The City's property tax: a tax the City levies, counted under § 8.08."
+city,400200,Real Estate Transfer,yes,"The realty transfer tax: a tax the City levies, counted under § 8.08."
+city,400300,Earned Income Tax,yes,"The earned income tax: a tax the City levies, counted under § 8.08."
+city,400400,Local Services Tax,yes,"The local services tax: a tax the City levies, counted under § 8.08."
+city,401000,Payment in Lieu of Taxes,no,"A voluntary payment by tax-exempt owners, not a tax the City levies."
+city,400500,Penalty Current Tax,no,"Penalties on late payment of current taxes: a charge on top of the tax, not a tax rate or levy."
+city,400900,Lien Interest & Costs,no,"Interest and collection costs on tax liens: a charge for collecting, not a tax."
+city,401100,Utility Tax Refund,no,"The state's public utility realty tax refund: a payment from the state, not a tax the City levies."
+city,401200,Real Estate Tax Lien Proc,no,"Proceeds from selling delinquent tax liens: a one-time sale of an asset, which § 8.08 leaves out."

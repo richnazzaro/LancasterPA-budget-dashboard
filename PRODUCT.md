@@ -30,7 +30,7 @@ Data comes from the city's budget PDFs, extracted and validated by a pipeline wi
 ## Capabilities and Constraints
 
 - Views: Home (Totals by Year, What changed, departments, funds), department and bureau pages with line items and a Staff section (budgeted positions and salaries by year), What changed, Reserve Fund, Funds and terms, About the data. County: the same pages without Staff; a General Fund Balance page in the Reserve Fund's place (budget-resolution and audited balances side by side, never combined); a Budget and Actual section (audited actuals beside the Budget at fund level); The 2026 Budget in Context; elected-office labels. Every page heading carries the entity's name as a running head.
-- One kind of figure per year: historic years Actual, the prior budget year Projected, the new year Proposed and Revised. Adopted and Amended are never shown.
+- One main kind of figure per year (what the charts over time draw): historic years Actual, the prior budget year Projected, the new year Proposed and Revised. Each earlier year's budget as passed can also be picked in Budget year and Compare with: Amended where the books print it, otherwise Adopted, never both (owner, 2026-11-27).
 - Links from numbers to PDF pages (`#page=N`) stay, quiet and without "p. N" text.
 - County figures are labelled "Budget" (never Adopted or Proposed on screen; the newest year's status line cites Resolution 79 of 2025), and audited figures "Actual". The County has no Staff section; its General Fund Balance page takes the Reserve Fund's place.
 - Entity name, title, footer, default fund, fund names and data paths live in the `entities` map of `web/config.json`; all colors live in the `:root` block of `web/styles.css` (charts read them from there). Keep it that way.

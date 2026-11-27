@@ -26,7 +26,7 @@ Use the **City** and **County** tabs at the top of the page to switch between th
 
 ### City of Lancaster
 
-The figures come from the City's budget books for 2022 through 2027, and a separate book of projections for 2028 and 2029. Each book prints several years side by side. To keep things from getting mixed up, the site shows **one kind of figure for each year**:
+The figures come from the City's budget books for 2022 through 2027, and a separate book of projections for 2028 and 2029. Each book prints several years side by side. To keep things from getting mixed up, the site shows **one main kind of figure for each year** (this is what the charts over time draw):
 
 | Year | What you see | What it means |
 |---|---|---|
@@ -35,7 +35,7 @@ The figures come from the City's budget books for 2022 through 2027, and a separ
 | 2027 | **Proposed** and **Revised** | The mayor's first proposal and the revised proposal that replaced it. You can switch between them. Neither has been adopted. |
 | 2028–2029 | **Projection** | The City's own estimate of the years after 2027. Shown lighter, only at the end of the charts and tables over time. |
 
-The City also prints **Adopted** and **Amended** figures. The site leaves them out on purpose so that every comparison is like with like. The **Funds and terms** page explains every one of these words.
+You can also pick each year's **budget as passed**: the **Amended** budget (the adopted budget with the changes made during the year) where the next year's book prints one, otherwise the **Adopted** budget, never both. Today 2021 to 2026 all have an Amended figure. It is a plan, not what was spent: compare "2025 Actual" with "2025 Amended" to see how a year turned out against its budget. It is not drawn on the charts over time. The **Funds and terms** page explains every one of these words.
 
 When the City publishes a new budget book, every year moves forward: the new year becomes Proposed and Revised, the year before becomes Projected, and older years become Actual.
 
@@ -50,15 +50,14 @@ When the City publishes a new budget book, every year moves forward: the new yea
 
 **Overview.** The home page opens on the **General Fund**, the fund paid for mostly by taxes. At the top is the total and one sentence that says whether it is up or down and by how much. On Spending it also says how much is drawn from savings to balance the budget; Below it: a short "What changed" summary (on Income, with a tile for each tax change: the change in the rate, with its arrow, and the rate before and after), a chart of totals by year, every department with its share, and income against spending for each fund.
 
-**Changing what you see.** Every page has a one-line strip such as "Viewing 2027 Revised · compared with 2026 Projected · General Fund · Spending". Press **Change view** to pick:
+**Changing what you see.** Every page has the same controls above the figures, always open, under a stamp that names the figure in view (such as "2027: Revised proposal, not adopted"):
 
-- **Fiscal year,** the year to show;
-- **Compare with,** any other year and figure, or no comparison;
+- **Budget year,** the year and figure to show, such as "2027 Revised", "2027 Proposed", "2026 Projected", "2026 Amended" or "2025 Actual";
+- **Compare with,** any other year and figure from the same list, or no comparison;
 - **Fund,** one fund, all funds together, or the savings balance (Reserve Fund or General Fund Balance);
-- **Figure,** Proposed or Revised, where a year has both;
 - **Show,** Spending or Income.
 
-The site remembers whether you left the controls open. "What do these mean?" and "What is a fund?" beside the controls give short definitions.
+They work with a keyboard (Tab moves between them; arrow keys change the Spending / Income choice) and with screen readers, which announce the new view after each change. They stay at the top of the page while you scroll (on a phone in a compact two-row form), so you can change the view from anywhere on the page. "What do these mean?", the last of the controls, opens the definitions of the figures (Actual, Projected, Revised and the rest) and of the funds in the Fund list, with the ones you are looking at marked, and links to the full Funds and terms page.
 
 **Departments and bureaus.** Click a department to open its page: what the department does (quoted from the City's own descriptions), what changed, a comparison with another year, its bureaus, its staff (City only), its spending categories and every line item. City departments and bureaus follow the City's 2027 organization chart in every year, so you can follow one office over time. County departments are grouped as the County's books group them (General Government, Courts and Row Offices, Corrections, Human Services); offices headed by an elected official are marked "Elected office".
 
@@ -83,6 +82,8 @@ When one fund charges another for services (for example the Water Fund paying th
 
 **Sharing.** The address in your browser keeps the year, figure, comparison and fund you chose, so a link opens exactly the view you see.
 
+**Budget calendar** (in the header, City only; the page is How the City budget is made) shows the City's budget calendar under its Home Rule Charter as a month-by-month timeline: when the Mayor must present the budget and what it must contain, the 6% limit on tax revenue and how it can be waived, Council's deadlines and what happens if one is missed, and when the public can take part. Every rule links to the page of the charter that sets it. It also tests each City budget made under the charter against the 6% limit: the four City taxes in the General Fund (real estate, real estate transfer, earned income and local services) against the same budget book's figure for the year before. The 2025 budget (+12.1%), the 2027 Proposed (+11.7%) and the 2027 Revised (+8.6%) are over it, which needs a Council waiver vote; the 2026 budget (+5.1%) is within it. These sums are the site's own, labelled calculated. The flag also shows on the Income view and on What changed. The County's budget calendar has not been researched.
+
 **About the data** lists the books used for each year, how the figures were checked, every known error in the source books, and download links for the data.
 
 ## How to check a number
@@ -96,7 +97,7 @@ When one fund charges another for services (for example the Water Fund paying th
 ## Known limits
 
 **City**
-- **2027 is not adopted.** The 2027 figures are the mayor's Proposed and Revised budgets. The site never shows Adopted figures: when the City's next book arrives, 2027 becomes that book's Projected year-end estimate.
+- **2027 is not adopted.** The 2027 figures are the mayor's Proposed and Revised budgets. When the City's next book arrives, 2027 becomes that book's Projected year-end estimate, and its Amended (or Adopted) budget can be picked too.
 - **Actual figures lag.** A year's actual spending is first printed in the budget book two years later, so 2026 is still an estimate.
 - **Positions are budgeted positions,** not a headcount of people employed. Fractions are positions shared between offices. Salary growth is not shown; benefits changes are shown in dollars.
 - **The books contain errors.** About the data lists 40 reviewed problems in the City's books. The biggest: the 2027 book prints two different General Fund balances for the end of 2025 ($13,479,257 and $25,604,677); the site uses the Revised one and flags the 2025 change. The 2027 Proposed balance page is also $475,000 off from its own figures.

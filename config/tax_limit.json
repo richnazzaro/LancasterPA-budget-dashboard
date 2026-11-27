@@ -1,0 +1,17 @@
+{
+  "_about": "Home Rule Charter § 8.08 tax revenue limit test (scripts/tax_limit.py, budget.json `tax_limit`). Which lines count: data/tax_limit_lines.csv.",
+  "entity": "city",
+  "fund": "General Fund",
+  "limit_pct": 6,
+  "first_year": 2025,
+  "section": "8.08",
+  "tested": [
+    {"column": "proposed", "measure": "proposed"},
+    {"column": "proposed_revised", "measure": "revised"}
+  ],
+  "baseline_measure": "projected",
+  "transition": {
+    "section": "13.14",
+    "budget_years": [2025, 2026, 2027]
+  }
+}

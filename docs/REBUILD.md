@@ -126,6 +126,7 @@ These are reviewed by a person and committed; the scripts read them but never wr
 | `data/sign_corrections.csv`, `data/ocr_corrections.csv`, `data/staffing_corrections.csv` | proven value fixes, each keeping the printed value and the evidence |
 | `data/org_units_2027.csv`, `data/org_structure_2027.csv` | departments and bureaus from the 2027 org chart, and which org code belongs to which |
 | `data/policy_notes.csv` | tax-rate facts that are not in the budget tables, each with its source |
+| `data/tax_limit_lines.csv` | which General Fund lines count as tax revenue for the Home Rule 6% limit (§ 8.08), with `config/tax_limit.json` (first charter year, limit, columns tested). If `check_dataset.py` reports "a General Fund tax revenue line not in data/tax_limit_lines.csv", decide whether it is a tax the City levies and add a row |
 | `data/line_notes.csv` | what a budget book says about one line in one year, shown beside the generated "stands out" note |
 | `data/income_rules.csv` | revenue lines that are not income (draws from savings, transfers from the government's own funds), charges between its funds, and reviewed look-alikes, City and County. If `check_dataset.py` reports a line that "looks like a draw, transfer or charge but has no rule", read the book's note for that line and add a row |
 | `config/county/*.json`, `config/county/acfr/*.json`, `config/county/resolutions/*.json` | each County book's layout and OCR settings; each audited report's source addresses and schedule pages; each budget resolution's address and reprints |
