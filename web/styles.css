@@ -840,18 +840,6 @@ a.src { white-space: nowrap; }
 .phone-toc a { display: flex; align-items: center; min-height: 44px; color: var(--fg); text-decoration: none; font-weight: 500; }
 @media (min-width: 1100px) { .phone-toc { display: none; } }
 
-/* Margin notes: on wide screens the page keeps a reading column and the right-hand margin carries the notes. */
-.margin { display: none; }
-@media (min-width: 1750px) {
-  main.page { display: grid; grid-template-columns: minmax(0, 1fr) 260px; column-gap: 56px; max-width: 1480px; align-items: start; }
-  main.page > #view, main.page > #about { grid-column: 1; }
-  .margin { display: block; grid-column: 2; grid-row: 1 / span 2; position: sticky; top: 40px; padding-top: 20px; border-top: 3px double var(--fg); font-size: 14px; line-height: 21px; color: var(--muted); }
-  .margin-h { margin: 0 0 14px; font-size: 14px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--fg); }
-  .margin dl { margin: 0 0 14px; } .margin dt { font-weight: 700; color: var(--fg); margin-top: 10px; } .margin dd { margin: 0; }
-  .margin p { margin: 0 0 10px; }
-  .about-page .margin, .terms-page .margin, .calendar-page .margin { display: none; }
-}
-
 .trend-axis { margin: 6px 0 0; font-size: 13px; line-height: 18px; color: var(--muted); }
 .trend-axis:empty { display: none; }
 
@@ -1034,7 +1022,7 @@ a.src.cite:hover, a.src.cite:focus-visible { border-bottom: 1px solid currentCol
   .cal-step { padding-left: 64px; }
 }
 @media print {
-  .calendar-page .site-header, .calendar-page .site-footer, .calendar-page .phone-toc, .calendar-page .skip, .calendar-page .margin { display: none !important; }
+  .calendar-page .site-header, .calendar-page .site-footer, .calendar-page .phone-toc, .calendar-page .skip { display: none !important; }
   .calendar-page { display: block !important; }
   .calendar-page main.page { max-width: none; padding: 0; }
   .calendar-page .panel { break-inside: auto; }

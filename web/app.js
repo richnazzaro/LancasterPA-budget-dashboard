@@ -2317,15 +2317,6 @@
       <p>${link('See everything that changed →')}</p></section>`;
   }
 
-  /* ---------- margin notes (wide screens): what the words mean, and where the problems are ---------- */
-  function renderMargin() {
-    const m = $('margin'); if (!m) return;
-    m.innerHTML = `<h2 class="margin-h">Reading notes</h2>
-      <dl>${figureWords().filter(([id]) => EXPLAIN_FIGURES[ENT].includes(id) && id !== 'calculated' && (id !== 'projection' || projectionYears().length)).map(([, t, d]) => `<dt>${t}</dt><dd>${d.replace(/<[^>]+>/g, '').split(/(?<=\.) /)[0]}</dd>`).join('')}</dl>
-      <p>Every amount links to its page in ${isCounty() ? 'the County\'s' : 'the city\'s'} ${isCounty() ? 'books' : 'budget book'}.</p>
-      <p>${knownLink()}</p>`;
-  }
-
   /* ---------- contents rail: where you are, and the sections of this page ---------- */
   let railScroll = null;
   function renderRail(here, onUnit) {
@@ -2411,7 +2402,6 @@
     pinControls();
     renderRail(here, onUnit);
     renderSwitch();
-    renderMargin();
     // The rail's "What changed" link keeps the fund (the Reserve Fund included: that page says it shows the General Fund),
     // the figure and the comparison, and Spending / Income; from an earlier year it opens the newest year's defaults.
     const wcLink = document.querySelector('#site-nav a[data-nav="changes"]');

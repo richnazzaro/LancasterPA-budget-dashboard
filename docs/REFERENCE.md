@@ -79,7 +79,6 @@ The page shell. `app.js` replaces the wordmark, tagline, description, footer and
 | Loading text | `Loading budget…` ([L57](../web/index.html#L57)) | "Loading budget…" | Shown until the data arrives. |
 | View announcement | `id="view-status"` ([L59](../web/index.html#L59)) | empty; `aria-live="polite"`, visually hidden | After a control changes, `announceView()` writes one sentence here ("Showing 2027 Revised compared with 2026 Projected, General Fund, spending."); cleared when you open another page. |
 | About heading | `id="about-title"` ([L60](../web/index.html#L60)) | "About the data" | The body is written by `renderAbout()` / `renderAboutCounty()`. |
-| Reading notes margin | `id="margin"` ([L63](../web/index.html#L63)) | aria-label "Reading notes" | Filled by `renderMargin()` on screens 1750px and wider. |
 | Footer | `id="site-footer"` ([L66](../web/index.html#L66)) | three spans: `footer-text`, `generated`, `footer-contact` | Filled from `footer`, the data's build date and `contact_email`. |
 | Chart library | `Chart.js/4.4.1` ([L72](../web/index.html#L72)) | Chart.js 4.4.1 from cdnjs, with an `integrity` hash | A new version needs its new hash. |
 
@@ -162,7 +161,6 @@ Other colors outside the token blocks:
 
 | Width | What changes | Search for |
 |---|---|---|
-| 1750px and up | Reading notes margin (260px) appears beside the page; main `max-width: 1480px` | `min-width: 1750px` ([L792](../web/styles.css#L792)) |
 | 1280px and up | About sections two to a row | `min-width: 1280px` ([L750](../web/styles.css#L750)) |
 | 1099px and down | Header is a top bar; the sections are one row (16px apart, fits from about 750px; narrower it scrolls sideways) | `max-width: 1099px` |
 | 1100px and up | Header becomes the 300px contents rail; main column `max-width: 1360px` | `min-width: 1100px` ([L662](../web/styles.css#L662)) |
@@ -275,7 +273,6 @@ Each row names the function that writes the text; search for it in `web/app.js`.
 | "Known issues for this view" | `knownLink` ([L290](../web/app.js#L290)) |
 | Printed vs calculated totals, the ≠ note ("The lines this total covers add up to …") | `totalOf()` ([L129](../web/app.js#L129)), `fig()` ([L140](../web/app.js#L140)), `gapNote()` ([L150](../web/app.js#L150)), `missingNote()` ([L158](../web/app.js#L158)) |
 | Contents rail ("On this page") | `renderRail()` ([L2246](../web/app.js#L2246)) |
-| Reading notes margin (1750px and up): the first sentence of each figure word from `figureWords()` | `renderMargin()` ([L2321](../web/app.js#L2321)) |
 | Jump search results and "No matches." | `buildJumpIndex()` ([L2451](../web/app.js#L2451)), `initJump()` ([L2468](../web/app.js#L2468)) |
 | Theme button label | `applyTheme()` ([L2724](../web/app.js#L2724)) |
 | "Could not load the budget data" | `loadEntity()` ([L2749](../web/app.js#L2749)), `boot()` ([L2806](../web/app.js#L2806)) |

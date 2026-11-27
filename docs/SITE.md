@@ -93,7 +93,6 @@ The County view shows the same pages with County figures, all labelled **Budget*
   - **Before 2025**: when voters approved the charter (its cover) and when it took effect (§ 13.02), the earlier rules from the City's 2024 audited financial statements (Optional Third Class City Charter Law; budget to Council before November 30, approved by the end of December), and that the site's 2022–2024 books were made under them.
   - On the County (`#/county/budget-calendar`) the nav link is hidden and the address shows one sentence saying the page covers the City, with a link to it. The County's budget calendar has not been researched.
 - **Page headings** name the budget: a running head ("City of Lancaster", "County of Lancaster", from `web/config.json`) above every heading, and the same name first in the browser tab title.
-- **Reading notes:** on very wide screens (1750px and up) a margin beside the page repeats the first sentence of each figure word from Funds and terms.
 - **About the data** (`#/about`, linked in the header):
   - which book supplies each year, including the projections book and its assumptions;
   - how the figures were validated;
