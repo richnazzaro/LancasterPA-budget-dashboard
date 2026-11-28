@@ -3655,7 +3655,7 @@
     document.title = pageTitle('What would you pay?');
     const { now, next } = taxYears(), cols = taxNextCols();
     const head = `<header class="page-head"><h1 id="page-h" tabindex="-1">What would you pay?</h1>
-      <p class="lede-sm">Your City and County taxes this year, and what they would be next year under the City's ${esc(cols[0].label)} budget. An estimate, not a tax bill.</p></header>`;
+      <p class="lede-sm">Your City and County taxes this year, and what they would be next year under the City's ${esc(cols[0].label)} budget. An estimate, not a tax bill. School district taxes are not included.</p></header>`;
     if (!TAXR?.rates?.length || !now || !next) return { html: `${head}<p class="muted">The tax rates could not be loaded.</p>` };
     if (!TX.who) TX.who = isCounty() ? 'county' : 'both';
     const R = BASE.tax_estimate?.reassessment_year;
@@ -3665,7 +3665,7 @@
     const vals = taxValueYears().map(([y, govs]) => fld(`tx-av-${y}`, `Assessed value, ${y}`,
       R && y >= R ? 'The new value on your reassessment notice.' : `The value on your ${y} tax bill.`, TX.av[y] || '', govs)).join('');
     const eitNow = taxRow('city', 'earned_income', now);
-    const inc = eitNow ? fld('tx-inc', 'Earned income', 'Wages and business profits, as on your PA tax return. City residents only. Used for both years.', TX.inc, ['city']) : '';
+    const inc = eitNow ? fld('tx-inc', 'Earned income', 'Wages and business profits, as on your PA tax return. City residents only. Used for both years. This is the City\'s earned income tax only; your school district\'s is not included.', TX.inc, ['city']) : '';
     const html = `${head}
       ${taxFindHTML()}
       <section class="panel" id="tx-in" tabindex="-1" aria-labelledby="tx-in-t"><h2 class="panel-title" id="tx-in-t">Your details</h2>
@@ -3687,7 +3687,7 @@
           <li><strong>Property tax</strong> is your assessed value ÷ 1,000 × the rate in mills. This year (${now}) uses your ${now} value; next year uses your ${R || next} value, because every property was reassessed for ${R || next}.</li>
           ${eitNow ? `<li><strong>Earned income tax</strong> is your earned income × the City's rate. It applies to people who live in the City. The same income is used for both years, so the change shows only the rate.</li>` : ''}
           <li><strong>Next year</strong> uses the tax rates in the City's ${esc(cols[0].label)} budget. A tax with no rate set yet for ${next} shows this year only.</li>
-          <li><strong>Not included:</strong> School District of Lancaster taxes, your township's or borough's taxes outside the City, the Local Services Tax for people who work in the City, homestead and farmstead exclusions, and discounts and penalties.</li>
+          <li><strong>Not included:</strong> school district taxes (both the school property tax and the school earned income tax), your township's or borough's taxes outside the City, the Local Services Tax for people who work in the City, homestead and farmstead exclusions, and discounts and penalties.</li>
         </ul>
       </section>`;
     return { html, after: mountTax };
