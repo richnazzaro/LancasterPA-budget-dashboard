@@ -1104,8 +1104,8 @@
       type: 'pie',
       data: { labels: data.map((d) => d.label), datasets: [{ data: data.map((d) => d.v), backgroundColor: data.map((d) => d.c), borderColor: BG, borderWidth: 2 }] },
       options: { responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
-        onClick: (_ev, els) => { const x = at(els); if (x && x.href) navigate(x.href); },
-        onHover: (ev, els) => { const x = at(els); ev.native.target.style.cursor = x && x.href ? 'pointer' : 'default'; },
+        onClick: (_ev, els) => { const x = at(els); if (x && x.href) navigate(x.href); else if (x && x.pick && pickSource) pickSource(x.pick); },
+        onHover: (ev, els) => { const x = at(els); ev.native.target.style.cursor = x && (x.href || x.pick) ? 'pointer' : 'default'; },
         plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { label: (c) => `${c.label}: ${money(c.raw)} (${((c.raw / total) * 100).toFixed(1)}%)` } } } },
     }));
   }
@@ -1665,7 +1665,7 @@
      grants and reimbursements); else "Charges to other funds" when income_rules.csv calls it a charge; else the group the book
      prints it under (the bureau). Draws and transfers are not income and never appear. The rows are the same lines the home
      page's total uses (scoped()), so the All row is that total for every column. */
-  let srcPts = new Map(), srcChart = null;
+  let srcPts = new Map(), srcChart = null, pickSource = null;
   function closeSrcChart() { if (srcChart) { srcChart.destroy(); srcChart = null; } }
   function sourceOf(r) {
     const IS = D.income_sources, n = IS && IS.a ? IS.a[r.ai] : null;
@@ -1715,12 +1715,16 @@
     const multi = names.length > 1;
     names.forEach((s, i) => srcPts.set(`i${i}`, { name: label.get(s), money: true, pts: scols.map((k) => { const c = bySrc.get(s).get(k), { y, m } = parseKey(k); return { y, m, v: c ? c.v : null, t: c ? { k, d: c.d, p: c.p } : null }; }) }));
     const none = '<span class="missing">No figures</span>';
+    // Side pie: each source's share of the selected figure, the rows are its key; a slice opens that source's history row.
+    const pieItems = names.map((s, i) => ({ label: label.get(s), v: val(s, sk), pick: `i${i}` }));
+    const pie = sidePieHTML('pie-src', `Share of ${seriesLabel(sk)} income by source`, pieItems);
+    if (pie) homePies.push(['pie-src', pieItems]);
     const cell = (s, k) => { const c = bySrc.get(s).get(k); return c ? src(money(c.v), k, c.d, c.p) : none; };
     const head = `<tr><th scope="col">Source</th>${S.c ? `<th scope="col" class="num hide-sm">${esc(seriesLabel(S.c))}</th>` : ''}<th scope="col" class="num">${esc(seriesLabel(sk))}</th>${S.c ? '<th scope="col" class="num">Change</th>' : ''}<th scope="col" class="num hide-sm">Share</th></tr>`;
     const body = names.map((s, i) => {
       const sel = val(s, sk), cmp = S.c ? val(s, S.c) : 0, sh = shareBase > 0 ? (Math.max(0, sel) / shareBase) * 100 : 0;
       const nm = multi ? `<button type="button" class="li-toggle is-toggle" data-is="i${i}" aria-expanded="false">${esc(label.get(s))}</button>` : esc(label.get(s));
-      return `<tr><th scope="row">${nm}</th>${S.c ? `<td class="num hide-sm">${cell(s, S.c)}</td>` : ''}<td class="num">${cell(s, sk)}</td>${S.c ? `<td class="num">${deltaHTML(sel - cmp, cmp, mny)}</td>` : ''}<td class="num share-cell hide-sm"><span class="share-bar" aria-hidden="true"><i style="width:${sh.toFixed(1)}%"></i></span><span class="share-n">${sh > 0 && sh < 0.1 ? '<0.1' : sh.toFixed(1)}%</span></td></tr>`;
+      return `<tr><th scope="row">${pie ? `<span class="keyed">${pieKey(i)}${nm}</span>` : nm}</th>${S.c ? `<td class="num hide-sm">${cell(s, S.c)}</td>` : ''}<td class="num">${cell(s, sk)}</td>${S.c ? `<td class="num">${deltaHTML(sel - cmp, cmp, mny)}</td>` : ''}<td class="num share-cell hide-sm"><span class="share-bar" aria-hidden="true"><i style="width:${sh.toFixed(1)}%"></i></span><span class="share-n">${sh > 0 && sh < 0.1 ? '<0.1' : sh.toFixed(1)}%</span></td></tr>`;
     }).join('');
     const ft = (t) => fig(t, { notes, what: 'Income' });
     const foot = `<tr><th scope="row">All</th>${S.c ? `<td class="num hide-sm">${cmpTotal ? ft(cmpTotal) : ''}</td>` : ''}<td class="num">${selTotal ? ft(selTotal) : ''}</td>${S.c ? `<td class="num">${deltaHTML((selTotal?.v || 0) - (cmpTotal?.v || 0), cmpTotal?.v || 0, mny)}</td>` : ''}<td class="num hide-sm">100%</td></tr>`;
@@ -1729,14 +1733,21 @@
     return `<section class="panel" id="sec-income-sources" tabindex="-1" aria-labelledby="is-t"><h2 class="panel-title" id="is-t">Income Sources</h2>
       <p class="panel-note">Income${where} by source, in the same columns as the line items: the budget year, the comparison year, the change and each source's share. Sources follow the books' account numbers: taxes are shown one by one, and other lines are grouped as the newest book that prints them does, so a group renamed over the years stays one row. Draws from savings and transfers between funds are not income and are left out.${allFunds ? ' In All funds, charges to other funds are left out too.' : ''} The All row is the income total shown at the top of the page. <a href="${termHref('term-income')}">What counts as income</a></p>
       ${multi ? '<p class="hint li-hint">Select a source\'s name to see it year by year.</p>' : ''}
-      <div class="table-scroll"><table class="table ledger" aria-label="Income by source">
-        <thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div>
+      ${pie ? '<div class="with-pie">' : ''}<div class="table-scroll"><table class="table ledger" aria-label="Income by source">
+        <thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div>${pie ? `${pie}</div>` : ''}
       ${gapNotes(notes)}</section>`;
   }
   // After the page is drawn: a source's name opens its chart and values under the table; one is open at a time.
   function mountIncomeSources() {
     const sec = $('sec-income-sources');
     if (!sec) return;
+    pickSource = (id) => { // a pie slice: toggle that source's history row, and bring it into view when it opens
+      const b = sec.querySelector(`.is-toggle[data-is="${id}"]`);
+      if (!b) return;
+      b.click();
+      const row = $(`is-row-${id}`);
+      if (row) row.scrollIntoView({ block: 'nearest', behavior: reduceMotion() ? 'auto' : 'smooth' });
+    };
     sec.querySelectorAll('.is-toggle').forEach((b) => b.addEventListener('click', () => {
       const wasOpen = b.getAttribute('aria-expanded') === 'true';
       closeSrcChart();

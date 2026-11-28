@@ -211,6 +211,8 @@ select { appearance: none; width: 100%; height: 40px; background: var(--card) ur
 .side-pie figcaption { margin-top: 12px; font-size: 13px; line-height: 18px; color: var(--muted); text-align: center; }
 .pie-key { display: inline-block; flex: none; width: 12px; height: 12px; margin-right: 10px; vertical-align: 1px; }
 .with-pie tbody th[scope="row"] { white-space: normal; } /* long names wrap so every column fits beside the pie */
+.with-pie .share-bar { display: none; } /* the pie shows the shares; the bar (Income Sources) would push the table past its column */
+@media (min-width: 768px) { #sec-income-sources .ledger th:not(:first-child), #sec-income-sources .ledger td:not(:first-child) { padding-left: 12px; padding-right: 12px; } } /* five columns: just fits the 620px list column beside the pie without a scrollbar */
 /* Swatch + name in a table cell: a wrapped name stays to the right of its swatch, which sits centred on the first line. */
 .keyed { display: flex; align-items: flex-start; }
 .keyed > .pie-key { margin-top: calc((1lh - 12px) / 2); }
@@ -981,7 +983,7 @@ a.status:hover { text-decoration: underline; text-underline-offset: 3px; }
 /* width 0 + min-width 100%: the history never widens the line table, so its chart follows the column when the window resizes */
 .li-hist .li-hist-body, .li-hist .chart-box { width: 0; min-width: 100%; }
 @media (max-width: 767px) {
-  .li-toggle { position: relative; }
+  .li-toggle, .table th .li-toggle { position: relative; } /* .table th button (all: unset) would otherwise leave the ::after unpositioned: it then spans the page and widens it */
   .li-toggle::after { content: ""; position: absolute; inset: -13px -6px; } /* an invisible 44px hit area; nothing visible changes */
   .li-hist > td { padding-left: 0; }
   /* phones: the amount link is a 44px target centred in its cell, so centre the year and figure with it */
