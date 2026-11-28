@@ -966,6 +966,16 @@ a.status:hover { text-decoration: underline; text-underline-offset: 3px; }
 .li-toggle[aria-expanded="true"]::before { transform: rotate(45deg); margin-bottom: 5px; }
 .li-toggle:hover { text-decoration: underline; text-underline-offset: 3px; }
 .li-hint { margin: 4px 0 8px; font-size: 14px; color: var(--muted); }
+/* Home ledger: the department name is a link to its page, so the history has its own chevron button just before it */
+.table th.has-hist { position: relative; padding-left: 24px; } /* the chevron hangs in this indent, so a long name wraps under itself */
+.table th .hist-toggle { position: absolute; left: 0; top: 15px; display: block; appearance: none; background: none; border: 0; margin: 0; padding: 0; width: 20px; height: 20px; cursor: pointer; color: inherit; min-height: 0; } /* .table th prefix: outranks the `.table th button { all: unset }` reset */
+.table th .hist-toggle::before { content: ""; position: absolute; left: 5px; top: 5px; width: 7px; height: 7px; border-right: 2px solid var(--fg); border-bottom: 2px solid var(--fg); transform: rotate(-45deg); transition: transform .15s; }
+.table th .hist-toggle[aria-expanded="true"]::before { transform: rotate(45deg); top: 3px; }
+.table th .hist-toggle::after { content: ""; position: absolute; inset: -12px; } /* a 44px hit area; nothing visible changes */
+.table th .hist-toggle:hover::before { border-color: var(--sel); }
+.table th .hist-toggle:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .hist-toggle::before { transition: none; } }
+@media (max-width: 767px) { .table th .hist-toggle { top: 11px; } }
 @media (prefers-reduced-motion: reduce) { .li-toggle::before { transition: none; } }
 .li-toggle:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 0; }
 .table tbody tr.li-hist:hover { background: none; }

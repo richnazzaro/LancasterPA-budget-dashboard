@@ -156,7 +156,7 @@ Other colors outside the token blocks:
 | Deck sentence ("Up $5.0M (6.0%) …") | `.deck {` ([L844](../web/styles.css#L844)) | serif 26px semibold |
 | Big total | `.big-total {` ([L848](../web/styles.css#L848)) | serif 44px, `--sel-ink`; label `.big-total .big-label` 13px uppercase |
 | Department name | `.dept-name {` ([L184](../web/styles.css#L184)) | serif 52px |
-| Chart text | `Chart.defaults.font.size` in `app.js` ([L3297](../web/app.js#L3297)) | 13px |
+| Chart text | `Chart.defaults.font.size` in `app.js` ([L3326](../web/app.js#L3326)) | 13px |
 
 ### Breakpoints
 
@@ -190,29 +190,29 @@ Other colors outside the token blocks:
 | `CALC_TAG` ([L144](../web/app.js#L144)) | `const CALC_TAG` | "calculated" (`.calc-tag`) | The label on the site's own sums. |
 | `GAP_SIGN` ([L145](../web/app.js#L145)) | `const GAP_SIGN` | `≠` (≠) | The mark on a printed total whose lines miss it beyond rounding (`gapMark()`, `gapNote()`). |
 | `EXPLAIN_FIGURES` ([L351](../web/app.js#L351)) | `const EXPLAIN_FIGURES` | City: actual, projected, proposed, revised, amended, adopted, projection (only while the data has projection years), calculated; County: budget, actual, calculated | Which figure words the "What do these mean?" panel lists, in this order. The wording itself is `figureWords()` (Funds and terms), not a copy. |
-| "What do these mean?" panel ([L352](../web/app.js#L352)) | `function explainHTML` | Toggle "What do these mean?"; headings "Figures" and "Funds"; markers "shown" (the figure in Budget year), "comparing" (the one in Compare with), "selected" (the chosen fund); link "More in Funds and terms →" to `#/terms` | The last of the controls: one explainer for the figures and the funds in the page's Fund list, using `figureWords()`, `FUND_INTRO`, `fundInfo()` / `FUND_INFO` and `balanceWord()`. Opened and closed by `setExplain()` ([L2600](../web/app.js#L2600)); Escape, a click outside the controls or Tab out of them close it, and Escape returns focus to the toggle. The open state lasts while the page's controls change and resets on a new page. |
-| Controls ([L386](../web/app.js#L386)) | `function controlsWrap` | always open on wide screens; on phones a compact bar (`controlsSummary()`, `setControls()`) naming only the selected view, above the headline, which expands on tap and closes on scroll; pinned to the top of the main column while the page scrolls | The stamp, the "View" group (Budget year, Compare with, Fund, Spending / Income) and the "What do these mean?" panel (`explainHTML()`). Field helpers: `selField` ([L321](../web/app.js#L321)), `tabField` ([L319](../web/app.js#L319)), `figureOptions()` ([L324](../web/app.js#L324): options grouped by year, the shown figure disabled in Compare with as "(the budget year shown)"). Live sentence: `viewSentence()` / `announceView()` ([L443](../web/app.js#L443)) into `#view-status` in `index.html`. Pinning: `pinControls()` ([L2561](../web/app.js#L2561)) sets `--pin-h` on `<html>` (the height of the bar left on screen once pinned, `0px` on pages without controls) and `--stamp-h` on the bar (phones), and adds `.is-stuck` once the bar is pinned. |
+| "What do these mean?" panel ([L352](../web/app.js#L352)) | `function explainHTML` | Toggle "What do these mean?"; headings "Figures" and "Funds"; markers "shown" (the figure in Budget year), "comparing" (the one in Compare with), "selected" (the chosen fund); link "More in Funds and terms →" to `#/terms` | The last of the controls: one explainer for the figures and the funds in the page's Fund list, using `figureWords()`, `FUND_INTRO`, `fundInfo()` / `FUND_INFO` and `balanceWord()`. Opened and closed by `setExplain()` ([L2629](../web/app.js#L2629)); Escape, a click outside the controls or Tab out of them close it, and Escape returns focus to the toggle. The open state lasts while the page's controls change and resets on a new page. |
+| Controls ([L386](../web/app.js#L386)) | `function controlsWrap` | always open on wide screens; on phones a compact bar (`controlsSummary()`, `setControls()`) naming only the selected view, above the headline, which expands on tap and closes on scroll; pinned to the top of the main column while the page scrolls | The stamp, the "View" group (Budget year, Compare with, Fund, Spending / Income) and the "What do these mean?" panel (`explainHTML()`). Field helpers: `selField` ([L321](../web/app.js#L321)), `tabField` ([L319](../web/app.js#L319)), `figureOptions()` ([L324](../web/app.js#L324): options grouped by year, the shown figure disabled in Compare with as "(the budget year shown)"). Live sentence: `viewSentence()` / `announceView()` ([L443](../web/app.js#L443)) into `#view-status` in `index.html`. Pinning: `pinControls()` ([L2590](../web/app.js#L2590)) sets `--pin-h` on `<html>` (the height of the bar left on screen once pinned, `0px` on pages without controls) and `--stamp-h` on the bar (phones), and adds `.is-stuck` once the bar is pinned. |
 | `SPIKE_X`, `SPIKE_SHARE` ([L642](../web/app.js#L642)) | `const SPIKE_X` | `2`, `0.05` | "Stands out" notes: a line at least 2× both neighbouring years, with a jump of at least 5% of its fund's total. Keep equal to `SPIKE_X, SPIKE_SHARE` in `scripts/check_dataset.py` (section 7). |
 | `RES_STATUS` ([L869](../web/app.js#L869)) | `const RES_STATUS` | `actual` "Actual year-end balance"; `projected` "Projected year-end balance"; `proposed` "Proposed, not adopted"; `revised` "Revised proposal, not adopted" | Status stamp on the Reserve Fund page. |
 | `resLabel` ([L860](../web/app.js#L860)) | `const resLabel` | "<year> <LABEL>", "Actual (unaudited)" for an unaudited year-end | Year labels on the Reserve Fund chart and table. |
-| `WC_TOP` ([L1875](../web/app.js#L1875)) | `const WC_TOP` | `10` | Rows in "Largest changes" on What changed before "All N changed lines". |
-| `unitLabel` ([L1758](../web/app.js#L1758)) | `const unitLabel` | "Department-wide costs (not a bureau)" / "Department revenue (not a bureau)" | Name of the City's department-wide group. |
+| `WC_TOP` ([L1904](../web/app.js#L1904)) | `const WC_TOP` | `10` | Rows in "Largest changes" on What changed before "All N changed lines". |
+| `unitLabel` ([L1787](../web/app.js#L1787)) | `const unitLabel` | "Department-wide costs (not a bureau)" / "Department revenue (not a bureau)" | Name of the City's department-wide group. |
 | `plainName` ([L205](../web/app.js#L205)) | `const plainName` | drops a trailing " Exp" / " Expense" | Display names of old printed budget groups. |
 | `isDraw` ([L700](../web/app.js#L700)) | `const isDraw` | name starts "Fund Balance Reserve" and object `499000` | Which revenue lines count as money drawn from savings. |
 | `taxLimitFlag()`, `tlTest()` | `function taxLimitFlag` | over: "▲ Exceeds the 6% tax revenue limit" / "Needs a Council waiver vote, majority of the whole Council plus one (§ 8.08). In the 2027 Revised budget, General Fund tax revenue is up 8.6% from 2026 Projected. How this is worked out", plus for `transition.budget_years` "Section 13.14 may waive the limit for budgets adopted in the charter's first two years, if passed by a simple majority of Council. This site does not say whether it applies to this budget."; within: "2026 budget: within the 6% tax revenue limit, +5.1% from 2025 Projected. How this is worked out" | The Home Rule 6% flag (`budget.json` `tax_limit`; City, General Fund or All funds only). Under the tiles in the home "What changed in 2027" panel and on What changed (follows the Budget year choice, 2027 Revised or 2027 Proposed); for an earlier year, under the total on the Income view (that year's budget as tested; nothing before `first_year`). CSS `.tl-flag`, `.tl-over`, `.tl-within`, `.tl-sign`, `.tl-note` (existing tokens only: `--fg`, `--muted`). |
 | `nonIncome`, `isIncome`, `ofKind` ([L201](../web/app.js#L201)) | `const isIncome` | from `budget.json` `not_income` (`data/income_rules.csv`) | What counts as income. `draw` and `transfer` lines are never income; `charge` lines are income of one fund but not of All funds. Edit the CSV, not these. |
 | `lineTag` ([L741](../web/app.js#L741)) | `const lineTag` | "Charged to another of the City's funds" / "Transfer from another of the City's funds: not counted as income" | The tag under a charge or transfer line in line-item tables. `ownFunds()` gives "the City's" / "the County's". |
 | `drawDC`, `drawSplit` ([L722](../web/app.js#L722)) | `const drawDC` | "… drawn from savings (… of it from dedicated data center revenue)" | The reserve-draw phrase used on every page. |
-| `drawLabel` ([L1993](../web/app.js#L1993)) | `const drawLabel` | "Drawn from savings (the “Fund Balance Reserve” lines)" / "Drawn from the reserve (the “Fund Balance Reserve” line)" | Row label on What changed. |
-| `countyGap` ([L1170](../web/app.js#L1170)) | `const countyGap` | ", spending $9.0M more than it expects to collect, covered from the General Fund's balance" | The County deck sentence's second half. |
-| `JT` ([L2710](../web/app.js#L2710)) | `const JT` | City: Department, Bureau, Line item; County: Group, Department, Line item | Result type labels in the Jump search. |
-| `FUND_INFO` ([L2912](../web/app.js#L2912)) | `const FUND_INFO` | see "Funds and terms" below | What pays for each fund, and what it is (Funds and terms and the "What do these mean?" panel, through `fundInfo()`). |
-| Font wait ([L3299](../web/app.js#L3299)) | `setTimeout(r, 1500)` | 1.5 s | How long the first chart waits for the web font. |
+| `drawLabel` ([L2022](../web/app.js#L2022)) | `const drawLabel` | "Drawn from savings (the “Fund Balance Reserve” lines)" / "Drawn from the reserve (the “Fund Balance Reserve” line)" | Row label on What changed. |
+| `countyGap` ([L1171](../web/app.js#L1171)) | `const countyGap` | ", spending $9.0M more than it expects to collect, covered from the General Fund's balance" | The County deck sentence's second half. |
+| `JT` ([L2739](../web/app.js#L2739)) | `const JT` | City: Department, Bureau, Line item; County: Group, Department, Line item | Result type labels in the Jump search. |
+| `FUND_INFO` ([L2941](../web/app.js#L2941)) | `const FUND_INFO` | see "Funds and terms" below | What pays for each fund, and what it is (Funds and terms and the "What do these mean?" panel, through `fundInfo()`). |
+| Font wait ([L3328](../web/app.js#L3328)) | `setTimeout(r, 1500)` | 1.5 s | How long the first chart waits for the web font. |
 | Saved choices | `localStorage` | keys `theme`, `entity` | Theme, last entity. (`controlsOpen` is no longer used and is deleted on load.) |
 
 ### Funds and terms (`#/terms`, `#/county/terms`)
 
-`FUND_INFO` ([L2912](../web/app.js#L2912)): one row per fund, `[paid for by, what it is]`. A fund in the data with no row shows "See the books". The table follows the data's funds, so a fund is listed only if the data has it.
+`FUND_INFO` ([L2941](../web/app.js#L2941)): one row per fund, `[paid for by, what it is]`. A fund in the data with no row shows "See the books". The table follows the data's funds, so a fund is listed only if the data has it.
 
 | Entity | Fund | "Paid for by" | "What it is" starts |
 |---|---|---|---|
@@ -233,7 +233,7 @@ Other colors outside the token blocks:
 | County | Fund R | Grants, not taxes | "… for developmental services." |
 | County | Fund Y | Grants, not taxes | "… for children and youth services." |
 
-The wording shared with the "What do these mean?" panel sits just above the page: `FUND_INTRO` ([L2938](../web/app.js#L2938), "A fund is a separate account kept for a purpose. …"), `fundInfo()` (a fund's `FUND_INFO` row, or "See the books"), `balanceWord()` ([L2941](../web/app.js#L2941): the Reserve Fund / General Fund Balance definition, anchor `term-balance`) and `figureWords()` ([L2949](../web/app.js#L2949): the figure words, Actual, Projected, Proposed, Revised, Adopted, Amended, Projection, Income, calculated; County: Budget, Actual, Income, calculated; the Income text is the `income` entry, anchor `term-income`; Adopted and Amended are anchors `term-adopted` and `term-amended`). Edit a definition there and both places change. The rest of the page is `termsPage()` ([L2967](../web/app.js#L2967)): the heading "Funds and terms", the intro, those definitions and `notShown` (City: "Not shown", anchor `term-not-shown`: year-to-date columns and older books' own proposals; County: "Adopted and Amended", anchor `term-adopted`). The panel and the status stamp link to it through `termHref()`.
+The wording shared with the "What do these mean?" panel sits just above the page: `FUND_INTRO` ([L2967](../web/app.js#L2967), "A fund is a separate account kept for a purpose. …"), `fundInfo()` (a fund's `FUND_INFO` row, or "See the books"), `balanceWord()` ([L2970](../web/app.js#L2970): the Reserve Fund / General Fund Balance definition, anchor `term-balance`) and `figureWords()` ([L2978](../web/app.js#L2978): the figure words, Actual, Projected, Proposed, Revised, Adopted, Amended, Projection, Income, calculated; County: Budget, Actual, Income, calculated; the Income text is the `income` entry, anchor `term-income`; Adopted and Amended are anchors `term-adopted` and `term-amended`). Edit a definition there and both places change. The rest of the page is `termsPage()` ([L2996](../web/app.js#L2996)): the heading "Funds and terms", the intro, those definitions and `notShown` (City: "Not shown", anchor `term-not-shown`: year-to-date columns and older books' own proposals; County: "Adopted and Amended", anchor `term-adopted`). The panel and the status stamp link to it through `termHref()`.
 
 ### How the City budget is made (`#/budget-calendar`)
 
@@ -261,31 +261,31 @@ Each row names the function that writes the text; search for it in `web/app.js`.
 
 | What you see | Where |
 |---|---|
-| Running head above the heading ("City of Lancaster") | `addEyebrow()` ([L2550](../web/app.js#L2550)); the name is `entity.short` in `config.json` |
+| Running head above the heading ("City of Lancaster") | `addEyebrow()` ([L2579](../web/app.js#L2579)); the name is `entity.short` in `config.json` |
 | Browser tab titles ("City of Lancaster · Overview · Lancaster Budget Explorer") | `pageTitle` ([L64](../web/app.js#L64)) |
-| Wordmark, tagline, footer, contact line ("Questions or corrections: …"), nav links | `applyChrome()` ([L3252](../web/app.js#L3252)) |
-| City / County tab links (each opens the same kind of page in the other entity) | `renderSwitch()` ([L3270](../web/app.js#L3270)) |
+| Wordmark, tagline, footer, contact line ("Questions or corrections: …"), nav links | `applyChrome()` ([L3281](../web/app.js#L3281)) |
+| City / County tab links (each opens the same kind of page in the other entity) | `renderSwitch()` ([L3299](../web/app.js#L3299)) |
 | Status stamp ("2027: Revised proposal, not adopted"), above the controls | `statusHTML()` ([L300](../web/app.js#L300)), `STATUS` |
-| Controls (wide screens: stamp, then Budget year, Compare with, Fund, Spending / Income, then "What do these mean?"; phones: a compact 45px summary that expands on tap and closes on scroll; pinned while scrolling) | `controlsWrap()` ([L386](../web/app.js#L386)), `filtersHTML()` ([L402](../web/app.js#L402)), `reserveFiltersHTML()` ([L334](../web/app.js#L334)), `cbFiltersHTML()` ([L990](../web/app.js#L990)), `changesFiltersHTML()` ([L2267](../web/app.js#L2267)), `onFilter()` ([L450](../web/app.js#L450)), `pinControls()` ([L2561](../web/app.js#L2561)); look: `.controls` (sticky, `.is-stuck`), `.controls-compact`, `.controls-body`, `.controls-stamp`, `.controls-fields`, `.controls-define` in `styles.css` ([L400](../web/styles.css#L400)), and `html { scroll-padding-top: var(--pin-h) }` |
+| Controls (wide screens: stamp, then Budget year, Compare with, Fund, Spending / Income, then "What do these mean?"; phones: a compact 45px summary that expands on tap and closes on scroll; pinned while scrolling) | `controlsWrap()` ([L386](../web/app.js#L386)), `filtersHTML()` ([L402](../web/app.js#L402)), `reserveFiltersHTML()` ([L334](../web/app.js#L334)), `cbFiltersHTML()` ([L990](../web/app.js#L990)), `changesFiltersHTML()` ([L2296](../web/app.js#L2296)), `onFilter()` ([L450](../web/app.js#L450)), `pinControls()` ([L2590](../web/app.js#L2590)); look: `.controls` (sticky, `.is-stuck`), `.controls-compact`, `.controls-body`, `.controls-stamp`, `.controls-fields`, `.controls-define` in `styles.css` ([L400](../web/styles.css#L400)), and `html { scroll-padding-top: var(--pin-h) }` |
 | "What do these mean?" panel (Figures and Funds, the "shown" / "comparing" / "selected" markers) | `explainHTML()` ([L352](../web/app.js#L352)), `EXPLAIN_FIGURES`, `setExplain()`; wording from `figureWords()`, `FUND_INTRO`, `FUND_INFO`, `balanceWord()`; look: `.explain-toggle`, `.explain`, `.explain-h`, `.explain-grid` (columns `repeat(auto-fit, minmax(16rem, 1fr))`), `.explain-item`, `.explain-tag` in `styles.css` ([L427](../web/styles.css#L427)) |
 | Field labels: Budget year, Compare with, Fund, Show (Spending / Income), "No comparison", "(the budget year shown)", "Only the funds this department uses are listed.", "What changed covers 2027 only." | `filtersHTML()`, `changesFiltersHTML()`, `figureOptions()` |
 | Live sentence after a change ("Showing 2027 Revised compared with 2026 Projected, General Fund, spending.") | `viewSentence()` ([L432](../web/app.js#L432)); the region is `<p id="view-status" aria-live="polite">` in `index.html` |
 | Fund list order (All funds, General Fund, other funds, Reserve Fund last) and "Only the funds this department uses are listed." | `fundChoices()` ([L310](../web/app.js#L310); `fundOptions()` turns it into the list's options, and the "What do these mean?" panel defines the same funds), `filtersHTML()` |
 | "Known issues for this view" | `knownLink` ([L306](../web/app.js#L306)) |
 | Printed vs calculated totals, the ≠ note ("The lines this total covers add up to …") | `totalOf()` ([L138](../web/app.js#L138)), `fig()` ([L149](../web/app.js#L149)), `gapNote()` ([L159](../web/app.js#L159)), `missingNote()` ([L167](../web/app.js#L167)) |
-| Contents rail ("On this page") | `renderRail()` ([L2447](../web/app.js#L2447)) |
-| Jump search results and "No matches." | `buildJumpIndex()` ([L2711](../web/app.js#L2711)), `initJump()` ([L2728](../web/app.js#L2728)) |
-| Theme button label | `applyTheme()` ([L3196](../web/app.js#L3196)) |
-| "Could not load the budget data" | `loadEntity()` ([L3221](../web/app.js#L3221)), `boot()` ([L3279](../web/app.js#L3279)) |
+| Contents rail ("On this page") | `renderRail()` ([L2476](../web/app.js#L2476)) |
+| Jump search results and "No matches." | `buildJumpIndex()` ([L2740](../web/app.js#L2740)), `initJump()` ([L2757](../web/app.js#L2757)) |
+| Theme button label | `applyTheme()` ([L3225](../web/app.js#L3225)) |
+| "Could not load the budget data" | `loadEntity()` ([L3250](../web/app.js#L3250)), `boot()` ([L3308](../web/app.js#L3308)) |
 
 **Home (Overview)**
 
 | What you see | Where |
 |---|---|
-| Page layout and order of sections; the deck sentence ("Up $5.0M (6.0%) from 2026 Projected, with $4.7M drawn from savings …"); "Income vs. Spending by Fund" | `homeView()` ([L1251](../web/app.js#L1251)) (the `deck` block), `heroDelta()` ([L1145](../web/app.js#L1145)), `drawNote()` ([L730](../web/app.js#L730)) |
-| "What changed in 2027" summary beside Totals by Year | `homeChangesHTML()` ([L2337](../web/app.js#L2337)) |
-| Departments ledger | `ledgerHTML()` ([L1128](../web/app.js#L1128)) |
-| Side pies beside the Departments ledger, the Spending (Income) by Bureau cards and the Income vs. Spending by Fund table: caption "Share of 2027 Revised spending by department" (… by group / bureau / department on County pages / fund; "income" on the Income view), each row's color swatch, slice click opens the row's page | `sidePieHTML()` ([L1087](../web/app.js#L1087)), `drawSidePie()` ([L1093](../web/app.js#L1093)), `pieKey()`; called from `homeView()`, `revExpAfter()` ([L1362](../web/app.js#L1362)) and `deptPage()`. Layout: `.with-pie`, `.side-pie`, `.pie-key`, `.keyed` (swatch + name; on phones the fund table puts the swatch above the name so the table gets no wider) in `styles.css` |
+| Page layout and order of sections; the deck sentence ("Up $5.0M (6.0%) from 2026 Projected, with $4.7M drawn from savings …"); "Income vs. Spending by Fund" | `homeView()` ([L1252](../web/app.js#L1252)) (the `deck` block), `heroDelta()` ([L1146](../web/app.js#L1146)), `drawNote()` ([L730](../web/app.js#L730)) |
+| "What changed in 2027" summary beside Totals by Year | `homeChangesHTML()` ([L2366](../web/app.js#L2366)) |
+| Departments ledger. Each row opens its department; a chevron button before the name (`.hist-toggle`, in `th.has-hist`) unfolds the department's (County: group's) history under the row, the same totals as its page's "Over time" tab, printed totals linked to their page and calculated ones tagged. Panel note: "Select a department to see its detailed breakdown, or the arrow beside it to see it year by year." | `ledgerHTML()` ([L1128](../web/app.js#L1128)), `mountDeptHistory()` ([L1702](../web/app.js#L1702)); styles `.hist-toggle` ([L970](../web/styles.css#L970)) |
+| Side pies beside the Departments ledger, the Spending (Income) by Bureau cards and the Income vs. Spending by Fund table: caption "Share of 2027 Revised spending by department" (… by group / bureau / department on County pages / fund; "income" on the Income view), each row's color swatch, slice click opens the row's page | `sidePieHTML()` ([L1087](../web/app.js#L1087)), `drawSidePie()` ([L1093](../web/app.js#L1093)), `pieKey()`; called from `homeView()`, `revExpAfter()` ([L1363](../web/app.js#L1363)) and `deptPage()`. Layout: `.with-pie`, `.side-pie`, `.pie-key`, `.keyed` (swatch + name; on phones the fund table puts the swatch above the name so the table gets no wider) in `styles.css` |
 | Totals by Year chart, legend, "Show values" table | `trendHTML()` ([L558](../web/app.js#L558)), `trendLegend()` ([L547](../web/app.js#L547)), `drawTrend()` ([L581](../web/app.js#L581)); the chart itself is `trendChart()` ([L589](../web/app.js#L589)), also used by a line item's history |
 | The projection note ("2028 and 2029 are projections, not budgets: …") and "The city's assumptions" | `projectionNote()` ([L513](../web/app.js#L513)); the assumption lines come from the data |
 | "Stands out" notes ("2025 stands out: Building Permits …") | `spikeSentence()` ([L680](../web/app.js#L680)), `spikeNotes` ([L688](../web/app.js#L688)), `lineSpikes()` ([L649](../web/app.js#L649)); the same note, with any `data/line_notes.csv` text for the line, also opens under a line's name in the line-item table (`lineHistoryNotes()`) |
@@ -297,32 +297,31 @@ Each row names the function that writes the text; search for it in `web/app.js`.
 
 | What you see | Where |
 |---|---|
-| Layout, headings (Compare, Line Items), in-page links | `entityView()` ([L1538](../web/app.js#L1538)), `crumbsHTML` ([L1448](../web/app.js#L1448)), `jumpNav` ([L1452](../web/app.js#L1452)) |
-| Department page: bureau cards, "What does this department do?" | `deptPage()` ([L1789](../web/app.js#L1789)), `cardList()` ([L1113](../web/app.js#L1113)), `aboutHTML()` ([L1773](../web/app.js#L1773)) |
-| Bureau page: "What does this bureau do?", department-wide group | `bureauPage()` ([L1837](../web/app.js#L1837)) |
-| Short "What changed" section and its summary ("Budgeted positions:", "Largest increases:", …) | `deptChangesHTML()` ([L2415](../web/app.js#L2415)), `deptSummaryHTML()` ([L2352](../web/app.js#L2352)) |
-| Staff section (Budgeted positions, Salaries and wages, position titles) | `staffHTML()` ([L1461](../web/app.js#L1461)) |
-| Category table | `categorySection()` ([L1416](../web/app.js#L1416)) |
-| Line items: count ("97 line items (1 only in 2026 Projected)"), headers, the search box ("Search line items, account numbers…"), "Show 20 more" | `lineCountText()` ([L1621](../web/app.js#L1621)), `lineTable()` ([L1626](../web/app.js#L1626)) |
-| A line item's history: the line's name is a toggle (`.li-toggle`, an ink chevron like the bureau "What does it do" summary: pointing right closed, down open; a muted hint above the table, `.li-hint`: "Select a line's name to see it year by year.") that unfolds a full-width row (`tr.li-hist`) under it: a small line chart (legend, "The vertical axis starts at …, not zero."), the "stands out" note and any line note, and a "Show values" table (Year, Figure, Amount; every Amount links to its PDF page). Figures are the line's rows (same account code and fund) per year by the site's own rule: Actual, Projected, Proposed and Revised, then Projection (County: Budget); a year with no row shows —. One row open at a time; re-sorting, searching or "Show more" closes it | `lineHistoryPoints()` ([L1665](../web/app.js#L1665)), `lineHistoryNotes()` ([L1677](../web/app.js#L1677)), `lineHistoryHTML()` ([L1687](../web/app.js#L1687)), `toggleLineHistory()` ([L1701](../web/app.js#L1701)), `closeLineHistory()` ([L1695](../web/app.js#L1695)), `mountLines()` ([L1730](../web/app.js#L1730)); styles `.li-toggle`, `.li-hist` ([L971](../web/styles.css#L971)) |
-| A line item's history: the line's name is a toggle (`.li-toggle`, an ink chevron like the bureau "What does it do" summary: pointing right closed, down open; a muted hint above the table, `.li-hint`: "Select a line's name to see it year by year.") that unfolds a full-width row (`tr.li-hist`) under it: a small line chart (legend, "The vertical axis starts at …, not zero."), the "stands out" note and any line note, and a "Show values" table (Year, Figure, Amount; every Amount links to its PDF page). Figures are the line's rows (same account code and fund) per year by the site's own rule: Actual, Projected, Proposed and Revised, then Projection (County: Budget); a year with no row shows —. One row open at a time; re-sorting, searching or "Show more" closes it | `lineHistoryPoints()` ([L1665](../web/app.js#L1665)), `lineHistoryNotes()` ([L1677](../web/app.js#L1677)), `lineHistoryHTML()` ([L1687](../web/app.js#L1687)), `toggleLineHistory()` ([L1701](../web/app.js#L1701)), `closeLineHistory()` ([L1695](../web/app.js#L1695)), `mountLines()` ([L1730](../web/app.js#L1730)); styles `.li-toggle`, `.li-hist` ([L971](../web/styles.css#L971)) |
-| "Export this view (CSV)": columns and file name | `exportCSV()` ([L1714](../web/app.js#L1714)) |
+| Layout, headings (Compare, Line Items), in-page links | `entityView()` ([L1539](../web/app.js#L1539)), `crumbsHTML` ([L1449](../web/app.js#L1449)), `jumpNav` ([L1453](../web/app.js#L1453)) |
+| Department page: bureau cards, "What does this department do?" | `deptPage()` ([L1818](../web/app.js#L1818)), `cardList()` ([L1113](../web/app.js#L1113)), `aboutHTML()` ([L1802](../web/app.js#L1802)) |
+| Bureau page: "What does this bureau do?", department-wide group | `bureauPage()` ([L1866](../web/app.js#L1866)) |
+| Short "What changed" section and its summary ("Budgeted positions:", "Largest increases:", …) | `deptChangesHTML()` ([L2444](../web/app.js#L2444)), `deptSummaryHTML()` ([L2381](../web/app.js#L2381)) |
+| Staff section (Budgeted positions, Salaries and wages, position titles) | `staffHTML()` ([L1462](../web/app.js#L1462)) |
+| Category table | `categorySection()` ([L1417](../web/app.js#L1417)) |
+| Line items: count ("97 line items (1 only in 2026 Projected)"), headers, the search box ("Search line items, account numbers…"), "Show 20 more" | `lineCountText()` ([L1622](../web/app.js#L1622)), `lineTable()` ([L1627](../web/app.js#L1627)) |
+| A line item's history: the line's name is a toggle (`.li-toggle`, an ink chevron like the bureau "What does it do" summary: pointing right closed, down open; a muted hint above the table, `.li-hint`: "Select a line's name to see it year by year.") that unfolds a full-width row (`tr.li-hist`) under it: a small line chart (legend, "The vertical axis starts at …, not zero."), the "stands out" note and any line note, and a "Show values" table (Year, Figure, Amount; every Amount links to its PDF page). Figures are the line's rows (same account code and fund) per year by the site's own rule: Actual, Projected, Proposed and Revised, then Projection (County: Budget); a year with no row shows —. One row open at a time; re-sorting, searching or "Show more" closes it | `lineHistoryPoints()` ([L1666](../web/app.js#L1666)), `lineHistoryNotes()` ([L1678](../web/app.js#L1678)), `lineHistoryHTML()` ([L1697](../web/app.js#L1697)) and the shared `histBodyHTML()` ([L1689](../web/app.js#L1689)), `toggleLineHistory()` ([L1730](../web/app.js#L1730)), `closeLineHistory()` ([L1724](../web/app.js#L1724)), `mountLines()` ([L1759](../web/app.js#L1759)); styles `.li-toggle`, `.li-hist` ([L981](../web/styles.css#L981)) |
+| "Export this view (CSV)": columns and file name | `exportCSV()` ([L1743](../web/app.js#L1743)) |
 
 **What changed (`#/changes`)**
 
 | What you see | Where |
 |---|---|
-| Page layout and section order (Spending by category, Positions, Largest line-item changes, New and removed lines, How it's paid for) | `changesPage()` ([L2281](../web/app.js#L2281)) |
-| Summary sentence (Spending / Income) | `headlineSentence()` ([L1944](../web/app.js#L1944)), `incomeSentence()` ([L1968](../web/app.js#L1968)) |
-| Badge (comparing a proposal with an estimate or actual) | `badgeHTML()` ([L1999](../web/app.js#L1999)) |
-| Four headline numbers | `tilesHTML()` ([L2009](../web/app.js#L2009)) |
-| Moved into / out of the General Fund | `shiftCard()` ([L2055](../web/app.js#L2055)), `shiftsHTML()` ([L2071](../web/app.js#L2071)) |
-| Positions ("Full-time positions budgeted, General Fund: …", "How positions are counted") | `positionsHTML()` ([L2120](../web/app.js#L2120)) |
-| "A line that stands out" | `spikeWCNote()` ([L1977](../web/app.js#L1977)) |
-| What the revision changed, tax-policy notes | `revisionHTML()` ([L2178](../web/app.js#L2178)), `policyHTML()` ([L2202](../web/app.js#L2202)) |
-| What changed controls: Budget year (the newest year's figures only), Compare with (the comparisons in changes.json), Fund, Show first (Spending / Income) | `changesFiltersHTML()` ([L2267](../web/app.js#L2267)) |
-| Reserve Fund version ("The 2027 Revised budget leaves $14.6M in the Reserve Fund …", "What moves the balance") | `reserveChangesPage()` ([L2227](../web/app.js#L2227)) |
-| County "Accounts merged: …" note under a line | `mergeNote` ([L2103](../web/app.js#L2103)) |
+| Page layout and section order (Spending by category, Positions, Largest line-item changes, New and removed lines, How it's paid for) | `changesPage()` ([L2310](../web/app.js#L2310)) |
+| Summary sentence (Spending / Income) | `headlineSentence()` ([L1973](../web/app.js#L1973)), `incomeSentence()` ([L1997](../web/app.js#L1997)) |
+| Badge (comparing a proposal with an estimate or actual) | `badgeHTML()` ([L2028](../web/app.js#L2028)) |
+| Four headline numbers | `tilesHTML()` ([L2038](../web/app.js#L2038)) |
+| Moved into / out of the General Fund | `shiftCard()` ([L2084](../web/app.js#L2084)), `shiftsHTML()` ([L2100](../web/app.js#L2100)) |
+| Positions ("Full-time positions budgeted, General Fund: …", "How positions are counted") | `positionsHTML()` ([L2149](../web/app.js#L2149)) |
+| "A line that stands out" | `spikeWCNote()` ([L2006](../web/app.js#L2006)) |
+| What the revision changed, tax-policy notes | `revisionHTML()` ([L2207](../web/app.js#L2207)), `policyHTML()` ([L2231](../web/app.js#L2231)) |
+| What changed controls: Budget year (the newest year's figures only), Compare with (the comparisons in changes.json), Fund, Show first (Spending / Income) | `changesFiltersHTML()` ([L2296](../web/app.js#L2296)) |
+| Reserve Fund version ("The 2027 Revised budget leaves $14.6M in the Reserve Fund …", "What moves the balance") | `reserveChangesPage()` ([L2256](../web/app.js#L2256)) |
+| County "Accounts merged: …" note under a line | `mergeNote` ([L2132](../web/app.js#L2132)) |
 
 **Reserve Fund (City) and General Fund Balance (County)**
 
@@ -335,18 +334,18 @@ Each row names the function that writes the text; search for it in `web/app.js`.
 
 | What you see | Where |
 |---|---|
-| Deck sentence's gap and the note under it | `countyGap` ([L1170](../web/app.js#L1170)), `countyGapNote()` ([L1172](../web/app.js#L1172)) |
-| Budget and Actual | `actualsHTML()` ([L1202](../web/app.js#L1202)); its note paragraphs are `actuals_note` in `web/data/county/budget.json` (written by `scripts/build_county.py`) |
-| The 2026 Budget in Context | `contextHTML()` ([L1310](../web/app.js#L1310)); the facts come from `data/county/context_facts.csv` |
+| Deck sentence's gap and the note under it | `countyGap` ([L1171](../web/app.js#L1171)), `countyGapNote()` ([L1173](../web/app.js#L1173)) |
+| Budget and Actual | `actualsHTML()` ([L1203](../web/app.js#L1203)); its note paragraphs are `actuals_note` in `web/data/county/budget.json` (written by `scripts/build_county.py`) |
+| The 2026 Budget in Context | `contextHTML()` ([L1311](../web/app.js#L1311)); the facts come from `data/county/context_facts.csv` |
 | "Group" / "Department" in place of "Department" / "Bureau" | search `isCounty()` in `homeView()`, `deptPage()`, `ledgerHTML()` and `JT` |
 
 **About the data and Funds and terms**
 
 | What you see | Where |
 |---|---|
-| City About (Sources, Projections, Reserve Fund, Departments and bureaus, Validation, Printed and calculated totals, Known problems, Get the data, Contact) | `renderAbout()` ([L2854](../web/app.js#L2854)) |
-| County About (Context facts, Sources, Actual figures, Departments and funds, How the County is run, General Fund balance, Validation, Merged accounts, …) | `renderAboutCounty()` ([L2784](../web/app.js#L2784)) |
-| Funds and terms | `termsPage()` ([L2967](../web/app.js#L2967)), `FUND_INFO` |
+| City About (Sources, Projections, Reserve Fund, Departments and bureaus, Validation, Printed and calculated totals, Known problems, Get the data, Contact) | `renderAbout()` ([L2883](../web/app.js#L2883)) |
+| County About (Context facts, Sources, Actual figures, Departments and funds, How the County is run, General Fund balance, Validation, Merged accounts, …) | `renderAboutCounty()` ([L2813](../web/app.js#L2813)) |
+| Funds and terms | `termsPage()` ([L2996](../web/app.js#L2996)), `FUND_INFO` |
 | How the City budget is made | `calendarPage()`, `calSteps()` (see the section above) |
 
 ---
