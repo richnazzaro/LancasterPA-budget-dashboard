@@ -24,6 +24,7 @@ Needs PyYAML and jsonschema (requirements-build.txt).
 """
 from __future__ import annotations
 
+import csv
 import json
 import copy
 import re
@@ -466,6 +467,19 @@ class Gov:
     def processed(self) -> Path:
         """The generated CSVs the build reads (government.yaml processed_dir, default data/processed)."""
         return ROOT / self.data.get("processed_dir", "data/processed")
+
+    @property
+    def primary_fund(self) -> str:
+        """The government's main fund: the one row of mapping/funds.csv with role primary, else
+        government.yaml display.primary_fund. Every script asks here instead of naming the fund."""
+        file = self.mapping / "funds.csv"
+        if file.exists():
+            with file.open(newline="", encoding="utf-8") as f:
+                rows = [r for r in csv.DictReader(f) if r["role"] == "primary"]
+            if len(rows) != 1:
+                raise ConfigError([f"{rel(file)}: exactly one fund must have role primary (found {len(rows)})"])
+            return rows[0]["name"]
+        return self.data["display"]["primary_fund"]
 
     @property
     def web_data(self) -> Path:

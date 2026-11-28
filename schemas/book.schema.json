@@ -53,7 +53,7 @@
     "layout_family": {
       "type": "string",
       "enum": ["lineitem_columns", "projection_book", "xposition_rows", "pde2028", "audited_report", "budget_resolution"],
-      "description": "Which extractor reads the book. lineitem_columns = line items in printed year columns (City books); projection_book = multi-year projections; xposition_rows = County books, amounts rebuilt from their position on the page; pde2028 = Pennsylvania school district General Fund Budget form; audited_report = annual financial report schedules; budget_resolution = an adopting budget resolution. Not in today's config/*.json files (the extractor is chosen by `extractor` or by folder); required once books move to YAML.",
+      "description": "Which extractor reads the book. lineitem_columns = line items in printed year columns (City books); projection_book = multi-year projections; xposition_rows = County books, amounts rebuilt from their position on the page; pde2028 = Pennsylvania school district General Fund Budget form; audited_report = annual financial report schedules; budget_resolution = an adopting budget resolution. lineitem_columns books choose how pages are read with `reading`.",
       "examples": ["lineitem_columns"]
     },
     "status": {
@@ -86,12 +86,6 @@
       "items": {"$ref": "#/$defs/column"},
       "description": "char_rows books: the printed amount columns, left to right, in the order the row's numbers appear.",
       "examples": [[{"fiscal_year": 2025, "figure": "actual"}]]
-    },
-    "extractor": {
-      "type": "string",
-      "enum": ["extract_layout", "extract_budget", "extract_projections"],
-      "description": "Today's name of the script that reads the book (default extract_layout). Replaced by layout_family.",
-      "examples": ["extract_layout"]
     },
     "kind": {
       "type": "string",
@@ -225,6 +219,11 @@
       },
       "additionalProperties": false,
       "examples": [{"560": "Stormwater Management Fund", "662": {"fund": "Long's Park Fund", "department": "Public Works"}}]
+    },
+    "other_fund_department": {
+      "type": "string",
+      "description": "The department of every fund in `funds` given by name only (not as {fund, department}). Required when any such fund is listed.",
+      "examples": ["Public Works"]
     },
     "general_fund_departments": {
       "type": "object",

@@ -299,8 +299,7 @@ def run(pdf, out=OUT_DIR, gov=None, cfg=None):
         if cfg is None:
             sys.exit(f"{govconfig.books_dir(gov.id) / (pdf.stem + '.yaml')}: no book config for {pdf.name}")
     book = {"fund_titles": cfg.get("fund_titles") or {},
-            "fund_and_department": make_fund_mapper(cfg["funds"], cfg["general_fund_departments"],
-                                                    cfg.get("general_fund_department_overrides", {}))}
+            "fund_and_department": make_fund_mapper(cfg, gov)}
     items, checks, unparsed, assumption_rows, years, keys = extract(pdf, book)
     out.mkdir(parents=True, exist_ok=True)
     cols = ["fund", "department", "bureau", "account_code", "org_code", "object_code",

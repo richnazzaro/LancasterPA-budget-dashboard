@@ -91,13 +91,10 @@ def fund_aliases(gov) -> dict:
 
 def primary_fund(gov) -> str:
     """The fund the site opens on: mapping/funds.csv role primary, else government.yaml display.primary_fund."""
-    file = gov.mapping / "funds.csv"
-    if file.exists():
-        rows = [r for r in read_csv(file) if r["role"] == "primary"]
-        if len(rows) == 1:
-            return rows[0]["name"]
-        sys.exit(f"{file}: exactly one fund must have role primary (found {len(rows)})")
-    return gov["display"]["primary_fund"]
+    try:
+        return gov.primary_fund
+    except govconfig.ConfigError as e:
+        sys.exit(str(e))
 
 
 def display_rule(gov) -> tuple[dict, list]:

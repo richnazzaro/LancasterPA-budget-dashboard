@@ -243,6 +243,8 @@ def infer_config(pdf_path, source, gov):
                        f"Delete this key once reviewed."),
         "_review_notes": notes,
         "source_doc": Path(pdf_path).name,
+        "layout_family": "lineitem_columns",
+        "reading": "word_boxes",
         "source": source,
         "budget_year": budget_year,
         "line_items": {"layouts": layouts, "total_prefix": "^TOTAL\\b\\s*[-_]?\\s*",
@@ -253,6 +255,8 @@ def infer_config(pdf_path, source, gov):
         "general_fund_departments": template["general_fund_departments"],
         "general_fund_department_overrides": template.get("general_fund_department_overrides", {}),
     }
+    if template.get("other_fund_department"):
+        cfg["other_fund_department"] = template["other_fund_department"]
     if source == "ocr":
         cfg["ocr"] = {"dpi": 300, "fallback_rotate": 90}
     return cfg
@@ -281,15 +285,29 @@ def _newest_layout_config(gov):
 # 3. Extract, validate, cross-check
 # --------------------------------------------------------------------------
 
+# Which code reads a book: its layout_family, and for line-item books how its pages are read (`reading`).
+# A new layout needs a new row here (engine code, once); a new government or year never does.
+READERS = {
+    ("lineitem_columns", "word_boxes"): lambda pdf, cfg, gov: extract_layout.run(pdf, None, gov.processed, gov=gov),
+    ("lineitem_columns", "char_rows"): lambda pdf, cfg, gov: extract_budget.run(pdf, gov.processed, gov=gov, cfg=cfg),
+    ("projection_book", None): lambda pdf, cfg, gov: extract_projections.run(pdf, gov.processed, gov=gov, cfg=cfg),
+}
+
+
+def reader_key(cfg):
+    family = cfg.get("layout_family")
+    return (family, cfg.get("reading", "word_boxes")) if family == "lineitem_columns" else (family, None)
+
+
 def extract_one(pdf_path, cfg, gov):
+    key = reader_key(cfg)
+    if key not in READERS:
+        sys.exit(f"{cfg.get('source_doc')}: no reader for layout_family {key[0]!r}"
+                 + (f" with reading {key[1]!r}" if key[1] else "")
+                 + f"; known: {', '.join(sorted({k[0] for k in READERS}))}")
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
-        if cfg.get("extractor") == "extract_budget":
-            stats = extract_budget.run(pdf_path, gov.processed, gov=gov, cfg=cfg)
-        elif cfg.get("extractor") == "extract_projections":
-            stats = extract_projections.run(pdf_path, gov.processed, gov=gov, cfg=cfg)
-        else:
-            stats = extract_layout.run(pdf_path, None, gov.processed, gov=gov)
+        stats = READERS[key](pdf_path, cfg, gov)
     return stats, buf.getvalue()
 
 
@@ -320,7 +338,7 @@ def ingest(pdf_path, gov):
     if cfg_path.exists():
         cfg = govconfig.book_config(gov.id, pdf_path.name)
         rep["config"] = "existing"
-        if cfg.get("source", "ocr") != source and cfg.get("extractor") not in ("extract_budget", "extract_projections"):
+        if cfg.get("source", "ocr") != source and reader_key(cfg) == ("lineitem_columns", "word_boxes"):
             rep["warning"] = (f"config says source={cfg.get('source', 'ocr')!r} but the PDF "
                               f"looks {source!r} ({share:.0%} of pages have text)")
     else:

@@ -220,7 +220,7 @@ def extract(pdf_path, book):
     return items, sections, staff, staff_checks, unparsed
 
 
-def book_from_config(cfg):
+def book_from_config(cfg, gov):
     """The parts of a book config this extractor needs, ready to use."""
     columns = [(c["fiscal_year"], c["doc_type"]) for c in cfg["amount_columns"]]
     st_columns = [(c["fiscal_year"], c["doc_type"]) for c in cfg["staffing"]["columns"]]
@@ -229,8 +229,7 @@ def book_from_config(cfg):
         "amount_columns": columns,
         "amount_keys": [f"{fig}_{fy}" for fy, fig in columns],
         "note_fonts": tuple(cfg.get("note_fonts") or DEFAULT_NOTE_FONTS),
-        "fund_and_department": make_fund_mapper(
-            cfg["funds"], cfg["general_fund_departments"], cfg.get("general_fund_department_overrides", {})),
+        "fund_and_department": make_fund_mapper(cfg, gov),
         "staff_keys": st_keys,
         "staff_flat": [k for pair in st_keys for k in pair],
     }
@@ -316,7 +315,7 @@ def run(pdf, out=OUT_DIR, gov=None, cfg=None):
         cfg = govconfig.book_config(gov.id, pdf.name)
         if cfg is None:
             sys.exit(f"{govconfig.books_dir(gov.id) / (pdf.stem + '.yaml')}: no book config for {pdf.name}")
-    book = book_from_config(cfg)
+    book = book_from_config(cfg, gov)
     doc = pdf.stem
     items, sections, staff, staff_checks, unparsed = extract(pdf, book)
     Path(out).mkdir(parents=True, exist_ok=True)

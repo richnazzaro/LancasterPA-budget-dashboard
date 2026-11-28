@@ -143,7 +143,7 @@ Their columns, row counts and what each changes on the site are in [REFERENCE.md
 ### When a check fails
 
 1. Read the failure: the report names the page, the section and the gap.
-2. If the extraction misread the page, fix the parsing (`scripts/extract_layout.py` or `config/<book>.json`; `scripts/extract_budget.py` for the 2027 book; `scripts/extract_projections.py` for the projections book).
+2. If the extraction misread the page, fix the book's YAML (`governments/lancaster-city/books/<book>.yaml`) or the reader its `layout_family`/`reading` points to (`scripts/extract_layout.py`; `scripts/extract_budget.py` for `reading: char_rows`; `scripts/extract_projections.py` for `projection_book`).
 3. If the city's book is itself wrong, add a row to `governments/lancaster-city/notes/known_issues.csv` explaining the evidence. `python scripts/review_failures.py <book name without .pdf>` drafts these rows for you to read and edit.
 4. If a value is provably misprinted (for example a negative printed without its minus sign), record the fix in the matching corrections file. `python scripts/sign_corrections.py <book> --append` proposes sign flips only when the printed total proves them.
 5. Never widen the $5 rounding tolerance to make a check pass.

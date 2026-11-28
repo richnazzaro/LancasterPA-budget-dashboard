@@ -324,9 +324,7 @@ def extract(pdf_path, cfg, gov=None):
     inherit = li.get("inherit_header", False)
     prev_header = None
     re_total = re.compile(li["total_prefix"])
-    fund_and_department = make_fund_mapper(
-        cfg["funds"], cfg["general_fund_departments"],
-        cfg.get("general_fund_department_overrides", {}))
+    fund_and_department = make_fund_mapper(cfg, gov)
 
     st = cfg["staffing"]
     st_keys = [(f"count_{c['fiscal_year']}_{c['doc_type']}",

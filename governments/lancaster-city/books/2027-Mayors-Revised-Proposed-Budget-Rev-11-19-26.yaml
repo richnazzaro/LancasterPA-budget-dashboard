@@ -2,12 +2,12 @@
 # Schema: schemas/book.schema.json. Moved from config/2027-Mayors-Revised-Proposed-Budget-Rev-11-19-26.json in Phase 1.2 (2026-11-28);
 # the columns, page headers and totals were checked against the PDF when the book was ingested (status: reviewed).
 #
-# The 2027 book has its own extractor (scripts/extract_budget.py, 8 columns and 2 staffing columns
-# hard-wired). This file only tells ingest.py to use it and which budget year the book is.
+# Printed from a spreadsheet: long titles overflow into the next column, so the line-item family reads
+# it with `reading: char_rows` (characters in the order the PDF draws them, rebuilt into rows) instead
+# of word boxes. Its 8 amount columns, 2 staffing columns, note fonts and fund maps are all below.
 source_doc: 2027-Mayors-Revised-Proposed-Budget-Rev-11-19-26.pdf
 layout_family: lineitem_columns
 status: reviewed
-extractor: extract_budget
 source: text
 budget_year: 2027
 staffing:                               # one (count, salary) pair per printed column, left to right
@@ -27,6 +27,7 @@ funds:                                  # org-code prefix -> fund (8- and 9-digi
   '561': Sewer Fund
   '562': Water Fund
   '563': Solid Waste & Recycling Fund
+other_fund_department: Public Works      # department of a fund above given by name only (the enterprise funds)
 general_fund_departments:               # 7-digit General Fund org codes: first 2 digits -> department
   '10': General Revenue
   '11': Executive

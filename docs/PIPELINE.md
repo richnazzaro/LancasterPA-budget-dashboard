@@ -30,7 +30,7 @@ For each PDF, `ingest.py`:
 
 Exit status: 0 when everything passes or is a reviewed source issue, 1 when a book has unreviewed failures, and 2 when a config was just inferred or a PDF couldn't be processed.
 
-The per-book scripts still work on their own: `scripts/extract_budget.py` (2027 book), `scripts/extract_projections.py` (the projections book) and `scripts/extract_layout.py` (all others).
+`ingest.py` picks the code that reads a book from its YAML: `layout_family: lineitem_columns` with `reading: word_boxes` (the default) → `scripts/extract_layout.py`; `lineitem_columns` with `reading: char_rows` (a book printed from a spreadsheet, such as the 2027 book) → `scripts/extract_budget.py`; `layout_family: projection_book` → `scripts/extract_projections.py`. A book whose family and reading have no reader stops with a message listing the known ones. Each script also runs on its own with a PDF path.
 
 Each book writes these files to `data/processed/`, suffixed with the PDF's name (plus the Fund Balance files below, and `crosscheck_*.csv`):
 
@@ -67,7 +67,7 @@ The city published projections for 2028 and 2029 with the 2027 budget: 28 pages 
 Each section, department, and fund total and each staffing subtotal printed in the PDF is recomputed from the parsed rows. Differences of up to $5 are allowed for the city's cent rounding. The script exits with an error if any check fails, unless that failure is listed in `governments/lancaster-city/notes/known_issues.csv` with a note explaining the source-document error.
 
 ### Other budget books (2022–2026): config-driven extractor
-A book printed from a spreadsheet (the 2027 book) goes through `scripts/extract_budget.py`, which reads its columns, note fonts, staffing pairs and fund maps from the book's YAML. Every other book goes through `scripts/extract_layout.py`, which takes its page layout from `governments/<id>/books/<pdf name>.yaml`:
+A book printed from a spreadsheet (`reading: char_rows`; today the 2027 book) goes through `scripts/extract_budget.py`, which reads its columns, note fonts, staffing pairs and fund maps from the book's YAML. Every other line-item book goes through `scripts/extract_layout.py`, which takes its page layout from `governments/<id>/books/<pdf name>.yaml`:
 
 ```bash
 python scripts/extract_layout.py "/path/to/Budget PDFs - City/2024-Adopted-Budget.pdf"

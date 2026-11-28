@@ -57,6 +57,7 @@ funds:
   '265':
     fund: Liquid Fuels Fund
     department: Public Works
+other_fund_department: Public Works      # department of a fund above given by name only (the enterprise funds)
 general_fund_departments:
   '10': General Revenue
   '11': Executive
