@@ -67,7 +67,7 @@ They work with a keyboard (Tab moves between them; arrow keys change the Spendin
 
 **Line items.** Search by name or account number, sort by any column, click a line's name to see that line across the years (with a link to the book page for each figure), and press **Export this view (CSV)** to download every matching line with its source page.
 
-**What changed** (in the header) explains the newest budget against the year before: the change in spending and income, the largest line-item changes, money and staff **moved into or out of the General Fund** (the City's fees-paid funds and the tax-paid General Fund are kept apart, so every move between them is called out), budgeted positions, and what the revised proposal changed. Where one line is far above the years either side of it, the page names it and says what the change would be without it.
+**What changed** (in the header) compares any two budgets: pick one in Budget year and any other in Compare with. It opens on the newest budget against the year before, and shows the change in spending and income, the largest line-item changes, money and staff **moved into or out of the General Fund** (the City's fees-paid funds and the tax-paid General Fund are kept apart, so every move between them is called out), budgeted positions (for any two budgets that have a position schedule, 2022 on), and what the revised proposal changed (moves between funds and the revision are shown for the newest budget's usual comparisons). Where one line is far above the years either side of it, the page names it and says what the change would be without it.
 
 **What counts as income.** Income means money coming in: taxes, fees, fines, grants, state and federal payments, interest and rent. The budget books also list as revenue some money that is not coming in, and the site leaves it out of income:
 
@@ -96,7 +96,7 @@ When one fund charges another for services (for example the Water Fund paying th
 2. **Compare it with the page.** Totals are shown **exactly as the government printed them**. Where no printed total covers exactly what you are looking at (all funds together, a search result, a regrouped department), the site adds up the lines itself and labels the figure **calculated**.
 3. **Look for ≠.** If the lines under a printed total do not add up to it beyond rounding, the site keeps the printed figure, marks it **≠**, and gives the lines' sum, the difference and an explanation.
 4. **Read the known problems.** About the data lists every error found in the source books, each reviewed by a person.
-5. **Download the data** from About the data, or directly: `budget.json`, `changes.json`, `staffing.json` and `conflicts.json` at https://budget.nazwel.net/data/, and the County's under https://budget.nazwel.net/data/county/. The source PDFs are at https://budget.nazwel.net/pdfs/ and https://budget.nazwel.net/pdfs/county/.
+5. **Download the data** from About the data, or directly: `budget.json`, `changes.json`, `positions.json` (position changes for any two budgets), `staffing.json` and `conflicts.json` at https://budget.nazwel.net/data/, and the County's under https://budget.nazwel.net/data/county/. The source PDFs are at https://budget.nazwel.net/pdfs/ and https://budget.nazwel.net/pdfs/county/.
 
 ## Known limits
 

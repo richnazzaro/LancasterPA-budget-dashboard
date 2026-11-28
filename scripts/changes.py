@@ -25,10 +25,15 @@ Shifts between funds are detected from the city's own line notes ("Budget has be
 General Fund ...", "... being transferred from Property Maintenance to Solid Waste ...") plus the
 matching zero-outs, new lines, and direct-bill reimbursements. See detect_shifts().
 
+build_positions() makes web/data/positions.json: the same positions block for every ordered pair of
+position schedules (the newest book's Proposed and Revised, each earlier book's own year), so What
+changed can show positions for any two figures. The page loads it only when What changed opens.
+
 Standard library only.
 """
 from __future__ import annotations
 
+import copy
 import csv
 import re
 from collections import Counter, defaultdict
@@ -331,33 +336,39 @@ def plain(name: str) -> str:
 # ---------------------------------------------------------------------------------------------
 # Positions
 # ---------------------------------------------------------------------------------------------
-def load_schedule(path: Path, column: str, doc_idx: int, org_fund: dict, codes: dict) -> dict | None:
+def load_schedule(path: Path, column: str, doc_idx: int, org_fund: dict, codes: dict, strict: bool = True) -> dict | None:
+    """One position schedule, per (org, class). strict (changes.json): an org code the org chart doesn't have stops
+    the build. Lenient (positions.json, which also uses older books): its positions go to `unplaced` instead, so the
+    schedule's total still counts them."""
     rows = read_csv(path)
     if not rows or f"count_{column}" not in rows[0]:
         return None
     has_ftpt = any(r.get("ft_pt") in ("FT", "PT") for r in rows)
     by = defaultdict(lambda: {"n": 0.0, "p": None, "titles": Counter()})
-    remapped = []
+    remapped, unplaced = [], []
     for r in rows:
         n = num(r[f"count_{column}"])
         if not n:
             continue
         org = r["org_code"]
+        cls = r["ft_pt"] if has_ftpt and r["ft_pt"] in ("FT", "PT") else ("FT" if has_ftpt else "ALL")
         if org not in codes:
             # A misprinted org code (e.g. 56188001 for 56188000): use the one mapped code it differs from in the last digit.
             near = [c for c in codes if len(c) == len(org) and c[:-1] == org[:-1]]
             if len(near) != 1:
-                raise SystemExit(f"staffing org {org} ({path.name}) is not in data/org_structure_2027.csv")
+                if strict:
+                    raise SystemExit(f"staffing org {org} ({path.name}) is not in data/org_structure_2027.csv")
+                unplaced.append({"org": org, "cls": cls, "n": n, "p": int(r["source_page"]), "title": r["position_title"]})
+                continue
             remapped.append({"printed": org, "used": near[0], "n": n, "p": int(r["source_page"]), "title": r["position_title"]})
             org = near[0]
-        cls = r["ft_pt"] if has_ftpt and r["ft_pt"] in ("FT", "PT") else ("FT" if has_ftpt else "ALL")
         e = by[(org, cls)]
         e["n"] += n
         p = int(r["source_page"])
         e["p"] = p if e["p"] is None else min(e["p"], p)
         e["titles"][norm_title(r["position_title"])] += n
     return {"doc": doc_idx, "column": column, "ftpt": has_ftpt, "orgs": dict(by), "remapped": remapped,
-            "fund": {o: org_fund[o] for o, _ in by}}
+            "unplaced": unplaced, "fund": {o: org_fund[o] for o, _ in by}}
 
 
 def norm_title(t: str) -> str:
@@ -507,6 +518,27 @@ def compare_positions(budget, frm, to, codes, units, known_issues, shifts, ctx) 
                                       f"{len(new)} other{'s' if len(new) != 1 else ''} (e.g. {', '.join(new[:2])}). Titles are renamed "
                                       f"or reworded between books, so positions are compared per bureau, not per title."})
 
+    # 5. Positions under org codes the org chart doesn't have (older books' misread codes; lenient schedules only):
+    #    counted in the all-funds totals, raw and adjusted alike (they are real positions in that schedule, and the
+    #    other schedule counts their counterparts in some bureau), but in no bureau row.
+    unplaced = {}
+    for side, sched in (("from", frm), ("to", to)):
+        up = sched.get("unplaced") or []
+        if not up:
+            continue
+        n_cls = defaultdict(float)
+        for m in up:
+            n_cls[m["cls"] if cls_list != ["ALL"] else "ALL"] += m["n"]
+        unplaced[side] = n_cls
+        n = sum(n_cls.values())
+        orgs_up = list(dict.fromkeys(m["org"] for m in up))
+        artifacts.append({"kind": "unplaced", "side": side, "orgs": orgs_up, "unit": None, "fund": "",
+                          "n": {c: clean(v) for c, v in n_cls.items()}, "d": sched["doc"], "p": min(m["p"] for m in up),
+                          "pages": sorted({m["p"] for m in up}), "titles": sorted({m["title"] for m in up}),
+                          "text": f"{fmt_n(n)} position{'s' if n != 1 else ''} in the {ctx[side + '_label']} "
+                                  f"{'are' if n != 1 else 'is'} under org codes the {ctx.get('org_chart', 'org chart')} doesn't have "
+                                  f"({', '.join(orgs_up)}); they are counted in the total but not in a bureau."})
+
     # Rows per (fund, unit, cls)
     agg = defaultdict(lambda: {"f": 0.0, "t": 0.0, "af": 0.0, "at": 0.0, "fp": None, "tp": None})
     def put(key, field, n, p=None, pf=None):
@@ -539,6 +571,10 @@ def compare_positions(budget, frm, to, codes, units, known_issues, shifts, ctx) 
         for c in cls_list:
             rs = [r for r in rows if r[2] == c and (scope == "all" or r[0] == scope)]
             totals.setdefault(str(scope), {})[c] = {k: clean(sum(r[i] for r in rs)) for k, i in (("f", 3), ("t", 4), ("af", 5), ("at", 6))}
+    for side, n_cls in unplaced.items():
+        for c, v in n_cls.items():
+            for k in (("f", "af") if side == "from" else ("t", "at")):
+                totals["all"][c][k] = clean(totals["all"][c][k] + v)
     return {"from_label": ctx["from_label"], "to_label": ctx["to_label"], "from_doc": frm["doc"], "to_doc": to["doc"],
             "classes": cls_list, "rows": rows, "totals": totals, "artifacts": artifacts}
 
@@ -846,4 +882,47 @@ def build_changes(budget: dict, processed: Path, designated: dict, newest: int, 
         "shifts": shifts,
         "policy": policy_notes(docs),
         "line_notes": line_notes(docs),
+    }
+
+
+def build_positions(budget: dict, processed: Path, designated: dict, newest: int, shifts: list) -> dict:
+    """web/data/positions.json: compare_positions() for every ordered pair of distinct position schedules.
+    Schedules: "<newest>|proposed" and "<newest>|revised" (the newest book's two columns) and "<y>" for each earlier
+    designated book's own-year column. A series maps to one (see seriesSchedule() in web/app.js): the newest year's
+    figure to its column, any other year's figure to that year's book. Schedules are read leniently: positions under
+    org codes the org chart doesn't have are counted in the totals as `unplaced`. `shifts` (changes.json's) apply
+    only from an earlier year to the newest; they are copied, so changes.json's own shifts are not touched."""
+    docs = budget["docs"]
+    org_rows = read_csv(ROOT / "data" / "org_structure_2027.csv")
+    org_fund = {r["org_code"]: r["fund"] for r in org_rows}
+    codes, units = budget["org"]["codes"], budget["org"]["units"]
+    known = budget.get("known_issues", [])
+    scheds = {}
+    nb = designated[newest]
+    path = processed / f"staffing_{nb['stem']}.csv"
+    for m, col in (("proposed", f"{newest}_proposed"), ("revised", f"{newest}_proposed_revised")):
+        sc = load_schedule(path, col, docs.index(nb["doc"]), org_fund, codes, strict=False) if path.exists() else None
+        if sc:
+            scheds[f"{newest}|{m}"] = sc | {"label": f"{newest} {m.capitalize()} position schedule", "year": newest}
+    for y in sorted(designated, reverse=True):
+        if y >= newest:
+            continue
+        book = designated[y]
+        path = processed / f"staffing_{book['stem']}.csv"
+        sc = load_schedule(path, f"{y}_proposed", docs.index(book["doc"]), org_fund, codes, strict=False) if path.exists() else None
+        if sc:
+            scheds[str(y)] = sc | {"label": f"{y} budget book's position schedule", "year": y}
+    pairs = {}
+    for t, T in scheds.items():
+        for f, F in scheds.items():
+            if t == f:
+                continue
+            ctx = {"id": f"{t}~{f}", "from_label": F["label"], "to_label": T["label"], "org_chart": f"{newest} org chart"}
+            sh = copy.deepcopy(shifts) if T["year"] == newest and F["year"] < newest else []
+            pairs[f"{t}~{f}"] = compare_positions(budget, F, T, codes, units, known, sh, ctx)
+    return {
+        "note": "schedules: id -> label and doc (budget.json docs). pairs: '<to schedule>~<from schedule>' -> the same "
+                "positions block as changes.json comparisons[*].positions.",
+        "schedules": {k: {"label": s["label"], "doc": s["doc"]} for k, s in scheds.items()},
+        "pairs": pairs,
     }

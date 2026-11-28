@@ -2203,13 +2203,155 @@
   const deltaHTML = (d, base, f = money) => { const p = base ? (d / Math.abs(base)) * 100 : null; return `<span class="${d > 0 ? 'up' : d < 0 ? 'down' : 'flat'}">${d === 0 ? 'No change' : sgn(d, f)}${p == null || d === 0 ? '' : `<span class="pct"> (${sgn(p, (x) => x.toFixed(1))}%)</span>`}</span>`; };
   const nDelta = (d) => `<span class="${d > 0 ? 'up' : d < 0 ? 'down' : 'flat'}">${Math.abs(d) < 0.005 ? '0' : sgn(d, fmtN)}</span>`;
 
-  /* Which comparison: <newest figure>~<compare with>. Falls back to the first one listed for that figure. */
+  /* Which comparison: <Budget year>~<Compare with>, any two figures the site has. changes.json's precomputed comparisons
+     (which also carry positions, department summaries and shifts between funds) are used where they exist; any other
+     pair is built here by buildComparison(). With no comparison chosen, the usual default (defaultCompare), else the
+     nearest other figure. The County keeps its precomputed comparisons only. */
   function changeCmp() {
     if (!CH) return null;
-    const to = key(D.newest_year, S.m);
-    let id = `${to}~${S.c}`;
-    if (!CH.comparisons[id]) id = Object.keys(CH.comparisons).find((x) => x.startsWith(`${to}~`)) || CH.default;
-    return CH.comparisons[id] ? { id, ...CH.comparisons[id] } : null;
+    if (isCounty()) {
+      const to = key(D.newest_year, S.m);
+      let id = `${to}~${S.c}`;
+      if (!CH.comparisons[id]) id = Object.keys(CH.comparisons).find((x) => x.startsWith(`${to}~`)) || CH.default;
+      return CH.comparisons[id] ? { id, ...CH.comparisons[id] } : null;
+    }
+    const to = key(S.y, S.m);
+    if (!D.series[to]) return null;
+    const from = S.c && S.c !== to && D.series[S.c] ? S.c : wcDefaultFrom(to);
+    if (!from) return null;
+    const id = `${to}~${from}`;
+    if (CH.comparisons[id]) return { id, ...CH.comparisons[id] };
+    return { id, ...buildComparison(to, from), ...pairPositions(to, from) };
+  }
+
+  /* Positions for a pair changes.json doesn't hold: positions.json (scripts/changes.py build_positions) has the same
+     positions block for every pair of position schedules. It is fetched the first time What changed is drawn (never on
+     the other pages), then the page is drawn again. seriesSchedule(k): the newest year's figure uses its own column of
+     the newest book's schedule ("2027|revised"); any other year's figure (Actual, Amended, Projected…) that year's
+     book's schedule ("2025"). pairPositions() returns { positions } or a one-line { posNote }, or { posLoading }. */
+  let POS; // undefined: not asked for yet; 'loading'; null: none for this entity (or it failed); else positions.json
+  const seriesSchedule = (k) => { const { y } = parseKey(k); return y === D.newest_year ? k : String(y); };
+  function loadPositions() {
+    if (POS !== undefined) return;
+    const ent = ENT, has = (CFG.lazy_files || []).includes('positions');
+    const done = (p) => {
+      ENTCACHE[ent].POS = p;
+      if (ENT !== ent) return;
+      POS = p;
+      if (route.name !== 'changes' || !$('view').querySelector('section[aria-busy="true"]')) return; // only a page waiting for it
+      const want = parseHash().q.get('s'), missing = want && !$(want);
+      onRoute(false);
+      if (missing && $(want)) { $(want).scrollIntoView(); $(want).focus({ preventScroll: true }); } // e.g. "How this is counted" opened from a link
+    };
+    if (!has) { POS = ENTCACHE[ent].POS = null; return; }
+    POS = ENTCACHE[ent].POS = 'loading';
+    fetch(`${CFG.paths.data}positions.json`, { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : null)).catch(() => null).then(done);
+  }
+  function pairPositions(to, from) {
+    if (POS === undefined || POS === 'loading') return (CFG.lazy_files || []).includes('positions') ? { posLoading: true } : {};
+    if (!POS) return {};
+    const ts = seriesSchedule(to), fs = seriesSchedule(from);
+    const none = [...new Set([to, from].filter((k, i) => !POS.schedules[[ts, fs][i]]).map((k) => parseKey(k).y))];
+    if (none.length) return { posNote: `There is no position schedule for ${none.join(' or ')}.` };
+    if (ts === fs) return { posNote: `Both figures use the ${esc(String(parseKey(to).y))} position schedule, so the count of positions is the same.` };
+    const P = POS.pairs[`${ts}~${fs}`];
+    return P ? { positions: P } : {};
+  }
+  function wcDefaultFrom(to) {
+    const { y, m } = parseKey(to);
+    return defaultCompare(y, m) || figureKeys().filter((k) => k !== to).sort((a, b) => Math.abs(parseKey(a).y - y) - Math.abs(parseKey(b).y - y))[0] || '';
+  }
+
+  /* buildComparison(toKey, fromKey): scripts/changes.py compare() in the browser, with the same shape as a changes.json
+     comparison: { to, from, same_kind, lines, scopes }. Lines are matched by (account code, nth occurrence) in each
+     series; a line row is [account, from v, d, p, to v, d, p] (nulls where absent). Per scope ("all" and each fund) and
+     kind: total, by_dept, by_unit, by_cat (spending) or by_group and draw (income), up / down (top 10 by change, lines in
+     both, draw lines left out), new / removed. Income membership is incomeAcct(), as wcTotal()'s ofKind() uses. */
+  const cmpCache = new Map();
+  const clean2 = (n) => Math.round(n * 100) / 100;
+  function cmpLines(k) {
+    const s = series(k), out = new Map(), seen = new Map();
+    s.a.forEach((a, i) => {
+      const code = D.accounts[a][0], nth = seen.get(code) || 0;
+      seen.set(code, nth + 1);
+      out.set(`${code}|${nth}`, { code, nth, e: [a, s.v[i], Array.isArray(s.doc) ? s.doc[i] : s.doc, s.p[i]] });
+    });
+    return out;
+  }
+  function cmpLink(entries) {
+    const es = entries.filter(Boolean);
+    if (!es.length) return null;
+    const d = es[0][2];
+    let p = Infinity;
+    for (const e of es) if (e[2] === d && e[3] < p) p = e[3];
+    return { v: clean2(es.reduce((t, e) => t + e[1], 0)), d, p };
+  }
+  function cmpTotalLink(scope, kind, k, entries) {
+    const lk = cmpLink(entries);
+    if (!lk || scope === 'all') return lk;
+    const cands = D.printed.filter((x) => x.fund === scope && x.kind === kind && k in x.values);
+    if (!cands.length) return lk;
+    let best = cands[0];
+    for (const x of cands) if (Math.abs(x.values[k] - lk.v) < Math.abs(best.values[k] - lk.v)) best = x;
+    return { ...lk, d: best.doc, p: best.page };
+  }
+  function buildComparison(to, from) {
+    const id = `${ENT}:${to}~${from}`;
+    if (cmpCache.has(id)) return cmpCache.get(id);
+    const F = cmpLines(from), T = cmpLines(to), revCat = D.categories.indexOf('Revenue');
+    const keys = [...new Map([...F, ...T].map(([k, x]) => [k, x])).values()]
+      .sort((a, b) => (a.code < b.code ? -1 : a.code > b.code ? 1 : a.nth - b.nth)).map((x) => `${x.code}|${x.nth}`);
+    const lines = [], meta = [], every = [];
+    for (const k of keys) {
+      const f = F.get(k)?.e || null, t = T.get(k)?.e || null, a = (t || f)[0];
+      const [code, name, fund, , bureau, cat] = D.accounts[a];
+      const unit = O.codes[code.split('-')[0]];
+      const info = { a, fund, cat, unit, dept: O.units[unit].dept, rev: cat === revCat, bureau, f, t,
+        draw: code.endsWith('-499000') && name.toLowerCase().startsWith('fund balance reserve'), delta: (t ? t[1] : 0) - (f ? f[1] : 0) };
+      every.push(info);
+      if (f && t && f[1] === t[1]) continue;
+      info.i = lines.length;
+      lines.push([a, ...(f ? f.slice(1) : [null, null, null]), ...(t ? t.slice(1) : [null, null, null])]);
+      meta.push(info);
+    }
+    const scopes = {};
+    for (const scope of ['all', ...[...new Set(every.map((e) => D.funds[e.fund]))].sort()]) {
+      const fi = scope === 'all' ? null : D.funds.indexOf(scope);
+      const inscope = every.filter((e) => fi == null || e.fund === fi), out = {};
+      for (const kind of ['expense', 'revenue']) {
+        // Income leaves out draws and transfers, and in All funds also charges to the City's own funds (incomeAcct).
+        const ks = inscope.filter((e) => e.rev === (kind === 'revenue') && (!e.rev || incomeAcct(e.a, scope === 'all')));
+        if (!ks.length) continue;
+        const block = { total: { f: cmpTotalLink(scope, kind, from, ks.map((e) => e.f)), t: cmpTotalLink(scope, kind, to, ks.map((e) => e.t)) } };
+        const group = (fn) => {
+          const g = new Map();
+          for (const e of ks) { const gk = fn(e); if (!g.has(gk)) g.set(gk, []); g.get(gk).push(e); }
+          return [...g].map(([gk, es]) => [gk, cmpLink(es.map((e) => e.f)), cmpLink(es.map((e) => e.t))])
+            .sort((x, y) => Math.abs(vOf(y[2]) - vOf(y[1])) - Math.abs(vOf(x[2]) - vOf(x[1])));
+        };
+        block.by_dept = group((e) => e.dept);
+        block.by_unit = group((e) => e.unit);
+        if (kind === 'expense') block.by_cat = group((e) => e.cat);
+        else {
+          block.by_group = group((e) => e.bureau); // the printed revenue group (budget.json `bureaus`)
+          const dl = inscope.filter((e) => e.rev && e.draw);
+          if (dl.length) block.draw = { f: cmpLink(dl.map((e) => e.f)), t: cmpLink(dl.map((e) => e.t)) };
+        }
+        const inKs = new Set(ks), changed = meta.filter((m) => inKs.has(m));
+        const both = changed.filter((m) => m.f && m.t && !m.draw);
+        block.up = both.filter((m) => m.delta > 0).sort((x, y) => y.delta - x.delta).slice(0, WC_TOP).map((m) => m.i);
+        block.down = both.filter((m) => m.delta < 0).sort((x, y) => x.delta - y.delta).slice(0, WC_TOP).map((m) => m.i);
+        const nw = changed.filter((m) => !m.f).sort((x, y) => y.delta - x.delta), gone = changed.filter((m) => !m.t).sort((x, y) => x.delta - y.delta);
+        block.new = { n: nw.length, v: clean2(nw.reduce((s, m) => s + m.delta, 0)), i: nw.map((m) => m.i) };
+        block.removed = { n: gone.length, v: clean2(gone.reduce((s, m) => s - m.delta, 0)), i: gone.map((m) => m.i) };
+        out[kind] = block;
+      }
+      scopes[scope] = out;
+    }
+    const pt = parseKey(to), pf = parseKey(from);
+    const c = { to, from, same_kind: pt.m === pf.m || pt.y === pf.y, lines, scopes };
+    cmpCache.set(id, c);
+    return c;
   }
   const revisionCmp = () => (CH ? CH.comparisons[`${D.newest_year}|revised~${D.newest_year}|proposed`] || null : null);
   const kindOf = (k) => parseKey(k).m;
@@ -2220,6 +2362,15 @@
     if (m === 'projected') return `the city expects to ${spend ? 'spend' : 'collect'} in ${y}`;
     if (m === 'actual') return `the city ${spend ? 'spent' : 'collected'} in ${y}`;
     return `the ${bud(c.from)}`;
+  }
+  /* The start of the headline: what the Budget year's figure spends or takes in. An Actual or Projected figure is what the
+     city spent or expects to spend, not a budget. */
+  function toSubject(c, t, where, spend = true) {
+    const { y, m } = parseKey(c.to), amt = t ? fig(t, { text: mny(t.v) }) : '$0';
+    if (m === 'actual') return `In ${y} the city ${spend ? 'spent' : 'collected'} ${amt} ${where}`;
+    if (m === 'projected') return `In ${y} the city expects to ${spend ? 'spend' : 'collect'} ${amt} ${where}`;
+    if (spend) return `The ${esc(bud(c.to))} spends ${amt} ${where}`;
+    return `The ${esc(seriesLabel(c.to))}${isCounty() ? '' : ' budget'} takes in ${amt} ${where}`;
   }
   const scopeName = () => S.f || 'all';
   const fundWords = () => (S.f ? `from the ${esc(fn(S.f))}` : 'across all funds');
@@ -2237,22 +2388,28 @@
   }
   const wcWhat = (kind, fund = S.f) => `${fn(fund) || 'All funds'} ${kind === 'revenue' ? 'income' : 'spending'}`;
 
-  /* Shifts between funds that touch this scope (fund, and optionally one department). */
+  /* Shifts between funds that touch this scope (fund, and optionally one department). changes.json sums each shift only
+     for the figures of its precomputed comparisons, so another pair shows none. */
   function shiftsFor(c, fund, dept = null, unit = null) {
     if (!CH || !crossYear(c)) return [];
     const inDept = (u) => u != null && O.units[u].dept === dept;
-    return CH.shifts.filter((s) => (!fund || s.from_fund === fund || s.to_fund === fund) && (dept == null || inDept(s.from.unit) || inDept(s.to?.unit))
+    return CH.shifts.filter((s) => c.from in s.from.values && c.to in s.from.values && (!fund || s.from_fund === fund || s.to_fund === fund) && (dept == null || inDept(s.from.unit) || inDept(s.to?.unit))
       && (unit == null || s.from.unit === unit || s.to?.unit === unit));
   }
+  /* Positions that moved between funds with their work. For one fund: moved in / out of it. For all funds a move
+     changes no total (it leaves one fund and arrives in another), so into/out stay 0 and `between` counts them. */
   function movedPositions(P, cls, fund) {
-    let into = 0, out = 0;
+    let into = 0, out = 0, between = 0;
     for (const a of (P?.artifacts || [])) {
       if (a.kind !== 'moved') continue;
       const n = a.n[cls] || 0;
-      if (!fund || a.fund === fund) into += n;
-      if (fund && a.from_fund === fund) out += n;
+      if (!fund) between += n;
+      else {
+        if (a.fund === fund) into += n;
+        if (a.from_fund === fund) out += n;
+      }
     }
-    return { into, out };
+    return { into, out, between };
   }
   const posClass = (P) => (P.classes.includes('FT') ? 'FT' : 'ALL');
   const clsWord = (cls, plural = true) => (cls === 'FT' ? `full-time position${plural ? 's' : ''}` : cls === 'PT' ? `part-time position${plural ? 's' : ''}` : `position${plural ? 's' : ''}`);
@@ -2260,7 +2417,7 @@
   function headlineSentence(c, sc) {
     const ex = sc.expense; if (!ex) return '';
     const t = wcTotal(c.to, 'expense'), f = wcTotal(c.from, 'expense'), d = vOf(t) - vOf(f), p = vOf(f) ? Math.abs(d / vOf(f)) * 100 : null;
-    let s = `The ${esc(bud(c.to))} spends ${t ? fig(t, { text: mny(t.v) }) : '$0'} ${fundWords()}, `
+    let s = `${toSubject(c, t, fundWords())}, `
       + (d === 0 ? `the same as ${fromPhrase(c)}.` : `${mny(Math.abs(d))}${p == null ? '' : ` (${p.toFixed(1)}%)`} ${d > 0 ? 'more' : 'less'} than ${fromPhrase(c)}.`);
     if (S.f) {
       const ins = shiftsFor(c, S.f).filter((x) => x.to_fund === S.f && x.to?.values);
@@ -2283,7 +2440,7 @@
      tiles below it (taxTiles); never the draw, which is not income. */
   function incomeSentence(c) {
     const t = wcTotal(c.to, 'revenue'), f = wcTotal(c.from, 'revenue'), d = vOf(t) - vOf(f), p = vOf(f) ? Math.abs(d / vOf(f)) * 100 : null;
-    return `The ${esc(seriesLabel(c.to))}${isCounty() ? '' : ' budget'} takes in ${t ? fig(t, { text: mny(t.v) }) : '$0'} ${S.f ? `in the ${esc(S.f)}` : 'across all funds'}, `
+    return `${toSubject(c, t, S.f ? `in the ${esc(S.f)}` : 'across all funds', false)}, `
       + (d === 0 ? `the same as ${fromPhrase(c, false)}.` : `${mny(Math.abs(d))}${p == null ? '' : ` (${p.toFixed(1)}%)`} ${d > 0 ? 'more' : 'less'} than ${fromPhrase(c, false)}.`);
   }
   const ledeFor = (c, sc) => (S.k === 'revenue' && sc.revenue ? incomeSentence(c) : headlineSentence(c, sc));
@@ -2312,14 +2469,19 @@
     return parts.length ? ` (${parts.map(([k, P]) => `${esc(seriesLabel(k))}: ${srcDoc(money(P.dc.v), P.dc.d, P.dc.p)} of it from dedicated data center revenue`).join('; ')})` : '';
   }
 
+  /* Two different kinds of figure in different years (e.g. a proposal against actual spending): say so, and offer the
+     other usual comparison where the site has one (a year-end estimate ↔ the latest actual before the Budget year). */
+  const figureWhat = (m) => ({ proposed: 'a proposal', revised: 'a proposal', projected: 'a year-end estimate', amended: 'an amended budget', adopted: 'an adopted budget', budget: 'a budget', projection: 'a projection' }[m]
+    || (m === 'actual' ? (isReserve() ? 'an actual year-end balance' : S.k === 'revenue' ? 'actual income' : 'actual spending') : LABEL[m].toLowerCase()));
   function badgeHTML(c) {
     if (c.same_kind) return '';
-    const fm = kindOf(c.from);
-    const what = fm === 'projected' ? 'a year-end estimate' : fm === 'actual' ? (isReserve() ? 'an actual year-end balance' : S.k === 'revenue' ? 'actual income' : 'actual spending') : LABEL[fm].toLowerCase();
-    const alt = Object.keys(CH.comparisons).filter((x) => x.startsWith(`${c.to}~`) && x !== c.id && crossYear(CH.comparisons[x]));
-    const altK = alt.find((x) => kindOf(x.split('~')[1]) === (fm === 'projected' ? 'actual' : 'projected'));
-    const sw = altK ? ` <a class="wc-switch" href="${esc(changesHash({ c: altK.split('~')[1] }))}">Compare with ${esc(seriesLabel(altK.split('~')[1]))} instead</a>` : '';
-    return `<p class="wc-badge"><span class="wc-badge-tag">Comparing a proposal with ${what}</span>${sw}</p>`;
+    const fm = kindOf(c.from), tw = isCounty() ? 'a proposal' : figureWhat(kindOf(c.to)), fw = figureWhat(fm), ty = parseKey(c.to).y;
+    if (tw === fw) return '';
+    const altK = isCounty() ? Object.keys(CH.comparisons).filter((x) => x.startsWith(`${c.to}~`) && x !== c.id && crossYear(CH.comparisons[x])).map((x) => x.split('~')[1]).find((k) => kindOf(k) === (fm === 'projected' ? 'actual' : 'projected'))
+      : fm === 'projected' ? Object.keys(D.series).filter((k) => kindOf(k) === 'actual' && parseKey(k).y < ty).sort((a, b) => parseKey(b).y - parseKey(a).y)[0]
+      : fm === 'actual' ? [key(ty - 1, 'projected')].find((k) => D.series[k]) : null;
+    const sw = altK && altK !== c.to && altK !== c.from ? ` <a class="wc-switch" href="${esc(changesHash({ c: altK }))}">Compare with ${esc(seriesLabel(altK))} instead</a>` : '';
+    return `<p class="wc-badge"><span class="wc-badge-tag">Comparing ${tw} with ${fw}</span>${sw}</p>`;
   }
 
   function tilesHTML(c, sc, { foot = true } = {}) {
@@ -2352,12 +2514,13 @@
         const parts = [];
         if (mv.into) parts.push(`${fmtN(mv.into)} moved in from other funds`);
         if (mv.out) parts.push(`${fmtN(mv.out)} moved out`);
+        if (mv.between) parts.push(`${fmtN(mv.between)} moved between funds, no change to the total`);
         parts.push(`${sgn(T.at - T.af, fmtN)} ${mv.into || mv.out ? 'other change' : 'after corrections'}`);
         // The count itself comes first; the link opens the Positions section of What changed at its explanation.
         tiles.push([cls === 'FT' ? 'Full-time positions' : 'Positions', nDelta(corrected), `${fmtN(T.t)} budgeted in the ${esc(P.to_label.replace(/ position schedule$/, ''))} schedule · ${parts.join(' · ')}. <a href="${esc(changesHash({ k: 'expense' }))}&amp;s=wc-pos-how" data-scroll="wc-pos-how">How this is counted</a>`]);
       }
     }
-    const rc = revisionCmp();
+    const rc = parseKey(c.to).y === D.newest_year ? revisionCmp() : null; // the newest year's proposal and its revision
     const rk = S.k === 'revenue' && rc?.scopes[scopeName()]?.revenue ? 'revenue' : 'expense';
     if (rc?.scopes[scopeName()]?.[rk]) {
       const pf = wcTotal(rc.from, rk), pt = wcTotal(rc.to, rk);
@@ -2443,10 +2606,14 @@
     const ref = (i) => { if (!used.has(i)) used.set(i, used.size + 1); return used.get(i); };
     const tables = P.classes.map((cls) => {
       const rs = rows.filter((r) => r[2] === cls && (r[3] || r[4] || r[5] || r[6]));
-      if (!rs.length) return '';
+      // Positions under org codes the org chart doesn't have (older books): no bureau, but in the city-wide total.
+      const up = fi == null && dept == null && unit == null ? P.artifacts.map((a, i) => [a, i]).filter(([a]) => a.kind === 'unplaced' && a.n[cls]) : [];
+      const upN = (side) => up.filter(([a]) => a.side === side).reduce((t, [a]) => t + a.n[cls], 0);
+      const uf = upN('from'), ut = upN('to');
+      if (!rs.length && !up.length) return '';
       // Only bureaus whose count changed (schedule change or real change); the total still covers every bureau.
       const show = rs.filter((r) => r[3] !== r[4] || r[5] !== r[6]);
-      if (!show.length) return compact ? '' : `<p class="wc-note">${cls === 'PT' ? 'Part-time p' : 'P'}ositions: no bureau changed (${fmtN(rs.reduce((t, r) => t + r[4], 0))} in all).</p>`;
+      if (!show.length && !up.length) return compact ? '' : `<p class="wc-note">${cls === 'PT' ? 'Part-time p' : 'P'}ositions: no bureau changed (${fmtN(rs.reduce((t, r) => t + r[4], 0))} in all).</p>`;
       const same = rs.length - show.length;
       const body = show.map((r) => {
         const notes = r[9].filter((i) => P.artifacts[i].kind !== 'titles').map((i) => `<a class="wc-ref" href="#wc-note-${ref(i)}" aria-label="Note ${ref(i)}">${ref(i)}</a>`).join('');
@@ -2456,10 +2623,13 @@
         const href = O.departments[O.units[r[1]].dept].bureaus && O.units[r[1]].kind === 'bureau' ? unitHash(r[1]) : deptHash(O.units[r[1]].dept);
         return `<tr><td><a href="${esc(href)}">${esc(nm)}</a>${notes ? `<sup class="wc-refs">${notes}</sup>` : ''}<span class="sub">${esc(O.departments[O.units[r[1]].dept].name)}</span><span class="wc-sm">${fl} → ${tl}</span></td><td class="num hide-sm">${fl}</td><td class="num hide-sm">${tl}</td><td class="num">${nDelta(r[4] - r[3])}</td><td class="num">${nDelta(r[6] - r[5])}</td></tr>`;
       }).join('');
-      const T = rs.reduce((t, r) => ({ f: t.f + r[3], t: t.t + r[4], af: t.af + r[5], at: t.at + r[6] }), { f: 0, t: 0, af: 0, at: 0 });
+      const upCell = (side, n) => { const a = up.find(([x]) => x.side === side)?.[0]; return a ? srcDoc(fmtN(n), a.d, a.p) : fmtN(n); };
+      const upRow = up.length ? `<tr><td>Not placed in a bureau<sup class="wc-refs">${up.map(([, i]) => `<a class="wc-ref" href="#wc-note-${ref(i)}" aria-label="Note ${ref(i)}">${ref(i)}</a>`).join('')}</sup><span class="sub">Org codes the org chart doesn't have</span><span class="wc-sm">${upCell('from', uf)} → ${upCell('to', ut)}</span></td><td class="num hide-sm">${upCell('from', uf)}</td><td class="num hide-sm">${upCell('to', ut)}</td><td class="num">${nDelta(ut - uf)}</td><td class="num">${nDelta(ut - uf)}</td></tr>` : '';
+      const T = rs.reduce((t, r) => ({ f: t.f + r[3], t: t.t + r[4], af: t.af + r[5], at: t.at + r[6] }), { f: uf, t: ut, af: uf, at: ut });
       const head = cls === 'ALL' ? 'Positions' : cls === 'FT' ? 'Full-time positions' : 'Part-time positions';
-      return `<div class="table-scroll"><table class="table tight wc-pos"><caption>${head}</caption><thead><tr><th scope="col">Bureau</th><th scope="col" class="num hide-sm">${esc(P.from_label.replace(/ position schedule$/, '').replace(/ budget book's$/, ' book'))}</th><th scope="col" class="num hide-sm">${esc(P.to_label.replace(/ position schedule$/, ''))}</th><th scope="col" class="num">Schedule change</th><th scope="col" class="num">Real change</th></tr></thead>
-        <tbody>${body}</tbody>${compact ? '' : `<tfoot><tr><td>Total${same ? `<span class="sub">including ${same} bureau${same === 1 ? '' : 's'} with no change</span>` : ''}<span class="wc-sm">${fmtN(T.f)} → ${fmtN(T.t)}</span></td><td class="num hide-sm">${fmtN(T.f)}</td><td class="num hide-sm">${fmtN(T.t)}</td><td class="num">${nDelta(T.t - T.f)}</td><td class="num">${nDelta(T.at - T.af)}</td></tr></tfoot>`}</table></div>`;
+      const colLabel = (l) => esc(l.replace(/ position schedule$/, '').replace(/ budget book's$/, ' book'));
+      return `<div class="table-scroll"><table class="table tight wc-pos"><caption>${head}</caption><thead><tr><th scope="col">Bureau</th><th scope="col" class="num hide-sm">${colLabel(P.from_label)}</th><th scope="col" class="num hide-sm">${colLabel(P.to_label)}</th><th scope="col" class="num">Schedule change</th><th scope="col" class="num">Real change</th></tr></thead>
+        <tbody>${body}${upRow}</tbody>${compact ? '' : `<tfoot><tr><td>Total${same ? `<span class="sub">including ${same} bureau${same === 1 ? '' : 's'} with no change</span>` : ''}<span class="wc-sm">${fmtN(T.f)} → ${fmtN(T.t)}</span></td><td class="num hide-sm">${fmtN(T.f)}</td><td class="num hide-sm">${fmtN(T.t)}</td><td class="num">${nDelta(T.t - T.f)}</td><td class="num">${nDelta(T.at - T.af)}</td></tr></tfoot>`}</table></div>`;
     }).join('');
     if (!tables) return '';
     const notes = [...used.entries()].sort((a, b) => a[1] - b[1]).map(([i, n]) => {
@@ -2475,10 +2645,12 @@
       const pg = (i) => { const ps = rows.map((r) => r[i]).filter((x) => x != null); return ps.length ? Math.min(...ps) : null; };
       const n = (v, doc, page) => (page != null ? srcDoc(fmtN(v), doc, page) : fmtN(v));
       const lbl = (l) => esc(l.replace(/ budget book's position schedule$/, ' budget book').replace(/ position schedule$/, ''));
-      const count = (cls) => { const x = T?.[cls]; return x ? `${n(x.t, P.to_doc, pg(8))} in the ${lbl(P.to_label)} schedule, against ${n(x.f, P.from_doc, pg(7))} in the ${lbl(P.from_label)}` : ''; };
+      const schedName = (l) => (/ budget book's position schedule$/.test(l) ? lbl(l) : `${lbl(l)} schedule`); // "2025 budget book", "2027 Revised schedule"
+      const count = (cls) => { const x = T?.[cls]; return x ? `${n(x.t, P.to_doc, pg(8))} in the ${schedName(P.to_label)}, against ${n(x.f, P.from_doc, pg(7))} in the ${lbl(P.from_label)}` : ''; };
       const main = posClass(P), mv = movedPositions(P, main, fund);
       const moved = [mv.into && `${fmtN(mv.into)} moved in from other funds with their work`, mv.out && `${fmtN(mv.out)} moved out to other funds`].filter(Boolean);
-      explain = `<p class="wc-pos-count" id="wc-pos-how" tabindex="-1"><strong>${main === 'FT' ? 'Full-time positions' : 'Positions'} budgeted${fund ? `, ${esc(fund)}` : ', all funds'}:</strong> ${count(main)}.${moved.length ? ` Of the change, ${listWords(moved)}.` : ''}${P.classes.includes('PT') && (T?.PT?.t || T?.PT?.f) ? ` Part-time: ${fmtN(T.PT.t)}, against ${fmtN(T.PT.f)}.` : ''}</p>
+      const between = mv.between ? ` ${fmtN(mv.between)} moved between funds with their work, which changes no total across all funds.` : '';
+      explain = `<p class="wc-pos-count" id="wc-pos-how" tabindex="-1"><strong>${main === 'FT' ? 'Full-time positions' : 'Positions'} budgeted${fund ? `, ${esc(fund)}` : ', all funds'}:</strong> ${count(main)}.${moved.length ? ` Of the change, ${listWords(moved)}.` : ''}${between}${P.classes.includes('PT') && (T?.PT?.t || T?.PT?.f) ? ` Part-time: ${fmtN(T.PT.t)}, against ${fmtN(T.PT.f)}.` : ''}</p>
         <p class="wc-note"><strong>How positions are counted.</strong> Each budget book has a position schedule: pages listing every job title the budget pays for, office by office. Each line there counts as one position, or as the share of one paid from that office's budget, so a job split between two offices or funds counts as part of a position in each (for example 0.5). Full-time and part-time are as the schedule marks them. These are positions the budget pays for, not a count of people employed.</p>
         <p class="wc-note">“Schedule change” is the difference between the two schedules, line for line. “Real change” leaves out what is not a real change: positions that moved between funds with their work (counted as moved, not added in one fund and cut in the other), positions marked full-time in one book and part-time in the other, and offices a book has no schedule page for. Each is listed in the notes under the table.</p>`;
     }
@@ -2541,9 +2713,9 @@
      committed data center revenue, ending balance), side by side where both figures print them. Every amount links to its
      page; the draw is worded as everywhere else ("$4.7M drawn from savings ($1.9M of it from dedicated data center revenue)"). */
   function reserveChangesPage(c) {
-    const name = D.reserve.name, to = resFind(D.newest_year, S.m), from = resFind(parseKey(c.from).y, parseKey(c.from).m);
+    const name = D.reserve.name, to = resFind(parseKey(c.to).y, parseKey(c.to).m), from = resFind(parseKey(c.from).y, parseKey(c.from).m);
     document.title = pageTitle(`What changed: ${seriesLabel(c.to)} · ${name}`);
-    const h1 = `<h1 id="page-h" tabindex="-1">What changed in ${D.newest_year}</h1>`;
+    const h1 = `<h1 id="page-h" tabindex="-1">${wcTitle(c)}</h1>`;
     if (!to || !from) {
       return { html: `<header class="page-head wc-head">${h1}<p class="wc-lede">The ${esc(name)} has no Fund Balance Projection figures for ${esc(seriesLabel(to ? c.from : c.to))}, so there is nothing to compare.</p></header>${changesFiltersHTML(c)}` };
     }
@@ -2578,17 +2750,16 @@
     return { html: `<header class="page-head wc-head">${h1}<p class="wc-lede">${lede}</p>${badgeHTML(c)}${start}</header>${changesFiltersHTML(c)}${tiles}${table}` };
   }
 
-  /* What changed is always about the newest year: its Budget year lists only that year's figures (Revised, Proposed), and
-     Compare with lists the comparisons changes.json holds for the chosen one. */
+  /* What changed compares any two budgets: Budget year lists every year and figure the site has (as the main view does),
+     and Compare with every other one. The County lists only the comparisons its changes.json holds, for its newest year. */
   function changesFiltersHTML(c) {
-    const to = key(D.newest_year, S.m);
-    const opts = Object.keys(CH.comparisons).filter((x) => x.startsWith(`${to}~`)).map((x) => x.split('~')[1])
-      .sort((a, b) => parseKey(b).y - parseKey(a).y || PICK_ORDER.indexOf(parseKey(a).m) - PICK_ORDER.indexOf(parseKey(b).m));
-    const ms = figuresFor(D.newest_year).filter((m) => Object.keys(CH.comparisons).some((x) => x.startsWith(`${key(D.newest_year, m)}~`)));
+    const all = figureKeys(), cty = isCounty() ? Object.keys(CH.comparisons) : null;
+    const toList = cty ? all.filter((k) => cty.some((x) => x.startsWith(`${k}~`))) : all;
+    const fromList = cty ? all.filter((k) => cty.includes(`${c.to}~${k}`)) : all.filter((x) => x !== c.to);
     const present = new Set(Object.keys(c.scopes).filter((x) => x !== 'all').map((f) => D.funds.indexOf(f)));
     const funds = fundOptions(present, null);
-    const fields = selField('f-y', 'ym', 'Budget year', figureOptions(ms.map((m) => key(D.newest_year, m)), c.to), `What changed covers ${D.newest_year} only.`)
-      + selField('f-c', 'c', 'Compare with', figureOptions(opts, c.from))
+    const fields = selField('f-y', 'ym', 'Budget year', figureOptions(toList, c.to), cty ? `What changed covers ${D.newest_year} only.` : '')
+      + selField('f-c', 'c', 'Compare with', figureOptions(fromList, c.from))
       + selField('f-f', 'f', 'Fund', funds)
       + (isReserve() ? '' : tabField('k', 'Show first', [['expense', 'Spending'], ['revenue', 'Income']], S.k));
     return controlsWrap(fields, statusHTML(), explainHTML({ shown: [mOf(c.to)], comparing: [mOf(c.from)], funds: fundChoices(present, null).map(([v]) => v) }));
@@ -2596,13 +2767,14 @@
 
   function changesPage() {
     if (!CH) return { html: `<header class="page-head"><h1 id="page-h" tabindex="-1">What changed</h1><p class="muted">The comparison data (changes.json) could not be loaded.</p></header>` };
+    loadPositions(); // first visit: fetch positions.json, then draw the page again
     const c = changeCmp();
     if (!c) return notFound('Comparison');
     if (c.from !== S.c) S.c = c.from;
     if (isReserve()) return reserveChangesPage(c);
     const sc = c.scopes[scopeName()];
     document.title = pageTitle(`What changed: ${seriesLabel(c.to)}${S.f ? ' · ' + fn(S.f) : ''}`);
-    const head = `<header class="page-head wc-head"><h1 id="page-h" tabindex="-1">What changed in ${D.newest_year}</h1>
+    const head = `<header class="page-head wc-head"><h1 id="page-h" tabindex="-1">${wcTitle(c)}</h1>
       ${sc ? `<p class="wc-lede">${ledeFor(c, sc)}</p>` : ''}${badgeHTML(c)}</header>`;
     if (!sc) {
       // A fund with no lines in either budget being compared (e.g. one the city has since folded into another).
@@ -2621,7 +2793,9 @@
         ${divBars(deptRows(ex, k), c, 'wc-dep-b', { title: isCounty() ? 'Group' : 'Department', note: isCounty() ? 'Select a group to see its departments and lines.' : 'Select a department to see its bureaus and lines.' })}</section>`;
     }
     const pos = positionsHTML(c);
-    if (pos || (ex && (c.positions || ST))) spend += `<section class="panel" aria-labelledby="wc-pos"><h2 class="total-label" id="wc-pos">Positions</h2>${pos || '<p class="wc-note">No position schedule for this comparison.</p>'}${benefitsLine(c, sc)}</section>`;
+    const posMsg = pos ? '' : c.positions ? '<p class="wc-note">No position schedule for this comparison.</p>' : c.posNote ? `<p class="wc-note">${c.posNote}</p>` : '';
+    // While positions.json loads the section keeps its place, empty (it is drawn again when the file arrives).
+    if (pos || (ex && (posMsg || c.posLoading))) spend += `<section class="panel" aria-labelledby="wc-pos"${c.posLoading ? ' aria-busy="true"' : ''}><h2 class="total-label" id="wc-pos">Positions</h2>${pos || posMsg}${benefitsLine(c, sc)}</section>`;
     if (ex) {
       spend += `<section class="panel" aria-labelledby="wc-top"><h2 class="total-label" id="wc-top">Largest line-item changes</h2>
         <p class="wc-note">Lines in both budgets. New and removed lines are listed below.</p>
@@ -2643,9 +2817,12 @@
         ${rv.new.n ? `<details class="values"><summary>New income lines</summary>${lineTableHTML(c, rv.new.i)}</details>` : ''}${rv.removed.n ? `<details class="values"><summary>Removed income lines</summary>${lineTableHTML(c, rv.removed.i)}</details>` : ''}` : ''}</section>`;
     }
     html += S.k === 'revenue' ? income + spend : spend + income; // "Show first": the chosen side leads
-    if (crossYear(c)) html += revisionHTML(c);
+    if (crossYear(c) && parseKey(c.to).y === D.newest_year) html += revisionHTML(c); // with the tax notes: the newest year only
     return { html };
   }
+  /* The page heading follows the pair: "What changed in 2024", or for an older Budget year against a newer comparison,
+     both figures by name. */
+  const wcTitle = (c) => (parseKey(c.from).y <= parseKey(c.to).y ? `What changed in ${parseKey(c.to).y}` : `${esc(seriesLabel(c.to))} against ${esc(seriesLabel(c.from))}`);
 
   /* "What changed" summary at the top of the home page, beside Totals by Year: the headline sentence and the
      key numbers for the newest year, linking to the full page. Newest year only; the Income view leads with income
@@ -2813,7 +2990,7 @@
     if (scroll) { aboutOpen = false; explainOpen = false; controlsOpen = false; const ls = $('view-status'); if (ls) ls.textContent = ''; } // a new page: the last control announcement no longer applies
     if (q.get('c') === 'none') { applyQuery(q); S.c = ''; } else applyQuery(q);
     if (route.name !== 'home' && (route.name !== 'changes' || isCounty()) && isReserve()) S.f = DEFAULT_FUND; // the reserve has no departments or bureaus (and the County's no What changed page)
-    if (route.name === 'changes' && S.y !== D.newest_year) { S.y = D.newest_year; S.m = defaultMeasure(S.y); S.c = defaultCompare(S.y, S.m); }
+    if (route.name === 'changes' && isCounty() && S.y !== D.newest_year) { S.y = D.newest_year; S.m = defaultMeasure(S.y); S.c = defaultCompare(S.y, S.m); } // the County's comparisons are its newest year's
     T.sort = 'sel'; T.dir = -1; T.q = route.name === 'dept' || route.name === 'bureau' ? (q.get('q') || '') : ''; T.shown = PAGE_SIZE;
     destroyCharts();
     notesShown = new Set();
@@ -3556,7 +3733,7 @@
       return false;
     }
     const c = ENTCACHE[id];
-    ENT = id; D = c.D; O = c.O; CH = c.CH; ST = c.ST; GB = c.GB; rowCache = c.rowCache; memberCache = c.memberCache; jumpIndex = null;
+    ENT = id; D = c.D; O = c.O; CH = c.CH; ST = c.ST; GB = c.GB; POS = c.POS; rowCache = c.rowCache; memberCache = c.memberCache; jumpIndex = null;
     CFG = { ...BASE, ...e, site_title: SITE + (e.title_suffix || '') };
     DEFAULT_FUND = D.funds.includes(CFG.default_fund) ? CFG.default_fund : '';
     try { localStorage.setItem('entity', id); } catch (err) { /* the choice lasts for this visit */ }
