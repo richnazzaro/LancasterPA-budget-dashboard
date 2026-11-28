@@ -1136,7 +1136,8 @@
       const sel = i.sel?.v || 0, cmp = i.cmp?.v || 0;
       const sh = total.v > 0 && i.sel ? (sel / total.v) * 100 : null;
       const cell = (t, calc) => (t ? fig(t, { tag: !calc, notes, what: `${i.name} ${kindWordPlain().toLowerCase()}` }) : '<span class="missing">No figures</span>');
-      return `<tr data-go="${esc(i.href)}"><th scope="row">${keys ? `<span class="keyed">${pieKey(n)}<a href="${esc(i.href)}">${esc(i.name)}</a></span>` : `<a href="${esc(i.href)}">${esc(i.name)}</a>`}</th>${S.c ? `<td class="num hide-sm">${cell(i.cmp, cmpCalc)}</td>` : ''}<td class="num">${cell(i.sel, selCalc)}</td>${S.c ? `<td class="num">${deltaHTML(sel - cmp, cmp, mny)}</td>` : ''}<td class="num hide-sm">${sh == null ? '' : (sh > 0 && sh < 0.1 ? '<0.1' : sh.toFixed(1)) + '%'}</td></tr>`;
+      const tog = `<button type="button" class="hist-toggle" data-hist="${i.id}" aria-expanded="false" aria-controls="dep-hist-${i.id}"><span class="sr-only">Show ${esc(i.name)} year by year</span></button>`;
+      return `<tr data-go="${esc(i.href)}"><th scope="row" class="has-hist">${tog}${keys ? `<span class="keyed">${pieKey(n)}<a href="${esc(i.href)}">${esc(i.name)}</a></span>` : `<a href="${esc(i.href)}">${esc(i.name)}</a>`}</th>${S.c ? `<td class="num hide-sm">${cell(i.cmp, cmpCalc)}</td>` : ''}<td class="num">${cell(i.sel, selCalc)}</td>${S.c ? `<td class="num">${deltaHTML(sel - cmp, cmp, mny)}</td>` : ''}<td class="num hide-sm">${sh == null ? '' : (sh > 0 && sh < 0.1 ? '<0.1' : sh.toFixed(1)) + '%'}</td></tr>`;
     }).join('');
     const foot = (t) => fig(t, { notes, what: `${fn(S.f) || CFG.entity.short} ${kindWordPlain().toLowerCase()}` });
     return `<div class="table-scroll"><table class="table ledger" aria-label="${isCounty() ? 'Groups' : 'Departments'}"><thead><tr><th scope="col">${isCounty() ? 'Group' : 'Department'}</th>${S.c ? `<th scope="col" class="num hide-sm">${head(seriesLabel(S.c), cmpCalc)}</th>` : ''}<th scope="col" class="num">${head(seriesLabel(k), selCalc)}</th>${S.c ? '<th scope="col" class="num">Change</th>' : ''}<th scope="col" class="num hide-sm">Share</th></tr></thead>
@@ -1294,7 +1295,7 @@
       <div class="home-flow">${filtersHTML()}
       <div class="overview${wc ? '' : ' overview-single'}">${trendHTML({}, 'Totals by Year')}${wc}</div>
       <section class="panel" id="sec-departments" tabindex="-1" aria-labelledby="dep-t"><h2 class="panel-title" id="dep-t">${isCounty() ? 'Departments by Group' : 'Departments'}</h2>
-        <p class="panel-note">${isCounty() ? 'The County\'s departments are grouped as in its budget book. Select a group to see its departments.' : 'Select a department to see its detailed breakdown.'} Amounts open the source page in the budget book.</p>
+        <p class="panel-note">${isCounty() ? 'The County\'s departments are grouped as in its budget book. Select a group to see its departments, or the arrow beside it to see it year by year.' : 'Select a department to see its detailed breakdown, or the arrow beside it to see it year by year.'} Amounts open the source page in the budget book.</p>
         ${depPieHTML ? `<div class="with-pie">${ledger}${depPieHTML}</div>` : ledger}${gapNotes(ledgerNotes)}</section>
       ${homeStaffHTML()}${incomeSourcesHTML()}
       <section class="panel" aria-labelledby="re-title"><h2 class="panel-title" id="re-title">Income vs. Spending by Fund: ${esc(seriesLabel(k))}</h2>
@@ -1971,13 +1972,41 @@
     }
     return out.join('');
   }
-  function lineHistoryHTML(e, pts) {
-    const rowsHtml = pts.map((p) => `<tr${p.m === 'projection' ? ' class="proj-row"' : ''}><th scope="row">${p.y}</th><td>${LABEL[p.m]}</td><td class="num">${p.t ? src(money(p.v), p.t.k, p.t.d, p.t.p) : '—'}</td></tr>`).join('');
-    return `<div class="li-hist-body" role="group" aria-label="History of ${esc(e.name)}">
+  // The unfolded history (a line item's or a department's): legend, chart, notes, and a "Show values" table whose amounts link to their pages.
+  function histBodyHTML(name, pts, notesHTML, cell) {
+    const rowsHtml = pts.map((p) => `<tr${p.m === 'projection' ? ' class="proj-row"' : ''}><th scope="row">${p.y}</th><td>${LABEL[p.m]}</td><td class="num">${p.t ? cell(p) : '—'}</td></tr>`).join('');
+    return `<div class="li-hist-body" role="group" aria-label="History of ${esc(name)}">
       <ul class="trend-legend" aria-hidden="true">${trendLegend(pts)}</ul>
-      <div class="chart-box short"><canvas role="img" aria-label="${esc(e.name)} by year, ${pts[0].y} to ${pts[pts.length - 1].y}. Solid line: actual. Dashed line: projected. Hollow diamond: proposed. Solid dot: revised. The table below has the values."></canvas></div>
-      <p class="trend-axis"></p>${lineHistoryNotes(e)}
+      <div class="chart-box short"><canvas role="img" aria-label="${esc(name)} by year, ${pts[0].y} to ${pts[pts.length - 1].y}. Solid line: actual. Dashed line: projected. Hollow diamond: proposed. Solid dot: revised. The table below has the values."></canvas></div>
+      <p class="trend-axis"></p>${notesHTML}
       <details class="values"><summary>Show values</summary><div class="table-scroll"><table class="table"><thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Amount</th></tr></thead><tbody>${rowsHtml}</tbody></table></div></details></div>`;
+  }
+  function lineHistoryHTML(e, pts) {
+    return histBodyHTML(e.name, pts, lineHistoryNotes(e), (p) => src(money(p.v), p.t.k, p.t.d, p.t.p));
+  }
+  /* A department's (County: a group's) history, unfolded under its row in the home ledger: the same totals its own page
+     charts under "Over time" (trendData with the department in scope), printed totals linked to their page, calculated ones tagged. */
+  function mountDeptHistory() {
+    const sec = $('sec-departments');
+    if (!sec) return;
+    sec.addEventListener('click', (ev) => {
+      const btn = ev.target.closest('.hist-toggle');
+      if (!btn) return;
+      const wasOpen = btn.getAttribute('aria-expanded') === 'true';
+      closeHist();
+      sec.querySelectorAll('tr.li-hist').forEach((r) => r.remove());
+      sec.querySelectorAll('.hist-toggle[aria-expanded="true"]').forEach((b) => b.setAttribute('aria-expanded', 'false'));
+      if (wasOpen) return;
+      const d = +btn.dataset.hist, scope = { dept: d }, pts = trendData(scope);
+      if (!pts.some((p) => p.v != null)) return;
+      const notes = new Map(), what = trendWhat(scope);
+      const body = histBodyHTML(O.departments[d].name, pts, spikeNotes(scope, S.k), (p) => fig(p.t, { notes, what }));
+      const tr = btn.closest('tr');
+      tr.insertAdjacentHTML('afterend', `<tr class="li-hist" id="dep-hist-${d}"><td colspan="${tr.cells.length}">${body}${gapNotes(notes)}</td></tr>`);
+      btn.setAttribute('aria-expanded', 'true');
+      const box = tr.nextElementSibling;
+      if (window.Chart) histChart = trendChart(box.querySelector('canvas'), pts, box.querySelector('.trend-axis'), true);
+    });
   }
   function closeLineHistory(holder) {
     closeHist();
@@ -2789,7 +2818,7 @@
     destroyCharts();
     notesShown = new Set();
     let page;
-    if (route.name === 'home') page = { html: homeView(), after: () => { if (isReserve()) drawReserve(); else { drawTrend(); revExpAfter(); drawContext(); homePies.forEach(([id, items]) => drawSidePie(id, items)); mountStaff(); mountIncomeSources(); } } };
+    if (route.name === 'home') page = { html: homeView(), after: () => { if (isReserve()) drawReserve(); else { drawTrend(); revExpAfter(); drawContext(); homePies.forEach(([id, items]) => drawSidePie(id, items)); mountDeptHistory(); mountStaff(); mountIncomeSources(); } } };
     else if (route.name === 'changes') page = changesPage();
     else if (route.name === 'dept') page = deptPage();
     else if (route.name === 'about') page = { html: '<header class="page-head"><h1 id="page-h" tabindex="-1">About the data</h1></header>', after: () => { const t = q.get('s') && $(q.get('s')); if (t) { if (t.tagName === 'DETAILS') t.open = true; t.scrollIntoView(); } } };
@@ -2935,7 +2964,7 @@
       const tab = e.target.closest('[data-tab]');
       if (tab) { onFilter(tab.dataset.tab, tab.dataset.v); return; }
       const card = e.target.closest('[data-go]');
-      if (card && !e.target.closest('a')) navigate(card.dataset.go);
+      if (card && !e.target.closest('a, button')) navigate(card.dataset.go);
     });
     view.addEventListener('toggle', (e) => { if (e.target.classList?.contains('org-about')) aboutOpen = e.target.open; }, true);
     // "What do these mean?": Escape closes it and returns focus to its toggle; so does leaving the controls (by Tab or a
