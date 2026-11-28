@@ -1466,7 +1466,7 @@
   // department chart in the Staff section, kept apart from the page's charts.
   let staffPts = new Map(), staffChart = null;
   function closeStaffChart() { if (staffChart) { staffChart.destroy(); staffChart = null; } unfitRow(); }
-  // A Staff or Income Sources chart opens in a row under the clicked name, like a line item's history. These tables are wider than
+  // A Staff chart opens in a row under the clicked name, like a line item's history. These tables are wider than
   // the page and scroll sideways, so the row's content is pinned to the scroll area's left edge (position: sticky) and given its visible width.
   let rowFit = null;
   function unfitRow() { if (rowFit) { window.removeEventListener('resize', rowFit); rowFit = null; } }
@@ -1666,7 +1666,7 @@
      prints it under (the bureau). Draws and transfers are not income and never appear. The rows are the same lines the home
      page's total uses (scoped()), so the All row is that total for every column. */
   let srcPts = new Map(), srcChart = null;
-  function closeSrcChart() { if (srcChart) { srcChart.destroy(); srcChart = null; } unfitRow(); }
+  function closeSrcChart() { if (srcChart) { srcChart.destroy(); srcChart = null; } }
   function sourceOf(r) {
     const IS = D.income_sources, n = IS && IS.a ? IS.a[r.ai] : null;
     if (n != null) return IS.names[n];
@@ -1686,7 +1686,8 @@
     // book prints one group, "Revenue", so grouping each year by its own printed name would break a source's trend.
     const newestSrc = new Map();
     for (const k of scols) if (!isProjKey(k)) for (const r of rows(k)) if (isIncome(r)) newestSrc.set(`${r.code}|${r.fund}`, sourceOf(r));
-    for (const k of scols) {
+    const sk = key(S.y, S.m); // the selected figure and the comparison figure: the two the table shows (the history unfolds every year)
+    for (const k of [...new Set([...scols, sk, ...(S.c ? [S.c] : [])])]) {
       const list = scoped(k);
       if (list.length) totals.set(k, totalOf(list, k));
       const groups = new Map();
@@ -1704,26 +1705,31 @@
       }
     }
     if (!bySrc.size) return '';
-    const newest = scols.filter((k) => !isProjKey(k)).pop();
-    const names = [...bySrc.keys()].sort((a, b) => (bySrc.get(b).get(newest)?.v || 0) - (bySrc.get(a).get(newest)?.v || 0) || (label.get(a) < label.get(b) ? -1 : 1));
-    const shareTotal = names.reduce((t, s) => t + Math.max(0, bySrc.get(s).get(newest)?.v || 0), 0);
-    const pc = (k) => (isProjKey(k) ? ' proj-col' : '');
-    const dash = '<span class="missing" title="Not in this year\'s book">—</span>';
+    // Same columns as the line items and the Departments ledger: comparison, selected figure, signed change, share. A source with
+    // nothing in either shown figure is left out (its history says nothing about this comparison).
+    const val = (s, k) => bySrc.get(s).get(k)?.v || 0;
+    const names = [...bySrc.keys()].filter((s) => val(s, sk) || (S.c && val(s, S.c))).sort((a, b) => val(b, sk) - val(a, sk) || (label.get(a) < label.get(b) ? -1 : 1));
+    if (!names.length) return '';
+    const selTotal = totals.get(sk), cmpTotal = S.c ? totals.get(S.c) : null;
+    const shareBase = selTotal ? selTotal.v : names.reduce((t, s) => t + Math.max(0, val(s, sk)), 0);
     const multi = names.length > 1;
     names.forEach((s, i) => srcPts.set(`i${i}`, { name: label.get(s), money: true, pts: scols.map((k) => { const c = bySrc.get(s).get(k), { y, m } = parseKey(k); return { y, m, v: c ? c.v : null, t: c ? { k, d: c.d, p: c.p } : null }; }) }));
-    const head = `<tr><th scope="col">Source</th>${scols.map((k) => `<th scope="col" class="num${pc(k)}">${seriesLabel(k).split(' ').map(esc).join('<br>')}</th>`).join('')}<th scope="col" class="num">Share of ${esc(seriesLabel(newest))}</th></tr>`;
+    const none = '<span class="missing">No figures</span>';
+    const cell = (s, k) => { const c = bySrc.get(s).get(k); return c ? src(money(c.v), k, c.d, c.p) : none; };
+    const head = `<tr><th scope="col">Source</th>${S.c ? `<th scope="col" class="num hide-sm">${esc(seriesLabel(S.c))}</th>` : ''}<th scope="col" class="num">${esc(seriesLabel(sk))}</th>${S.c ? '<th scope="col" class="num">Change</th>' : ''}<th scope="col" class="num hide-sm">Share</th></tr>`;
     const body = names.map((s, i) => {
-      const sh = shareTotal > 0 ? (Math.max(0, bySrc.get(s).get(newest)?.v || 0) / shareTotal) * 100 : 0;
+      const sel = val(s, sk), cmp = S.c ? val(s, S.c) : 0, sh = shareBase > 0 ? (Math.max(0, sel) / shareBase) * 100 : 0;
       const nm = multi ? `<button type="button" class="li-toggle is-toggle" data-is="i${i}" aria-expanded="false">${esc(label.get(s))}</button>` : esc(label.get(s));
-      return `<tr><th scope="row">${nm}</th>${scols.map((k) => { const c = bySrc.get(s).get(k); return `<td class="num${pc(k)}">${c ? src(mny(c.v), k, c.d, c.p) : dash}</td>`; }).join('')}<td class="num share-cell"><span class="share-bar" aria-hidden="true"><i style="width:${sh.toFixed(1)}%"></i></span><span class="share-n">${sh.toFixed(1)}%</span></td></tr>`;
+      return `<tr><th scope="row">${nm}</th>${S.c ? `<td class="num hide-sm">${cell(s, S.c)}</td>` : ''}<td class="num">${cell(s, sk)}</td>${S.c ? `<td class="num">${deltaHTML(sel - cmp, cmp, mny)}</td>` : ''}<td class="num share-cell hide-sm"><span class="share-bar" aria-hidden="true"><i style="width:${sh.toFixed(1)}%"></i></span><span class="share-n">${sh > 0 && sh < 0.1 ? '<0.1' : sh.toFixed(1)}%</span></td></tr>`;
     }).join('');
-    const foot = `<tr><th scope="row">All</th>${scols.map((k) => `<td class="num${pc(k)}">${totals.has(k) ? fig(totals.get(k), { tag: false, notes, what: 'Income' }) : dash}</td>`).join('')}<td class="num"></td></tr>`;
+    const ft = (t) => fig(t, { notes, what: 'Income' });
+    const foot = `<tr><th scope="row">All</th>${S.c ? `<td class="num hide-sm">${cmpTotal ? ft(cmpTotal) : ''}</td>` : ''}<td class="num">${selTotal ? ft(selTotal) : ''}</td>${S.c ? `<td class="num">${deltaHTML((selTotal?.v || 0) - (cmpTotal?.v || 0), cmpTotal?.v || 0, mny)}</td>` : ''}<td class="num hide-sm">100%</td></tr>`;
     const where = S.f ? ` in the ${esc(fn(S.f))}` : '';
     const allFunds = !S.f;
     return `<section class="panel" id="sec-income-sources" tabindex="-1" aria-labelledby="is-t"><h2 class="panel-title" id="is-t">Income Sources</h2>
-      <p class="panel-note">Income${where} by source, with the same figures as Totals by Year. Sources follow the books' account numbers: taxes are shown one by one, and other lines are grouped as the newest book that prints them does, so a group renamed over the years stays one row. Draws from savings and transfers between funds are not income and are left out.${allFunds ? ' In All funds, charges to other funds are left out too.' : ''} The All row is the income total shown at the top of the page. <a href="${termHref('term-income')}">What counts as income</a></p>
+      <p class="panel-note">Income${where} by source, in the same columns as the line items: the budget year, the comparison year, the change and each source's share. Sources follow the books' account numbers: taxes are shown one by one, and other lines are grouped as the newest book that prints them does, so a group renamed over the years stays one row. Draws from savings and transfers between funds are not income and are left out.${allFunds ? ' In All funds, charges to other funds are left out too.' : ''} The All row is the income total shown at the top of the page. <a href="${termHref('term-income')}">What counts as income</a></p>
       ${multi ? '<p class="hint li-hint">Select a source\'s name to see it year by year.</p>' : ''}
-      <div class="table-scroll" tabindex="0" role="region" aria-label="Income by source and year, scrollable"><table class="table tight staff-table is-table" aria-label="Income by source and year">
+      <div class="table-scroll"><table class="table ledger" aria-label="Income by source">
         <thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div>
       ${gapNotes(notes)}</section>`;
   }
@@ -1734,11 +1740,16 @@
     sec.querySelectorAll('.is-toggle').forEach((b) => b.addEventListener('click', () => {
       const wasOpen = b.getAttribute('aria-expanded') === 'true';
       closeSrcChart();
-      closeInlineRows(sec);
+      sec.querySelectorAll('tr.li-hist').forEach((r) => r.remove());
+      sec.querySelectorAll('.li-toggle[aria-expanded="true"]').forEach((x) => x.setAttribute('aria-expanded', 'false'));
       if (wasOpen) return;
       const h = srcPts.get(b.dataset.is);
       if (!h || !h.pts.some((p) => p.v != null)) return;
-      const box = openInlineRow(b, `is-row-${b.dataset.is}`, salHistoryHTML(h.name, h.pts, 'Income'));
+      const tr = b.closest('tr'), id = `is-row-${b.dataset.is}`;
+      tr.insertAdjacentHTML('afterend', `<tr class="li-hist" id="${id}"><td colspan="${tr.cells.length}">${salHistoryHTML(h.name, h.pts, 'Income')}</td></tr>`);
+      b.setAttribute('aria-controls', id);
+      b.setAttribute('aria-expanded', 'true');
+      const box = tr.nextElementSibling;
       if (window.Chart) srcChart = trendChart(box.querySelector('canvas'), h.pts, box.querySelector('.trend-axis'), true);
     }));
   }
