@@ -3298,24 +3298,30 @@
       <p>The County's <a href="${pdf(PR.file)}" target="_blank" rel="noopener">${D.context.year} budget presentation</a> (<a href="${pdf(PR.file)}" download>download PDF</a>; <a href="${esc(PR.url)}" target="_blank" rel="noopener">County page</a>) repeats these figures and is the only source for the number of funded staffing positions. A slide deck is not a primary document, so the site uses none of its other figures: its fund balances, revenue and spending are budget-basis or proposed figures that differ from the adopted resolution and the audit.</p>` : '';
     const merges = (CH?.account_changes || []).map((m) => `<li>${esc(m.from.join(' and '))} → ${esc(m.to)} ${esc(m.to_name)}: ${esc(m.evidence)}</li>`).join('');
     $('about-body').innerHTML = `
-      <h2 class="about-h">Sources</h2>
-      <p>Every Budget figure comes from the County of Lancaster's published budget books. Each book reports two or three years side by side; this site shows <strong>one Budget figure per year</strong>, from the newest book that prints that year, and labels it simply “Budget”.</p>
-      <ul>
-        <li><strong>${D.newest_year}: Budget</strong>${ac ? `, ${esc(ac.text)}` : ''}.</li>
-        <li><strong>${years().filter((y) => y < D.newest_year).sort((a, b) => a - b).join(', ')}: Budget</strong>, as the next year's book prints them. The books do not say whether these are the original or an amended budget, so the site calls them Budget.</li>
-      </ul>
-      <p>Books in use:</p><ul>${books}</ul>
-      <p>Years appear as soon as the books that report them have been processed.</p>
-      <p>Not sure what a word or fund means? See <a href="${eh('terms')}">Funds and terms</a>.</p>
-      <h2 class="about-h">Actual figures</h2>
-      <p>Actual figures for ${A.years[0]} to ${A.years[A.years.length - 1]} come from the County's audited annual reports, in the budget-versus-actual schedules.</p>
-      <ul>${D.actuals_note.map((t) => cleanNote(t)).filter(Boolean).map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
-      <p>Audited reports in use:</p><ul>${acfrs}</ul>
-      ${ctxAbout}
+      <div class="about-grid">
+        <div class="about-col">
+          <h2 class="about-h">Sources</h2>
+          <p>Every Budget figure comes from the County of Lancaster's published budget books. Each book reports two or three years side by side; this site shows <strong>one Budget figure per year</strong>, from the newest book that prints that year, and labels it simply "Budget."</p>
+          <ul>
+            <li><strong>${D.newest_year}: Budget</strong>${ac ? `, ${esc(ac.text)}` : ''}.</li>
+            <li><strong>${years().filter((y) => y < D.newest_year).sort((a, b) => a - b).join(', ')}: Budget</strong>, as the next year's book prints them. The books do not say whether these are the original or an amended budget, so the site calls them Budget.</li>
+          </ul>
+          <p>Books in use:</p><ul>${books}</ul>
+          <p>Years appear as soon as the books that report them have been processed.</p>
+        </div>
+        <div class="about-col">
+          <p>Not sure what a word or fund means? See <a href="${eh('terms')}">Funds and terms</a>.</p>
+          <h2 class="about-h">Actual figures</h2>
+          <p>Actual figures for ${A.years[0]} to ${A.years[A.years.length - 1]} come from the County's audited annual reports, in the budget-versus-actual schedules.</p>
+          <ul>${D.actuals_note.map((t) => cleanNote(t)).filter(Boolean).map((t) => `<li>${esc(t)}</li>`).join('')}</ul>
+          <p>Audited reports in use:</p><ul>${acfrs}</ul>
+          ${ctxAbout}
+        </div>
+      </div>
       <h2 class="about-h">Departments and funds</h2>
       <p>Departments are grouped as the County's <a href="${pdf(O.chart_doc)}#page=${O.chart_page}" target="_blank" rel="noopener">${D.newest_year} budget book</a> groups them: ${groups}. Each budget line belongs to a department by its account number, with the department's name as the book prints it. The County does not publish staffing schedules, so there is no Staff section.</p>
       ${O.elected_chart ? `<h2 class="about-h" id="about-elected" tabindex="-1">How the County is run, and the elected offices</h2>
-      <p>Three Commissioners, elected by the voters, manage the County. Alongside them, officials elected on their own (the “row offices”: Controller, Coroner, Recorder of Deeds, Treasurer, Clerk of Courts, Prothonotary, Register of Wills, Sheriff and District Attorney) head their own offices, and the judges of the Court of Common Pleas and the Magisterial District Judges are elected too. The County's <a href="${pdfHref(O.elected_chart.d, O.elected_chart.p)}" target="_blank" rel="noopener">2026 budget presentation (slide 3)</a> marks each of them with an asterisk on its organizational chart, and the audited report's <a href="${pdfHref(O.elected_list.d, O.elected_list.p)}" target="_blank" rel="noopener">list of elected officials</a> names them. Departments headed by an elected official, or serving elected judges, say so on their page and in the department lists. The budget book's own groups, and their printed totals, are unchanged.</p>` : ''}
+      <p>Three Commissioners, elected by the voters, manage the County. Alongside them, officials elected on their own (the "row offices": Controller, Coroner, Recorder of Deeds, Treasurer, Clerk of Courts, Prothonotary, Register of Wills, Sheriff and District Attorney) head their own offices, and the judges of the Court of Common Pleas and the Magisterial District Judges are elected too. The County's <a href="${pdfHref(O.elected_chart.d, O.elected_chart.p)}" target="_blank" rel="noopener">2026 budget presentation (slide 3)</a> marks each of them with an asterisk on its organizational chart, and the audited report's <a href="${pdfHref(O.elected_list.d, O.elected_list.p)}" target="_blank" rel="noopener">list of elected officials</a> names them. Departments headed by an elected official, or serving elected judges, say so on their page and in the department lists. The budget book's own groups, and their printed totals, are unchanged.</p>` : ''}
       <p>The County's books print fund letters without names. The names shown here come from the County's audited annual reports:</p>
       <ul>${fundList}</ul>
       <h2 class="about-h" id="about-balance" tabindex="-1">General Fund balance</h2>
@@ -3359,45 +3365,52 @@
     const books = used.map((b) => { const f = figs(b); const href = `${CFG.paths.pdfs}${encodeURIComponent(b.doc)}`; return `<li><a href="${href}" target="_blank" rel="noopener">${esc(bookName(b))}</a> (<a href="${href}" download>download PDF</a>): ${f.length ? 'supplies ' + f.join(', ') : 'no figures under the selection rule'}.</li>`; }).join('');
     const issues = D.known_issues.map((i) => `<li>${esc(nameOf[i.source_doc] || i.source_doc.replace(/\.pdf$/i, ''))}: ${esc(scrubPages(i.note))}</li>`).join('');
     $('about-body').innerHTML = `
-      <h2 class="about-h">Sources</h2>
-      <p>Every figure comes from ${esc(CFG.entity.possessive)} published budget books. Each book reports several years side by side; this site picks <strong>one main kind of figure per year</strong>, which the multi-year charts and tables draw:</p>
-      <ul>
-        <li><strong>${actualYears[0]}–${actualYears[actualYears.length - 1]}: Actual</strong>, the audited spending reported in the budget book published two years later.</li>
-        ${projYears.length ? `<li><strong>${projYears.join(', ')}: Projected</strong>, the city's year-end estimate (the revised projection when present) from the next year's book. The actual for ${projYears.length > 1 ? 'these years is' : 'this year is'} not published yet.</li>` : ''}
-        <li><strong>${D.newest_year}: Proposed and Revised</strong>, both from the ${D.newest_year} book, so you can compare what changed between them. Neither is an adopted budget.</li>
-        ${projectionYears().length ? `<li><strong>${projectionYears().join(' and ')}: Projection</strong>, the city's own multi-year estimates made with the ${D.projection.after_year} budget, from its ${srcDoc(esc(projBook()), D.projection.doc, 1)}. They appear only at the end of the multi-year charts and tables (Totals by Year and the Staff salaries table), drawn lighter and labelled “Projection”; they are never the year you pick, and the headline, the change sentence and What changed stay on ${D.newest_year}.</li>` : ''}
-      </ul>
-      ${(() => { const am = yrsOf('amended'), ad = yrsOf('adopted'); return am.length || ad.length ? `<p>Each year also has <strong>one budget figure</strong> you can pick in Budget year or Compare with: the <strong>Amended</strong> budget where the next year's book prints one${am.length ? ` (${rangeText(am)})` : ''}, otherwise the <strong>Adopted</strong> budget${ad.length ? ` (${rangeText(ad)})` : ''}; never both. It is not drawn on the multi-year charts.</p>` : ''; })()}
-      <p>Year-to-date columns and an older book's own-year proposal are not shown.</p>
-      ${D.projection ? (() => {
-        const P = D.projection, page = (P.assumptions[0] || {}).p;
-        return `<h2 class="about-h">Projections</h2>
-      <p>The ${srcDoc(esc(projBook()), P.doc, 1)} prints every account line of the General Fund and the four utility funds for ${P.years.join(' and ')}, with each fund's total income, total spending and surplus or deficit. The site checks every section and fund total against its lines, as it does for the budget books. Its ${page ? srcDoc('assumptions', P.doc, page) : 'assumptions'}: no water, sewer, stormwater or trash rate increases; 3% salary increases; General Fund costs following each department's history; and, in the utility funds, 5% medical and 2% operating cost increases. The city notes that actual results will differ where costs depart from past trends.</p>
-      <p>The projections list no money drawn from savings (their “Fund Balance Reserve” lines are blank), so where spending is higher than income they show a deficit. They have no Fund Balance Projection page, so the Reserve Fund ends at ${D.newest_year}.</p>`;
-      })() : ''}
-      ${D.reserve ? `<h2 class="about-h">Reserve Fund</h2>
-      <p>The <strong>Reserve Fund</strong> entry in the Fund selector is the General Fund's balance, from the budget book's Fund Balance Projection page. Each book prints the actual balance at the end of the year two years earlier; that is the <strong>actual</strong> year-end balance for that year (unaudited for recent years). The newest book also prints a projected balance for the prior year and proposed and revised balances for the newest year. The same one-kind-per-year rule applies. Where a book prints two columns that disagree, the revised column is used and the difference is stated on the page.</p>` : ''}
-      <p>Books in use:</p><ul>${books}${D.projection ? (() => { const href = `${CFG.paths.pdfs}${encodeURIComponent(D.docs[D.projection.doc])}`; return `<li><a href="${href}" target="_blank" rel="noopener">${esc(D.projection.years.join('–'))} Budget Projections</a> (<a href="${href}" download>download PDF</a>): supplies ${D.projection.years.map((y) => `${y} projection`).join(', ')}.</li>`; })() : ''}</ul>
-      <p>Years appear as soon as the books that report them have been processed.</p>
-      <p>Not sure what a word or fund means? See <a href="${eh('terms')}">Funds and terms</a>.</p>
-      ${CFG.budget_calendar ? `<p>Who prepares and approves the budget, and by when: <a href="${eh('budget-calendar')}">How the City budget is made</a>, the budget calendar in the City's ${esc(CFG.budget_calendar.charter_title)}.</p>` : ''}
-      <h2 class="about-h">Departments and bureaus</h2>
-      <p>Departments and bureaus follow the city's <a href="${CFG.paths.pdfs}${encodeURIComponent(O.chart_doc)}" target="_blank" rel="noopener">2027 organizational chart</a>. Each budget line belongs to a bureau by its account number, so older years are grouped the same way even where the budget book printed them under another department or name (for example, Human Resources is shown under Executive in every year). Budget groups that are not a bureau, such as city-wide insurance, benefits and debt service or fee revenue, are shown as a separate “department-wide” group. Descriptions of what each department and bureau does are quoted from the city's <a href="${CFG.paths.pdfs}${encodeURIComponent(O.desc_doc)}" target="_blank" rel="noopener">2027 organization descriptions</a>.</p>
-      <h2 class="about-h">Validation</h2>
-      <p>Line items were extracted from the PDFs by script (scanned books were OCR'd first). Figures are shown as printed, never adjusted. Where overlapping books disagree on the same figure, the rule above decides and the disagreement is logged (${D.conflict_count} so far). Lines of $0 are left out.</p>
-      <h2 class="about-h" id="about-totals">Printed and calculated totals</h2>
-      <p>Every total is shown exactly as the city printed it, and links to its page. The site adds up the line items under each printed total (each section, department roll-up and fund) only to check it. A difference of up to $5 on a section total, or up to 50 cents for each line in a larger roll-up, is the city's rounding to whole dollars and is not mentioned.</p>
-      <p>Where the lines add up to something else, the printed total is still the one shown. It carries a <span class="gap-mark" aria-hidden="true">${GAP_SIGN}</span> sign, and a note beside it gives what the lines add up to, the difference, and the reviewed explanation from the list of known problems below.</p>
-      <p>Where the book prints no total for exactly what you are looking at, the figure is this site's own sum of the line items, labelled <span class="calc-tag">calculated</span>. That covers all funds together, departments and bureaus regrouped to the 2027 org chart, spending categories, and line items narrowed by a search.</p>
-      <h2 class="about-h" id="about-income" tabindex="-1">What counts as income</h2>
-      <p>Income is money coming in: taxes, fees, grants, state and federal payments, interest and the like. The budget books also list as revenue money drawn from savings and money moved in from ${ownFunds()} other funds. The site leaves both out of income, so an income total is usually this site's own sum, labelled calculated, rather than the book's printed revenue total. What one of ${ownFunds()} funds charges another for services stays in the income of the fund that is paid, marked on its lines, and is left out of the All funds total so it is not counted twice. Spending is shown as printed, transfers out included. <a href="${termHref('term-income')}">More on what counts as income</a></p>
-      <h2 class="about-h">Known problems in the source books</h2>
-      <p>These come from errors in the city's documents, not the extraction. A person reviewed each one.</p>
-      <details class="values" id="about-issues" tabindex="-1"><summary>Show all ${D.known_issues.length} notes</summary><ul>${issues || '<li>None recorded.</li>'}</ul></details>
-      <h2 class="about-h">Get the data</h2>
-      <p><a href="${CFG.paths.data}budget.json">budget.json</a> (every figure shown here${D.projection ? ', with the projections in its <code>projection</code> block' : ''}), <a href="${CFG.paths.data}staffing.json">staffing.json</a> (budgeted positions), <a href="${CFG.paths.data}conflicts.json">conflicts.json</a>, <a href="${CFG.paths.data}changes.json">changes.json</a> (what changed in ${D.newest_year}, with the fund shifts and position counts). The extraction scripts and tables are in the project <a href="${CFG.project_repository}">repository</a>.</p>${CFG.contact_email ? `
-      <h2 class="about-h">Contact</h2>
-      <p>Found an error, or have a question about a figure? Email <a href="mailto:${esc(CFG.contact_email)}">${esc(CFG.contact_email)}</a>.</p>` : ''}`;
+      <div class="about-grid">
+        <div class="about-col">
+          <h2 class="about-h">Sources</h2>
+          <p>Every figure comes from ${esc(CFG.entity.possessive)} published budget books. Each book reports several years side by side; this site picks <strong>one main kind of figure per year</strong>, which the multi-year charts and tables draw:</p>
+          <ul>
+            <li><strong>${actualYears[0]}–${actualYears[actualYears.length - 1]}: Actual</strong>, the audited spending reported in the budget book published two years later.</li>
+            ${projYears.length ? `<li><strong>${projYears.join(', ')}: Projected</strong>, the city's year-end estimate (the revised projection when present) from the next year's book. The actual for ${projYears.length > 1 ? 'these years is' : 'this year is'} not published yet.</li>` : ''}
+            <li><strong>${D.newest_year}: Proposed and Revised</strong>, both from the ${D.newest_year} book, so you can compare what changed between them. Neither is an adopted budget.</li>
+            ${projectionYears().length ? `<li><strong>${projectionYears().join(' and ')}: Projection</strong>, the city's own multi-year estimates made with the ${D.projection.after_year} budget, from its ${srcDoc(esc(projBook()), D.projection.doc, 1)}. They appear only at the end of the multi-year charts and tables (Totals by Year and the Staff salaries table), drawn lighter and labelled "Projection"; they are never the year you pick, and the headline, the change sentence and What changed stay on ${D.newest_year}.</li>` : ''}
+          </ul>
+          ${(() => { const am = yrsOf('amended'), ad = yrsOf('adopted'); return am.length || ad.length ? `<p>Each year also has <strong>one budget figure</strong> you can pick in Budget year or Compare with: the <strong>Amended</strong> budget where the next year's book prints one${am.length ? ` (${rangeText(am)})` : ''}, otherwise the <strong>Adopted</strong> budget${ad.length ? ` (${rangeText(ad)})` : ''}; never both. It is not drawn on the multi-year charts.</p>` : ''; })()}
+          <p>Year-to-date columns and an older book's own-year proposal are not shown.</p>
+          ${D.projection ? (() => {
+            const P = D.projection, page = (P.assumptions[0] || {}).p;
+            return `<h2 class="about-h">Projections</h2>
+          <p>The ${srcDoc(esc(projBook()), P.doc, 1)} prints every account line of the General Fund and the four utility funds for ${P.years.join(' and ')}, with each fund's total income, total spending and surplus or deficit. The site checks every section and fund total against its lines, as it does for the budget books. Its ${page ? srcDoc('assumptions', P.doc, page) : 'assumptions'}: no water, sewer, stormwater or trash rate increases; 3% salary increases; General Fund costs following each department's history; and, in the utility funds, 5% medical and 2% operating cost increases. The city notes that actual results will differ where costs depart from past trends.</p>
+          <p>The projections list no money drawn from savings (their "Fund Balance Reserve" lines are blank), so where spending is higher than income they show a deficit. They have no Fund Balance Projection page, so the Reserve Fund ends at ${D.newest_year}.</p>`;
+          })() : ''}
+          ${D.reserve ? `<h2 class="about-h">Reserve Fund</h2>
+          <p>The <strong>Reserve Fund</strong> entry in the Fund selector is the General Fund's balance, from the budget book's Fund Balance Projection page. Each book prints the actual balance at the end of the year two years earlier; that is the <strong>actual</strong> year-end balance for that year (unaudited for recent years). The newest book also prints a projected balance for the prior year and proposed and revised balances for the newest year. The same one-kind-per-year rule applies. Where a book prints two columns that disagree, the revised column is used and the difference is stated on the page.</p>` : ''}
+          <p>Books in use:</p><ul>${books}${D.projection ? (() => { const href = `${CFG.paths.pdfs}${encodeURIComponent(D.docs[D.projection.doc])}`; return `<li><a href="${href}" target="_blank" rel="noopener">${esc(D.projection.years.join('–'))} Budget Projections</a> (<a href="${href}" download>download PDF</a>): supplies ${D.projection.years.map((y) => `${y} projection`).join(', ')}.</li>`; })() : ''}</ul>
+          <p>Years appear as soon as the books that report them have been processed.</p>
+          <p>Not sure what a word or fund means? See <a href="${eh('terms')}">Funds and terms</a>.</p>
+          ${CFG.budget_calendar ? `<p>Who prepares and approves the budget, and by when: <a href="${eh('budget-calendar')}">How the City budget is made</a>, the budget calendar in the City's ${esc(CFG.budget_calendar.charter_title)}.</p>` : ''}
+        </div>
+        <div class="about-col">
+          <h2 class="about-h">Departments and bureaus</h2>
+          <p>Departments and bureaus follow the city's <a href="${CFG.paths.pdfs}${encodeURIComponent(O.chart_doc)}" target="_blank" rel="noopener">2027 organizational chart</a>. Each budget line belongs to a bureau by its account number, so older years are grouped the same way even where the budget book printed them under another department or name (for example, Human Resources is shown under Executive in every year). Budget groups that are not a bureau, such as city-wide insurance, benefits and debt service or fee revenue, are shown as a separate "department-wide" group. Descriptions of what each department and bureau does are quoted from the city's <a href="${CFG.paths.pdfs}${encodeURIComponent(O.desc_doc)}" target="_blank" rel="noopener">2027 organization descriptions</a>.</p>
+          <h2 class="about-h">Validation</h2>
+          <p>Line items were extracted from the PDFs by script (scanned books were OCR'd first). Figures are shown as printed, never adjusted. Where overlapping books disagree on the same figure, the rule above decides and the disagreement is logged (${D.conflict_count} so far). Lines of $0 are left out.</p>
+          <h2 class="about-h" id="about-totals">Printed and calculated totals</h2>
+          <p>Every total is shown exactly as the city printed it, and links to its page. The site adds up the line items under each printed total (each section, department roll-up and fund) only to check it. A difference of up to $5 on a section total, or up to 50 cents for each line in a larger roll-up, is the city's rounding to whole dollars and is not mentioned.</p>
+          <p>Where the lines add up to something else, the printed total is still the one shown. It carries a <span class="gap-mark" aria-hidden="true">${GAP_SIGN}</span> sign, and a note beside it gives what the lines add up to, the difference, and the reviewed explanation from the list of known problems below.</p>
+          <p>Where the book prints no total for exactly what you are looking at, the figure is this site's own sum of the line items, labelled <span class="calc-tag">calculated</span>. That covers all funds together, departments and bureaus regrouped to the 2027 org chart, spending categories, and line items narrowed by a search.</p>
+          <h2 class="about-h" id="about-income" tabindex="-1">What counts as income</h2>
+          <p>Income is money coming in: taxes, fees, grants, state and federal payments, interest and the like. The budget books also list as revenue money drawn from savings and money moved in from ${ownFunds()} other funds. The site leaves both out of income, so an income total is usually this site's own sum, labelled calculated, rather than the book's printed revenue total. What one of ${ownFunds()} funds charges another for services stays in the income of the fund that is paid, marked on its lines, and is left out of the All funds total so it is not counted twice. Spending is shown as printed, transfers out included. <a href="${termHref('term-income')}">More on what counts as income</a></p>
+          <h2 class="about-h">Known problems in the source books</h2>
+          <p>These come from errors in the city's documents, not the extraction. A person reviewed each one.</p>
+          <details class="values" id="about-issues" tabindex="-1"><summary>Show all ${D.known_issues.length} notes</summary><ul>${issues || '<li>None recorded.</li>'}</ul></details>
+          <h2 class="about-h">Get the data</h2>
+          <p><a href="${CFG.paths.data}budget.json">budget.json</a> (every figure shown here${D.projection ? ', with the projections in its <code>projection</code> block' : ''}), <a href="${CFG.paths.data}staffing.json">staffing.json</a> (budgeted positions), <a href="${CFG.paths.data}conflicts.json">conflicts.json</a>, <a href="${CFG.paths.data}changes.json">changes.json</a> (what changed in ${D.newest_year}, with the fund shifts and position counts). The extraction scripts and tables are in the project <a href="${CFG.project_repository}">repository</a>.</p>${CFG.contact_email ? `
+          <h2 class="about-h">Contact</h2>
+          <p>Found an error, or have a question about a figure? Email <a href="mailto:${esc(CFG.contact_email)}">${esc(CFG.contact_email)}</a>.</p>` : ''}
+        </div>
+      </div>
+`;
     groupAbout();
   }
 

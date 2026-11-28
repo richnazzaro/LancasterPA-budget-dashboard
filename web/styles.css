@@ -80,6 +80,22 @@
     --cal-deadline: #7fc99b; --cal-deadline-fg: #0d1410;
   }
 }
+/* About section: grid layout with two columns for better readability */
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin: 0 0 1rem 0;
+}
+.about-col {
+  padding: 0 1rem;
+}
+/* Hide About section on small screens */
+@media (max-width: 767px) {
+  .about-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -835,8 +851,7 @@ a.src { white-space: nowrap; }
 /* About the data: on wide screens the short sections sit two to a row; the long ones span the page.
    (A grid, not CSS columns: columns reflowed the whole page when the known-problems list opened.) */
 @media (min-width: 1280px) {
-  #about-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 72px; align-items: start; }
-  #about-body .about-sec-wide { grid-column: 1 / -1; }
+  .about-sec-wide { grid-column: 1 / -1; }
 }
 
 /* ---------------------------------------------------------------------------------------------------------
