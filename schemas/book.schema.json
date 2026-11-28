@@ -1,0 +1,268 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "book.schema.json",
+  "title": "governments/<id>/books/<book>.yaml",
+  "description": "How to read one source PDF: which layout family it uses, what each printed column means (year and figure), page ranges, the staffing schedule, and how account codes map to funds and departments. Covers today's per-book files config/*.json (City budget books and projections), config/county/*.json (County budget books), config/county/acfr/*.json (audited reports) and config/county/resolutions/*.json (budget resolutions), which move here in Phases 1 and 2. Keys starting with an underscore are comments.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["source_doc"],
+  "patternProperties": {
+    "^_": {"description": "A comment for people reading the file; ignored by the scripts."}
+  },
+  "$defs": {
+    "year": {"type": "integer", "minimum": 1900, "maximum": 2100},
+    "page": {"type": "integer", "minimum": 1},
+    "column": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fiscal_year"],
+      "anyOf": [{"required": ["doc_type"]}, {"required": ["figure"]}],
+      "patternProperties": {"^_": {}},
+      "properties": {
+        "header": {"type": "string", "description": "A pattern (regular expression) matched against the column's printed header words joined with spaces.", "examples": ["^2025 PROJECTED$"]},
+        "fiscal_year": {"type": ["integer", "null"], "minimum": 1900, "maximum": 2100, "description": "The budget year the column's figures are for.", "examples": [2025]},
+        "doc_type": {
+          "type": "string",
+          "enum": ["actual", "adopted", "amended", "actual_ytd", "projected", "projected_revised", "proposed", "proposed_revised", "projection", "budget"],
+          "description": "What kind of figure the column prints (today's name for figure).",
+          "examples": ["projected"]
+        },
+        "figure": {
+          "type": "string",
+          "enum": ["actual", "adopted", "amended", "actual_ytd", "projected", "projected_revised", "proposed", "proposed_revised", "projection", "budget"],
+          "description": "What kind of figure the column prints (the new name for doc_type; give one of the two).",
+          "examples": ["proposed_revised"]
+        }
+      }
+    },
+    "page_range": {
+      "description": "One page, or a [first, last] pair of PDF page numbers (inclusive).",
+      "oneOf": [
+        {"$ref": "#/$defs/page"},
+        {"type": "array", "prefixItems": [{"$ref": "#/$defs/page"}, {"$ref": "#/$defs/page"}], "minItems": 2, "maxItems": 2}
+      ]
+    }
+  },
+  "properties": {
+    "source_doc": {
+      "type": "string",
+      "pattern": "\\.pdf$",
+      "description": "The PDF's file name, exactly as saved in the government's sources folder.",
+      "examples": ["2027-Mayors-Revised-Proposed-Budget-Rev-11-19-26.pdf"]
+    },
+    "layout_family": {
+      "type": "string",
+      "enum": ["lineitem_columns", "projection_book", "xposition_rows", "pde2028", "audited_report", "budget_resolution"],
+      "description": "Which extractor reads the book. lineitem_columns = line items in printed year columns (City books); projection_book = multi-year projections; xposition_rows = County books, amounts rebuilt from their position on the page; pde2028 = Pennsylvania school district General Fund Budget form; audited_report = annual financial report schedules; budget_resolution = an adopting budget resolution. Not in today's config/*.json files (the extractor is chosen by `extractor` or by folder); required once books move to YAML.",
+      "examples": ["lineitem_columns"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "reviewed"],
+      "description": "draft = written or guessed by a script and not yet checked by a person; the parse step refuses it. reviewed = a person has checked every column, page range and mapping against the PDF. Not in today's config/*.json files.",
+      "examples": ["reviewed"]
+    },
+    "source": {
+      "type": "string",
+      "enum": ["text", "ocr"],
+      "description": "text = the PDF has a text layer; ocr = scanned pages, read by OCR.",
+      "examples": ["text"]
+    },
+    "extractor": {
+      "type": "string",
+      "enum": ["extract_layout", "extract_budget", "extract_projections"],
+      "description": "Today's name of the script that reads the book (default extract_layout). Replaced by layout_family.",
+      "examples": ["extract_layout"]
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["budget", "projection"],
+      "description": "projection = a multi-year projections book, not a budget book (no budget year, staffing or fund balance). Default budget.",
+      "examples": ["projection"]
+    },
+    "budget_year": {"$ref": "#/$defs/year", "description": "The budget year the book proposes or adopts.", "examples": [2027]},
+    "book_year": {"$ref": "#/$defs/year", "description": "The budget year of the book (County books).", "examples": [2026]},
+    "fiscal_year": {"$ref": "#/$defs/year", "description": "The year an audited report covers.", "examples": [2025]},
+    "years": {"type": "array", "items": {"$ref": "#/$defs/year"}, "description": "Every year the book prints figures for.", "examples": [[2025, 2026]]},
+    "entity": {"type": "string", "description": "The government's name as recorded for the book (today's County files).", "examples": ["County of Lancaster, PA"]},
+    "title": {"type": "string", "description": "The document's title as printed.", "examples": ["Resolution No. 79 of 2025: the County of Lancaster's 2026 budget"]},
+    "document_note": {"type": "string", "description": "A note about the document, for people (for example how its columns are labelled).", "examples": ["Text-layer book. Budget column is headed '2022 PROPOSED'; kept as doc_type 'proposed'."]},
+    "edition": {"type": "string", "description": "Which edition of the book this is (proposed, final, adopted) and the evidence.", "examples": ["Final (file name 'v4- FINAL', dated 2024-12-11); Resolution No. 83 of 2024 on p3."]},
+    "layout": {"type": "string", "description": "A plain description of where the tables are in the book (today's County files).", "examples": ["Line items from the 'Department Account' reports: General Fund revenue pp9-11, expenditure pp12-28."]},
+    "original_file_name": {"type": "string", "description": "The file name the document was downloaded under, before it was renamed.", "examples": ["2026%20Budget%20Book.pdf"]},
+    "url": {"type": "string", "pattern": "^https?://", "description": "The public page where the document is published.", "examples": ["https://lancastercountypa.gov/DocumentCenter/View/18652/Resolution-No-79-of-2025"]},
+    "download_url": {"type": "string", "pattern": "^https?://", "description": "The direct download address.", "examples": ["https://lancastercountypa.gov/ArchiveCenter/ViewFile/Item/3414"]},
+    "downloaded": {"type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "description": "The date the copy was downloaded (YYYY-MM-DD).", "examples": ["2026-11-21"]},
+    "saved_from": {"type": "string", "description": "The file name the document was saved from.", "examples": ["Resolution%20No.%2079%20of%202025.pdf"]},
+    "dated": {"type": ["string", "null"], "description": "The date the document carries, with where it is printed; empty when none is printed.", "examples": ["transmittal letter dated June 30, 2025"]},
+    "pdf_pages": {"type": "integer", "minimum": 1, "description": "How many pages the PDF has.", "examples": [152]},
+    "page_note": {"type": "string", "description": "How page numbers in this file relate to the printed page numbers.", "examples": ["All pages are PDF page numbers (the printed page number is 9-10 lower)."]},
+    "page": {"$ref": "#/$defs/page", "description": "The page that holds the figures (one-page documents such as a resolution).", "examples": [1]},
+    "resolution": {"type": "string", "description": "The resolution's number as printed.", "examples": ["Resolution No. 79 of 2025"]},
+    "copies": {
+      "type": "array",
+      "description": "Other documents that reprint the same page.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["source_doc", "page"],
+        "properties": {
+          "source_doc": {"type": "string", "pattern": "\\.pdf$", "description": "The other PDF.", "examples": ["County-2025-Budget-Book.pdf"]},
+          "page": {"$ref": "#/$defs/page", "description": "The page in it.", "examples": [3]}
+        }
+      }
+    },
+    "pages": {
+      "type": "object",
+      "description": "Page ranges by role (for example line_items, staffing, fund_balance, summary), each a list of single pages or [first, last] pairs. New in the portable layout; today these live in the extractors or in the layout prose.",
+      "propertyNames": {"pattern": "^[a-z][a-z_]*$"},
+      "additionalProperties": {"type": "array", "items": {"$ref": "#/$defs/page_range"}},
+      "examples": [{"line_items": [[9, 28], [114, 123]], "fund_balance": [35]}]
+    },
+    "page_order": {
+      "type": "array",
+      "description": "Pages bound in the wrong order: each [a, b] pair is read in swapped order.",
+      "items": {"type": "array", "prefixItems": [{"$ref": "#/$defs/page"}, {"$ref": "#/$defs/page"}], "minItems": 2, "maxItems": 2},
+      "examples": [[[111, 112]]]
+    },
+    "ocr": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {"^_": {}},
+      "description": "Settings for reading scanned pages.",
+      "properties": {
+        "dpi": {"type": "integer", "minimum": 72, "maximum": 1200, "description": "Resolution the pages are rendered at before OCR.", "examples": [300]},
+        "fallback_rotate": {"type": "integer", "enum": [0, 90, 180, 270], "description": "Rotation (degrees) to try when a page reads badly upright.", "examples": [90]},
+        "clean": {"type": "boolean", "description": "true = clean the scan (threshold, erase broken table rules) before OCR.", "examples": [true]},
+        "column_years": {"type": "array", "items": {"$ref": "#/$defs/year"}, "description": "The years of the printed amount columns, left to right.", "examples": [[2024, 2023]]}
+      }
+    },
+    "glyph_map": {
+      "type": "object",
+      "description": "Characters the PDF's text layer garbles, mapped to what is printed.",
+      "patternProperties": {"^_": {}},
+      "additionalProperties": {"type": "string"},
+      "examples": [{"(cid:20)": "1"}]
+    },
+    "line_items": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {"^_": {}},
+      "description": "The line-item tables: their columns (or several layouts of columns) and how section totals are printed.",
+      "properties": {
+        "columns": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/column"}, "description": "The printed amount columns, left to right, when the book has one layout."},
+        "header_last_line": {"type": "string", "description": "A pattern matched against the last line of the column header block.", "examples": ["ACTUAL.*PROPOSED"]},
+        "total_prefix": {"type": "string", "description": "A pattern that marks a printed section total row.", "examples": ["^TOTAL\\b\\s*[-_]?\\s*"]},
+        "inherit_header": {"type": "boolean", "description": "true = a page with no column header uses the previous page's layout.", "examples": [false]},
+        "layouts": {
+          "type": "array",
+          "minItems": 1,
+          "description": "Several column layouts in one book, tried in order.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["columns"],
+            "patternProperties": {"^_": {}},
+            "properties": {
+              "name": {"type": "string", "description": "A name for the layout.", "examples": ["five_columns"]},
+              "columns": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/column"}, "description": "The layout's printed amount columns, left to right."},
+              "header_last_line": {"type": "string", "description": "A pattern matched against the last header line of pages in this layout.", "examples": ["ACTUAL.*PROJECTED$"]},
+              "pages_seen": {"type": "integer", "minimum": 0, "description": "How many pages the detect step found in this layout (drafts only)."},
+              "example_page": {"$ref": "#/$defs/page", "description": "One page in this layout (drafts only)."}
+            }
+          }
+        }
+      }
+    },
+    "staffing": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {"^_": {}},
+      "description": "The staffing schedule: which (year, figure) each count/salary pair is for, and the order of fields in a row.",
+      "properties": {
+        "columns": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/column"}, "description": "One entry per printed (count, salary) pair, left to right."},
+        "row": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {"type": "string", "enum": ["title", "bargaining_unit", "ft_pt", "count", "salary"]},
+          "description": "The fields of a staffing row after the org and object codes, in printed order.",
+          "examples": [["title", "bargaining_unit", "ft_pt", "count", "salary"]]
+        },
+        "count_pattern": {"type": "string", "description": "A pattern a position count must match (for books that print fractional FTEs).", "examples": ["^\\d+(\\.\\d{1,3})?$"]}
+      }
+    },
+    "funds": {
+      "type": "object",
+      "description": "Org-code prefix -> fund, for funds other than the main fund. A value is a fund name, or {fund, department} when the whole fund belongs to one department.",
+      "patternProperties": {
+        "^_": {},
+        "^\\d+$": {
+          "oneOf": [
+            {"type": "string"},
+            {"type": "object", "additionalProperties": false, "required": ["fund", "department"], "properties": {"fund": {"type": "string"}, "department": {"type": "string"}}}
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "examples": [{"560": "Stormwater Management Fund", "662": {"fund": "Long's Park Fund", "department": "Public Works"}}]
+    },
+    "general_fund_departments": {
+      "type": "object",
+      "description": "Main-fund org-code prefix -> department.",
+      "patternProperties": {"^_": {}, "^\\d+$": {"type": "string"}},
+      "additionalProperties": false,
+      "examples": [{"15": "Public Safety"}]
+    },
+    "general_fund_department_overrides": {
+      "type": "object",
+      "description": "Longer org-code prefixes that belong to a different department than their first digits say.",
+      "patternProperties": {"^_": {}, "^\\d+$": {"type": "string"}},
+      "additionalProperties": false,
+      "examples": [{"1403": "City Controller / Treasurer"}]
+    },
+    "fund_balance": {
+      "type": "object",
+      "additionalProperties": false,
+      "patternProperties": {"^_": {}},
+      "description": "The fund balance page.",
+      "properties": {
+        "scenarios": {"type": "array", "items": {"type": "string"}, "description": "The printed balance columns, left to right.", "examples": [["proposed", "revised"]]}
+      }
+    },
+    "department_pages": {
+      "type": "object",
+      "description": "Adjustments for checking department pages line by line, keyed by department code.",
+      "patternProperties": {
+        "^_": {},
+        "^[A-Z]\\d{4}$": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "sections": {"type": "array", "items": {"type": "string"}, "description": "Only these sections of the department are on its page."},
+            "add": {"type": "array", "items": {"type": "array", "items": {"type": "string"}, "minItems": 2, "maxItems": 2}, "description": "[fund letter, department] pairs folded into this department's page."}
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "schedules": {
+      "type": "array",
+      "description": "Audited report: the budget-vs-actual schedules, one per fund.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["fund", "page"],
+        "properties": {
+          "fund": {"type": "string", "description": "The fund as the site names it.", "examples": ["Fund Y"]},
+          "acfr_fund": {"type": "string", "description": "The fund as the report names it.", "examples": ["Children and Youth Services Fund"]},
+          "book_funds": {"type": "array", "items": {"type": "string"}, "description": "The budget-book funds the schedule covers.", "examples": [["Fund H", "Fund R", "Fund EI"]]},
+          "page": {"$ref": "#/$defs/page", "description": "The schedule's PDF page.", "examples": [117]}
+        }
+      }
+    },
+    "fund_balance_table_page": {"$ref": "#/$defs/page", "description": "Audited report: PDF page of the fund balance history table.", "examples": [127]},
+    "gaap_statement_page": {"$ref": "#/$defs/page", "description": "Audited report: PDF page of the governmental funds statement.", "examples": [43]},
+    "budget_to_gaap_note_page": {"$ref": "#/$defs/page", "description": "Audited report: PDF page of the note reconciling budget and GAAP figures.", "examples": [116]}
+  }
+}

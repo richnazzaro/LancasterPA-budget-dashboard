@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "csv/org_units.schema.json",
+  "title": "org_units_2027.csv",
+  "description": "The units on the newest City org chart: departments and the bureaus under them, with chart pages and links to their descriptions.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "department",
+    "unit",
+    "kind",
+    "division",
+    "chart_page",
+    "descriptions",
+    "aliases",
+    "notes"
+  ],
+  "properties": {
+    "department": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The department.",
+      "minLength": 1,
+      "examples": [
+        "Executive"
+      ]
+    },
+    "unit": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The bureau or office; empty on a department's own row.",
+      "examples": [
+        "Office of the Mayor"
+      ]
+    },
+    "kind": {
+      "type": "string",
+      "x-type": "choice",
+      "description": "department = the department itself; bureau = a unit under it; whole-department = a department with no separate units; department-wide = lines that belong to the department, not one bureau.",
+      "enum": [
+        "department",
+        "bureau",
+        "whole-department",
+        "department-wide"
+      ],
+      "examples": [
+        "department"
+      ]
+    },
+    "division": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The division the bureau belongs to, where the chart prints one.",
+      "examples": [
+        "Public Right of Way"
+      ]
+    },
+    "chart_page": {
+      "type": "string",
+      "x-type": "page number",
+      "description": "The org chart PDF page.",
+      "pattern": "^$|^[1-9]\\d*$",
+      "examples": [
+        "1"
+      ]
+    },
+    "descriptions": {
+      "type": "string",
+      "x-type": "text",
+      "description": "Description ids (from the descriptions file) for this unit; [n-m] picks paragraphs.",
+      "examples": [
+        "p1-executive-department[1-2]"
+      ]
+    },
+    "aliases": {
+      "type": "string",
+      "x-type": "text",
+      "description": "Other ids that mean the same unit.",
+      "examples": [
+        "city-controller-treasurer"
+      ]
+    },
+    "notes": {
+      "type": "string",
+      "x-type": "text",
+      "description": "Notes for people.",
+      "examples": [
+        "The Mayor's department. Chart p1 shows Chief of Staff, Office of the Solicitor and Bure..."
+      ]
+    }
+  }
+}

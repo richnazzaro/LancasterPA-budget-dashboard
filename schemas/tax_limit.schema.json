@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "tax_limit.schema.json",
+  "title": "governments/<id>/content/rules/tax_limit.yaml",
+  "description": "A legal limit on how fast tax revenue may grow, tested against each budget (today the City's Home Rule Charter § 8.08 6% test, in config/tax_limit.json). Which lines count as tax revenue is listed in a separate CSV (today data/tax_limit_lines.csv). Keys starting with an underscore are comments.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["fund", "limit_pct", "first_year", "section", "tested", "baseline_measure"],
+  "patternProperties": {
+    "^_": {"description": "A comment for people reading the file; ignored by the scripts."}
+  },
+  "properties": {
+    "entity": {
+      "type": "string",
+      "enum": ["city", "county"],
+      "description": "Which government the test is for (today's file only; in a government's folder the folder says it).",
+      "examples": ["city"]
+    },
+    "fund": {
+      "type": "string",
+      "description": "The fund whose tax revenue is tested.",
+      "examples": ["General Fund"]
+    },
+    "limit_pct": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "The largest allowed rise over the year before, in percent.",
+      "examples": [6]
+    },
+    "first_year": {
+      "type": "integer",
+      "minimum": 1900,
+      "maximum": 2100,
+      "description": "The first budget year the rule applies to. Earlier years are not tested.",
+      "examples": [2025]
+    },
+    "section": {
+      "type": "string",
+      "description": "The section of the law or charter that sets the limit.",
+      "examples": ["8.08"]
+    },
+    "tested": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Which budget columns are tested, and the figure each result is shown under.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["column", "measure"],
+        "properties": {
+          "column": {"type": "string", "enum": ["proposed", "proposed_revised", "adopted", "amended", "budget"], "description": "The printed column tested.", "examples": ["proposed_revised"]},
+          "measure": {"type": "string", "pattern": "^[a-z][a-z_]*$", "description": "The figure name the result is shown under.", "examples": ["revised"]}
+        }
+      }
+    },
+    "baseline_measure": {
+      "type": "string",
+      "pattern": "^[a-z][a-z_]*$",
+      "description": "The figure for the year before that the budget is compared with.",
+      "examples": ["projected"]
+    },
+    "transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["section", "budget_years"],
+      "description": "A transition rule that may waive the limit for some years. The site quotes it and does not decide whether it applies.",
+      "properties": {
+        "section": {"type": "string", "description": "The section with the transition rule.", "examples": ["13.14"]},
+        "budget_years": {"type": "array", "items": {"type": "integer", "minimum": 1900, "maximum": 2100}, "description": "The budget years the transition note is shown for.", "examples": [[2025, 2026, 2027]]}
+      }
+    }
+  }
+}

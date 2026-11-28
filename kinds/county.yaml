@@ -1,0 +1,18 @@
+# Default words for a county government. A county's government.yaml can override any of them.
+# Schema: schemas/kind.schema.json. Nothing here is a fact about a particular county.
+kind: county
+name: County
+route: county                    # PLAN.md decision D6: addresses /county/...
+fiscal_year:
+  start_month: 1                 # generic default; each county sets its own year in its government.yaml
+  label: "{end}"
+vocabulary:
+  governing_body: Commissioners  # web/app.js County About text ("Three Commissioners ... manage the County"); Pennsylvania usage
+  executive: Commissioners       # same source: the County has no separate executive in today's site text
+  department: Group              # web/app.js JT(): ['Group', 'Department', 'Line item'] for the County
+  unit: Department               # web/app.js JT() and UW ('department') for the County
+  line_item: Line item           # web/app.js JT()
+  budget_document: budget book   # web/config.json County footer: "published budget books"
+figure_labels:                   # web/app.js LABEL
+  budget: Budget
+  actual: Actual

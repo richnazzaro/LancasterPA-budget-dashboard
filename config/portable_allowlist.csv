@@ -1,0 +1,3 @@
+file,category,pattern,reason
+scripts/check_portable.py,*,.,The checker's own pattern table names what it looks for; it is not engine behaviour.
+scripts/validate_config.py,*,data/|org_|_2027|county,"Temporary: today's CSV paths, mapped to their schemas until Phase 1/2 move the files into governments/<id>/ and the loader resolves them."

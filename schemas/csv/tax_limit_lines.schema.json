@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "csv/tax_limit_lines.schema.json",
+  "title": "tax_limit_lines.csv",
+  "description": "Which revenue lines count as tax revenue in the tax limit test (counts = yes), and which tax-looking lines do not (counts = no), each with a reason.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entity",
+    "code",
+    "name",
+    "counts",
+    "reason"
+  ],
+  "properties": {
+    "entity": {
+      "type": "string",
+      "x-type": "choice",
+      "description": "Which government.",
+      "enum": [
+        "city",
+        "county"
+      ],
+      "examples": [
+        "city"
+      ]
+    },
+    "code": {
+      "type": "string",
+      "x-type": "code",
+      "description": "The revenue line's object code.",
+      "pattern": "^\\d+$",
+      "minLength": 1,
+      "examples": [
+        "400000"
+      ]
+    },
+    "name": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The line's printed name.",
+      "minLength": 1,
+      "examples": [
+        "City Real Estate Taxes"
+      ]
+    },
+    "counts": {
+      "type": "string",
+      "x-type": "choice",
+      "description": "yes = counted as tax revenue; no = not counted.",
+      "enum": [
+        "yes",
+        "no"
+      ],
+      "examples": [
+        "yes"
+      ]
+    },
+    "reason": {
+      "type": "string",
+      "x-type": "text",
+      "description": "Why, in one line.",
+      "minLength": 1,
+      "examples": [
+        "The City's property tax: a tax the City levies, counted under § 8.08."
+      ]
+    }
+  }
+}

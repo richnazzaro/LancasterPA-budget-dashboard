@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "csv/sign_corrections.schema.json",
+  "title": "sign_corrections.csv",
+  "description": "Minus signs the OCR dropped, restored only where the printed section total proves it. The printed value is kept.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_doc",
+    "source_page",
+    "account_code",
+    "column",
+    "printed_value",
+    "corrected_value",
+    "section",
+    "section_page",
+    "printed_total",
+    "line_sum",
+    "gap",
+    "evidence"
+  ],
+  "properties": {
+    "source_doc": {
+      "type": "string",
+      "x-type": "file name",
+      "description": "The PDF.",
+      "pattern": "\\.pdf$",
+      "minLength": 1,
+      "examples": [
+        "2022-City-of-Lancaster-Adopted-Budget-122121.pdf"
+      ]
+    },
+    "source_page": {
+      "type": "string",
+      "x-type": "page number",
+      "description": "The page of the line.",
+      "pattern": "^[1-9]\\d*$",
+      "minLength": 1,
+      "examples": [
+        "112"
+      ]
+    },
+    "account_code": {
+      "type": "string",
+      "x-type": "account code",
+      "description": "The line's account code (org-object).",
+      "pattern": "^\\d+-(\\d+|TBD)$",
+      "minLength": 1,
+      "examples": [
+        "1601000-744500"
+      ]
+    },
+    "column": {
+      "type": "string",
+      "x-type": "column name",
+      "description": "The cell's column: figure and year, such as actual_2023.",
+      "pattern": "^[a-z_]+_\\d{4}$",
+      "minLength": 1,
+      "examples": [
+        "actual_ytd_2021"
+      ]
+    },
+    "printed_value": {
+      "type": "string",
+      "x-type": "whole number",
+      "description": "The value as read.",
+      "pattern": "^-?\\d+$",
+      "minLength": 1,
+      "examples": [
+        "485"
+      ]
+    },
+    "corrected_value": {
+      "type": "string",
+      "x-type": "whole number",
+      "description": "The value with its sign restored.",
+      "pattern": "^-?\\d+$",
+      "minLength": 1,
+      "examples": [
+        "-485"
+      ]
+    },
+    "section": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The section whose total proves it.",
+      "minLength": 1,
+      "examples": [
+        "Director CPED Exp"
+      ]
+    },
+    "section_page": {
+      "type": "string",
+      "x-type": "page number",
+      "description": "The page of that total.",
+      "pattern": "^[1-9]\\d*$",
+      "minLength": 1,
+      "examples": [
+        "113"
+      ]
+    },
+    "printed_total": {
+      "type": "string",
+      "x-type": "whole number",
+      "description": "The section total as printed.",
+      "pattern": "^-?\\d+$",
+      "minLength": 1,
+      "examples": [
+        "1389360"
+      ]
+    },
+    "line_sum": {
+      "type": "string",
+      "x-type": "whole number",
+      "description": "The sum of the section's lines as read.",
+      "pattern": "^-?\\d+$",
+      "minLength": 1,
+      "examples": [
+        "1390329"
+      ]
+    },
+    "gap": {
+      "type": "string",
+      "x-type": "whole number",
+      "description": "Printed total minus the sum.",
+      "pattern": "^-?\\d+$",
+      "minLength": 1,
+      "examples": [
+        "969"
+      ]
+    },
+    "evidence": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The arithmetic in words.",
+      "minLength": 1,
+      "examples": [
+        "Lines of 'Director CPED Exp' sum to 1,390,329, 969 above the printed total 1,389,360 = ..."
+      ]
+    }
+  }
+}

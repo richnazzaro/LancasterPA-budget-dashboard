@@ -1,0 +1,75 @@
+# The County of Lancaster, PA. Schema: schemas/government.schema.json.
+# Phase 0: nothing reads this file yet except scripts/validate_config.py; the site and pipeline still use
+# web/config.json, config/county/**/*.json and data/county/*.csv. Every value describes the site as it is today.
+id: lancaster-county                     # PLAN.md decision D6
+name: County of Lancaster, PA            # web/config.json entities.county.entity.name
+short_name: County of Lancaster          # web/config.json entities.county.entity.short
+kind: county                             # web/config.json entities.county.entity.kind
+route: county                            # PLAN.md decision D6 (/county/...); today #/county/...
+
+fiscal_year:
+  start_month: 1                         # calendar year: config/county/acfr/*.json titles "for the year ended December 31"
+  label: "{end}"
+
+sources_dir: Budget PDFs - County        # today's folder (scripts/ingest.py COUNTY_PDF_DIR); moves to governments/lancaster-county/sources/ in Phase 2.5
+pdf_path: pdfs/county/                   # web/config.json entities.county.paths.pdfs
+data_path: data/county/                  # web/config.json entities.county.paths.data
+
+display:
+  # County rule (AGENTS.md "County"; scripts/build_county.py docstring; web/data/county/budget.json `rule`):
+  # every year shows its Budget from the newest County book that prints the year; audited ACFR actuals
+  # are shown beside it for the audited years (now 2023-2025) and never combined with it.
+  figures:
+    - years: all
+      show: [budget]
+      note: From the newest County book that prints the year.
+    - years: audited
+      show: [actual]
+      note: Audited ACFR actuals (budgetary basis), shown side by side with Budget, never combined.
+  measures:                              # labels: web/app.js LABEL; status: web/app.js STATUS
+    budget:
+      label: Budget
+      columns: [budget]
+      book: newest_that_prints_the_year
+      status: Budget
+    actual:
+      label: Actual
+      source: audited_reports            # web/data/county/budget.json rule.actual.source: "County ACFR, budget-vs-actual schedules (budgetary basis)"
+  primary_fund: General Fund             # web/config.json entities.county.default_fund
+  reserve_name: General Fund Balance     # web/data/county/budget.json reserve.name
+  fund_names:                            # web/config.json entities.county.fund_names
+    Fund B: Liquid Fuels (Fund B)
+    Fund E: Drug & Alcohol (Fund E)
+    Fund EI: Early Intervention (Fund EI)
+    Fund F: Domestic Relations (Fund F)
+    Fund G: Aging (Fund G)
+    Fund H: Behavioral Health (Fund H)
+    Fund R: Developmental Services (Fund R)
+    Fund Y: Children & Youth (Fund Y)
+    Fund H+R+EI: Behavioral Health, Developmental Services & Early Intervention (Funds H, R, EI)
+
+features:
+  reserve: auto                          # General Fund Balance from the budget resolutions and ACFRs (scripts/build_county.py build_fund_balance)
+  staffing: "off"                          # scripts/build_county.py: "No staffing.json: the County books print no positions"
+  actuals: auto                          # data/processed/county/actuals_acfr_*.csv
+  projections: "off"                       # no County projections book
+  tax_limit: "off"                         # the 6% test is City only (web/app.js TLIM: !isCounty())
+  tax_estimate: auto                     # data/tax_rates.csv has County rows
+  budget_calendar: "off"                   # City only today (web/config.json has budget_calendar for the City only)
+  context_facts: auto                    # data/county/context_facts.csv
+  unit_descriptions: "off"                 # no County description text today (data/county/org_units.csv has names and pages only)
+  income_sources: "on"                     # the Income Sources panel shows for the County too, from printed groups (data/income_sources.csv has no County rows)
+
+text:                                    # web/config.json entities.county
+  switch_label: County
+  title_suffix: ": County"
+  possessive: the County of Lancaster's
+  description: Lancaster County, PA budget by department and line item, with audited actuals by fund, from the County's published budget books and annual financial reports.
+  tagline: This is an independent project, not associated with the County of Lancaster.
+  footer: An independent transparency project using the County of Lancaster's published budget books and annual financial reports.
+  adopted:                               # web/config.json entities.county.adopted
+    year: 2026
+    text: adopted Dec 24, 2025 (Resolution 79 of 2025)
+
+data_files:                              # web/config.json entities.county.files
+  eager: [changes, fund_balance_gaap]

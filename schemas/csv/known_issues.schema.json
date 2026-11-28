@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "csv/known_issues.schema.json",
+  "title": "known_issues.csv",
+  "description": "Reviewed errors and oddities in the source PDFs (a printed total that does not add up, a missing page). A failed check is accepted only when a row here explains it. The site lists these notes on its About panel.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_doc",
+    "source_page",
+    "label",
+    "note"
+  ],
+  "properties": {
+    "source_doc": {
+      "type": "string",
+      "x-type": "file name",
+      "description": "The PDF with the issue.",
+      "pattern": "\\.pdf$",
+      "minLength": 1,
+      "examples": [
+        "2026-Adopted-Budget-2026.pdf"
+      ]
+    },
+    "source_page": {
+      "type": "string",
+      "x-type": "page number",
+      "description": "The PDF page.",
+      "pattern": "^[1-9]\\d*$",
+      "minLength": 1,
+      "examples": [
+        "133"
+      ]
+    },
+    "label": {
+      "type": "string",
+      "x-type": "text",
+      "description": "What the issue concerns (a section, total or line), as the check reports it.",
+      "minLength": 1,
+      "examples": [
+        "Page 133 repeats page 130; skipped"
+      ]
+    },
+    "note": {
+      "type": "string",
+      "x-type": "text",
+      "description": "What is wrong and the evidence, in plain words.",
+      "minLength": 1,
+      "examples": [
+        "Source PDF prints the Bureau of Health staffing schedule twice (p130 and p133). p133 si..."
+      ]
+    },
+    "kind": {
+      "type": "string",
+      "x-type": "choice",
+      "description": "County only today: rounding = a gap within rounding; source_error = the PDF is wrong; basis_difference = two documents count differently (budget vs audited basis).",
+      "enum": [
+        "rounding",
+        "source_error",
+        "basis_difference",
+        ""
+      ]
+    }
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "csv/org_structure.schema.json",
+  "title": "org_structure_2027.csv",
+  "description": "Every org code -> fund, department and unit on the newest org chart, with the names the books printed for it over the years.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "org_code",
+    "fund",
+    "department",
+    "unit",
+    "printed_department",
+    "printed_names",
+    "notes"
+  ],
+  "properties": {
+    "org_code": {
+      "type": "string",
+      "x-type": "code",
+      "description": "The org code from the books.",
+      "pattern": "^\\d+$",
+      "minLength": 1,
+      "examples": [
+        "1000001"
+      ]
+    },
+    "fund": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The fund.",
+      "minLength": 1,
+      "examples": [
+        "General Fund"
+      ]
+    },
+    "department": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The department on the newest org chart.",
+      "minLength": 1,
+      "examples": [
+        "General Revenue"
+      ]
+    },
+    "unit": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The unit (bureau or office) on the newest org chart.",
+      "minLength": 1,
+      "examples": [
+        "General Revenue"
+      ]
+    },
+    "printed_department": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The department name(s) the books printed, with years.",
+      "minLength": 1,
+      "examples": [
+        "General Revenue (2020–2027)"
+      ]
+    },
+    "printed_names": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The section name(s) the books printed for this code, with years.",
+      "minLength": 1,
+      "examples": [
+        "Tax Revenues (2020–2021); Tax Revenue (2022–2027)"
+      ]
+    },
+    "notes": {
+      "type": "string",
+      "x-type": "text",
+      "description": "How the code was placed, with chart pages.",
+      "examples": [
+        "City-wide tax revenue. Not a unit on the org chart; kept as its own group with no bureaus."
+      ]
+    }
+  }
+}

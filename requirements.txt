@@ -4,3 +4,5 @@ pandas==2.3.3
 pypdfium2==5.15.2
 pillow==13.0.0
 numpy==2.0.2
+PyYAML==6.0.4
+jsonschema==4.26.0

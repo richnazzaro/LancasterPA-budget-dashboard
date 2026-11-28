@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "csv/county_context_facts.schema.json",
+  "title": "context_facts.csv (County)",
+  "description": "Context figures from outside the budget tables (tax rate history, ratings, capital plans, agency grants), each checked against its cited page.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "group",
+    "label",
+    "value",
+    "unit",
+    "year",
+    "fund",
+    "source_doc",
+    "source_page",
+    "source_kind",
+    "find",
+    "also_in",
+    "note"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-type": "id",
+      "description": "A stable id for the fact.",
+      "pattern": "^[a-z0-9_]+$",
+      "minLength": 1,
+      "examples": [
+        "tax_increase"
+      ]
+    },
+    "group": {
+      "type": "string",
+      "x-type": "text",
+      "description": "Which section the fact belongs to (tax, millage_history, standing, capital, agency_grants, millage_note).",
+      "pattern": "^[a-z_]+$",
+      "minLength": 1,
+      "examples": [
+        "tax"
+      ]
+    },
+    "label": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The fact's label as shown.",
+      "minLength": 1,
+      "examples": [
+        "Tax increase over 2025"
+      ]
+    },
+    "value": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The value (a number, or text when unit is text).",
+      "minLength": 1,
+      "examples": [
+        "10"
+      ]
+    },
+    "unit": {
+      "type": "string",
+      "x-type": "choice",
+      "description": "percent, mills, dollars, rating, positions or text.",
+      "enum": [
+        "percent",
+        "mills",
+        "dollars",
+        "rating",
+        "positions",
+        "text"
+      ],
+      "examples": [
+        "percent"
+      ]
+    },
+    "year": {
+      "type": "string",
+      "x-type": "year",
+      "description": "The year the fact is for.",
+      "pattern": "^(19|20|21)\\d\\d$",
+      "minLength": 1,
+      "examples": [
+        "2026"
+      ]
+    },
+    "fund": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The fund, where the fact is about one.",
+      "examples": [
+        "Capital Reserve Fund"
+      ]
+    },
+    "source_doc": {
+      "type": "string",
+      "x-type": "file name",
+      "description": "The PDF that prints it.",
+      "pattern": "\\.pdf$",
+      "minLength": 1,
+      "examples": [
+        "County-Resolution-79-of-2025.pdf"
+      ]
+    },
+    "source_page": {
+      "type": "string",
+      "x-type": "page number",
+      "description": "The page.",
+      "pattern": "^[1-9]\\d*$",
+      "minLength": 1,
+      "examples": [
+        "1"
+      ]
+    },
+    "source_kind": {
+      "type": "string",
+      "x-type": "choice",
+      "description": "printed = in a primary document; presentation = only on a presentation slide; calculated = our sum of printed figures.",
+      "enum": [
+        "printed",
+        "presentation",
+        "calculated"
+      ],
+      "examples": [
+        "printed"
+      ]
+    },
+    "find": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The text the check looks for on the page (year|value for a table row).",
+      "examples": [
+        "10%"
+      ]
+    },
+    "also_in": {
+      "type": "string",
+      "x-type": "text",
+      "description": "Other places that print it: <file>#<page>, separated by ;.",
+      "pattern": "^$|^[^;#]+\\.pdf#[1-9]\\d*(;[^;#]+\\.pdf#[1-9]\\d*)*$",
+      "examples": [
+        "County-2026-Budget-Presentation.pdf#4"
+      ]
+    },
+    "note": {
+      "type": "string",
+      "x-type": "text",
+      "description": "A note shown with the fact.",
+      "examples": [
+        "The audited report says the County maintained this rating during 2025."
+      ]
+    }
+  }
+}

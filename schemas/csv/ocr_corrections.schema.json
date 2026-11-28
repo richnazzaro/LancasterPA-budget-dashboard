@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "csv/ocr_corrections.schema.json",
+  "title": "ocr_corrections.csv",
+  "description": "Values the OCR of a scanned book misread, corrected from the page image. The printed (misread) text is kept next to the fix.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_doc",
+    "source_page",
+    "row_label",
+    "column",
+    "ocr_text",
+    "corrected_value",
+    "evidence"
+  ],
+  "properties": {
+    "source_doc": {
+      "type": "string",
+      "x-type": "file name",
+      "description": "The scanned PDF.",
+      "pattern": "\\.pdf$",
+      "minLength": 1,
+      "examples": [
+        "2026-Adopted-Budget-2026.pdf"
+      ]
+    },
+    "source_page": {
+      "type": "string",
+      "x-type": "page number",
+      "description": "The PDF page.",
+      "pattern": "^[1-9]\\d*$",
+      "minLength": 1,
+      "examples": [
+        "48"
+      ]
+    },
+    "row_label": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The row: its account code (City) or printed label (County).",
+      "minLength": 1,
+      "examples": [
+        "1000004-415100"
+      ]
+    },
+    "column": {
+      "type": "string",
+      "x-type": "column name",
+      "description": "The cell's column: a figure and year such as proposed_2026 or budget_2024, or account_name / label / variance.",
+      "pattern": "^([a-z_]+_\\d{4}|account_name|label|variance)$",
+      "minLength": 1,
+      "examples": [
+        "actual_ytd_2025"
+      ]
+    },
+    "ocr_text": {
+      "type": "string",
+      "x-type": "text",
+      "description": "What the OCR read (may be empty when it read nothing).",
+      "examples": [
+        "T7,A17"
+      ]
+    },
+    "corrected_value": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The value on the page image.",
+      "examples": [
+        "77,417"
+      ]
+    },
+    "evidence": {
+      "type": "string",
+      "x-type": "text",
+      "description": "How the correction is proven (totals, other books, the image).",
+      "minLength": 1,
+      "examples": [
+        "Read from the page image (Anti-Auto Theft grant, RECEIVED YTD). With it, Other Income Y..."
+      ]
+    }
+  }
+}

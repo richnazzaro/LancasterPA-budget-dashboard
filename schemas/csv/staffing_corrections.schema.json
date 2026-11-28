@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "csv/staffing_corrections.schema.json",
+  "title": "staffing_corrections.csv",
+  "description": "Proven fixes to staffing schedule values (a clipped digit), with the printed value kept.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source_doc",
+    "source_page",
+    "org_code",
+    "object_code",
+    "position_title",
+    "column",
+    "printed_value",
+    "corrected_value",
+    "subtotal_label",
+    "printed_subtotal",
+    "line_sum",
+    "gap",
+    "evidence"
+  ],
+  "properties": {
+    "source_doc": {
+      "type": "string",
+      "x-type": "file name",
+      "description": "The PDF.",
+      "pattern": "\\.pdf$",
+      "minLength": 1,
+      "examples": [
+        "2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf"
+      ]
+    },
+    "source_page": {
+      "type": "string",
+      "x-type": "page number",
+      "description": "The page.",
+      "pattern": "^[1-9]\\d*$",
+      "minLength": 1,
+      "examples": [
+        "271"
+      ]
+    },
+    "org_code": {
+      "type": "string",
+      "x-type": "code",
+      "description": "The position's org code.",
+      "pattern": "^\\d+$",
+      "minLength": 1,
+      "examples": [
+        "56387000"
+      ]
+    },
+    "object_code": {
+      "type": "string",
+      "x-type": "code",
+      "description": "The position's object code.",
+      "pattern": "^\\d+$",
+      "minLength": 1,
+      "examples": [
+        "611000"
+      ]
+    },
+    "position_title": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The position title as printed.",
+      "minLength": 1,
+      "examples": [
+        "MANAGER SUSTAINABLE OPERATIONS"
+      ]
+    },
+    "column": {
+      "type": "string",
+      "x-type": "column name",
+      "description": "The field: count or salary, year and figure, such as salary_2023_proposed.",
+      "pattern": "^(count|salary)_\\d{4}_[a-z_]+$",
+      "minLength": 1,
+      "examples": [
+        "salary_2023_proposed"
+      ]
+    },
+    "printed_value": {
+      "type": "string",
+      "x-type": "number",
+      "description": "The value as printed.",
+      "pattern": "^-?\\d+(\\.\\d+)?$",
+      "minLength": 1,
+      "examples": [
+        "20000"
+      ]
+    },
+    "corrected_value": {
+      "type": "string",
+      "x-type": "number",
+      "description": "The corrected value.",
+      "pattern": "^-?\\d+(\\.\\d+)?$",
+      "minLength": 1,
+      "examples": [
+        "120000"
+      ]
+    },
+    "subtotal_label": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The printed subtotal that proves it.",
+      "minLength": 1,
+      "examples": [
+        "TOTAL 611000 EMPLOYEES (Bureau Of Solid Waste & Recycling: Administration)"
+      ]
+    },
+    "printed_subtotal": {
+      "type": "string",
+      "x-type": "number",
+      "description": "That subtotal.",
+      "pattern": "^-?\\d+(\\.\\d+)?$",
+      "minLength": 1,
+      "examples": [
+        "131065"
+      ]
+    },
+    "line_sum": {
+      "type": "string",
+      "x-type": "number",
+      "description": "The sum of the lines as printed.",
+      "pattern": "^-?\\d+(\\.\\d+)?$",
+      "minLength": 1,
+      "examples": [
+        "31065"
+      ]
+    },
+    "gap": {
+      "type": "string",
+      "x-type": "number",
+      "description": "Subtotal minus the sum.",
+      "pattern": "^-?\\d+(\\.\\d+)?$",
+      "minLength": 1,
+      "examples": [
+        "-100000"
+      ]
+    },
+    "evidence": {
+      "type": "string",
+      "x-type": "text",
+      "description": "Why this correction and no other.",
+      "minLength": 1,
+      "examples": [
+        "The two 611000 positions print 11,065 + 20,000 = 31,065, but the subtotal is 131,065 (g..."
+      ]
+    }
+  }
+}

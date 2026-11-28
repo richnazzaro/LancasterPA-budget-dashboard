@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "csv/county_org_units.schema.json",
+  "title": "org_units.csv (County)",
+  "description": "County department codes -> department name and the group (by code letter) they belong to, with their pages in the budget book.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "department_code",
+    "department",
+    "group_letter",
+    "group",
+    "book_section",
+    "section_page",
+    "department_page",
+    "source_doc"
+  ],
+  "properties": {
+    "department_code": {
+      "type": "string",
+      "x-type": "code",
+      "description": "The department code.",
+      "pattern": "^[A-Z]\\d{4}$",
+      "minLength": 1,
+      "examples": [
+        "A1100"
+      ]
+    },
+    "department": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The department name.",
+      "minLength": 1,
+      "examples": [
+        "Line-Item Grants"
+      ]
+    },
+    "group_letter": {
+      "type": "string",
+      "x-type": "letter",
+      "description": "The code's first letter.",
+      "pattern": "^[A-Z]$",
+      "minLength": 1,
+      "examples": [
+        "A"
+      ]
+    },
+    "group": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The group's name.",
+      "minLength": 1,
+      "examples": [
+        "General Government"
+      ]
+    },
+    "book_section": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The book section that lists it.",
+      "minLength": 1,
+      "examples": [
+        "Operating Department Summaries"
+      ]
+    },
+    "section_page": {
+      "type": "string",
+      "x-type": "page number",
+      "description": "The section's first page.",
+      "pattern": "^[1-9]\\d*$",
+      "minLength": 1,
+      "examples": [
+        "29"
+      ]
+    },
+    "department_page": {
+      "type": "string",
+      "x-type": "page number",
+      "description": "The department's page.",
+      "pattern": "^[1-9]\\d*$",
+      "minLength": 1,
+      "examples": [
+        "42"
+      ]
+    },
+    "source_doc": {
+      "type": "string",
+      "x-type": "file name",
+      "description": "The book.",
+      "pattern": "\\.pdf$",
+      "minLength": 1,
+      "examples": [
+        "County-2026-Budget-Book.pdf"
+      ]
+    }
+  }
+}

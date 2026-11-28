@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "csv/county_elected_offices.schema.json",
+  "title": "elected_offices.csv (County)",
+  "description": "County departments headed by an elected official, with the line shown on their page and its sources.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "department_code",
+    "department",
+    "label",
+    "line",
+    "source_doc",
+    "source_page",
+    "also_in",
+    "note"
+  ],
+  "properties": {
+    "department_code": {
+      "type": "string",
+      "x-type": "code",
+      "description": "The department code.",
+      "pattern": "^[A-Z]\\d{4}$",
+      "minLength": 1,
+      "examples": [
+        "A1111"
+      ]
+    },
+    "department": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The department's printed name.",
+      "minLength": 1,
+      "examples": [
+        "Commissioners Office"
+      ]
+    },
+    "label": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The tag shown (Elected office, Elected judges).",
+      "minLength": 1,
+      "examples": [
+        "Elected office"
+      ]
+    },
+    "line": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The sentence shown on the department page.",
+      "minLength": 1,
+      "examples": [
+        "Headed by the three elected County Commissioners"
+      ]
+    },
+    "source_doc": {
+      "type": "string",
+      "x-type": "file name",
+      "description": "The PDF that says it.",
+      "pattern": "\\.pdf$",
+      "minLength": 1,
+      "examples": [
+        "County-ACFR-2025.pdf"
+      ]
+    },
+    "source_page": {
+      "type": "string",
+      "x-type": "page number",
+      "description": "The page.",
+      "pattern": "^[1-9]\\d*$",
+      "minLength": 1,
+      "examples": [
+        "10"
+      ]
+    },
+    "also_in": {
+      "type": "string",
+      "x-type": "text",
+      "description": "Other places: <file>#<page>, separated by ;.",
+      "pattern": "^$|^[^;#]+\\.pdf#[1-9]\\d*(;[^;#]+\\.pdf#[1-9]\\d*)*$",
+      "examples": [
+        "County-ACFR-2025.pdf#17;County-2026-Budget-Presentation.pdf#3"
+      ]
+    },
+    "note": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The evidence, for people.",
+      "minLength": 1,
+      "examples": [
+        "Report p.10: \"three county commissioners are elected every four years\"; p.17 lists them..."
+      ]
+    }
+  }
+}

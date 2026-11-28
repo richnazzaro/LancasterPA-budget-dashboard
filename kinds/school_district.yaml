@@ -1,0 +1,18 @@
+# Default words for a school district. A district's government.yaml can override any of them.
+# Schema: schemas/kind.schema.json. Every value below is generic vocabulary only, not a fact about any district.
+kind: school_district
+name: School District            # generic default; confirm from the district's own documents
+route: school                    # PLAN.md decision D6: addresses /school/...
+fiscal_year:
+  start_month: 7                 # generic default; confirm from the district's own documents (PLAN.md D1: July-June stored as the ending year)
+  label: "{start}–{end_short}"   # generic default; confirm from the district's own documents (PLAN.md D1: shown as "2026–27")
+vocabulary:
+  governing_body: School Board   # generic default; confirm from the district's own documents
+  executive: Superintendent      # generic default; confirm from the district's own documents
+  department: Function           # generic default; confirm from the district's own documents (PLAN.md Phase 5: departments ~ functions; owner decides in review)
+  category: Object               # generic default; confirm from the district's own documents (PLAN.md Phase 5: categories ~ objects)
+  line_item: Line item           # generic default; confirm from the district's own documents
+  budget_document: budget        # generic default; confirm from the district's own documents
+figure_labels:
+  budget: Budget                 # generic default; confirm from the district's own documents (PLAN.md Phase 5: one "Budget" figure per year)
+  actual: Actual                 # generic default; confirm from the district's own documents

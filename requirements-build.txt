@@ -1,0 +1,5 @@
+# What the site build and checks need beyond the standard library: the YAML config files
+# (site.yaml, governments/*/government.yaml, kinds/*.yaml) and their JSON Schemas.
+# Installed by the publish workflow (.github/workflows/pages.yml, "Install build dependencies"). The PDF pipeline needs requirements.txt instead.
+PyYAML==6.0.4
+jsonschema==4.26.0

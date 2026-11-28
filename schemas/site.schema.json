@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "site.schema.json",
+  "title": "site.yaml",
+  "description": "Settings for the whole website, shared by every government on it: the site's name, how to contact it, which governments appear and in what order, and the property-tax estimate page.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "contact_email", "repository", "default_government", "governments"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The site's name, shown in the header and the browser tab.",
+      "examples": ["Lancaster Budget Explorer"]
+    },
+    "contact_email": {
+      "type": "string",
+      "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+      "description": "The public email address readers can write to. Never a personal address.",
+      "examples": ["budget@nazwel.net"]
+    },
+    "repository": {
+      "type": "string",
+      "pattern": "^https://",
+      "description": "Web address of the project's public code repository, linked from the About page.",
+      "examples": ["https://github.com/richnazzaro/LancasterPA-budget-dashboard"]
+    },
+    "default_government": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "The government the site opens on when a reader visits the home address. Must be one of the ids listed under governments.",
+      "examples": ["lancaster-city"]
+    },
+    "governments": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "The governments on the site, in the order the City / County / School switch lists them. Each id is a folder under governments/. Only governments with data appear in the switch; with one government there is no switch.",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+        "description": "A government id (its folder name under governments/)."
+      },
+      "examples": [["lancaster-city", "lancaster-county"]]
+    },
+    "tax_estimate": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The property-tax estimate page: which years it compares and where readers look up their assessed value. Leave it out and the page is not built.",
+      "required": ["rates", "this_year", "next_year"],
+      "properties": {
+        "rates": {
+          "type": "string",
+          "description": "Where the website finds the tax rates file, relative to the web folder.",
+          "examples": ["data/tax_rates.json"]
+        },
+        "this_year": {
+          "type": "integer",
+          "minimum": 1900,
+          "maximum": 2100,
+          "description": "The tax year the page treats as \"this year\".",
+          "examples": [2026]
+        },
+        "next_year": {
+          "type": "integer",
+          "minimum": 1900,
+          "maximum": 2100,
+          "description": "The tax year the page treats as \"next year\" (the newest budget's year).",
+          "examples": [2027]
+        },
+        "reassessment_year": {
+          "type": "integer",
+          "minimum": 1900,
+          "maximum": 2100,
+          "description": "The first tax year that uses new assessed values after a countywide reassessment. Rates before and after it apply to different values, so the page pairs each rate with the value from the same year.",
+          "examples": [2027]
+        },
+        "lookup": {
+          "type": "array",
+          "description": "Outside websites where a reader can look up their assessed value, one per assessment year.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["assessed_year", "name", "search"],
+            "properties": {
+              "assessed_year": {
+                "type": "integer",
+                "minimum": 1900,
+                "maximum": 2100,
+                "description": "The assessment year this lookup site shows values for.",
+                "examples": [2026]
+              },
+              "name": {
+                "type": "string",
+                "description": "The lookup site's name as the page shows it.",
+                "examples": ["Property Tax Inquiry"]
+              },
+              "search": {
+                "type": "string",
+                "pattern": "^https://",
+                "description": "The lookup site's search address. The page sends the reader there; it never fetches values itself.",
+                "examples": ["https://lancasterpa.devnetwedge.com/Search/ExecuteSearch"]
+              }
+            }
+          }
+        },
+        "reassessment_source": {
+          "type": "string",
+          "pattern": "^https://",
+          "description": "A public document that explains the reassessment, linked from the page.",
+          "examples": ["https://co.lancaster.pa.us/DocumentCenter/View/17033/Taxpayers-Guide-to-the-2027-Reassessment-"]
+        }
+      }
+    }
+  }
+}

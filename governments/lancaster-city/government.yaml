@@ -1,0 +1,108 @@
+# The City of Lancaster, PA. Schema: schemas/government.schema.json.
+# Phase 0: nothing reads this file yet except scripts/validate_config.py; the site and pipeline still use
+# web/config.json, config/*.json and data/*.csv. Every value describes the site as it is today.
+id: lancaster-city                       # PLAN.md decision D6
+name: City of Lancaster, PA              # web/config.json entities.city.entity.name
+short_name: City of Lancaster            # web/config.json entities.city.entity.short
+kind: city                               # web/config.json entities.city.entity.kind
+route: city                              # PLAN.md decision D6 (/city/...); today the City has no hash prefix (#/...)
+
+fiscal_year:
+  start_month: 1                         # January to December: Home Rule Charter § 8.01, quoted in web/app.js calSteps()
+  label: "{end}"                         # shown as the plain year, as today
+
+sources_dir: Budget PDFs - City          # today's folder (scripts/ingest.py PDF_DIR); moves to governments/lancaster-city/sources/ in Phase 1.6
+pdf_path: pdfs/                          # web/config.json entities.city.paths.pdfs (web/pdfs -> ../Budget PDFs - City)
+data_path: data/                         # web/config.json entities.city.paths.data
+
+display:
+  # One kind of figure per year: AGENTS.md "Which figures the site shows", scripts/build_dataset.py RULE,
+  # web/data/budget.json `rule`.
+  figures:
+    - years: newest
+      show: [proposed, revised]
+      note: New budget year (now 2027). Labelled exactly Proposed and Revised, not "Revised Proposed" (AGENTS.md).
+    - years: prior
+      show: [projected]
+      note: Prior budget year (now 2026), from the newest book, the revised projection when printed (AGENTS.md).
+    - years: past
+      show: [actual]
+      note: Historic years (now 2020-2025), Actual only, from the book two years later (AGENTS.md).
+    - years: after_newest
+      show: [projection]
+      note: Years after the newest, from the projections book; never a selectable year (scripts/build_dataset.py docstring).
+  selectable:
+    # Owner rule 2026-11-27 (scripts/build_dataset.py docstring, BUDGET_MEASURES): one budget figure per year,
+    # Amended when the next book prints it, otherwise Adopted; selectable but never charted.
+    # Note: AGENTS.md still says "Adopted and Amended are never shown"; the build follows the newer owner rule.
+    figures: [amended, adopted]
+    one_per_year: true
+  measures:                              # labels: web/app.js LABEL; status: web/app.js STATUS; columns/book_offset: web/data/budget.json `rule`
+    proposed:
+      label: Proposed
+      columns: [proposed]
+      book_offset: 0
+      status: Proposed, not adopted
+    revised:
+      label: Revised
+      columns: [proposed_revised]
+      book_offset: 0
+      status: Revised proposal, not adopted
+    projected:
+      label: Projected
+      columns: [projected_revised, projected]
+      book_offset: 1
+      status: Projected year-end estimate
+    actual:
+      label: Actual
+      columns: [actual]
+      book_offset: 2
+      status: Actual spending
+    amended:
+      label: Amended
+      columns: [amended]
+      book_offset: 1
+      status: Amended budget
+    adopted:
+      label: Adopted
+      columns: [adopted]
+      book_offset: 1
+      status: Adopted budget
+    projection:
+      label: Projection
+      columns: [projection]
+      source: projections_book           # config/2028-2029-Budget-Projections.json (kind: projection)
+  hidden_columns: [actual_ytd]           # AGENTS.md: YTD columns (and a book's own-year proposed column) are never shown; OCR cross-check only
+  primary_fund: General Fund             # web/config.json entities.city.default_fund
+  reserve_name: Reserve Fund             # web/data/budget.json reserve.name; listed last in every Fund list (AGENTS.md)
+
+features:
+  reserve: auto                          # data/processed/fund_balance_*.csv (Fund Balance Projection page)
+  staffing: auto                         # web/data/staffing.json from the books' staffing schedules
+  actuals: "off"                           # the City has no audited-actuals view today (web/app.js shows D.actuals only for the County)
+  projections: auto                      # data/processed/budget_long_2028-2029-Budget-Projections.csv
+  tax_limit: auto                        # config/tax_limit.json + data/tax_limit_lines.csv (Charter § 8.08 6% test)
+  tax_estimate: auto                     # data/tax_rates.csv has City rows
+  budget_calendar: auto                  # web/config.json entities.city.budget_calendar; page "How the City budget is made"
+  context_facts: "off"                     # County only today (data/county/context_facts.csv)
+  unit_descriptions: auto                # data/org_descriptions_2027.csv
+  income_sources: "on"                     # the Income Sources panel shows on the Income view whether or not data/income_sources.csv has rows (web/app.js sourceOf() falls back to the printed group)
+
+vocabulary:
+  governing_body: City Council           # web/app.js figure words: "The budget City Council passed"
+
+text:                                    # web/config.json entities.city
+  switch_label: City
+  possessive: the City of Lancaster's
+  description: City of Lancaster, PA budget by department, bureau and line item, from the city's published budget books.
+  tagline: This is an independent project, not associated with the City of Lancaster.
+  footer: An independent transparency project using the City of Lancaster's published budget books.
+  budget_calendar_links:                 # web/config.json entities.city.budget_calendar
+    charter_title: Home Rule Charter
+    charter_url: https://www.cityoflancasterpa.gov/wp-content/uploads/2025/01/Adopted-Home-Rule-Charter.pdf
+    old_rules_title: 2024 audited financial statements
+    old_rules_url: https://www.cityoflancasterpa.gov/wp-content/uploads/2025/12/COL-Financial-Statements-2024.pdf
+
+data_files:                              # web/config.json entities.city.files / lazy_files
+  eager: [changes, staffing]
+  lazy: [positions]
