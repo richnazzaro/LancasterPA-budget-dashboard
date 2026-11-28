@@ -1465,7 +1465,27 @@
   // { name, pts, money }, filled while the Staff HTML is built and read by mountStaff(); staffChart is the one open bureau or
   // department chart in the Staff section, kept apart from the page's charts.
   let staffPts = new Map(), staffChart = null;
-  function closeStaffChart() { if (staffChart) { staffChart.destroy(); staffChart = null; } }
+  function closeStaffChart() { if (staffChart) { staffChart.destroy(); staffChart = null; } unfitRow(); }
+  // A Staff or Income Sources chart opens in a row under the clicked name, like a line item's history. These tables are wider than
+  // the page and scroll sideways, so the row's content is pinned to the scroll area's left edge (position: sticky) and given its visible width.
+  let rowFit = null;
+  function unfitRow() { if (rowFit) { window.removeEventListener('resize', rowFit); rowFit = null; } }
+  function closeInlineRows(sec) {
+    sec.querySelectorAll('tr.li-hist').forEach((r) => r.remove());
+    sec.querySelectorAll('.li-toggle[aria-expanded="true"]').forEach((x) => x.setAttribute('aria-expanded', 'false'));
+  }
+  function openInlineRow(btn, id, inner) {
+    const tr = btn.closest('tr'), sc = tr.closest('.table-scroll');
+    tr.insertAdjacentHTML('afterend', `<tr class="li-hist" id="${id}"><td colspan="${tr.cells.length}"><div class="st-row">${inner}</div></td></tr>`);
+    btn.setAttribute('aria-controls', id);
+    btn.setAttribute('aria-expanded', 'true');
+    const row = tr.nextElementSibling, td = row.firstElementChild, box = td.firstElementChild;
+    unfitRow();
+    rowFit = () => { const cs = getComputedStyle(td); box.style.width = `${Math.max(200, sc.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight))}px`; };
+    rowFit();
+    window.addEventListener('resize', rowFit);
+    return row;
+  }
   const staffCols = () => ST.books.map((b) => ({ k: `${b.year}|${b.measure}`, label: b.measure === 'budgeted' ? String(b.year) : `${b.year} ${LABEL[b.measure]}`, b }));
   // One point per schedule for trendChart: 2022–2026 Budgeted (the line), the newest year's Proposed and Revised (the marks).
   const staffPoints = (pcols, cellOf) => pcols.map((c) => { const cell = cellOf(c.k); return { y: c.b.year, m: c.b.measure, v: cell ? cell.n : null, t: cell || null }; });
@@ -1498,15 +1518,13 @@
     const cv = $('staff-chart'), sc = staffPts.get('scope');
     if (cv && sc && window.Chart) charts.push(trendChart(cv, sc.pts, cv.closest('.li-hist-body').querySelector('.trend-axis'), false, true));
     sec.querySelectorAll('.staff-toggle').forEach((b) => b.addEventListener('click', () => {
-      const wasOpen = b.getAttribute('aria-expanded') === 'true', box = $(b.getAttribute('aria-controls'));
+      const wasOpen = b.getAttribute('aria-expanded') === 'true';
       closeStaffChart();
-      sec.querySelectorAll('.st-hist').forEach((x) => { x.innerHTML = ''; });
-      sec.querySelectorAll('.staff-toggle[aria-expanded="true"]').forEach((x) => x.setAttribute('aria-expanded', 'false'));
-      if (wasOpen || !box) return;
+      closeInlineRows(sec);
+      if (wasOpen) return;
       const h = staffPts.get(b.dataset.st);
       if (!h || !h.pts.some((p) => p.v != null)) return;
-      box.innerHTML = `<h4 class="wc-h3 st-hist-h">${esc(h.name)}</h4>${h.money ? salHistoryHTML(h.name, h.pts) : staffHistoryHTML(h.name, h.pts)}`;
-      b.setAttribute('aria-expanded', 'true');
+      const box = openInlineRow(b, `st-row-${b.dataset.st}`, h.money ? salHistoryHTML(h.name, h.pts) : staffHistoryHTML(h.name, h.pts));
       if (window.Chart) staffChart = trendChart(box.querySelector('canvas'), h.pts, box.querySelector('.trend-axis'), true, !h.money);
     }));
   }
@@ -1558,8 +1576,8 @@
     if (pos.size) staffPts.set('scope', { name: scopeName, pts: staffPoints(pcols, (k) => { const t = sumCol(pos, k, (c) => c.n); return t == null ? null : { n: t }; }) });
     for (const u of sal.keys()) staffPts.set(`s${u}`, { name: unitLabel(u, 'expense'), money: true, pts: scols.map((k) => { const c = sal.get(u).get(k), { y, m } = parseKey(k); return { y, m, v: c ? c.v : null, t: c ? { k, d: c.d, p: c.p } : null }; }) });
     // On a department page a bureau's name in either table opens its chart under that table (the bureau cards link to the pages).
-    const toggleHead = (pre, m, box) => (u) => (multi && m.has(u) ? `<button type="button" class="li-toggle staff-toggle" data-st="${pre}${u}" aria-expanded="false" aria-controls="${box}">${esc(unitLabel(u, 'expense'))}</button>` : rowHead(u));
-    const posHead = toggleHead('u', pos, 'st-hist'), salHead = toggleHead('s', sal, 'sal-hist');
+    const toggleHead = (pre, m) => (u) => (multi && m.has(u) ? `<button type="button" class="li-toggle staff-toggle" data-st="${pre}${u}" aria-expanded="false">${esc(unitLabel(u, 'expense'))}</button>` : rowHead(u));
+    const posHead = toggleHead('u', pos), salHead = toggleHead('s', sal);
     const table = (caption, cols, m, cell, total, head = rowHead) => `<div class="table-scroll" tabindex="0" role="region" aria-label="${esc(caption)}, scrollable"><table class="table tight staff-table" aria-label="${esc(caption)}">
       <thead><tr><th scope="col">${scope.unit == null ? 'Bureau' : ''}</th>${cols.map((c) => `<th scope="col" class="num${pc(c)}">${c.label.split(' ').map(esc).join('<br>')}</th>`).join('')}</tr></thead>
       <tbody>${ids.map((u) => `<tr><th scope="row">${head(u)}</th>${cols.map((c) => `<td class="num${pc(c)}">${cell(m.get(u)?.get(c.k), c.k)}</td>`).join('')}</tr>`).join('')}</tbody>
@@ -1591,11 +1609,11 @@
       <p class="panel-note">From each year's staffing schedule. The city publishes budgeted positions, not how many people were actually employed. Fractions are positions shared with other bureaus or funds. Counts open the schedule page in the budget book.</p>
       ${staffPts.has('scope') ? staffHistoryHTML(scopeName, staffPts.get('scope').pts, 'staff-chart') : ''}
       ${multi && pos.size ? '<p class="hint li-hint">Select a bureau\'s name to see its positions year by year.</p>' : ''}
-      ${posTable}<div class="st-hist" id="st-hist"></div>${titles}
+      ${posTable}${titles}
       <h3 class="wc-h3">Salaries and wages${where}</h3>
       <p class="panel-note">The “Salaries &amp; Wages” budget lines (salaries, overtime and temporary wages; benefits are separate): Actual through 2025, Projected for 2026, Proposed and Revised for 2027${projectionYears().length ? `, then the city's projections for ${projectionYears().join(' and ')}` : ''}.</p>
       ${multi && sal.size ? '<p class="hint li-hint">Select a bureau\'s name to see its salaries and wages year by year.</p>' : ''}
-      ${salTable}<div class="st-hist" id="sal-hist"></div></section>`;
+      ${salTable}</section>`;
   }
   /* Home page Staff panel: budgeted positions by department and year, city-wide (or in the selected fund), with a chart
      of the total and a toggle on each department. Positions whose account number in that year's book matches no office
@@ -1626,7 +1644,7 @@
     const dash = '<span class="missing" title="Not in this year\'s schedule">—</span>';
     const cell = (c) => (c ? fmtN(c.n) : dash);
     const head = `<tr><th scope="col">Department</th>${pcols.map((c) => `<th scope="col" class="num">${c.label.split(' ').map(esc).join('<br>')}</th>`).join('')}</tr>`;
-    const body = ids.map((d) => `<tr><th scope="row"><button type="button" class="li-toggle staff-toggle" data-st="d${d}" aria-expanded="false" aria-controls="st-hist">${esc(O.departments[d].name)}</button></th>${pcols.map((c) => `<td class="num">${cell(pos.get(d).get(c.k))}</td>`).join('')}</tr>`).join('')
+    const body = ids.map((d) => `<tr><th scope="row"><button type="button" class="li-toggle staff-toggle" data-st="d${d}" aria-expanded="false">${esc(O.departments[d].name)}</button></th>${pcols.map((c) => `<td class="num">${cell(pos.get(d).get(c.k))}</td>`).join('')}</tr>`).join('')
       + (off.size ? `<tr><th scope="row">Not placed in a department</th>${pcols.map((c) => `<td class="num">${cell(off.get(c.k))}</td>`).join('')}</tr>` : '');
     const foot = `<tr><th scope="row">All</th>${pcols.map((c) => `<td class="num">${cell(total(c.k))}</td>`).join('')}</tr>`;
     const where = S.f ? ` in the ${esc(fn(S.f))}` : '';
@@ -1637,7 +1655,6 @@
       <p class="hint li-hint">Select a department's name to see its positions year by year.</p>
       <div class="table-scroll" tabindex="0" role="region" aria-label="Budgeted positions by department, scrollable"><table class="table tight staff-table" aria-label="Budgeted positions by department">
         <thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div>
-      <div class="st-hist" id="st-hist"></div>
       ${off.size ? '<p class="panel-note">“Not placed in a department”: positions whose account number in that year\'s book matches no office on the 2027 organizational chart.</p>' : ''}
       <p class="panel-note">Where a book's schedule pages are missing or printed twice, the note is under <a href="${eh('about?s=about-issues')}">Known problems in the source books</a>.</p></section>`;
   }
@@ -1649,7 +1666,7 @@
      prints it under (the bureau). Draws and transfers are not income and never appear. The rows are the same lines the home
      page's total uses (scoped()), so the All row is that total for every column. */
   let srcPts = new Map(), srcChart = null;
-  function closeSrcChart() { if (srcChart) { srcChart.destroy(); srcChart = null; } }
+  function closeSrcChart() { if (srcChart) { srcChart.destroy(); srcChart = null; } unfitRow(); }
   function sourceOf(r) {
     const IS = D.income_sources, n = IS && IS.a ? IS.a[r.ai] : null;
     if (n != null) return IS.names[n];
@@ -1697,7 +1714,7 @@
     const head = `<tr><th scope="col">Source</th>${scols.map((k) => `<th scope="col" class="num${pc(k)}">${seriesLabel(k).split(' ').map(esc).join('<br>')}</th>`).join('')}<th scope="col" class="num">Share of ${esc(seriesLabel(newest))}</th></tr>`;
     const body = names.map((s, i) => {
       const sh = shareTotal > 0 ? (Math.max(0, bySrc.get(s).get(newest)?.v || 0) / shareTotal) * 100 : 0;
-      const nm = multi ? `<button type="button" class="li-toggle is-toggle" data-is="i${i}" aria-expanded="false" aria-controls="is-hist">${esc(label.get(s))}</button>` : esc(label.get(s));
+      const nm = multi ? `<button type="button" class="li-toggle is-toggle" data-is="i${i}" aria-expanded="false">${esc(label.get(s))}</button>` : esc(label.get(s));
       return `<tr><th scope="row">${nm}</th>${scols.map((k) => { const c = bySrc.get(s).get(k); return `<td class="num${pc(k)}">${c ? src(mny(c.v), k, c.d, c.p) : dash}</td>`; }).join('')}<td class="num share-cell"><span class="share-bar" aria-hidden="true"><i style="width:${sh.toFixed(1)}%"></i></span><span class="share-n">${sh.toFixed(1)}%</span></td></tr>`;
     }).join('');
     const foot = `<tr><th scope="row">All</th>${scols.map((k) => `<td class="num${pc(k)}">${totals.has(k) ? fig(totals.get(k), { tag: false, notes, what: 'Income' }) : dash}</td>`).join('')}<td class="num"></td></tr>`;
@@ -1708,22 +1725,20 @@
       ${multi ? '<p class="hint li-hint">Select a source\'s name to see it year by year.</p>' : ''}
       <div class="table-scroll" tabindex="0" role="region" aria-label="Income by source and year, scrollable"><table class="table tight staff-table is-table" aria-label="Income by source and year">
         <thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div>
-      <div class="st-hist" id="is-hist"></div>${gapNotes(notes)}</section>`;
+      ${gapNotes(notes)}</section>`;
   }
   // After the page is drawn: a source's name opens its chart and values under the table; one is open at a time.
   function mountIncomeSources() {
     const sec = $('sec-income-sources');
     if (!sec) return;
     sec.querySelectorAll('.is-toggle').forEach((b) => b.addEventListener('click', () => {
-      const wasOpen = b.getAttribute('aria-expanded') === 'true', box = $(b.getAttribute('aria-controls'));
+      const wasOpen = b.getAttribute('aria-expanded') === 'true';
       closeSrcChart();
-      box.innerHTML = '';
-      sec.querySelectorAll('.is-toggle[aria-expanded="true"]').forEach((x) => x.setAttribute('aria-expanded', 'false'));
+      closeInlineRows(sec);
       if (wasOpen) return;
       const h = srcPts.get(b.dataset.is);
       if (!h || !h.pts.some((p) => p.v != null)) return;
-      box.innerHTML = `<h4 class="wc-h3 st-hist-h">${esc(h.name)}</h4>${salHistoryHTML(h.name, h.pts, 'Income')}`;
-      b.setAttribute('aria-expanded', 'true');
+      const box = openInlineRow(b, `is-row-${b.dataset.is}`, salHistoryHTML(h.name, h.pts, 'Income'));
       if (window.Chart) srcChart = trendChart(box.querySelector('canvas'), h.pts, box.querySelector('.trend-axis'), true);
     }));
   }

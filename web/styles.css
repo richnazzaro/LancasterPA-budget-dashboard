@@ -969,9 +969,9 @@ a.status:hover { text-decoration: underline; text-underline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { .li-toggle::before { transition: none; } }
 .li-toggle:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 0; }
 .table tbody tr.li-hist:hover { background: none; }
-.st-hist:empty { display: none; }
-.st-hist { margin-top: 12px; }
-.st-hist-h { margin-bottom: 4px; }
+/* Staff and Income Sources rows sit in tables that scroll sideways: the opened row's content is pinned to the scroll area's left edge and
+   given its visible width (set in app.js), so the chart never spans the whole table */
+.li-hist .st-row { position: sticky; left: 0; }
 .staff-table tfoot .li-toggle, .staff-table tbody .li-toggle { font-weight: inherit; }
 .li-hist > td { padding: 8px 0 24px 20px; }
 .li-hist .trend-legend { justify-content: flex-start; }
