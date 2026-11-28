@@ -1086,6 +1086,32 @@ a.src.cite:hover, a.src.cite:focus-visible { border-bottom: 1px solid currentCol
   .cal-lead { font-size: 17px; line-height: 25px; }
   .cal-step { padding-left: 64px; }
 }
+
+/* What would you pay? (#/tax): the tax estimate page. Fields like the view controls, the total like a page figure,
+   a ruled table grouped by government. Existing tokens only. */
+.tx-form { display: flex; flex-wrap: wrap; gap: 20px 16px; align-items: flex-start; }
+.tx-form .tx-field { flex: 1 1 220px; max-width: 320px; }
+.tx-form .tx-field[hidden] { display: none; }
+.tx-input { position: relative; }
+.tx-input span { position: absolute; left: 12px; top: 10px; color: var(--muted); font: 14px/20px var(--font); pointer-events: none; }
+.tx-input input { width: 100%; height: 40px; background: var(--card); color: var(--fg); border: 1px solid var(--fg); border-radius: 2px; padding: 8px 12px 8px 24px; font: 14px/20px var(--font); font-variant-numeric: tabular-nums; }
+.tx-privacy { margin: 16px 0 0; font-size: 14px; }
+.tx-total-label { margin: 0 0 4px; font-size: 13px; line-height: 20px; letter-spacing: .1em; text-transform: uppercase; font-weight: 600; color: var(--muted); }
+.tx-total { margin: 0 0 8px; font-family: var(--serif); font-size: 44px; line-height: 48px; font-weight: 700; color: var(--sel-ink); font-variant-numeric: tabular-nums; }
+.tx-deck { margin: 0 0 24px; font-family: var(--serif); font-size: 20px; line-height: 28px; font-weight: 600; }
+.tx-table tr.tx-gov th { padding-top: 20px; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--fg); }
+.tx-table tbody tr.tx-gov:hover { background: transparent; }
+.tx-sub { display: block; font-size: 13px; color: var(--muted); font-weight: 400; }
+.tx-notes { margin: 0; padding-left: 20px; }
+.tx-notes li { margin: 0 0 10px; }
+.tax-link, .tax-link-p a { color: var(--link); font-weight: 600; }
+.tax-link-p { margin: 8px 0 0; font-size: 15px; }
+@media (max-width: 767px) {
+  .tx-form .tx-field { max-width: none; flex-basis: 100%; }
+  .tx-total { font-size: 36px; line-height: 40px; }
+  .tx-input input { height: 44px; }
+  .tx-input span { top: 12px; }
+}
 @media print {
   .calendar-page .site-header, .calendar-page .site-footer, .calendar-page .phone-toc, .calendar-page .skip { display: none !important; }
   .calendar-page { display: block !important; }

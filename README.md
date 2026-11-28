@@ -80,6 +80,8 @@ When one fund charges another for services (for example the Water Fund paying th
 
 **2028–2029 projections (City).** The charts and tables over time continue past 2027 with a dotted gray line on a shaded band, with the City's assumptions underneath (for example no water, sewer, stormwater or trash rate increases and 3% salary increases). They are estimates, not budgets, and are never the headline figure.
 
+**What would you pay?** Under the property tax and earned income tax changes on the Income view and the What changed page, "Estimate what you would pay →" opens a calculator. Choose City, County or both, type in your assessed value from your assessment notice and, for the City's earned income tax, your wages and business profits, and it estimates each tax at the newest rate, with each rate linked to where it comes from. Because every property was reassessed for 2027, the City's 2027 rate applies to your new value, while the County's newest rate (2026) still applies to your old one. It is an estimate, not a tax bill, and leaves out School District taxes and homestead exclusions. What you type stays in your browser.
+
 **Funds and terms** (in the header) lists every fund, what pays for it (taxes, fees, grants or state money), and what each figure word means.
 
 **Jump to…** in the header finds any department, bureau or line item by name or account number.
