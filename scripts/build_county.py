@@ -78,6 +78,7 @@ from pathlib import Path
 from build_dataset import Interner, parse_amount, read_csv, write_json
 from changes import compare
 import income_rules
+import income_sources
 from org_structure import slug
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -689,6 +690,8 @@ def build(processed: Path = PROCESSED, out: Path = OUT) -> dict:
         "accounts": [list(a) for a in accounts.items],
         # Revenue accounts that are not income: {account index: draw | transfer | charge} (data/income_rules.csv).
         "not_income": income_rules.not_income(accounts.items, funds.items, cats.items, REVENUE),
+        # Income sources (data/income_sources.csv); the County has no rows, so the panel uses the printed groups.
+        "income_sources": income_sources.income_sources(accounts.items, funds.items, cats.items, "county", REVENUE),
         "series": dict(sorted(series.items())),
         "printed": printed,
         "known_issues": known,

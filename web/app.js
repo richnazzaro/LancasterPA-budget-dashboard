@@ -481,7 +481,7 @@
     announceView();
   }
 
-  function destroyCharts() { charts.forEach((c) => c.destroy()); charts = []; closeHist(); closeStaffChart(); }
+  function destroyCharts() { charts.forEach((c) => c.destroy()); charts = []; closeHist(); closeStaffChart(); closeSrcChart(); }
   const chartTheme = () => ({
     tip: { backgroundColor: BG, borderColor: GRID, borderWidth: 1, titleColor: INK, bodyColor: INK, padding: 10 },
     tick: MUTED, grid: GRID,
@@ -1295,7 +1295,7 @@
       <section class="panel" id="sec-departments" tabindex="-1" aria-labelledby="dep-t"><h2 class="panel-title" id="dep-t">${isCounty() ? 'Departments by Group' : 'Departments'}</h2>
         <p class="panel-note">${isCounty() ? 'The County\'s departments are grouped as in its budget book. Select a group to see its departments.' : 'Select a department to see its detailed breakdown.'} Amounts open the source page in the budget book.</p>
         ${depPieHTML ? `<div class="with-pie">${ledger}${depPieHTML}</div>` : ledger}${gapNotes(ledgerNotes)}</section>
-      ${homeStaffHTML()}
+      ${homeStaffHTML()}${incomeSourcesHTML()}
       <section class="panel" aria-labelledby="re-title"><h2 class="panel-title" id="re-title">Income vs. Spending by Fund: ${esc(seriesLabel(k))}</h2>
         <div class="chart-box"><canvas id="re-chart" role="img" aria-label="Income and spending by fund"></canvas></div>
         <div class="with-pie" id="re-wrap"><div class="table-scroll"><table class="table" id="re-table"></table></div></div></section>${actualsHTML()}${contextHTML()}</div>`;
@@ -1482,11 +1482,11 @@
       <details class="values"><summary>Show values</summary><div class="table-scroll"><table class="table"><thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Positions</th></tr></thead><tbody>${rowsHtml}</tbody></table></div></details></div>`;
   }
   // A bureau's Salaries and wages by year, unfolded under the salaries table: the same chart and values as a line item's history.
-  function salHistoryHTML(name, pts) {
+  function salHistoryHTML(name, pts, what = 'Salaries and wages') {
     const rowsHtml = pts.map((p) => `<tr${p.m === 'projection' ? ' class="proj-row"' : ''}><th scope="row">${p.y}</th><td>${LABEL[p.m]}</td><td class="num">${p.t ? src(money(p.v), p.t.k, p.t.d, p.t.p) : '—'}</td></tr>`).join('');
-    return `<div class="li-hist-body" role="group" aria-label="Salaries and wages, ${esc(name)}">
+    return `<div class="li-hist-body" role="group" aria-label="${esc(what)}, ${esc(name)}">
       <ul class="trend-legend" aria-hidden="true">${trendLegend(pts)}</ul>
-      <div class="chart-box short"><canvas role="img" aria-label="Salaries and wages, ${esc(name)}, by year, ${pts[0].y} to ${pts[pts.length - 1].y}. Solid line: actual. Dashed line: projected. Hollow diamond: proposed. Solid dot: revised. The table below has the values."></canvas></div>
+      <div class="chart-box short"><canvas role="img" aria-label="${esc(what)}, ${esc(name)}, by year, ${pts[0].y} to ${pts[pts.length - 1].y}. Solid line: actual. Dashed line: projected. Hollow diamond: proposed. Solid dot: revised. The table below has the values."></canvas></div>
       <p class="trend-axis"></p>
       <details class="values"><summary>Show values</summary><div class="table-scroll"><table class="table"><thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Amount</th></tr></thead><tbody>${rowsHtml}</tbody></table></div></details></div>`;
   }
@@ -1642,6 +1642,90 @@
       <p class="panel-note">Where a book's schedule pages are missing or printed twice, the note is under <a href="${eh('about?s=about-issues')}">Known problems in the source books</a>.</p></section>`;
   }
 
+
+  /* ---------- Income Sources: income by source, year by year (home page, Income view) ----------
+     A line's source: the name data/income_sources.csv gives its account (budget.json `income_sources`: the taxes one by one,
+     grants and reimbursements); else "Charges to other funds" when income_rules.csv calls it a charge; else the group the book
+     prints it under (the bureau). Draws and transfers are not income and never appear. The rows are the same lines the home
+     page's total uses (scoped()), so the All row is that total for every column. */
+  let srcPts = new Map(), srcChart = null;
+  function closeSrcChart() { if (srcChart) { srcChart.destroy(); srcChart = null; } }
+  function sourceOf(r) {
+    const IS = D.income_sources, n = IS && IS.a ? IS.a[r.ai] : null;
+    if (n != null) return IS.names[n];
+    return nonIncome(r.ai) === 'charge' ? 'Charges to other funds' : plainName(D.bureaus[r.bureau]);
+  }
+  // The books rename a group from year to year ("Water Revenues", "Water Revenue"; "&" and "and"; a hyphen added): one row for them.
+  const sourceKey = (s) => s.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim().replace(/s$/, '');
+  function incomeSourcesHTML() {
+    srcPts = new Map();
+    if (S.k !== 'revenue' || isReserve()) return '';
+    const scols = [];
+    for (const y of years().slice().sort((a, b) => a - b)) for (const m of ORDER) if (series(key(y, m))) scols.push(key(y, m));
+    for (const y of projectionYears()) scols.push(key(y, 'projection')); // the city's projections, after the newest year
+    const bySrc = new Map(), totals = new Map(), notes = new Map(), label = new Map();
+    const lastBudget = scols.filter((k) => !isProjKey(k)).pop(), newestSrc = new Map();
+    for (const r of rows(lastBudget)) if (isIncome(r)) newestSrc.set(`${r.code}|${r.fund}`, sourceOf(r));
+    for (const k of scols) {
+      const list = scoped(k);
+      if (list.length) totals.set(k, totalOf(list, k));
+      const groups = new Map();
+      for (const r of list) {
+        let s = sourceOf(r);
+        // The projections book prints one group, "Revenue": give the line the source it has in the newest budget (same account, same fund).
+        if (isProjKey(k) && newestSrc.has(`${r.code}|${r.fund}`)) s = newestSrc.get(`${r.code}|${r.fund}`);
+        const g = sourceKey(s);
+        if (!isProjKey(k) || !label.has(g)) label.set(g, s);
+        if (!groups.has(g)) groups.set(g, []);
+        groups.get(g).push(r);
+      }
+      for (const [s, l] of groups) {
+        if (!bySrc.has(s)) bySrc.set(s, new Map());
+        const big = l.slice().sort((a, b) => b.v - a.v); // the page of the largest line
+        bySrc.get(s).set(k, { v: sum(l), k, ...firstPage(big) });
+      }
+    }
+    if (!bySrc.size) return '';
+    const newest = scols.filter((k) => !isProjKey(k)).pop();
+    const names = [...bySrc.keys()].sort((a, b) => (bySrc.get(b).get(newest)?.v || 0) - (bySrc.get(a).get(newest)?.v || 0) || (label.get(a) < label.get(b) ? -1 : 1));
+    const shareTotal = names.reduce((t, s) => t + Math.max(0, bySrc.get(s).get(newest)?.v || 0), 0);
+    const pc = (k) => (isProjKey(k) ? ' proj-col' : '');
+    const dash = '<span class="missing" title="Not in this year\'s book">—</span>';
+    const multi = names.length > 1;
+    names.forEach((s, i) => srcPts.set(`i${i}`, { name: label.get(s), money: true, pts: scols.map((k) => { const c = bySrc.get(s).get(k), { y, m } = parseKey(k); return { y, m, v: c ? c.v : null, t: c ? { k, d: c.d, p: c.p } : null }; }) }));
+    const head = `<tr><th scope="col">Source</th>${scols.map((k) => `<th scope="col" class="num${pc(k)}">${seriesLabel(k).split(' ').map(esc).join('<br>')}</th>`).join('')}<th scope="col" class="num">Share of ${esc(seriesLabel(newest))}</th></tr>`;
+    const body = names.map((s, i) => {
+      const sh = shareTotal > 0 ? (Math.max(0, bySrc.get(s).get(newest)?.v || 0) / shareTotal) * 100 : 0;
+      const nm = multi ? `<button type="button" class="li-toggle is-toggle" data-is="i${i}" aria-expanded="false" aria-controls="is-hist">${esc(label.get(s))}</button>` : esc(label.get(s));
+      return `<tr><th scope="row">${nm}</th>${scols.map((k) => { const c = bySrc.get(s).get(k); return `<td class="num${pc(k)}">${c ? src(mny(c.v), k, c.d, c.p) : dash}</td>`; }).join('')}<td class="num share-cell"><span class="share-bar" aria-hidden="true"><i style="width:${sh.toFixed(1)}%"></i></span><span class="share-n">${sh.toFixed(1)}%</span></td></tr>`;
+    }).join('');
+    const foot = `<tr><th scope="row">All</th>${scols.map((k) => `<td class="num${pc(k)}">${totals.has(k) ? fig(totals.get(k), { tag: false, notes, what: 'Income' }) : dash}</td>`).join('')}<td class="num"></td></tr>`;
+    const where = S.f ? ` in the ${esc(fn(S.f))}` : '';
+    const allFunds = !S.f;
+    return `<section class="panel" id="sec-income-sources" tabindex="-1" aria-labelledby="is-t"><h2 class="panel-title" id="is-t">Income Sources</h2>
+      <p class="panel-note">Income${where} by source, with the same figures as Totals by Year. Sources follow the books' account numbers: taxes are shown one by one, and other lines are grouped as the book prints them. Draws from savings and transfers between funds are not income and are left out.${allFunds ? ' In All funds, charges to other funds are left out too.' : ''} The All row is the income total shown at the top of the page. <a href="${termHref('term-income')}">What counts as income</a></p>
+      ${multi ? '<p class="hint li-hint">Select a source\'s name to see it year by year.</p>' : ''}
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Income by source and year, scrollable"><table class="table tight staff-table is-table" aria-label="Income by source and year">
+        <thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div>
+      <div class="st-hist" id="is-hist"></div>${gapNotes(notes)}</section>`;
+  }
+  // After the page is drawn: a source's name opens its chart and values under the table; one is open at a time.
+  function mountIncomeSources() {
+    const sec = $('sec-income-sources');
+    if (!sec) return;
+    sec.querySelectorAll('.is-toggle').forEach((b) => b.addEventListener('click', () => {
+      const wasOpen = b.getAttribute('aria-expanded') === 'true', box = $(b.getAttribute('aria-controls'));
+      closeSrcChart();
+      box.innerHTML = '';
+      sec.querySelectorAll('.is-toggle[aria-expanded="true"]').forEach((x) => x.setAttribute('aria-expanded', 'false'));
+      if (wasOpen) return;
+      const h = srcPts.get(b.dataset.is);
+      if (!h || !h.pts.some((p) => p.v != null)) return;
+      box.innerHTML = `<h4 class="wc-h3 st-hist-h">${esc(h.name)}</h4>${salHistoryHTML(h.name, h.pts, 'Income')}`;
+      b.setAttribute('aria-expanded', 'true');
+      if (window.Chart) srcChart = trendChart(box.querySelector('canvas'), h.pts, box.querySelector('.trend-axis'), true);
+    }));
+  }
 
   const bdWord = () => (S.k === 'revenue' ? 'Revenue' : isCounty() ? 'Spending' : 'Budget'); // "Total Budget" on a City department page; the County's figure is already called Budget
   function entityView({ title, subtitle, selRows, cmpRows, crumbs, bureauList = '', changes = '', deptPicker, scope, about = '' }) {
@@ -2612,7 +2696,7 @@
     destroyCharts();
     notesShown = new Set();
     let page;
-    if (route.name === 'home') page = { html: homeView(), after: () => { if (isReserve()) drawReserve(); else { drawTrend(); revExpAfter(); drawContext(); homePies.forEach(([id, items]) => drawSidePie(id, items)); mountStaff(); } } };
+    if (route.name === 'home') page = { html: homeView(), after: () => { if (isReserve()) drawReserve(); else { drawTrend(); revExpAfter(); drawContext(); homePies.forEach(([id, items]) => drawSidePie(id, items)); mountStaff(); mountIncomeSources(); } } };
     else if (route.name === 'changes') page = changesPage();
     else if (route.name === 'dept') page = deptPage();
     else if (route.name === 'about') page = { html: '<header class="page-head"><h1 id="page-h" tabindex="-1">About the data</h1></header>', after: () => { const t = q.get('s') && $(q.get('s')); if (t) { if (t.tagName === 'DETAILS') t.open = true; t.scrollIntoView(); } } };
