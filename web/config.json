@@ -8,6 +8,10 @@
     "this_year": 2026,
     "next_year": 2027,
     "reassessment_year": 2027,
+    "lookup": [
+      { "assessed_year": 2026, "name": "Property Tax Inquiry", "search": "https://lancasterpa.devnetwedge.com/Search/ExecuteSearch" },
+      { "assessed_year": 2027, "name": "2027 Reassessment Inquiry", "search": "https://lancasterpa-reval.devnetwedge.com/Search/ExecuteSearch" }
+    ],
     "reassessment_source": "https://co.lancaster.pa.us/DocumentCenter/View/17033/Taxpayers-Guide-to-the-2027-Reassessment-"
   },
   "entities": {

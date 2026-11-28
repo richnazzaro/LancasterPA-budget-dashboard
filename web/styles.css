@@ -1111,6 +1111,20 @@ a.src.cite:hover, a.src.cite:focus-visible { border-bottom: 1px solid currentCol
 .tx-input span { position: absolute; left: 12px; top: 10px; color: var(--muted); font: 14px/20px var(--font); pointer-events: none; }
 .tx-input input { width: 100%; height: 40px; background: var(--card); color: var(--fg); border: 1px solid var(--fg); border-radius: 2px; padding: 8px 12px 8px 24px; font: 14px/20px var(--font); font-variant-numeric: tabular-nums; }
 .tx-privacy { margin: 16px 0 0; font-size: 14px; }
+/* Find your assessed values: the hand-off to the County's property search */
+.tx-find > * { max-width: 860px; }
+.tx-find-lede { margin: 0 0 16px; color: var(--muted); font-size: 15px; max-width: 62ch; }
+.tx-find-fields { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; }
+.tx-find-field { flex: 0 1 200px; min-width: 0; }
+.tx-find-field:first-child { flex-basis: 130px; }
+.tx-find-or { margin: 34px 4px 0; color: var(--muted); font-size: 14px; font-style: italic; }
+.tx-text { width: 100%; height: 40px; background: var(--card); color: var(--fg); border: 1px solid var(--fg); border-radius: 2px; padding: 8px 12px; font: 14px/20px var(--font); }
+.tx-text:focus-visible, .tx-input input:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.tx-find-btns { display: flex; flex-wrap: wrap; gap: 12px; margin: 16px 0 0; }
+.tx-find-btn[hidden] { display: none; }
+.tx-find-msg { margin: 8px 0 0; min-height: 20px; font-size: 14px; color: var(--muted); }
+.tx-find-how { margin: 4px 0 0; max-width: 70ch; }
+
 .tx-deck { margin: 0 0 16px; max-width: 62ch; font-family: var(--serif); font-size: 20px; line-height: 28px; font-weight: 600; }
 
 /* How your taxes change */
@@ -1149,6 +1163,10 @@ a.src.cite:hover, a.src.cite:focus-visible { border-bottom: 1px solid currentCol
 .tax-link-p { margin: 8px 0 0; font-size: 15px; }
 @media (max-width: 767px) {
   .tx-form .tx-field { max-width: none; flex-basis: 100%; }
+  .tx-find-field, .tx-find-field:first-child { flex: 1 1 100%; }
+  .tx-find-or { margin: 0; }
+  .tx-text { height: 44px; }
+  .tx-find-btn { flex: 1 1 100%; min-height: 44px; }
   .tx-input input { height: 44px; }
   .tx-input span { top: 12px; }
   .tx-sum-head { display: none; }

@@ -3667,13 +3667,14 @@
     const eitNow = taxRow('city', 'earned_income', now);
     const inc = eitNow ? fld('tx-inc', 'Earned income', 'Wages and business profits, as on your PA tax return. City residents only. Used for both years.', TX.inc, ['city']) : '';
     const html = `${head}
+      ${taxFindHTML()}
       <section class="panel" id="tx-in" tabindex="-1" aria-labelledby="tx-in-t"><h2 class="panel-title" id="tx-in-t">Your details</h2>
         <form class="tx-form" id="tx-form" novalidate>
           <div class="field tx-field"><label class="field-label" for="tx-who">Taxes to include</label>
             <select id="tx-who">${TAX_WHO.map(([v, l]) => `<option value="${v}"${v === TX.who ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
           ${vals}${inc}
         </form>
-        <p class="panel-note tx-privacy">What you type stays in this page: it is not sent anywhere or saved in the address.</p>
+        <p class="panel-note tx-privacy">Your assessed values and income stay in this page: they are not sent anywhere or saved in the address.</p>
       </section>
       <section class="panel" id="tx-chg" tabindex="-1" aria-labelledby="tx-chg-t"><h2 class="panel-title" id="tx-chg-t">How your taxes change</h2>
         <div id="tx-summary"></div>
@@ -3691,14 +3692,59 @@
       </section>`;
     return { html, after: mountTax };
   }
+  /* Find your assessed values: a hand-off to the County's property search (config.json `tax_estimate.lookup`, one
+     site per year of value). The reader's own browser posts the address or parcel number to the County's search in a
+     new tab; this site sends nothing and sees nothing. No proxy: the County's sites send no CORS headers and ask
+     robots not to fetch parcel pages. */
+  const taxLookups = () => (BASE.tax_estimate?.lookup || []).filter((l) => l.search && taxValueYears().some(([y]) => y === l.assessed_year));
+  function taxFindHTML() {
+    const L = taxLookups();
+    if (!L.length) return '';
+    const fld = (id, label, note, attrs = '') => `<div class="field tx-find-field"><label class="field-label" for="${id}">${label}</label><input class="tx-text" id="${id}" type="text" autocomplete="off"${attrs}${note ? ` aria-describedby="${id}-note"` : ''}>${note ? `<p class="field-note" id="${id}-note">${note}</p>` : ''}</div>`;
+    return `<section class="panel tx-find" id="tx-find" tabindex="-1" aria-labelledby="tx-find-t"><h2 class="panel-title" id="tx-find-t">Find your assessed values</h2>
+      <p class="tx-find-lede">Don't have your assessment notice? Search the County's property records by address or parcel number. Each button opens the County's site in a new tab; only the address or parcel number goes to the County, and this site does not see it.</p>
+      <div class="tx-find-fields">
+        ${fld('tx-f-num', 'House number', '', ' inputmode="numeric"')}
+        ${fld('tx-f-street', 'Street name', 'With its direction, like S Duke or E James.', ' autocapitalize="characters"')}
+        <p class="tx-find-or" aria-hidden="true">or</p>
+        ${fld('tx-f-parcel', 'Parcel number', 'From your tax bill or notice, like 332-32083-0-0000.')}
+      </div>
+      <div class="tx-find-btns">${L.map((l) => `<button type="button" class="btn btn-outline tx-find-btn" data-year="${l.assessed_year}">Look up your ${l.assessed_year} value<span class="sr-only"> (opens the County's ${esc(l.name)} in a new tab)</span><span aria-hidden="true"> ↗</span></button>`).join('')}</div>
+      <p class="tx-find-msg" id="tx-find-msg" role="status" aria-live="polite"></p>
+      <p class="field-note tx-find-how">On the County's page, open your property and find <strong>Assessments</strong>. Use the <strong>Total</strong> in the <strong>Non-Exempt</strong> row (or <strong>Pref. Total</strong> if it is above zero), and type it into the matching Assessed value field below.</p>
+    </section>`;
+  }
+  // The County's search matches "S DUKE" or "S DUKE ST" but not "SOUTH DUKE" or "DUKE STREET": directions become their
+  // letter, and a spelled-out street type at the end is dropped.
+  const TAX_DIR = { NORTH: 'N', SOUTH: 'S', EAST: 'E', WEST: 'W' };
+  const TAX_SUFFIX = /\s+(STREET|AVENUE|ROAD|LANE|DRIVE|PLACE|COURT|BOULEVARD|TERRACE|CIRCLE|ALLEY)$/;
+  const taxStreet = (s) => String(s || '').toUpperCase().replace(/\./g, ' ').replace(/\s+/g, ' ').trim()
+    .replace(/^(NORTH|SOUTH|EAST|WEST)\s/, (m, d) => `${TAX_DIR[d]} `).replace(TAX_SUFFIX, '');
+  // Post the search to the County's site in a new tab: by parcel number, or by house number and street.
+  function taxFindGo(year) {
+    const l = taxLookups().find((x) => x.assessed_year === year); if (!l) return;
+    const num = $('tx-f-num').value.replace(/[^0-9]/g, ''), street = taxStreet($('tx-f-street').value), parcel = $('tx-f-parcel').value.trim();
+    const msg = $('tx-find-msg');
+    if (!parcel && !street) { msg.textContent = 'Type a street name, or a parcel number, first.'; $('tx-f-street').focus(); return; }
+    msg.textContent = `Opened the County's ${l.name} in a new tab.`;
+    const f = document.createElement('form');
+    f.method = 'post'; f.action = l.search; f.target = '_blank'; f.rel = 'noopener noreferrer'; f.hidden = true;
+    const fields = parcel ? [['property_key', parcel]] : [['house_number_min', num], ['house_number_max', num], ['street_name', street]];
+    for (const [k, v] of fields) { const i = document.createElement('input'); i.type = 'hidden'; i.name = k; i.value = v; f.appendChild(i); }
+    document.body.appendChild(f); f.submit(); f.remove();
+  }
   function mountTax() {
     const form = $('tx-form'); if (!form) return;
+    document.querySelectorAll('.tx-find-btn').forEach((b) => b.addEventListener('click', () => taxFindGo(+b.dataset.year)));
+    $('tx-find')?.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.matches('input')) { e.preventDefault(); const b = [...document.querySelectorAll('.tx-find-btn')].find((x) => !x.hidden); if (b) taxFindGo(+b.dataset.year); } });
     const sync = () => {
       TX.who = $('tx-who').value;
       for (const [y] of taxValueYears()) TX.av[y] = $(`tx-av-${y}`)?.value || '';
       TX.inc = $('tx-inc')?.value || '';
       const govs = taxGovs();
       form.querySelectorAll('[data-govs]').forEach((f) => { f.hidden = !f.dataset.govs.split(' ').some((g) => govs.includes(g)); });
+      // A lookup button only for a year of value the chosen taxes use.
+      document.querySelectorAll('.tx-find-btn').forEach((b) => { b.hidden = !!$(`tx-av-${b.dataset.year}`)?.closest('.tx-field')?.hidden; });
       const M = taxModel(govs);
       $('tx-summary').innerHTML = taxSummaryHTML(M);
       $('tx-result').innerHTML = taxTableHTML(M);
