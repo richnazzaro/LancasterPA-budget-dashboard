@@ -41,7 +41,7 @@ Outputs (web/data/):
   changes.json    "What changed" in the newest year (scripts/changes.py): line-level comparisons,
                   totals by fund, category, department and bureau, shifts between funds found in the
                   city's line notes, position counts per bureau (raw and adjusted), tax-policy notes
-                  (data/policy_notes.csv)
+                  (notes/policy_notes.csv)
   positions.json  position counts per bureau for every pair of position schedules (scripts/changes.py
                   build_positions), so What changed shows positions for any two figures; loaded lazily
 
@@ -60,6 +60,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
+import govconfig
 import income_rules
 import tax_limit
 import income_sources
@@ -71,30 +72,42 @@ ROOT = Path(__file__).resolve().parent.parent
 MEASURES = ["actual", "projected", "proposed", "revised", "amended", "adopted"]
 PROJECTION = "projection"  # doc_type of the multi-year projections book; never a measure in `series`
 PROPOSED_MEASURES = {"proposed", "revised"}  # shown only for the newest year
-# measure -> (book offset from the figure's fiscal year, source columns in preference order)
-RULE = {
-    "proposed": (0, ["proposed"]),
-    "revised": (0, ["proposed_revised"]),
-    "projected": (1, ["projected_revised", "projected"]),
-    "actual": (2, ["actual"]),
-    "amended": (1, ["amended"]),
-    "adopted": (1, ["adopted"]),
-}
-# The year's budget figure, in preference order: Amended where the book prints it, else Adopted (one per year).
-BUDGET_MEASURES = ["amended", "adopted"]
-COLUMN_TO_MEASURE = {c: m for m, (_, cols) in RULE.items() for c in cols}
-FUND_ALIASES = {  # words used in printed roll-up labels -> fund names in the CSVs
-    "general fund": "General Fund",
-    "stormwater": "Stormwater Management Fund",
-    "wastewater": "Sewer Fund",
-    "sewer": "Sewer Fund",
-    "water fund": "Water Fund",
-    "water": "Water Fund",  # after stormwater and wastewater, so only plain "Water ..." labels reach it
-    "solid waste": "Solid Waste & Recycling Fund",
-    "long's park": "Long's Park Fund",
-    "longs park": "Long's Park Fund",
-    "liquid fuels": "Liquid Fuels Fund",
-}
+
+
+def fund_aliases(gov) -> dict:
+    """Words used in printed roll-up labels -> fund names, from the government's mapping/funds.csv (printed_names).
+
+    More specific words come first in the file, and the first match wins, so "water fund" is checked before "water"."""
+    file = gov.mapping / "funds.csv"
+    if not file.exists():
+        sys.exit(f"{file}: missing; every government lists its funds here (name, role, printed names)")
+    out = {}
+    for r in read_csv(file):
+        for word in (r["printed_names"] or "").split(";"):
+            if word.strip():
+                out[word.strip().lower()] = r["name"]
+    return out
+
+
+def primary_fund(gov) -> str:
+    """The fund the site opens on: mapping/funds.csv role primary, else government.yaml display.primary_fund."""
+    try:
+        return gov.primary_fund
+    except govconfig.ConfigError as e:
+        sys.exit(str(e))
+
+
+def display_rule(gov) -> tuple[dict, list]:
+    """(measure -> (book offset, source columns), the year's budget figures in preference order) from government.yaml.
+
+    `display.measures` says what each figure is called and which printed columns it comes from; `display.selectable`
+    lists the one-budget-figure-per-year choices in preference order (Amended where the book prints it, else Adopted)."""
+    rule = {}
+    for name, m in gov["display"]["measures"].items():
+        if "book_offset" in m and m.get("columns"):
+            rule[name] = (m["book_offset"], list(m["columns"]))
+    selectable = gov["display"].get("selectable", {}).get("figures") or []
+    return rule, list(selectable)
 
 
 class Interner:
@@ -177,7 +190,14 @@ def pick_designated(books: dict, conflicts: list) -> dict[int, dict]:
     return chosen
 
 
-def build(processed: Path, out: Path) -> dict:
+def build(processed: Path, out: Path, gov=None) -> dict:
+    gov = govconfig.resolve_government(gov)
+    rule, budget_measures = display_rule(gov)
+    col_map = {c: m for m, (_, cols) in rule.items() for c in cols}
+    if primary_fund(gov) != gov["display"]["primary_fund"]:
+        sys.exit(f"government.yaml display.primary_fund is {gov['display']['primary_fund']!r} but mapping/funds.csv "
+                 f"marks {primary_fund(gov)!r} as the primary fund; make them agree")
+    aliases = fund_aliases(gov)
     projection_books: dict = {}
     books = load_books(processed, projection_books)
     if not books:
@@ -196,11 +216,11 @@ def build(processed: Path, out: Path) -> dict:
         is_book_designated = designated.get(by) is book
         seen = defaultdict(int)  # a book can print the same account code on two lines
         for r in book["rows"]:
-            measure = COLUMN_TO_MEASURE.get(r["doc_type"])
+            measure = col_map.get(r["doc_type"])
             if measure is None:  # actual_ytd and anything unknown
                 continue
             fy = int(r["fiscal_year"])
-            offset, cols = RULE[measure]
+            offset, cols = rule[measure]
             if measure in PROPOSED_MEASURES and fy != newest:
                 continue  # older books' own-year proposals are never shown
             nth = seen[(r["doc_type"], fy, r["account_code"])]
@@ -233,7 +253,7 @@ def build(processed: Path, out: Path) -> dict:
             kept.add((fy, "actual"))
         elif "projected" in have:
             kept.add((fy, "projected"))
-        budget_fig = next((m for m in BUDGET_MEASURES if m in have), None)
+        budget_fig = next((m for m in budget_measures if m in have), None)
         if budget_fig:
             kept.add((fy, budget_fig))
 
@@ -273,13 +293,16 @@ def build(processed: Path, out: Path) -> dict:
         entry["column"] = s["c"][0] if len(set(s["c"])) == 1 else s["c"]
         out_series[key] = entry
 
-    known_issues = read_csv(ROOT / "data" / "known_issues.csv") if (ROOT / "data" / "known_issues.csv").exists() else []
+    ki = gov.notes / "known_issues.csv"
+    if not ki.exists():
+        ki = ROOT / "data" / gov["route"] / "known_issues.csv"
+    known_issues = read_csv(ki) if ki.exists() else []
     # Projections: interned into the same accounts table before it is listed, so org mapping covers their lines.
     projection = build_projection(processed, projection_books, newest, docs, funds, depts, bureaus, cats, accounts,
                                   known_issues)
     acct_rows = [list(a) for a in accounts.items]
     printed = printed_totals(processed, designated, newest, docs, funds, bureaus, out_series, acct_rows,
-                             cats.index.get("Revenue"), known_issues)
+                             cats.index.get("Revenue"), known_issues, rule, aliases)
 
     book_list = sorted(({"doc": b["doc"], "year": b["year"], "csv": b["csv"],
                          "used": designated.get(b["year"]) is b} for b in books.values()),
@@ -291,7 +314,7 @@ def build(processed: Path, out: Path) -> dict:
         "generated": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "newest_year": newest,
         "measures": MEASURES,
-        "rule": {m: {"book_offset": o, "columns": c} for m, (o, c) in RULE.items()},
+        "rule": {m: {"book_offset": o, "columns": c} for m, (o, c) in rule.items()},
         "books": book_list,
         "docs": docs.items,
         "funds": funds.items,
@@ -300,35 +323,35 @@ def build(processed: Path, out: Path) -> dict:
         "categories": cats.items,
         # [account_code, account_name, fund, department, bureau, category]
         "accounts": [list(a) for a in accounts.items],
-        # Revenue accounts that are not income: {account index: draw | transfer | charge} (data/income_rules.csv).
-        "not_income": income_rules.not_income(accounts.items, funds.items, cats.items),
+        # Revenue accounts that are not income: {account index: draw | transfer | charge} (mapping/income_rules.csv).
+        "not_income": income_rules.not_income(accounts.items, funds.items, cats.items, gov=gov),
         # Home Rule Charter § 8.08: each budget made under the charter tested against the 6% tax revenue limit
-        # (scripts/tax_limit.py; config/tax_limit.json, data/tax_limit_lines.csv). Sums are calculated.
-        "tax_limit": tax_limit.build(designated, RULE, docs),
-        # Income sources: {"names": [...], "a": {account index: name index}} (data/income_sources.csv).
-        "income_sources": income_sources.income_sources(accounts.items, funds.items, cats.items),
+        # (scripts/tax_limit.py; content/rules/tax_limit.yaml, content/rules/tax_limit_lines.csv). Sums are calculated.
+        "tax_limit": tax_limit.build(designated, rule, docs, gov),
+        # Income sources: {"names": [...], "a": {account index: name index}} (mapping/income_sources.csv).
+        "income_sources": income_sources.income_sources(accounts.items, funds.items, cats.items, gov),
         "series": out_series,
         "printed": printed,
         "known_issues": known_issues,
         # Bureaus a book omits entirely (reviewed known-issue notes), keyed by source book.
         "missing_bureaus": missing_bureaus(known_issues, books),
-        "reserve": reserve_fund(processed, designated, newest, docs),
+        "reserve": reserve_fund(processed, designated, newest, docs, gov),
         # Multi-year projections after the newest year (see the module docstring). Never part of `series`.
         "projection": projection,
         "conflict_count": len(conflicts),
         # Departments and bureaus as on the 2027 org chart, with "what does it do" text
         # (scripts/org_structure.py; data/org_*_2027.csv). Every org code above maps to a unit.
-        "org": build_org({a[0].split("-")[0] for a in accounts.items}),
+        "org": build_org({a[0].split("-")[0] for a in accounts.items}, gov),
     }
     out.mkdir(parents=True, exist_ok=True)
     write_json(out / "budget.json", budget)
     write_json(out / "conflicts.json", conflicts)
     write_json(out / "staffing.json", staffing(processed, designated, newest))
     # "What changed" for the newest year (scripts/changes.py): comparisons, fund shifts, positions, policy notes.
-    changes = build_changes(budget, processed, designated, newest, FUND_ALIASES)
+    changes = build_changes(budget, processed, designated, newest, aliases, gov)
     write_json(out / "changes.json", changes)
     # Positions for every pair of position schedules (What changed for any two figures; loaded only on that page).
-    write_json(out / "positions.json", build_positions(budget, processed, designated, newest, changes["shifts"]))
+    write_json(out / "positions.json", build_positions(budget, processed, designated, newest, changes["shifts"], gov))
     return budget
 
 
@@ -430,7 +453,7 @@ def _amount(text):
     return int(round(float(text)))
 
 
-def reserve_fund(processed: Path, designated: dict, newest: int, docs) -> dict | None:
+def reserve_fund(processed: Path, designated: dict, newest: int, docs, gov=None) -> dict | None:
     """Year-end General Fund balance entries, one kind per year (see module docstring)."""
     books = {}
     for by, book in sorted(designated.items()):
@@ -495,7 +518,7 @@ def reserve_fund(processed: Path, designated: dict, newest: int, docs) -> dict |
                     entry["note"] = (f"In the city's {by} book the {sc} column does not add up: its revenues plus expenditures ({usd(_amount(c['computed']))}) "
                                      f"differ from its surplus plus adjustment lines ({usd(_amount(c['printed']))}) by ${gap:,}.")
             entries.append(entry)
-    return {"name": "Reserve Fund", "entries": entries}
+    return {"name": gov["display"]["reserve_name"], "entries": entries}
 
 
 def missing_bureaus(known_issues: list, books: dict) -> dict:
@@ -537,7 +560,8 @@ def _issue_for(known_issues: list, doc: str, page: int, label: str):
 
 
 def printed_totals(processed: Path, designated: dict, newest: int, docs, funds, bureaus,
-                   series: dict, accounts: list, revenue_cat, known_issues: list) -> list:
+                   series: dict, accounts: list, revenue_cat, known_issues: list, rule: dict,
+                   aliases: dict | None = None) -> list:
     """Every section (bureau) and roll-up total the books print, for the figures the site shows.
 
     Each item says which lines the printed total covers (`m`), so the site can tell whether a total it
@@ -548,6 +572,7 @@ def printed_totals(processed: Path, designated: dict, newest: int, docs, funds, 
     `n` (lines summed), and `flag` (the gap is more than rounding: $5 for a section, $0.50 per line for a
     roll-up). `issue` points to the reviewed note in known_issues.csv."""
     out = []
+    col_map = {c: m for m, (_, cols) in rule.items() for c in cols}
     shown_keys = set(series)
     for by, book in sorted(designated.items()):
         path = processed / f"validation_{book['stem']}.csv"
@@ -585,7 +610,7 @@ def printed_totals(processed: Path, designated: dict, newest: int, docs, funds, 
         for i, r in enumerate(val):
             if r["level"] == "rollup":
                 label = r["label"].lower()
-                fund = next((f for k, f in FUND_ALIASES.items() if k in label), None)
+                fund = next((f for k, f in (aliases or {}).items() if k in label), None)
                 kind = "revenue" if "revenue" in label else "expense" if "expense" in label else None
                 if fund and kind:
                     last_fund[(fund, kind)] = i
@@ -604,15 +629,15 @@ def printed_totals(processed: Path, designated: dict, newest: int, docs, funds, 
                 if not m or parse_amount(text) is None:
                     continue
                 doc_type, fy = m.group(1), int(m.group(2))
-                measure = COLUMN_TO_MEASURE.get(doc_type)
-                if measure is None or by - fy != RULE[measure][0]:
+                measure = col_map.get(doc_type)
+                if measure is None or by - fy != rule[measure][0]:
                     continue
                 if measure in PROPOSED_MEASURES and fy != newest:
                     continue
                 key = f"{fy}|{measure}"
                 if key not in shown_keys:
                     continue  # only totals for figures the site actually shows
-                rank = RULE[measure][1].index(doc_type)
+                rank = rule[measure][1].index(doc_type)
                 if key not in values or rank < values[key][1]:
                     values[key] = (parse_amount(text), rank)
             if not values:
@@ -728,20 +753,23 @@ def write_json(path: Path, data) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--entity", choices=["city", "county"], default="city",
-                    help="city (default): web/data/; county: data/processed/county -> web/data/county/ (scripts/build_county.py)")
-    ap.add_argument("--processed", type=Path, default=None)
-    ap.add_argument("--out", type=Path, default=None)
+    ap.add_argument("--gov", help="government id (default: site.yaml default_government)")
+    ap.add_argument("--entity", choices=["city", "county"],
+                    help="old name for --gov: city = lancaster-city, county = lancaster-county")
+    ap.add_argument("--processed", type=Path, default=None, help="the generated CSVs (default: the government's processed_dir)")
+    ap.add_argument("--out", type=Path, default=None, help="where the site JSON goes (default: web/<data_path>)")
     args = ap.parse_args()
-    if args.entity == "county":
+    gov_id = args.gov or {"city": "lancaster-city", "county": "lancaster-county"}.get(args.entity)
+    gov = govconfig.resolve_government(gov_id)
+    if gov.kind == "county":
         import build_county
-        out = args.out or build_county.OUT
-        build_county.report(build_county.build(args.processed or build_county.PROCESSED, out), out)
+        out = args.out or gov.web_data
+        build_county.report(build_county.build(args.processed or gov.processed, out), out)
         return
-    args.processed = args.processed or ROOT / "data" / "processed"
-    args.out = args.out or ROOT / "web" / "data"
-    budget = build(args.processed, args.out)
-    import tax_rates  # the tax estimate page's rates (data/tax_rates.csv), shared by the City and County pages
+    args.processed = args.processed or gov.processed
+    args.out = args.out or gov.web_data
+    budget = build(args.processed, args.out, gov)
+    import tax_rates  # the tax estimate page's rates (every government's mapping/tax_rates.csv)
     tax_rates.write(args.out / "tax_rates.json")
     print(f"Books: " + ", ".join(f"{b['year']}={b['doc']}{'' if b['used'] else ' (ignored)'}"
                                  for b in budget["books"]))

@@ -12,7 +12,7 @@
    line sum and rounding flag re-add from budget_long ($5 for a section, $0.50 per line for a roll-up), and the
    totals the site can display are matched to them; every flag that shows is listed (failures: value, sum, flag).
 4. Org structure (2027 org chart): every shown line's org code maps to an org unit; the
-   mapping in budget.json equals data/org_structure_2027.csv; for every year, figure and
+   mapping in budget.json equals mapping/org_structure.csv; for every year, figure and
    revenue/expense, the unit (bureau) totals of each department add up to that department's
    total (department taken straight from the CSV), and the departments add up to the series total;
    departments with no bureaus have exactly one unit; every description has text.
@@ -31,7 +31,7 @@
    the series and the staffing CSVs: the net change, the driver lines and categories, position counts and why
    raw and adjusted differ, named titles' counts, and the fund shifts named.
 8. Lines far above the years either side of them (the site's "stands out" notes, app.js lineSpikes()): listed with
-   the same rule (SPIKE_X, SPIKE_SHARE); every row of data/line_notes.csv names a line printed in that year and
+   the same rule (SPIKE_X, SPIKE_SHARE); every row of notes/line_notes.csv names a line printed in that year and
    figure (FAIL otherwise), and is reported as matching a listed line or not.
 9. Projections (budget.json `projection`, the multi-year projections book): never in `series` (so never a
    selectable year) and only for years after the newest year; every projection series total per fund and
@@ -40,7 +40,7 @@
    each fund's printed Surplus/(Deficit) equals the CSV and its printed Total Revenue less Total Expense; the
    assumptions equal the extracted assumptions page.
 10. Home Rule 6% tax revenue limit (budget.json `tax_limit`, scripts/tax_limit.py): every budget made under the charter
-   is re-tested from the budget_long CSVs (the counted tax lines of data/tax_limit_lines.csv, the same book's
+   is re-tested from the budget_long CSVs (the counted tax lines of content/rules/tax_limit_lines.csv, the same book's
    preceding-year figure) and must match the JSON (amounts, baseline, change, over/within); a General Fund tax revenue
    line the CSV does not list fails.
 Exits 1 on any failure of checks 1, 2, 3, 4, 6, 7, 8, 9, 10 and the CSV part of 5. Standard library only.
@@ -63,6 +63,22 @@ from changes import counts_as_income
 
 ROOT = Path(__file__).resolve().parent.parent
 TOLERANCE = 5
+GOV = None          # the government being checked (set in main); its files and display rules come from it
+
+
+def processed() -> Path:
+    """The government's generated CSVs."""
+    return GOV.processed if GOV is not None else ROOT / "data" / "processed"
+
+
+def org_codes() -> Path:
+    """The government's org code -> unit table."""
+    return GOV.path(GOV["org"]["codes"])
+
+
+def primary_fund() -> str:
+    """The fund the site opens on (government.yaml display.primary_fund)."""
+    return GOV["display"]["primary_fund"]
 
 
 def check_reserve(budget: dict) -> int:
@@ -74,7 +90,7 @@ def check_reserve(budget: dict) -> int:
         print("     no fund_balance data")
         return 0
     rows = defaultdict(list)
-    for path in sorted((ROOT / "data" / "processed").glob("fund_balance_*.csv")):
+    for path in sorted(processed().glob("fund_balance_*.csv")):
         if "_checks_" in path.name or "crossbook" in path.name:
             continue
         with path.open(newline="", encoding="utf-8") as f:
@@ -126,7 +142,7 @@ def check_org(budget: dict) -> int:
         return 1
     bad = 0
     units, depts, codes = org["units"], org["departments"], org["codes"]
-    with (ROOT / "data" / "org_structure_2027.csv").open(newline="", encoding="utf-8") as f:
+    with org_codes().open(newline="", encoding="utf-8") as f:
         table = {r["org_code"]: (r["department"], r["unit"]) for r in csv.DictReader(f)}
     built = {c: (depts[units[u]["dept"]]["name"], units[u]["name"]) for c, u in codes.items()}
     if built != table:
@@ -173,16 +189,22 @@ def check_org(budget: dict) -> int:
     return bad
 
 
+def draw_codes() -> set[str]:
+    """The object codes reviewed as draws on savings (income_rules.csv class draw)."""
+    return {r["code"] for r in income_rules.load(GOV) if r["class"] == "draw"}
+
+
 def check_reserve_draw(budget: dict) -> int:
-    """The General Fund's revenue includes money drawn from the reserve. Verify what the site shows."""
-    print("\nReserve draw (General Fund revenue lines 'Fund Balance Reserve', object 499000):")
+    """The tax-funded fund's revenue includes money drawn from savings. Verify what the site shows."""
+    draws = draw_codes()
+    print(f"\nReserve draw ({primary_fund()} revenue lines class draw: object {', '.join(sorted(draws))}):")
     acc = budget["accounts"]
-    is_draw = lambda a: acc[a][0].endswith("-499000") and acc[a][1].lower().startswith("fund balance reserve")
+    is_draw = lambda a: acc[a][0].split("-")[-1] in draws
     csv_sum = defaultdict(float)
-    for path in sorted((ROOT / "data" / "processed").glob("budget_long_*.csv")):
+    for path in sorted(processed().glob("budget_long_*.csv")):
         with path.open(newline="", encoding="utf-8") as f:
             for r in csv.DictReader(f):
-                if r["object_code"] == "499000" and r["account_name"].lower().startswith("fund balance reserve") and r["amount"].strip():
+                if r["object_code"] in draws and r["amount"].strip():
                     csv_sum[(r["fiscal_year"], r["doc_type"], r["source_doc"])] += float(r["amount"])
     reserve = {(e["year"], e["measure"]): e for e in (budget.get("reserve") or {}).get("entries", [])}
     bad = 0
@@ -205,7 +227,7 @@ def check_reserve_draw(budget: dict) -> int:
                 by_t[ln["t"]] += ln["v"]
             drawdown = -(by_t["surplus"] + by_t["adjustment"])      # what the Fund Balance page takes out of the reserve
             op = -(by_t["revenues"] + by_t["expenditures"])           # revenues less expenditures on the same page
-            gf = budget["funds"].index("General Fund")
+            gf = budget["funds"].index(primary_fund())
             gf_rev = sum(v for a, v in zip(s["a"], s["v"]) if acc[a][2] == gf and budget["categories"][acc[a][5]] == "Revenue")
             gap_rev = by_t["revenues"] + shown - gf_rev
             ties = abs(drawdown - shown) <= TOLERANCE and abs(op - shown) <= TOLERANCE and abs(gap_rev) <= TOLERANCE
@@ -221,7 +243,7 @@ def check_reserve_draw(budget: dict) -> int:
             dc = next((ln for ln in e["lines"] if ln["t"] == "adjustment" and "data center" in ln["l"].lower()), None)
             if sur and dc and sur["v"] < 0 and dc["v"] < 0 and abs(-(sur["v"] + dc["v"]) - shown) <= TOLERANCE:
                 doc = budget["docs"][e["doc"]]
-                fb = ROOT / "data" / "processed" / f"fund_balance_{doc[:-4]}.csv"
+                fb = processed() / f"fund_balance_{doc[:-4]}.csv"
                 with fb.open(newline="", encoding="utf-8") as f:
                     rows = [r for r in csv.DictReader(f) if r["fiscal_year"] == str(s["year"]) and r["scenario"] in (e["sc"], "single")]
                 want = {t: [float(r["amount"]) for r in rows if r["line_type"] == t and (t != "adjustment" or "data center" in r["label"].lower())]
@@ -242,7 +264,7 @@ def check_reserve_draw(budget: dict) -> int:
 
 
 def check_changes(budget: dict) -> int:
-    path = ROOT / "web" / "data" / "changes.json"
+    path = GOV.web_data / "changes.json"
     print("\nWhat changed (changes.json):")
     if not path.exists():
         print("FAIL web/data/changes.json is missing")
@@ -251,7 +273,8 @@ def check_changes(budget: dict) -> int:
     acc, cats, funds = budget["accounts"], budget["categories"], budget["funds"]
     codes, units = budget["org"]["codes"], budget["org"]["units"]
     bad = 0
-    classify = income_rules.classifier()
+    classify = income_rules.classifier(income_rules.load(GOV))
+    draws = draw_codes()
 
     def entries(key):
         s = budget["series"][key]
@@ -262,7 +285,7 @@ def check_changes(budget: dict) -> int:
             u = codes[code.split("-")[0]]
             out.append({"a": a, "v": v, "p": p, "d": d, "fund": acc[a][2], "cat": acc[a][5], "bureau": acc[a][4],
                         "unit": u, "dept": units[u]["dept"], "rev": cats[acc[a][5]] == "Revenue",
-                        "draw": code.endswith("-499000") and acc[a][1].lower().startswith("fund balance reserve"),
+                        "draw": code.split("-")[-1] in draws,
                         "cls": classify(code, funds[acc[a][2]]) if cats[acc[a][5]] == "Revenue" else ""})
         return out
 
@@ -324,7 +347,7 @@ def check_changes(budget: dict) -> int:
                 if not hit:
                     bad += 1
                     print(f"FAIL {cid} line {acc[ln[0]][0]} [{side}] {ln[off]:,} p{ln[off + 2]} not in series")
-        g = c["scopes"].get("General Fund", {}).get("expense")
+        g = c["scopes"].get(primary_fund(), {}).get("expense")
         gl = f"; General Fund spending {val(g['total']['f']):,} -> {val(g['total']['t']):,} ({val(g['total']['t']) - val(g['total']['f']):+,})" if g else ""
         print(f"ok   {cid:30s} {len(c['lines'])} changed lines, {n_checked} totals tied to the series{gl}")
 
@@ -360,7 +383,7 @@ def check_changes(budget: dict) -> int:
     # Positions
     print("\nPositions (staffing schedules, per org-chart bureau):")
     staffing_sum = {}
-    for p in sorted((ROOT / "data" / "processed").glob("staffing_*.csv")):
+    for p in sorted(processed().glob("staffing_*.csv")):
         with p.open(newline="", encoding="utf-8") as f:
             rows = list(csv.DictReader(f))
         for col in (rows[0].keys() if rows else []):
@@ -403,7 +426,7 @@ def check_changes(budget: dict) -> int:
 
     bad += check_position_pairs(budget, ch, staffing_sum)
 
-    print("\nTax-policy notes (data/policy_notes.csv):")
+    print("\nTax-policy notes (notes/policy_notes.csv):")
     for n in ch["policy"]:
         print(f"     {n['year']} {n['figure']:8s} {n['item']:18s} {n['text']}  [{n['source']}]")
     return bad
@@ -420,11 +443,11 @@ def check_summaries(budget: dict) -> int:
     from changes import title_key  # the canonical title form only; counts are re-added from the CSVs here
 
     print("\nDepartment and bureau summaries (What changed):")
-    ch = json.loads((ROOT / "web" / "data" / "changes.json").read_text())
+    ch = json.loads((GOV.web_data / "changes.json").read_text())
     acc, cats, funds = budget["accounts"], budget["categories"], budget["funds"]
     codes, units, depts = budget["org"]["codes"], budget["org"]["units"], budget["org"]["departments"]
     rev = cats.index("Revenue")
-    with (ROOT / "data" / "org_structure_2027.csv").open(newline="", encoding="utf-8") as f:
+    with org_codes().open(newline="", encoding="utf-8") as f:
         org_fund = {r["org_code"]: r["fund"] for r in csv.DictReader(f)}
     bad, n_checked = 0, 0
 
@@ -438,7 +461,7 @@ def check_summaries(budget: dict) -> int:
         m = re.search(r"(\d{4}) (Revised|Proposed)", label)
         yr = m.group(1) if m else re.search(r"(\d{4})", label).group(1)
         col = f"count_{yr}_proposed_revised" if m and m.group(2) == "Revised" else f"count_{yr}_proposed"
-        path = next(p for p in (ROOT / "data" / "processed").glob("staffing_*.csv") if budget_stem(doc) in p.name)
+        path = next(p for p in processed().glob("staffing_*.csv") if budget_stem(doc) in p.name)
         out = []  # (org, title key, n)
         with path.open(newline="", encoding="utf-8") as f:
             for r in csv.DictReader(f):
@@ -541,7 +564,7 @@ def check_summaries(budget: dict) -> int:
                         if funds[0] not in (x["from_fund"], x["to_fund"]) or not touches:
                             fail(f"{name}: shift {x['from']['label']} does not touch the General Fund and this group")
         if cid == ch["default"]:
-            for g, s in sorted(Sm.get("General Fund", {}).get("d", {}).items(), key=lambda kv: int(kv[0])):
+            for g, s in sorted(Sm.get(primary_fund(), {}).get("d", {}).items(), key=lambda kv: int(kv[0])):
                 p = s.get("pos") or {}
                 drv = [f"{acc[c['lines'][i][0]][1]} {((c['lines'][i][4] or 0) - (c['lines'][i][1] or 0)):+,}" for i in s.get("drivers", [])]
                 drv += [f"{cats[ci]} {v:+,}" for ci, v, _d, _p in s.get("cat_drivers", [])]
@@ -739,7 +762,7 @@ def check_projection(budget: dict) -> int:
         bad += not ok
         print(f"{'ok  ' if ok else 'FAIL'} {k[0]:16s} {k[1]:30s} {k[2]:8s} shown {shown[k]:>14,.0f} ({n_shown[k]} lines)  csv {raw[k]:>14,.0f} ({n_raw[k]})")
     for o in sorted(unmapped):
-        print(f"FAIL projection org code {o} has no org unit (data/org_structure_2027.csv)")
+        print(f"FAIL projection org code {o} has no org unit ({org_codes().name})")
     bad += len(unmapped)
     if not unmapped:
         print("ok   every projection line maps to an org unit")
@@ -830,7 +853,7 @@ def check_position_pairs(budget: dict, ch: dict, staffing_sum: dict, override: d
         doc = docs[pos["schedules"][sid]["doc"]]
         y, _, m = sid.partition("|")
         col = f"count_{y}_proposed_revised" if m == "revised" else f"count_{y}_proposed"
-        path = next(p for p in (ROOT / "data" / "processed").glob("staffing_*.csv") if budget_stem(doc) in p.name)
+        path = next(p for p in processed().glob("staffing_*.csv") if budget_stem(doc) in p.name)
         with path.open(newline="", encoding="utf-8") as f:
             rows = list(csv.DictReader(f))
         ftpt = any(r.get("ft_pt") in ("FT", "PT") for r in rows)
@@ -929,8 +952,8 @@ def check_spikes(budget: dict) -> int:
                 spikes.add((keys[i], idk[2]))
                 print(f"     {keys[i]:16s} {funds[idk[1]]:28s} {idk[0]:8s} {idk[2]:16s} {v:>12,.0f}  (before {pa:,.0f}, after {pb:,.0f}; {(v - nb) / tot[idk[:2]]:.1%} of the fund)")
     bad = 0
-    ch = json.loads((ROOT / "web" / "data" / "changes.json").read_text())
-    print("Line notes (data/line_notes.csv):")
+    ch = json.loads((GOV.web_data / "changes.json").read_text())
+    print("Line notes (notes/line_notes.csv):")
     for n in ch.get("line_notes", []):
         k = f"{n['year']}|{n['figure']}"
         found = k in ser and any(acc[a][0] == n["account"] for a in ser[k]["a"])
@@ -941,14 +964,20 @@ def check_spikes(budget: dict) -> int:
 
 
 def main() -> int:
+    global GOV
     import argparse
+    import govconfig
     ap = argparse.ArgumentParser(description="Check the dashboard JSON against the processed CSVs.")
-    ap.add_argument("--entity", choices=["city", "county"], default="city",
-                    help="city (default): web/data/; county: web/data/county/ (scripts/check_county.py)")
-    if ap.parse_args().entity == "county":
+    ap.add_argument("--gov", help="government id (default: site.yaml default_government)")
+    ap.add_argument("--entity", choices=["city", "county"],
+                    help="old name for --gov: city = lancaster-city, county = lancaster-county")
+    args = ap.parse_args()
+    gov_id = args.gov or {"city": "lancaster-city", "county": "lancaster-county"}.get(args.entity)
+    GOV = govconfig.resolve_government(gov_id)
+    if GOV.kind == "county":
         import check_county
         return check_county.main()
-    budget = json.loads((ROOT / "web" / "data" / "budget.json").read_text())
+    budget = json.loads((GOV.web_data / "budget.json").read_text())
     acc = budget["accounts"]
     shown = defaultdict(float)
     for key, s in budget["series"].items():
@@ -960,7 +989,7 @@ def main() -> int:
             shown[(key, fund, kind, budget["docs"][d], c)] += v
 
     raw = defaultdict(float)
-    for path in sorted((ROOT / "data" / "processed").glob("budget_long_*.csv")):
+    for path in sorted(processed().glob("budget_long_*.csv")):
         with path.open(newline="", encoding="utf-8") as f:
             for r in csv.DictReader(f):
                 if r["amount"].strip():
@@ -1023,12 +1052,12 @@ def main() -> int:
     failures += check_reserve(budget)
     failures += check_org(budget)
     failures += check_reserve_draw(budget)
-    failures += income_rules.check(budget)
+    failures += income_rules.check(budget, gov=GOV)
     failures += check_changes(budget)
     failures += check_summaries(budget)
     failures += check_spikes(budget)
     failures += check_projection(budget)
-    failures += tax_limit.check(budget)
+    failures += tax_limit.check(budget, gov=GOV)
     failures += tax_rates.check()
 
     print(f"\n{failures} series mismatches")

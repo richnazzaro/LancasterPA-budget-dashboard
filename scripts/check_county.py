@@ -51,11 +51,13 @@ import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
+import govconfig
 import income_rules
 from changes import counts_as_income
 
 ROOT = Path(__file__).resolve().parent.parent
-PROCESSED = ROOT / "data" / "processed" / "county"
+GOV = govconfig.government("lancaster-county")     # the County's folders (Phase 2 moves its files there)
+PROCESSED = GOV.processed
 DATA = ROOT / "data" / "county"
 WEB = ROOT / "web" / "data" / "county"
 TOLERANCE = 5
@@ -239,7 +241,7 @@ def main() -> int:
     failures += check_actuals(budget, rows_by_doc, want_book)
     failures += check_fund_balance(budget)
     failures += check_context(budget)
-    failures += income_rules.check(budget)
+    failures += income_rules.check(budget, gov=GOV)
 
     print(f"\n{failures} series mismatches")
     return 1 if failures else 0
@@ -414,7 +416,7 @@ def check_context(budget) -> int:
 
 def check_changes(budget, changes, csv_rows, want_book, book_year, newest) -> int:
     print("\nWhat changed (changes.json), recomputed from the CSVs with account merges:")
-    classify = income_rules.classifier()
+    classify = income_rules.classifier(income_rules.load(GOV))
     acc, funds, cats, depts, bureaus = (budget[k] for k in ("accounts", "funds", "categories", "departments", "bureaus"))
     org = budget["org"]
     prior = newest - 1

@@ -1,8 +1,8 @@
 """Shared pieces of the budget extractors.
 
-Used by extract_budget.py (PDFs with a text layer) and extract_scanned.py
-(image-only PDFs read with OCR), so both produce the same tables and apply
-the same checks:
+Used by the line-item readers (extract_layout.py for word boxes from a text
+layer or OCR, extract_budget.py for char_rows books) and extract_projections.py,
+so they produce the same tables and apply the same checks:
 
     line_items_<doc>.csv   one row per account line, every amount column (wide)
     budget_long_<doc>.csv  the dashboard's long table: one row per line x column
@@ -11,6 +11,7 @@ the same checks:
 """
 
 import re
+import sys
 from pathlib import Path
 
 import pandas as pd
@@ -18,9 +19,15 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "data" / "processed"
 
-# Printed checks that fail because of errors in the source PDF itself, after a
-# person has reviewed them. Unreviewed failures still stop the pipeline.
-KNOWN_ISSUES_FILE = ROOT / "data" / "known_issues.csv"
+
+def known_issues_file(gov=None) -> Path:
+    """The government's reviewed source-PDF notes (notes/known_issues.csv; County still keeps it in data/<route>/)."""
+    import govconfig
+    gov = govconfig.resolve_government(gov)
+    for p in (gov.notes / "known_issues.csv", ROOT / "data" / gov["route"] / "known_issues.csv"):
+        if p.exists():
+            return p
+    return gov.notes / "known_issues.csv"
 
 # The city's spreadsheet rounds each cell independently, so sums can drift by
 # a few dollars from the printed total. Anything bigger is a real problem.
@@ -40,15 +47,24 @@ def to_number(token):
     return -value if negative else value
 
 
-def make_fund_mapper(funds, general_fund_departments, department_overrides,
-                     other_fund_department="Public Works"):
-    """Return org_code -> (fund, department) for one budget book.
+def make_fund_mapper(cfg, gov):
+    """Return org_code -> (fund, department) for one budget book, from its config and its government.
 
-    General Fund org codes are 7 digits; the first 2 give the department and
-    4-digit overrides move bureaus that report elsewhere. Longer org codes
-    belong to the enterprise funds, keyed by their first 3 digits. A fund
-    entry may be a name, or {"fund": name, "department": dept}.
+    Main-fund org codes are 7 digits: the first 2 give the department (`general_fund_departments`) and
+    4-digit `general_fund_department_overrides` move bureaus that report elsewhere. Longer org codes belong
+    to the other funds, keyed by their first 3 digits (`funds`). A fund entry is a name (its department is
+    the book's `other_fund_department`) or {"fund": name, "department": dept}. The main fund's name is the
+    government's primary fund (mapping/funds.csv role primary).
     """
+    funds = {k: v for k, v in cfg["funds"].items() if not k.startswith("_")}
+    general_fund_departments = cfg["general_fund_departments"]
+    department_overrides = cfg.get("general_fund_department_overrides", {})
+    other_fund_department = cfg.get("other_fund_department")
+    if other_fund_department is None and any(isinstance(v, str) for v in funds.values()):
+        sys.exit(f"{cfg.get('source_doc', 'book config')}: `funds` lists a fund by name only; "
+                 f"add other_fund_department (the department those funds belong to) to its book YAML")
+    primary = gov.primary_fund
+
     def mapper(org_code):
         if len(org_code) >= 8:
             entry = funds.get(org_code[:3], f"Unknown fund {org_code[:3]}")
@@ -57,7 +73,7 @@ def make_fund_mapper(funds, general_fund_departments, department_overrides,
             return entry, other_fund_department
         dept = department_overrides.get(org_code[:4]) or \
             general_fund_departments.get(org_code[:2], f"Unknown dept {org_code[:2]}")
-        return "General Fund", dept
+        return primary, dept
     return mapper
 
 
@@ -150,11 +166,12 @@ def to_long(items, amount_columns, amount_keys, source_doc):
     return pd.DataFrame(rows, columns=LONG_COLUMNS)
 
 
-def acknowledge_known_issues(checks, source_doc):
+def acknowledge_known_issues(checks, source_doc, gov=None):
     """Mark failed checks that a person has logged as source-PDF errors."""
     checks["acknowledged"] = ""
-    if KNOWN_ISSUES_FILE.exists():
-        known = pd.read_csv(KNOWN_ISSUES_FILE)
+    file = known_issues_file(gov)
+    if file.exists():
+        known = pd.read_csv(file)
         known = known[known["source_doc"] == source_doc]
         for _, k in known.iterrows():
             hit = (checks["source_page"] == k["source_page"]) & \
@@ -184,7 +201,7 @@ def print_summary(items, staff, checks, unparsed):
         for u in unparsed[:30]:
             print(f"  p{u['source_page']}: {u['text'][:110]}")
     if len(acknowledged):
-        print("\nKnown source-document issues (reviewed, see data/known_issues.csv):")
+        print("\nKnown source-document issues (reviewed, see notes/known_issues.csv):")
         for _, r in acknowledged.iterrows():
             print(f"  p{r.source_page} [{r.level}] {r.label}")
     if len(failed):

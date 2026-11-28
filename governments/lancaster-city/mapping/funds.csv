@@ -1,0 +1,8 @@
+code_prefix,name,role,paid_by,description,printed_names
+,General Fund,primary,General Fund taxes and intergovernmental revenue,"The tax-funded operating fund: City departments, public safety, debt service and fringe benefits.",general fund
+560,Stormwater Management Fund,enterprise,Stormwater fees,"The stormwater utility: green infrastructure, street cleaning and grounds work.",stormwater
+561,Sewer Fund,enterprise,Wastewater charges to users,"Wastewater collection, pumping stations and treatment.",wastewater;sewer
+562,Water Fund,enterprise,Water charges to users,"Water treatment, transmission and distribution.",water fund;water
+563,Solid Waste & Recycling Fund,enterprise,Refuse and recycling fees,"Single-hauler solid waste and recycling collections.",solid waste
+662,Long's Park Fund,special,Long's Park revenue,"Long's Park's own revenue and spending.",long's park;longs park
+265,Liquid Fuels Fund,special,State liquid fuels allocation,"State liquid fuels payments for street maintenance.",liquid fuels

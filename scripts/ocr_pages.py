@@ -1,7 +1,7 @@
 """OCR a scanned budget PDF into cached word boxes.
 
 Usage:
-    python scripts/ocr_pages.py "Budget PDFs - City/2026-Adopted-Budget-2026.pdf" [--dpi 300] [--jobs 8]
+    python scripts/ocr_pages.py "governments/lancaster-city/sources/2026-Adopted-Budget-2026.pdf" [--dpi 300] [--jobs 8]
 
 For every page this renders the PDF at --dpi, works out which way the page is
 turned (Tesseract's orientation detection), rotates it upright, and runs

@@ -3,7 +3,7 @@
 
 Input:  Budget PDFs - City/Org Descriptions 2027.pdf (text layer; pages 1-17 are prose,
         pages 18-23 repeat the org chart as one word per line and are skipped).
-Output: data/org_descriptions_2027.csv with one row per printed heading:
+Output: content/org_descriptions.csv with one row per printed heading:
         id, level, parent, heading, source_page, text
 
 Wording is kept exactly as printed (typos included). Cleanup is limited to:
@@ -36,8 +36,14 @@ from pathlib import Path
 import pdfplumber
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_PDF = ROOT / "Budget PDFs - City" / "Org Descriptions 2027.pdf"
-DEFAULT_OUT = ROOT / "data" / "org_descriptions_2027.csv"
+def default_pdf(gov) -> Path:
+    """The government's descriptions PDF (government.yaml org.descriptions_pdf)."""
+    return gov.sources / gov["org"]["descriptions_pdf"]
+
+
+def default_out(gov) -> Path:
+    """The descriptions table the build reads (government.yaml org.descriptions)."""
+    return gov.path(gov["org"]["descriptions"])
 
 BODY, HEAD, FOOT = 10.7, 13.5, 7.7
 # Two-column bullet lists: page -> [(top, bottom, x split)]. Read left column, then right.
@@ -213,9 +219,14 @@ def extract(pdf_path: Path) -> list[dict]:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--pdf", type=Path, default=DEFAULT_PDF)
-    ap.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    ap.add_argument("--gov", help="government id (default: site.yaml default_government)")
+    ap.add_argument("--pdf", type=Path)
+    ap.add_argument("--out", type=Path)
     args = ap.parse_args()
+    import govconfig
+    gov = govconfig.resolve_government(args.gov)
+    args.pdf = args.pdf or default_pdf(gov)
+    args.out = args.out or default_out(gov)
     entries = extract(args.pdf)
     with args.out.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=["id", "level", "parent", "heading", "source_page", "text"])

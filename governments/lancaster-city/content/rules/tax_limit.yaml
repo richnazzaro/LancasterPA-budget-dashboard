@@ -1,0 +1,19 @@
+# The Home Rule Charter's 6% tax revenue limit, section 8.08, tested for every City budget made under the charter.
+# Schema: schemas/tax_limit.schema.json. Moved from config/tax_limit.json in Phase 1.1 (2026-11-28).
+# Which lines count as tax revenue: content/rules/tax_limit_lines.csv (in this folder).
+fund: General Fund
+limit_pct: 6
+first_year: 2025
+section: '8.08'
+tested:
+- column: proposed
+  measure: proposed
+- column: proposed_revised
+  measure: revised
+baseline_measure: projected
+transition:
+  section: '13.14'
+  budget_years:
+  - 2025
+  - 2026
+  - 2027

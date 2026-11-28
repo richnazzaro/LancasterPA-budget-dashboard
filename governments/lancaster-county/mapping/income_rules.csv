@@ -1,0 +1,5 @@
+code,fund,class,lines,evidence
+6965,,transfer,Transfer From Other Funds; County Cash,"Money moved in from another County fund, mostly the General Fund's County match. The audited reports count it as a transfer, not revenue."
+6964,,charge,Indirect Revenue; Indirect Costs,"Indirect costs charged to other County funds and agencies (the book's ""Charges to County Agencies"")."
+6967,,charge,HSDF,"Paid from the County's Human Services Development Fund to another County fund (""Charges to County Agencies"")."
+6999,,charge,YDC Costs - County Share,"The County's own share of youth detention costs, charged between County funds (""Charges to County Agencies"")."

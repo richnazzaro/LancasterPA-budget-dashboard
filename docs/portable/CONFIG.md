@@ -15,6 +15,7 @@ How to read the tables: a field written `a.b` sits inside `a`; `a[].b` is a fiel
 - [`governments/<id>/content/calendar.yaml`](#governmentsidcontentcalendaryaml)
 - [`governments/<id>/content/rules/tax_limit.yaml`](#governmentsidcontentrulestax_limityaml)
 - [Hand-kept CSV files](#hand-kept-csv-files)
+  - [funds.csv](#fundscsv)
   - [income_rules.csv](#income_rulescsv)
   - [income_sources.csv](#income_sourcescsv)
   - [known_issues.csv](#known_issuescsv)
@@ -76,6 +77,14 @@ Schema: `schemas/government.schema.json`. Edited by: whoever onboards the govern
 | `sources_dir` | text | yes | The folder, relative to the repository root, that holds the government's processed source PDFs. | `Budget PDFs - City` |
 | `pdf_path` | text | yes | Where the PDFs are published on the website, relative to the site root, ending in /. Every number on the site links to a page in one of these PDFs, so this address must not change once published. | `pdfs/` |
 | `data_path` | text | yes | Where the government's generated data files are published on the website, relative to the site root, ending in /. | `data/` |
+| `processed_dir` | text | no | The folder, relative to the repository root, that holds the government's generated CSVs (the build reads these). Default data/processed. | `data/processed` |
+| `org` | group of fields | no | The org chart tables: which org code belongs to which department and unit, and the printed descriptions of each unit. All paths are relative to this government's folder. |  |
+| `org.as_of` | whole number | yes | The chart's edition year (the PDF it was taken from). | `2027` |
+| `org.units` | text | yes | Departments and units, one row each. | `mapping/units.csv` |
+| `org.codes` | text | yes | Org code -&gt; department and unit. | `mapping/org_structure.csv` |
+| `org.descriptions` | text | yes | The description text, one row per printed heading. | `content/org_descriptions.csv` |
+| `org.chart_pdf` | text | no | The org chart PDF's file name in the sources folder (linked from the site). | `2027 Org Chart.pdf` |
+| `org.descriptions_pdf` | text | no | The descriptions PDF's file name in the sources folder (linked from the site). | `Org Descriptions 2027.pdf` |
 | `display` | group of fields | yes | Which figure the site shows for each year. The site shows one kind of figure per year on its charts; each rule below says which figure a group of years gets. |  |
 | `display.figures` | list | yes | One rule per group of years. A year's charted figure is the first listed figure that has data. |  |
 | `display.figures[].years` | one of: `newest`, `prior`, `past`, `after_newest`, `all`, `audited` | yes | Which years the rule covers: newest = the newest budget's year; prior = the year before it; past = every earlier year; after_newest = years after the newest (projections); all = every year; audited = years with an audited annual report. | `newest` |
@@ -166,10 +175,16 @@ Schema: `schemas/book.schema.json`. Edited by: the reviewer of each new PDF (dra
 | Field | Type | Required | Meaning | Example |
 |---|---|---|---|---|
 | `source_doc` | text | yes | The PDF's file name, exactly as saved in the government's sources folder. | `2027-Mayors-Revised-Proposed-Budget-Rev-11-19-26.pdf` |
-| `layout_family` | one of: `lineitem_columns`, `projection_book`, `xposition_rows`, `pde2028`, `audited_report`, `budget_resolution` | no | Which extractor reads the book. lineitem_columns = line items in printed year columns (City books); projection_book = multi-year projections; xposition_rows = County books, amounts rebuilt from their position on the page; pde2028 = Pennsylvania school district General Fund Budget form; audited_report = annual financial report schedules; budget_resolution = an adopting budget resolution. Not in today's config/*.json files (the extractor is chosen by `extractor` or by folder); required once books move to YAML. | `lineitem_columns` |
+| `layout_family` | one of: `lineitem_columns`, `projection_book`, `xposition_rows`, `pde2028`, `audited_report`, `budget_resolution` | no | Which extractor reads the book. lineitem_columns = line items in printed year columns (City books); projection_book = multi-year projections; xposition_rows = County books, amounts rebuilt from their position on the page; pde2028 = Pennsylvania school district General Fund Budget form; audited_report = annual financial report schedules; budget_resolution = an adopting budget resolution. lineitem_columns books choose how pages are read with `reading`. | `lineitem_columns` |
 | `status` | one of: `draft`, `reviewed` | no | draft = written or guessed by a script and not yet checked by a person; the parse step refuses it. reviewed = a person has checked every column, page range and mapping against the PDF. Not in today's config/*.json files. | `reviewed` |
 | `source` | one of: `text`, `ocr` | no | text = the PDF has a text layer; ocr = scanned pages, read by OCR. | `text` |
-| `extractor` | one of: `extract_layout`, `extract_budget`, `extract_projections` | no | Today's name of the script that reads the book (default extract_layout). Replaced by layout_family. | `extract_layout` |
+| `reading` | one of: `word_boxes`, `char_rows` | no | How the family reads this book's pages. word_boxes = words with positions (text layer or OCR), assigned to columns by x-position. char_rows = characters in the order the PDF draws them (books printed from a spreadsheet whose long titles overflow into the next column), rebuilt into rows first. | `word_boxes` |
+| `note_fonts` | list of text | no | char_rows books: the ends of the font names used for the explanatory notes under line items (they overlap the table rows and are attached to the line above as its description). | `["CIDFont+F2", "+Calibri"]` |
+| `amount_columns` | list of any or any | no | char_rows books: the printed amount columns, left to right, in the order the row's numbers appear. | `[{"fiscal_year": 2025, "figure": "actual"}]` |
+| `amount_columns[].header` | text | no | A pattern (regular expression) matched against the column's printed header words joined with spaces. | `^2025 PROJECTED$` |
+| `amount_columns[].fiscal_year` | whole number or empty | yes | The budget year the column's figures are for. | `2025` |
+| `amount_columns[].doc_type` | one of: `actual`, `adopted`, `amended`, `actual_ytd`, `projected`, `projected_revised`, `proposed`, `proposed_revised`, `projection`, `budget` | no | What kind of figure the column prints (today's name for figure). | `projected` |
+| `amount_columns[].figure` | one of: `actual`, `adopted`, `amended`, `actual_ytd`, `projected`, `projected_revised`, `proposed`, `proposed_revised`, `projection`, `budget` | no | What kind of figure the column prints (the new name for doc_type; give one of the two). | `proposed_revised` |
 | `kind` | one of: `budget`, `projection` | no | projection = a multi-year projections book, not a budget book (no budget year, staffing or fund balance). Default budget. | `projection` |
 | `budget_year` | whole number | no | The budget year the book proposes or adopts. | `2027` |
 | `book_year` | whole number | no | The budget year of the book (County books). | `2026` |
@@ -229,8 +244,10 @@ Schema: `schemas/book.schema.json`. Edited by: the reviewer of each new PDF (dra
 | `staffing.row` | list of one of: `title`, `bargaining_unit`, `ft_pt`, `count`, `salary` | no | The fields of a staffing row after the org and object codes, in printed order. | `["title", "bargaining_unit", "ft_pt", "count", "salary"]` |
 | `staffing.count_pattern` | text | no | A pattern a position count must match (for books that print fractional FTEs). | `^\d+(\.\d{1,3})?$` |
 | `funds` | group of fields | no | Org-code prefix -&gt; fund, for funds other than the main fund. A value is a fund name, or {fund, department} when the whole fund belongs to one department. | `{"560": "Stormwater Management Fund", "662": {"fund": "Long's Park ...` |
+| `other_fund_department` | text | no | The department of every fund in `funds` given by name only (not as {fund, department}). Required when any such fund is listed. | `Public Works` |
 | `general_fund_departments` | group of fields | no | Main-fund org-code prefix -&gt; department. | `{"15": "Public Safety"}` |
 | `general_fund_department_overrides` | group of fields | no | Longer org-code prefixes that belong to a different department than their first digits say. | `{"1403": "City Controller / Treasurer"}` |
+| `fund_titles` | group of fields | no | projection_book: the fund title printed in a page heading -&gt; the fund name used everywhere else. | `{"Stormwater Management Fund": "Stormwater Management Fund"}` |
 | `fund_balance` | group of fields | no | The fund balance page. |  |
 | `fund_balance.scenarios` | list of text | no | The printed balance columns, left to right. | `["proposed", "revised"]` |
 | `department_pages` | group of fields | no | Adjustments for checking department pages line by line, keyed by department code. |  |
@@ -298,15 +315,29 @@ Schema: `schemas/tax_limit.schema.json`. Edited by: whoever sets up a legal tax 
 
 Each CSV has a header row. The tables list its columns; a value's form (whole number, page number, account code, one of a list) is checked on every line. Phase 0 checks the files where they are today; Phases 1 and 2 move them into `governments/<id>/mapping/`, `notes/` and `content/`.
 
+### funds.csv
+
+Every fund of one government, with its role and a plain description. Code is the org-code prefix the book uses for the fund (empty for the tax-funded main fund). Roles: primary = the fund the site opens on and the pages treat as the tax-funded one; enterprise = a self-supporting utility; special = a small fund with its own revenue; capital = a capital-projects fund; reserve = a savings fund shown last in a list. printed_names are the words a printed roll-up label uses for the fund (semicolon-separated, lower case), so a printed total can be matched to its fund.
+
+Schema: `schemas/csv/funds.schema.json`. Today's file(s): `governments/lancaster-city/mapping/funds.csv`.
+
+| Field | Type | Required | Meaning | Example |
+|---|---|---|---|---|
+| `code_prefix` | code | column yes, value may be empty | The org-code prefix the book uses for this fund; empty for the main fund (its codes are 7 digits). | `560` |
+| `name` | text | yes | The fund's name, as the site shows it. | `Sewer Fund` |
+| `role` | choice: `primary`, `enterprise`, `special`, `capital`, `reserve` | yes | primary = the fund the site opens on and the pages treat as tax-funded; enterprise = a self-supporting utility; special = a small fund with its own revenue; capital = a capital-projects fund; reserve = a savings fund. | `enterprise` |
+| `paid_by` | text | column yes, value may be empty | Who pays for the fund's spending (fees, taxes, a grant), in a few words. | `Wastewater charges to users` |
+| `description` | text | yes | What the fund is for, in one sentence for readers. | `Wastewater collection, pumping stations and treatment.` |
+| `printed_names` | text | column yes, value may be empty | Words a printed roll-up label uses for this fund, lower case and semicolon-separated (matched anywhere in the label). More specific words come first. | `wastewater;sewer` |
+
 ### income_rules.csv
 
 Revenue lines that are not income: draws from savings, transfers from the government's own funds, and charges between its own funds. The Income view and totals leave them out (charges stay in the paid fund's income, labelled). The check fails on a look-alike line with no rule here.
 
-Schema: `schemas/csv/income_rules.schema.json`. Today's file(s): `data/income_rules.csv`.
+Schema: `schemas/csv/income_rules.schema.json`. Today's file(s): `governments/lancaster-city/mapping/income_rules.csv`, `governments/lancaster-county/mapping/income_rules.csv`.
 
 | Field | Type | Required | Meaning | Example |
 |---|---|---|---|---|
-| `entity` | choice: `city`, `county` | yes | Which government the rule is for (city or county). Dropped when the file moves into a government's folder. | `city` |
 | `code` | code | yes | The revenue line's object (account) code. | `499000` |
 | `fund` | text | column yes, value may be empty | Only for this fund; empty = every fund that prints the code. |  |
 | `class` | choice: `draw`, `transfer`, `charge`, `income` | yes | draw = money taken from savings; transfer = money moved in from another of the government's funds; charge = a charge between the government's own funds (kept in the paid fund's income, labelled, left out of the All funds total); income = a look-alike that is real income. | `draw` |
@@ -317,11 +348,10 @@ Schema: `schemas/csv/income_rules.schema.json`. Today's file(s): `data/income_ru
 
 Revenue object code -&gt; the income source it is shown under in the Income Sources panel (taxes one by one, grants, one-time federal money). Lines not listed fall back to the newest book's printed revenue group.
 
-Schema: `schemas/csv/income_sources.schema.json`. Today's file(s): `data/income_sources.csv`.
+Schema: `schemas/csv/income_sources.schema.json`. Today's file(s): `governments/lancaster-city/mapping/income_sources.csv`.
 
 | Field | Type | Required | Meaning | Example |
 |---|---|---|---|---|
-| `entity` | choice: `city`, `county` | yes | Which government (city or county). | `city` |
 | `code` | code | yes | The revenue line's object code. | `400000` |
 | `fund` | text | column yes, value may be empty | Only for this fund; empty = every fund. |  |
 | `source` | text | yes | The income source name shown on the site. | `Real estate tax` |
@@ -331,7 +361,7 @@ Schema: `schemas/csv/income_sources.schema.json`. Today's file(s): `data/income_
 
 Reviewed errors and oddities in the source PDFs (a printed total that does not add up, a missing page). A failed check is accepted only when a row here explains it. The site lists these notes on its About panel.
 
-Schema: `schemas/csv/known_issues.schema.json`. Today's file(s): `data/known_issues.csv`, `data/county/known_issues.csv`.
+Schema: `schemas/csv/known_issues.schema.json`. Today's file(s): `governments/lancaster-city/notes/known_issues.csv`, `data/county/known_issues.csv`.
 
 | Field | Type | Required | Meaning | Example |
 |---|---|---|---|---|
@@ -345,7 +375,7 @@ Schema: `schemas/csv/known_issues.schema.json`. Today's file(s): `data/known_iss
 
 Text a budget book prints about one line in one year, shown beside the site's note when the line stands out.
 
-Schema: `schemas/csv/line_notes.schema.json`. Today's file(s): `data/line_notes.csv`.
+Schema: `schemas/csv/line_notes.schema.json`. Today's file(s): `governments/lancaster-city/notes/line_notes.csv`.
 
 | Field | Type | Required | Meaning | Example |
 |---|---|---|---|---|
@@ -359,7 +389,7 @@ Schema: `schemas/csv/line_notes.schema.json`. Today's file(s): `data/line_notes.
 
 Values the OCR of a scanned book misread, corrected from the page image. The printed (misread) text is kept next to the fix.
 
-Schema: `schemas/csv/ocr_corrections.schema.json`. Today's file(s): `data/ocr_corrections.csv`, `data/county/ocr_corrections.csv`.
+Schema: `schemas/csv/ocr_corrections.schema.json`. Today's file(s): `governments/lancaster-city/notes/ocr_corrections.csv`, `data/county/ocr_corrections.csv`.
 
 | Field | Type | Required | Meaning | Example |
 |---|---|---|---|---|
@@ -375,7 +405,7 @@ Schema: `schemas/csv/ocr_corrections.schema.json`. Today's file(s): `data/ocr_co
 
 Descriptions of departments and bureaus from the City's org descriptions PDF, one row per heading, with its page.
 
-Schema: `schemas/csv/org_descriptions.schema.json`. Today's file(s): `data/org_descriptions_2027.csv`.
+Schema: `schemas/csv/org_descriptions.schema.json`. Today's file(s): `governments/lancaster-city/content/org_descriptions.csv`.
 
 | Field | Type | Required | Meaning | Example |
 |---|---|---|---|---|
@@ -390,7 +420,7 @@ Schema: `schemas/csv/org_descriptions.schema.json`. Today's file(s): `data/org_d
 
 Every org code -&gt; fund, department and unit on the newest org chart, with the names the books printed for it over the years.
 
-Schema: `schemas/csv/org_structure.schema.json`. Today's file(s): `data/org_structure_2027.csv`.
+Schema: `schemas/csv/org_structure.schema.json`. Today's file(s): `governments/lancaster-city/mapping/org_structure.csv`.
 
 | Field | Type | Required | Meaning | Example |
 |---|---|---|---|---|
@@ -406,7 +436,7 @@ Schema: `schemas/csv/org_structure.schema.json`. Today's file(s): `data/org_stru
 
 The units on the newest City org chart: departments and the bureaus under them, with chart pages and links to their descriptions.
 
-Schema: `schemas/csv/org_units.schema.json`. Today's file(s): `data/org_units_2027.csv`.
+Schema: `schemas/csv/org_units.schema.json`. Today's file(s): `governments/lancaster-city/mapping/units.csv`.
 
 | Field | Type | Required | Meaning | Example |
 |---|---|---|---|---|
@@ -423,7 +453,7 @@ Schema: `schemas/csv/org_units.schema.json`. Today's file(s): `data/org_units_20
 
 Tax-rate and policy facts the budget tables do not print (for example a tax rate change), each with its source.
 
-Schema: `schemas/csv/policy_notes.schema.json`. Today's file(s): `data/policy_notes.csv`.
+Schema: `schemas/csv/policy_notes.schema.json`. Today's file(s): `governments/lancaster-city/notes/policy_notes.csv`.
 
 | Field | Type | Required | Meaning | Example |
 |---|---|---|---|---|
@@ -442,7 +472,7 @@ Schema: `schemas/csv/policy_notes.schema.json`. Today's file(s): `data/policy_no
 
 Minus signs the OCR dropped, restored only where the printed section total proves it. The printed value is kept.
 
-Schema: `schemas/csv/sign_corrections.schema.json`. Today's file(s): `data/sign_corrections.csv`.
+Schema: `schemas/csv/sign_corrections.schema.json`. Today's file(s): `governments/lancaster-city/notes/sign_corrections.csv`.
 
 | Field | Type | Required | Meaning | Example |
 |---|---|---|---|---|
@@ -463,7 +493,7 @@ Schema: `schemas/csv/sign_corrections.schema.json`. Today's file(s): `data/sign_
 
 Proven fixes to staffing schedule values (a clipped digit), with the printed value kept.
 
-Schema: `schemas/csv/staffing_corrections.schema.json`. Today's file(s): `data/staffing_corrections.csv`.
+Schema: `schemas/csv/staffing_corrections.schema.json`. Today's file(s): `governments/lancaster-city/notes/staffing_corrections.csv`.
 
 | Field | Type | Required | Meaning | Example |
 |---|---|---|---|---|
@@ -485,11 +515,10 @@ Schema: `schemas/csv/staffing_corrections.schema.json`. Today's file(s): `data/s
 
 Which revenue lines count as tax revenue in the tax limit test (counts = yes), and which tax-looking lines do not (counts = no), each with a reason.
 
-Schema: `schemas/csv/tax_limit_lines.schema.json`. Today's file(s): `data/tax_limit_lines.csv`.
+Schema: `schemas/csv/tax_limit_lines.schema.json`. Today's file(s): `governments/lancaster-city/content/rules/tax_limit_lines.csv`.
 
 | Field | Type | Required | Meaning | Example |
 |---|---|---|---|---|
-| `entity` | choice: `city`, `county` | yes | Which government. | `city` |
 | `code` | code | yes | The revenue line's object code. | `400000` |
 | `name` | text | yes | The line's printed name. | `City Real Estate Taxes` |
 | `counts` | choice: `yes`, `no` | yes | yes = counted as tax revenue; no = not counted. | `yes` |
@@ -499,11 +528,10 @@ Schema: `schemas/csv/tax_limit_lines.schema.json`. Today's file(s): `data/tax_li
 
 Tax rates for the tax estimate page, one row per government, tax and year, each with its source.
 
-Schema: `schemas/csv/tax_rates.schema.json`. Today's file(s): `data/tax_rates.csv`.
+Schema: `schemas/csv/tax_rates.schema.json`. Today's file(s): `governments/lancaster-city/mapping/tax_rates.csv`, `governments/lancaster-county/mapping/tax_rates.csv`.
 
 | Field | Type | Required | Meaning | Example |
 |---|---|---|---|---|
-| `government` | choice: `city`, `county` | yes | Which government levies the tax. | `city` |
 | `tax` | choice: `real_estate`, `earned_income` | yes | real_estate (rate in mills on assessed value) or earned_income (rate in % of earned income). | `real_estate` |
 | `year` | year | yes | The tax year. | `2026` |
 | `label` | text | yes | The rate's label on the site. | `2026` |

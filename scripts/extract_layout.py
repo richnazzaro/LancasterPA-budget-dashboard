@@ -11,8 +11,8 @@ config's "source" picks where word boxes come from:
 
 Steps:
   1. Get word boxes for every page.
-  2. Read each page's column header and check it against the per-document
-     config (config/<pdf stem>.json). Assign every number to a column by its
+  2. Read each page's column header and check it against the book's config
+     (governments/<id>/books/<pdf stem>.yaml). Assign every number to a column by its
      x-position on the page, not by its order in the line.
   3. Rebuild line items, section TOTAL rows and staffing schedules, and
      re-check every printed total exactly as extract_budget.py does.
@@ -20,7 +20,7 @@ Steps:
      ocr_cells_<doc>.csv: every amount cell that was not read cleanly.
 
 Any number that could not be read as a well-formed amount fails the run,
-unless a person has fixed it in data/ocr_corrections.csv (with evidence).
+unless a person has fixed it in notes/ocr_corrections.csv (with evidence).
 Corrected values still have to pass the printed-total checks.
 """
 
@@ -40,10 +40,13 @@ from budget_common import (
 )
 from ocr_pages import cache_dir, ocr_document
 
-CONFIG_DIR = ROOT / "config"
-CORRECTIONS_FILE = ROOT / "data" / "ocr_corrections.csv"
-SIGN_FILE = ROOT / "data" / "sign_corrections.csv"
-STAFF_FIX_FILE = ROOT / "data" / "staffing_corrections.csv"
+def corrections_file(gov=None, name="ocr_corrections.csv") -> Path:
+    """A government's hand-kept notes/<name> (the corrections this extractor applies)."""
+    import govconfig
+    gov = govconfig.resolve_government(gov)
+    p = gov.notes / name
+    legacy = ROOT / "data" / gov["route"] / name
+    return p if p.exists() or not legacy.exists() else legacy
 
 RE_ORG = re.compile(r"^\d{7,8}$")
 RE_OBJ = re.compile(r"^\d{6}$")
@@ -293,10 +296,11 @@ def parse_amounts(words, anchors, keys, single_pitch=300):
 # Corrections reviewed by a person
 # --------------------------------------------------------------------------
 
-def load_corrections(source_doc):
-    if not CORRECTIONS_FILE.exists():
+def load_corrections(source_doc, gov=None):
+    file = corrections_file(gov, "ocr_corrections.csv")
+    if not file.exists():
         return {}
-    df = pd.read_csv(CORRECTIONS_FILE, dtype=str, keep_default_na=False)
+    df = pd.read_csv(file, dtype=str, keep_default_na=False)
     df = df[df.source_doc == source_doc]
     return {(int(r.source_page), r.row_label, r.column): r for r in df.itertuples()}
 
@@ -305,7 +309,7 @@ def load_corrections(source_doc):
 # Main extraction
 # --------------------------------------------------------------------------
 
-def extract(pdf_path, cfg):
+def extract(pdf_path, cfg, gov=None):
     source_doc = cfg["source_doc"]
     li = cfg["line_items"]
     layouts = li.get("layouts") or [{"name": "main", "columns": li["columns"],
@@ -320,9 +324,7 @@ def extract(pdf_path, cfg):
     inherit = li.get("inherit_header", False)
     prev_header = None
     re_total = re.compile(li["total_prefix"])
-    fund_and_department = make_fund_mapper(
-        cfg["funds"], cfg["general_fund_departments"],
-        cfg.get("general_fund_department_overrides", {}))
+    fund_and_department = make_fund_mapper(cfg, gov)
 
     st = cfg["staffing"]
     st_keys = [(f"count_{c['fiscal_year']}_{c['doc_type']}",
@@ -331,9 +333,9 @@ def extract(pdf_path, cfg):
     # Per book; reset every run so one book's pattern never leaks into the next.
     STAFF_FIELD["count"] = re.compile(st.get("count_pattern") or DEFAULT_COUNT)
 
-    corrections = load_corrections(source_doc)
-    signs, used_signs = load_signs(source_doc), set()
-    staff_fixes, used_staff_fixes = load_staff_fixes(source_doc), set()
+    corrections = load_corrections(source_doc, gov)
+    signs, used_signs = load_signs(source_doc, gov), set()
+    staff_fixes, used_staff_fixes = load_staff_fixes(source_doc, gov), set()
     used_corrections = set()
 
     items, sections, staff, staff_checks, unparsed, cell_log = [], [], [], [], [], []
@@ -748,21 +750,22 @@ def _name(line, left_ws, amount_left, corrections, used, page_no, label):
     return " ".join(words)
 
 
-def load_signs(source_doc):
+def load_signs(source_doc, gov=None):
     """Sign flips proven by printed totals (scripts/sign_corrections.py)."""
-    if not SIGN_FILE.exists():
+    file = corrections_file(gov, "sign_corrections.csv")
+    if not file.exists():
         return {}
-    df = pd.read_csv(SIGN_FILE, dtype=str, keep_default_na=False)
+    df = pd.read_csv(file, dtype=str, keep_default_na=False)
     df = df[df.source_doc == source_doc]
     return {(int(r.source_page), r.account_code, r.column): r for r in df.itertuples()}
 
 
-def load_staff_fixes(source_doc):
-    """Staffing cells corrected because a printed subtotal proves the value
-    (data/staffing_corrections.csv)."""
-    if not STAFF_FIX_FILE.exists():
+def load_staff_fixes(source_doc, gov=None):
+    """Staffing cells corrected because a printed subtotal proves the value (notes/staffing_corrections.csv)."""
+    file = corrections_file(gov, "staffing_corrections.csv")
+    if not file.exists():
         return {}
-    df = pd.read_csv(STAFF_FIX_FILE, dtype=str, keep_default_na=False)
+    df = pd.read_csv(file, dtype=str, keep_default_na=False)
     df = df[df.source_doc == source_doc]
     return {(int(r.source_page), r.org_code, r.object_code, r.position_title, r.column,
              r.printed_value): r for r in df.itertuples()}
@@ -850,12 +853,19 @@ def main():
         sys.exit(1)
 
 
-def run(pdf, config=None, out=OUT_DIR):
+def run(pdf, config=None, out=OUT_DIR, gov=None):
     """Extract and validate one book. Returns a stats dict ("ok" = no
-    unreviewed failures)."""
+    unreviewed failures). The layout comes from the government's books/<pdf stem>.yaml."""
+    import govconfig
+    gov = govconfig.resolve_government(gov)
     args = argparse.Namespace(pdf=Path(pdf), config=config, out=Path(out))
-    cfg_path = args.config or CONFIG_DIR / f"{args.pdf.stem}.json"
-    cfg = json.loads(cfg_path.read_text())
+    if args.config:
+        cfg = json.loads(Path(args.config).read_text())
+        cfg_path = Path(args.config)
+    else:
+        cfg, cfg_path = govconfig.book_config(gov.id, args.pdf.name), govconfig.books_dir(gov.id) / f"{args.pdf.stem}.yaml"
+        if cfg is None:
+            sys.exit(f"{govconfig.rel(cfg_path)}: no book config for {args.pdf.name}; run scripts/ingest.py to infer one")
     if cfg["source_doc"] != args.pdf.name:
         sys.exit(f"{cfg_path} is for {cfg['source_doc']}, not {args.pdf.name}")
     if cfg.get("source", "ocr") == "ocr":
@@ -863,7 +873,7 @@ def run(pdf, config=None, out=OUT_DIR):
                      fallback_rotate=cfg["ocr"].get("fallback_rotate", 0))
 
     (items, sections, staff, staff_checks, unparsed, cell_log,
-     columns, keys, page_kinds) = extract(args.pdf, cfg)
+     columns, keys, page_kinds) = extract(args.pdf, cfg, gov)
     doc = args.pdf.stem
     args.out.mkdir(parents=True, exist_ok=True)
 
@@ -880,7 +890,7 @@ def run(pdf, config=None, out=OUT_DIR):
     pd.DataFrame(cell_log).to_csv(args.out / f"ocr_cells_{doc}.csv", index=False)
 
     checks = pd.DataFrame(sections + staff_checks + cell_checks(cell_log))
-    checks = acknowledge_known_issues(checks, args.pdf.name)
+    checks = acknowledge_known_issues(checks, args.pdf.name, gov)
     checks.to_csv(args.out / f"validation_{doc}.csv", index=False)
 
     kinds = pd.Series(page_kinds).value_counts()

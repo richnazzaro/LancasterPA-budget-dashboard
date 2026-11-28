@@ -6,25 +6,12 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "entity",
     "code",
     "name",
     "counts",
     "reason"
   ],
   "properties": {
-    "entity": {
-      "type": "string",
-      "x-type": "choice",
-      "description": "Which government.",
-      "enum": [
-        "city",
-        "county"
-      ],
-      "examples": [
-        "city"
-      ]
-    },
     "code": {
       "type": "string",
       "x-type": "code",

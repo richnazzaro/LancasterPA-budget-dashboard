@@ -1,4 +1,4 @@
-"""Income sources (data/income_sources.csv).
+"""Income sources (mapping/income_sources.csv).
 
 The Income view groups income by where it comes from. A rule names the source of one object code (City, 6 digits) or
 account (County, 4 digits), the part after the "-" in an account code, and optionally a fund name (blank: any fund).
@@ -14,37 +14,44 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
-PATH = Path(__file__).resolve().parent.parent / "data" / "income_sources.csv"
-COLUMNS = ("entity", "code", "fund", "source", "evidence")
+COLUMNS = ("code", "fund", "source", "evidence")
 
 
-def load(path: Path = PATH, entity: str | None = None) -> list[dict]:
-    """The rules (for one entity when given), validated: every field present, evidence given, no code listed twice for
-    the same fund."""
-    with path.open(newline="") as f:
+def path(gov=None) -> Path:
+    """The government's mapping/income_sources.csv."""
+    import govconfig
+    return govconfig.resolve_government(gov).mapping / "income_sources.csv"
+
+
+def load(gov=None) -> list[dict]:
+    """The rules, validated: every field present, evidence given, no code listed twice for the same fund.
+
+    A government with no file has no rules (its income is grouped by the printed groups)."""
+    file = path(gov)
+    if not file.exists():
+        return []
+    with file.open(newline="") as f:
         reader = csv.DictReader(f)
         if tuple(reader.fieldnames or ()) != COLUMNS:
-            raise ValueError(f"{path.name}: columns must be {', '.join(COLUMNS)}")
+            raise ValueError(f"{file.name}: columns must be {', '.join(COLUMNS)}")
         rules = list(reader)
     seen = set()
     for n, r in enumerate(rules, start=2):
-        for c in ("entity", "code", "source", "evidence"):
+        for c in ("code", "source", "evidence"):
             if not (r[c] or "").strip():
-                raise ValueError(f"{path.name} line {n}: {c} is empty")
-        if r["entity"] not in ("city", "county"):
-            raise ValueError(f"{path.name} line {n}: entity {r['entity']!r} is not city or county")
-        key = (r["entity"], r["code"], r["fund"])
+                raise ValueError(f"{file.name} line {n}: {c} is empty")
+        key = (r["code"], r["fund"])
         if key in seen:
-            raise ValueError(f"{path.name} line {n}: {r['code']} is listed twice for the same fund")
+            raise ValueError(f"{file.name} line {n}: {r['code']} is listed twice for the same fund")
         seen.add(key)
-    return [r for r in rules if entity is None or r["entity"] == entity]
+    return rules
 
 
-def income_sources(accounts: list, funds: list, categories: list, entity: str = "city", revenue: str = "Revenue") -> dict:
+def income_sources(accounts: list, funds: list, categories: list, gov=None, revenue: str = "Revenue") -> dict:
     """budget.json `income_sources`: the source names and {account index (as text): name index} for every revenue
     account a rule matches (a rule with a fund beats nothing else: a fund rule and an any-fund rule never overlap
     on one account because the first match wins, fund rules first)."""
-    rules = load(entity=entity)
+    rules = load(gov)
     by_code: dict[str, list[dict]] = {}
     for r in sorted(rules, key=lambda r: not r["fund"]):  # fund-specific rules first
         by_code.setdefault(r["code"], []).append(r)

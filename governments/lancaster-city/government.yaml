@@ -11,9 +11,10 @@ fiscal_year:
   start_month: 1                         # January to December: Home Rule Charter § 8.01, quoted in web/app.js calSteps()
   label: "{end}"                         # shown as the plain year, as today
 
-sources_dir: Budget PDFs - City          # today's folder (scripts/ingest.py PDF_DIR); moves to governments/lancaster-city/sources/ in Phase 1.6
-pdf_path: pdfs/                          # web/config.json entities.city.paths.pdfs (web/pdfs -> ../Budget PDFs - City)
+sources_dir: governments/lancaster-city/sources   # the processed PDFs; published at pdf_path (PLAN.md decision D4)
+pdf_path: pdfs/                          # web/config.json entities.city.paths.pdfs (web/pdfs -> this folder)
 data_path: data/                         # web/config.json entities.city.paths.data
+processed_dir: data/processed            # generated CSVs the build reads (scripts/ingest.py writes them here)
 
 display:
   # One kind of figure per year: AGENTS.md "Which figures the site shows", scripts/build_dataset.py RULE,
@@ -106,3 +107,11 @@ text:                                    # web/config.json entities.city
 data_files:                              # web/config.json entities.city.files / lazy_files
   eager: [changes, staffing]
   lazy: [positions]
+
+org:                                     # scripts/org_structure.py; the 2027 chart, City-wide (all years use it)
+  as_of: 2027
+  units: mapping/units.csv                # was data/org_units_2027.csv
+  codes: mapping/org_structure.csv        # was data/org_structure_2027.csv
+  descriptions: content/org_descriptions.csv   # was data/org_descriptions_2027.csv
+  chart_pdf: 2027 Org Chart.pdf
+  descriptions_pdf: Org Descriptions 2027.pdf

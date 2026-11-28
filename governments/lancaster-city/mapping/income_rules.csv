@@ -1,0 +1,17 @@
+code,fund,class,lines,evidence
+499000,,draw,Fund Balance Reserve,"Money taken from the fund's own savings to balance the budget, not money coming in. The General Fund's draw is the deficit on the Fund Balance Projection page."
+404300,,transfer,Tsfr'd From Utility Funds,"The book's note: ""Revenue is derived from interfund transfers to the General Fund from the Water Fund."""
+404500,,charge,SF - Admin Indirect Costs,Indirect costs charged to the Sewer Fund under the City's full cost allocation plan (the book's note).
+404600,,charge,WF - Admin Indirect Costs,Indirect costs charged to the Water Fund under the City's full cost allocation plan.
+417900,,charge,TF - Admin Indirect Costs,Indirect costs charged to the Solid Waste & Recycling Fund under the City's full cost allocation plan (the book's note).
+420200,,charge,SWMF Admin Indirect Costs,Indirect costs charged to the Stormwater Management Fund under the City's full cost allocation plan (the book's note).
+405000,,charge,Sewer Vehicle Maintenance,Reimbursement from the Sewer Fund for vehicle upkeep by the Motor Vehicles Section (the book's note).
+405100,,charge,Water Vehicle Maintenance,Reimbursement from the Water Fund for vehicle upkeep by the Motor Vehicles Section.
+420000,,charge,Sewer Direct Costs; Swr Grnds Exp Reimb,"Grounds maintenance at wastewater facilities, billed directly to the Sewer Fund (the book's note)."
+422000,,charge,WaterGrnds Exp Reimb,Grounds maintenance billed directly to the Water Fund (the book's note).
+430000,,charge,Treasury Allocation,Reimbursed by the City's enterprise funds for Treasury billing and collection services (the book's note).
+430400,,charge,IT Allocation,Reimbursed by the City's enterprise funds for IT services (the book's note).
+407900,,charge,Reimb. - Meter Labor,The Sewer Fund's 35% share of the Water Fund's Meter Shop budget (the book's note).
+407500,,charge,Liquid Fuels Reimb.,Reimbursement by the Liquid Fuels Fund for General Fund street work (the book's note).
+406900,,income,Fed.Reimb-Indirect Costs,"Reviewed: federal grant money for indirect costs, from outside the City. Counted as income."
+412400,,income,Liquid Fuels Allocation,Reviewed: the state's liquid fuels (motor fuel tax) payment to the City. Counted as income.

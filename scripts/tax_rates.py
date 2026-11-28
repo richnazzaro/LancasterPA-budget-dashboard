@@ -1,4 +1,4 @@
-"""Tax rates for the tax estimate page (data/tax_rates.csv -> web/data/tax_rates.json).
+"""Tax rates for the tax estimate page (governments/<id>/mapping/tax_rates.csv -> web/data/tax_rates.json).
 
 The budget tables print no tax rates, so the page "What would you pay?" (#/tax, #/county/tax) reads them from a hand-kept
 file, one row per (government, tax, year), each with its source:
@@ -16,7 +16,7 @@ file, one row per (government, tax, year), each with its source:
 
 Each row is the rate in force for that year, before any change the year's budget makes: this year's rates (2026), and
 for next year the City's property tax rate reset after the reassessment (5.71 mills on the new values). What the newest
-budget does comes from data/policy_notes.csv, matched by year and `account`: a note's `rate_to` is the new rate, its
+budget does comes from notes/policy_notes.csv, matched by year and `account`: a note's `rate_to` is the new rate, its
 `change_pct` raises the year's rate by that percent (a calculated rate, flagged). Each becomes a step in `steps` (the
 Proposal, then the Revised budget). Where a tax has notes for a year but no row (the earned income tax in 2027), the
 year before's row is carried forward as the base (`carried`). The page (config.json `tax_estimate.this_year` and
@@ -34,20 +34,42 @@ import os
 import re
 from pathlib import Path
 
+import govconfig
+
 ROOT = Path(__file__).resolve().parent.parent
-CSV = ROOT / "data" / "tax_rates.csv"
 OUT = ROOT / "web" / "data" / "tax_rates.json"
 PDFS = ROOT / "web" / "pdfs"
-CONTEXT = ROOT / "data" / "county" / "context_facts.csv"
-POLICY = ROOT / "data" / "policy_notes.csv"
 UNITS = {"real_estate": "mills", "earned_income": "%"}
-GOVS = ("city", "county")
 PDF_SRC = re.compile(r"^(?P<doc>[^#]+\.pdf)#page=(?P<page>\d+)$")
 
 
-def load(path: Path = CSV) -> list[dict]:
-    with path.open(newline="", encoding="utf-8") as f:
-        return list(csv.DictReader(f))
+def path(gov) -> Path:
+    """A government's hand-kept mapping/tax_rates.csv."""
+    return gov.mapping / "tax_rates.csv"
+
+
+def governments() -> list:
+    """Every government (site.yaml order) that has a mapping/tax_rates.csv."""
+    return [g for g in (govconfig.government(i) for i in govconfig.list_governments()) if path(g).exists()]
+
+
+def context_file(gov) -> Path | None:
+    """The government's context facts, where it keeps them (Phase 2 moves the County file into its folder)."""
+    for p in (gov.notes / "context_facts.csv", ROOT / "data" / gov["route"] / "context_facts.csv"):
+        if p.exists():
+            return p
+    return None
+
+
+def load(paths=None) -> list[dict]:
+    """Every government's rows, each labelled with its short name (government.yaml route: city, county).
+
+    The short name is what the site's tax pages key on, so the file keeps its `government` column."""
+    rows = []
+    for gov in governments() if paths is None else paths:
+        with path(gov).open(newline="", encoding="utf-8") as f:
+            rows += [{**r, "government": gov["route"]} for r in csv.DictReader(f)]
+    return rows
 
 
 def _pdf_path(doc: str) -> str | None:
@@ -60,12 +82,13 @@ def _pdf_path(doc: str) -> str | None:
 
 
 def problems(rows: list[dict]) -> list[str]:
-    """Every reason a row can't be shown as it is; empty when the file is good."""
+    """Every reason a row can't be shown as it is; empty when the files are good."""
     out, seen = [], set()
+    known = {g["route"] for g in governments()}
     for i, r in enumerate(rows, start=2):
-        at = f"data/tax_rates.csv line {i}"
-        if r["government"] not in GOVS:
-            out.append(f"{at}: government must be one of {', '.join(GOVS)}")
+        at = f"{r['government']}/mapping/tax_rates.csv row {i - 1}"
+        if r["government"] not in known:
+            out.append(f"{at}: government {r['government']!r} has no government.yaml route")
         if r["tax"] not in UNITS:
             out.append(f"{at}: tax must be one of {', '.join(UNITS)}")
         elif r["unit"] != UNITS[r["tax"]]:
@@ -108,14 +131,22 @@ def _source(s: str) -> tuple[str | None, str | None]:
 
 
 def load_policy() -> list[dict]:
-    with POLICY.open(newline="", encoding="utf-8") as f:
-        return [p for p in csv.DictReader(f) if p["account"] and (p["rate_to"] or p["change_pct"])]
+    """Every government's notes/policy_notes.csv rows that change a rate, labelled with its short name."""
+    rows = []
+    for gov in (govconfig.government(i) for i in govconfig.list_governments()):
+        p = gov.notes / "policy_notes.csv"
+        if not p.exists():
+            continue
+        with p.open(newline="", encoding="utf-8") as f:
+            rows += [{**r, "government": gov["route"]} for r in csv.DictReader(f)
+                     if r["account"] and (r["rate_to"] or r["change_pct"])]
+    return rows
 
 
 def steps_for(r: dict, policy: list[dict]) -> list[dict]:
-    """What the newest budget's figures do to this rate (data/policy_notes.csv, same year and account), in FIGURES order.
+    """What the newest budget's figures do to this rate (notes/policy_notes.csv, same year and account), in FIGURES order.
     A note with rate_to gives the new rate; one with change_pct raises the row's rate by that percent (calculated)."""
-    if r["government"] != "city" or not r["account"]:
+    if not r["account"]:
         return []
     base, out = float(r["rate"]), []
     for fig in FIGURES:
@@ -137,12 +168,12 @@ def steps_for(r: dict, policy: list[dict]) -> list[dict]:
 
 
 def with_carried(rows: list[dict], policy: list[dict]) -> list[dict]:
-    """The rows, plus a carried-forward base for each City tax with policy notes for a year it has no row for."""
+    """The rows, plus a carried-forward base for each tax with policy notes for a year it has no row for."""
     out = list(rows)
-    for y, acct in sorted({(p["year"], p["account"]) for p in policy}):
-        if any(r["government"] == "city" and r["account"] == acct and r["year"] == y for r in rows):
+    for gov, y, acct in sorted({(p["government"], p["year"], p["account"]) for p in policy}):
+        if any(r["government"] == gov and r["account"] == acct and r["year"] == y for r in rows):
             continue
-        prev = [r for r in rows if r["government"] == "city" and r["account"] == acct and int(r["year"]) == int(y) - 1]
+        prev = [r for r in rows if r["government"] == gov and r["account"] == acct and int(r["year"]) == int(y) - 1]
         if prev:
             out.append({**prev[0], "year": y, "label": y, "carried": True})
     return out
@@ -175,7 +206,7 @@ def write(out: Path = OUT) -> dict:
 
 def check() -> int:
     """For check_dataset.py: the file's rows, the cross-checks and web/data/tax_rates.json. Returns the failure count."""
-    print("\nTax rates for the tax estimate page (data/tax_rates.csv):")
+    print("\nTax rates for the tax estimate page (governments/*/mapping/tax_rates.csv):")
     rows = load()
     fails = problems(rows)
     policy = load_policy()
@@ -184,16 +215,23 @@ def check() -> int:
         k = (r["government"], r["tax"])
         if k not in newest or int(r["year"]) > int(newest[k]["year"]):
             newest[k] = r
-    # The County's rate is also in the context facts (from its adopting resolution): they must agree.
-    ctx = {f["id"]: f for f in csv.DictReader(CONTEXT.open(newline="", encoding="utf-8"))} if CONTEXT.exists() else {}
+    # A rate the government also prints as a context fact (from its adopting resolution) must agree.
     for r in rows:
-        if r["government"] == "county" and r["tax"] == "real_estate":
-            f = ctx.get(f"millage_{r['year']}")
-            if not f:
-                fails.append(f"county real_estate {r['year']}: no millage_{r['year']} in data/county/context_facts.csv")
-            elif abs(float(f["value"]) - float(r["rate"])) > 1e-9:
-                fails.append(f"county real_estate {r['year']}: {r['rate']} mills here, {f['value']} in context_facts.csv")
-    # The budget's tax changes (data/policy_notes.csv): a note's rate_from is the rate before the change, so it must
+        if r["tax"] != "real_estate":
+            continue
+        gov = next((g for g in governments() if g["route"] == r["government"]), None)
+        cf = context_file(gov) if gov else None
+        if cf is None:
+            continue
+        ctx = {f["id"]: f for f in csv.DictReader(cf.open(newline="", encoding="utf-8"))}
+        f = ctx.get(f"millage_{r['year']}")
+        if not f:
+            fails.append(f"{r['government']} real_estate {r['year']}: no millage_{r['year']} in "
+                         f"{govconfig.rel(cf)}")
+        elif abs(float(f["value"]) - float(r["rate"])) > 1e-9:
+            fails.append(f"{r['government']} real_estate {r['year']}: {r['rate']} mills here, {f['value']} in "
+                         f"{govconfig.rel(cf)}")
+    # The budget's tax changes (notes/policy_notes.csv): a note's rate_from is the rate before the change, so it must
     # equal this file's rate; every figure with a note for the row's year and line must become a step.
     for (gov, tax), r in newest.items():
         steps = steps_for(r, policy)
