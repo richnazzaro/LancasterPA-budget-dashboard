@@ -14,6 +14,7 @@ fiscal_year:
 sources_dir: Budget PDFs - County        # today's folder (scripts/ingest.py COUNTY_PDF_DIR); moves to governments/lancaster-county/sources/ in Phase 2.5
 pdf_path: pdfs/county/                   # web/config.json entities.county.paths.pdfs
 data_path: data/county/                  # web/config.json entities.county.paths.data
+processed_dir: data/processed/county     # generated CSVs the build reads
 
 display:
   # County rule (AGENTS.md "County"; scripts/build_county.py docstring; web/data/county/budget.json `rule`):

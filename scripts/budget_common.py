@@ -18,9 +18,15 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "data" / "processed"
 
-# Printed checks that fail because of errors in the source PDF itself, after a
-# person has reviewed them. Unreviewed failures still stop the pipeline.
-KNOWN_ISSUES_FILE = ROOT / "data" / "known_issues.csv"
+
+def known_issues_file(gov=None) -> Path:
+    """The government's reviewed source-PDF notes (notes/known_issues.csv; County still keeps it in data/<route>/)."""
+    import govconfig
+    gov = govconfig.resolve_government(gov)
+    for p in (gov.notes / "known_issues.csv", ROOT / "data" / gov["route"] / "known_issues.csv"):
+        if p.exists():
+            return p
+    return gov.notes / "known_issues.csv"
 
 # The city's spreadsheet rounds each cell independently, so sums can drift by
 # a few dollars from the printed total. Anything bigger is a real problem.
@@ -150,11 +156,12 @@ def to_long(items, amount_columns, amount_keys, source_doc):
     return pd.DataFrame(rows, columns=LONG_COLUMNS)
 
 
-def acknowledge_known_issues(checks, source_doc):
+def acknowledge_known_issues(checks, source_doc, gov=None):
     """Mark failed checks that a person has logged as source-PDF errors."""
     checks["acknowledged"] = ""
-    if KNOWN_ISSUES_FILE.exists():
-        known = pd.read_csv(KNOWN_ISSUES_FILE)
+    file = known_issues_file(gov)
+    if file.exists():
+        known = pd.read_csv(file)
         known = known[known["source_doc"] == source_doc]
         for _, k in known.iterrows():
             hit = (checks["source_page"] == k["source_page"]) & \
@@ -184,7 +191,7 @@ def print_summary(items, staff, checks, unparsed):
         for u in unparsed[:30]:
             print(f"  p{u['source_page']}: {u['text'][:110]}")
     if len(acknowledged):
-        print("\nKnown source-document issues (reviewed, see data/known_issues.csv):")
+        print("\nKnown source-document issues (reviewed, see notes/known_issues.csv):")
         for _, r in acknowledged.iterrows():
             print(f"  p{r.source_page} [{r.level}] {r.label}")
     if len(failed):

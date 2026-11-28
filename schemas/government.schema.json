@@ -108,6 +108,25 @@
       "description": "Where the government's generated data files are published on the website, relative to the site root, ending in /.",
       "examples": ["data/"]
     },
+    "processed_dir": {
+      "type": "string",
+      "description": "The folder, relative to the repository root, that holds the government's generated CSVs (the build reads these). Default data/processed.",
+      "examples": ["data/processed"]
+    },
+    "org": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The org chart tables: which org code belongs to which department and unit, and the printed descriptions of each unit. All paths are relative to this government's folder.",
+      "required": ["as_of", "units", "codes", "descriptions"],
+      "properties": {
+        "as_of": {"type": "integer", "minimum": 1900, "maximum": 2100, "description": "The chart's edition year (the PDF it was taken from).", "examples": [2027]},
+        "units": {"type": "string", "description": "Departments and units, one row each.", "examples": ["mapping/units.csv"]},
+        "codes": {"type": "string", "description": "Org code -> department and unit.", "examples": ["mapping/org_structure.csv"]},
+        "descriptions": {"type": "string", "description": "The description text, one row per printed heading.", "examples": ["content/org_descriptions.csv"]},
+        "chart_pdf": {"type": "string", "description": "The org chart PDF's file name in the sources folder (linked from the site).", "examples": ["2027 Org Chart.pdf"]},
+        "descriptions_pdf": {"type": "string", "description": "The descriptions PDF's file name in the sources folder (linked from the site).", "examples": ["Org Descriptions 2027.pdf"]}
+      }
+    },
     "display": {
       "type": "object",
       "additionalProperties": false,

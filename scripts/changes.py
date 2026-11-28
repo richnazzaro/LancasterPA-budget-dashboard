@@ -3,7 +3,7 @@
 
 Called by build_dataset.py after budget.json is built, so it reads the same series the site shows
 (one kind of figure per year) and the same `org` block. Nothing here is typed in by hand except
-data/policy_notes.csv (tax-policy facts that are not in the budget tables).
+notes/policy_notes.csv (tax-policy facts that are not in the budget tables).
 
 Comparisons (to <- from), for the newest year N:
   N Revised  <- N-1 Projected   (default)          N Proposed <- N-1 Projected
@@ -41,9 +41,7 @@ from pathlib import Path
 
 import income_rules
 
-ROOT = Path(__file__).resolve().parent.parent
-POLICY_CSV = ROOT / "data" / "policy_notes.csv"
-LINE_NOTES_CSV = ROOT / "data" / "line_notes.csv"  # what the book says about one line in one year (e.g. 2025 Building Permits)
+TOP_N = 10
 TOP_N = 10
 MOVE_RE = re.compile(r"\b(?:moved|transferr(?:ed|ing))\b", re.I)
 DIRECT_BILL_RE = re.compile(r"\bdirect(?:ly)?[ -]?(?:bill|billed|invoice)", re.I)
@@ -102,13 +100,13 @@ def link(entries) -> dict | None:
 # ---------------------------------------------------------------------------------------------
 # Line-level comparison and scoped totals
 # ---------------------------------------------------------------------------------------------
-def compare(budget: dict, frm: Series, to: Series, ctx: dict) -> dict:
+def compare(budget: dict, frm: Series, to: Series, ctx: dict, gov=None) -> dict:
     acc, cats = budget["accounts"], budget["categories"]
     codes = budget["org"]["codes"]
     units = budget["org"]["units"]
     rev_cat = cats.index("Revenue") if "Revenue" in cats else -1
     fund_names = budget["funds"]
-    classify = income_rules.classifier()  # draw / transfer / charge (data/income_rules.csv); '' is income
+    classify = income_rules.classifier(income_rules.load(gov))  # draw / transfer / charge; '' is income
     keys = sorted(set(frm.lines) | set(to.lines))
     lines, meta = [], []  # meta: per line (fund, cat, unit, dept, is_rev, delta, is_draw, bureau)
     every = []            # every key with its from/to entry, for scope totals
@@ -118,7 +116,7 @@ def compare(budget: dict, frm: Series, to: Series, ctx: dict) -> dict:
         code, name, fund, _dept, bureau, cat = acc[a]
         unit = codes[code.split("-")[0]]
         info = {"fund": fund, "cat": cat, "unit": unit, "dept": units[unit]["dept"], "rev": cat == rev_cat,
-                "bureau": bureau, "draw": code.endswith("-499000") and name.lower().startswith("fund balance reserve"),
+                "bureau": bureau, "draw": cat == rev_cat and classify(code, fund_names[fund]) == "draw",
                 "cls": classify(code, fund_names[fund]) if cat == rev_cat else "",
                 "f": f, "t": t, "delta": (t[1] if t else 0) - (f[1] if f else 0)}
         every.append(info)
@@ -357,7 +355,7 @@ def load_schedule(path: Path, column: str, doc_idx: int, org_fund: dict, codes: 
             near = [c for c in codes if len(c) == len(org) and c[:-1] == org[:-1]]
             if len(near) != 1:
                 if strict:
-                    raise SystemExit(f"staffing org {org} ({path.name}) is not in data/org_structure_2027.csv")
+                    raise SystemExit(f"staffing org {org} ({path.name}) is not in mapping/org_structure.csv")
                 unplaced.append({"org": org, "cls": cls, "n": n, "p": int(r["source_page"]), "title": r["position_title"]})
                 continue
             remapped.append({"printed": org, "used": near[0], "n": n, "p": int(r["source_page"]), "title": r["position_title"]})
@@ -769,17 +767,20 @@ def parse_year(k: str) -> str:
 # ---------------------------------------------------------------------------------------------
 # Policy notes
 # ---------------------------------------------------------------------------------------------
-def policy_notes(docs: list) -> list:
-    if not POLICY_CSV.exists():
+def policy_notes(docs: list, gov=None) -> list:
+    import govconfig
+    gov = govconfig.resolve_government(gov)
+    f = gov.notes / "policy_notes.csv"
+    if not f.exists():
         return []
     out = []
-    for r in read_csv(POLICY_CSV):
+    for r in read_csv(f):
         e = {"year": int(r["year"]), "figure": r["figure"].strip(), "item": r["item"].strip(), "text": r["text"].strip(),
              "source": r["source"].strip(), "account": (r.get("account") or "").strip()}
         m = re.match(r"(.+\.pdf)#page=(\d+)$", e["source"], re.I)
         if m:
             if m.group(1) not in docs:
-                raise SystemExit(f"policy_notes.csv: unknown source document {m.group(1)}")
+                raise SystemExit(f"{govconfig.rel(f)}: unknown source document {m.group(1)}")
             e["d"], e["p"] = docs.index(m.group(1)), int(m.group(2))
         # A tax-change tile on the Income view: the rate before and after (rate_from, rate_to, unit), or, where the
         # rate itself is not printed, only the change in percent (change_pct; 0 = no change).
@@ -789,30 +790,33 @@ def policy_notes(docs: list) -> list:
                 e[k] = float(v)
         if "rate_from" in e or "rate_to" in e:
             if not ("rate_from" in e and "rate_to" in e and (r.get("unit") or "").strip()):
-                raise SystemExit(f"policy_notes.csv: {e['year']} {e['item']}: rate_from, rate_to and unit go together")
+                raise SystemExit(f"{govconfig.rel(f)}: {e['year']} {e['item']}: rate_from, rate_to and unit go together")
             e["unit"] = r["unit"].strip()
         out.append(e)
     return out
 
 
-def line_notes(docs: list) -> list:
-    """Hand-kept, sourced context for one line in one year (data/line_notes.csv): year, figure, account, text, source.
+def line_notes(docs: list, gov=None) -> list:
+    """Hand-kept, sourced context for one line in one year (notes/line_notes.csv): year, figure, account, text, source.
     The site shows it beside the generated note for a line far above the years either side of it."""
-    if not LINE_NOTES_CSV.exists():
+    import govconfig
+    gov = govconfig.resolve_government(gov)
+    f = gov.notes / "line_notes.csv"
+    if not f.exists():
         return []
     out = []
-    for r in read_csv(LINE_NOTES_CSV):
+    for r in read_csv(f):
         e = {"year": int(r["year"]), "figure": r["figure"].strip(), "account": r["account"].strip(), "text": r["text"].strip()}
         m = re.match(r"(.+\.pdf)#page=(\d+)$", r["source"].strip(), re.I)
         if not m or m.group(1) not in docs:
-            raise SystemExit(f"line_notes.csv: source must be <budget book pdf>#page=N, got {r['source']!r}")
+            raise SystemExit(f"{govconfig.rel(f)}: source must be <budget book pdf>#page=N, got {r['source']!r}")
         e["d"], e["p"] = docs.index(m.group(1)), int(m.group(2))
         out.append(e)
     return out
 
 
 # ---------------------------------------------------------------------------------------------
-def build_changes(budget: dict, processed: Path, designated: dict, newest: int, aliases: dict) -> dict:
+def build_changes(budget: dict, processed: Path, designated: dict, newest: int, aliases: dict, gov=None) -> dict:
     docs = budget["docs"]
     newest_book = designated[newest]
     items_path = processed / f"line_items_{newest_book['stem']}.csv"
@@ -830,7 +834,7 @@ def build_changes(budget: dict, processed: Path, designated: dict, newest: int, 
     series = {k: Series(budget, k) for k in set(to_keys + from_keys)}
     label = lambda k: f"{k.split('|')[0]} {k.split('|')[1].capitalize()}"
 
-    org_rows = read_csv(ROOT / "data" / "org_structure_2027.csv")
+    org_rows = read_csv(gov.path(gov["org"]["codes"])) if gov.get("org") else []
     org_fund = {r["org_code"]: r["fund"] for r in org_rows}
     codes, units = budget["org"]["codes"], budget["org"]["units"]
     known = budget.get("known_issues", [])
@@ -860,7 +864,7 @@ def build_changes(budget: dict, processed: Path, designated: dict, newest: int, 
         cid = f"{t}~{f}"
         ctx = {"id": cid, "from_label": schedules.get(f, {}).get("label", label(f)), "to_label": schedules.get(t, {}).get("label", label(t))}
         comp = {"to": t, "from": f, "same_kind": t.split("|")[1] == f.split("|")[1] or f.split("|")[0] == t.split("|")[0]}
-        comp |= compare(budget, series[f], series[t], ctx)
+        comp |= compare(budget, series[f], series[t], ctx, gov)
         if t in schedules and f in schedules:
             comp["positions"] = compare_positions(budget, schedules[f], schedules[t], codes, units, known,
                                                   shifts if f.split("|")[0] != t.split("|")[0] else [], ctx)
@@ -885,7 +889,7 @@ def build_changes(budget: dict, processed: Path, designated: dict, newest: int, 
     }
 
 
-def build_positions(budget: dict, processed: Path, designated: dict, newest: int, shifts: list) -> dict:
+def build_positions(budget: dict, processed: Path, designated: dict, newest: int, shifts: list, gov=None) -> dict:
     """web/data/positions.json: compare_positions() for every ordered pair of distinct position schedules.
     Schedules: "<newest>|proposed" and "<newest>|revised" (the newest book's two columns) and "<y>" for each earlier
     designated book's own-year column. A series maps to one (see seriesSchedule() in web/app.js): the newest year's
@@ -893,7 +897,7 @@ def build_positions(budget: dict, processed: Path, designated: dict, newest: int
     org codes the org chart doesn't have are counted in the totals as `unplaced`. `shifts` (changes.json's) apply
     only from an earlier year to the newest; they are copied, so changes.json's own shifts are not touched."""
     docs = budget["docs"]
-    org_rows = read_csv(ROOT / "data" / "org_structure_2027.csv")
+    org_rows = read_csv(gov.path(gov["org"]["codes"])) if gov.get("org") else []
     org_fund = {r["org_code"]: r["fund"] for r in org_rows}
     codes, units = budget["org"]["codes"], budget["org"]["units"]
     known = budget.get("known_issues", [])

@@ -6,7 +6,6 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "government",
     "tax",
     "year",
     "label",
@@ -18,18 +17,6 @@
     "evidence"
   ],
   "properties": {
-    "government": {
-      "type": "string",
-      "x-type": "choice",
-      "description": "Which government levies the tax.",
-      "enum": [
-        "city",
-        "county"
-      ],
-      "examples": [
-        "city"
-      ]
-    },
     "tax": {
       "type": "string",
       "x-type": "choice",

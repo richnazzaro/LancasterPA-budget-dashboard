@@ -25,7 +25,9 @@ Needs PyYAML and jsonschema (requirements-build.txt).
 from __future__ import annotations
 
 import json
+import copy
 import re
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -375,7 +377,7 @@ def book_config(gov_id: str, pdf_name: str) -> dict | None:
     if data["source_doc"] != Path(pdf_name).name:
         raise ConfigError(f"{rel(path)}, field source_doc: {data['source_doc']!r} does not match the PDF "
                           f"{Path(pdf_name).name!r}")
-    return data
+    return normalise_book(data)
 
 
 def calendar(gov_id: str) -> dict | None:
@@ -397,3 +399,137 @@ def year_label(gov: dict | str, year: int) -> str:
     start = year if fy["start_month"] == 1 else year - 1
     return (fy["label"].replace("{end_short}", f"{year % 100:02d}")
             .replace("{end}", str(year)).replace("{start}", str(start)))
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# One government's files, in one object (Phase 1)
+# ---------------------------------------------------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class Gov:
+    """A loaded government.yaml and the folders every script reads its files from.
+
+    Paths are absolute; `rel()` turns one into the form shown in messages. Nothing here names a government: a script
+    takes a Gov and asks it where its mapping, notes, books, PDFs and generated data live.
+    """
+
+    id: str
+    data: dict
+
+    def __getitem__(self, key: str):
+        return self.data[key]
+
+    def get(self, key: str, default=None):
+        return self.data.get(key, default)
+
+    @property
+    def name(self) -> str:
+        return self.data["name"]
+
+    @property
+    def kind(self) -> str:
+        return self.data["kind"]
+
+    def path(self, *parts: str) -> Path:
+        return gov_dir(self.id).joinpath(*parts)
+
+    @property
+    def books(self) -> Path:
+        return books_dir(self.id)
+
+    @property
+    def mapping(self) -> Path:
+        return mapping_dir(self.id)
+
+    @property
+    def notes(self) -> Path:
+        return notes_dir(self.id)
+
+    @property
+    def content(self) -> Path:
+        return content_dir(self.id)
+
+    @property
+    def inbox(self) -> Path:
+        return inbox_dir(self.id)
+
+    @property
+    def review(self) -> Path:
+        return review_dir(self.id)
+
+    @property
+    def sources(self) -> Path:
+        """The processed PDFs (government.yaml sources_dir), published at `pdf_path`."""
+        return ROOT / self.data["sources_dir"]
+
+    @property
+    def processed(self) -> Path:
+        """The generated CSVs the build reads (government.yaml processed_dir, default data/processed)."""
+        return ROOT / self.data.get("processed_dir", "data/processed")
+
+    @property
+    def web_data(self) -> Path:
+        """The site's JSON for this government (government.yaml data_path, under web/)."""
+        return ROOT / "web" / self.data["data_path"]
+
+
+@lru_cache(maxsize=None)
+def government(gov_id: str) -> Gov:
+    """A government by id, checked, with its folders. Raise on an unknown id."""
+    data = load_government(gov_id)
+    return Gov(id=gov_id, data=data)
+
+
+def default_government() -> str:
+    """site.yaml default_government (the government the opening address shows)."""
+    return load_site()["default_government"]
+
+
+def resolve_government(gov_id) -> Gov:
+    """A Gov from an id, an already-loaded Gov, or a plain government.yaml dict; site.yaml's default when None."""
+    if isinstance(gov_id, Gov):
+        return gov_id
+    if isinstance(gov_id, dict):
+        return Gov(id=gov_id["id"], data=gov_id)
+    return government(gov_id or default_government())
+
+
+def normalise_book(cfg: dict) -> dict:
+    """A book config with `figure` renamed to `doc_type`, the name the extractors use.
+
+    The YAML files call a printed column's kind `figure` (the portable name); the extractors were written when it was
+    called `doc_type`. Renaming here keeps one name in the files and one change in the code. Returns a copy.
+    """
+    out = copy.deepcopy(cfg)
+    for columns in [out.get("line_items", {}).get("columns") or []] + \
+                   [lay["columns"] for lay in out.get("line_items", {}).get("layouts") or []] + \
+                   [out.get("staffing", {}).get("columns") or []] + \
+                   [out.get("amount_columns") or []]:
+        for col in columns:
+            if isinstance(col, dict) and "figure" in col:
+                col.setdefault("doc_type", col.pop("figure"))
+    return out
+
+
+def book_files(gov_id: str) -> list[Path]:
+    """Every governments/<id>/books/*.yaml, by file name."""
+    return sorted(books_dir(gov_id).glob("*.yaml"))
+
+
+def load_books(gov_id: str) -> dict[str, dict]:
+    """Every book of a government: {pdf stem: normalised config}, each checked against book.schema.json.
+
+    A book in governments/<id>/books/ must say which family reads it and whether a person has reviewed it; the legacy
+    config/*.json files (County, until Phase 2) do not, so the requirement lives here rather than in the schema."""
+    out = {}
+    for path in book_files(gov_id):
+        cfg = _load(path, "book")
+        for field in ("layout_family", "status"):
+            if not cfg.get(field):
+                raise ConfigError(f"{rel(path)}, field {field}: missing; every book must say which family reads it "
+                                  f"(layout_family) and whether a person has checked it (status: draft or reviewed)")
+        if Path(cfg["source_doc"]).stem != path.stem:
+            raise ConfigError(f"{rel(path)}, field source_doc: {cfg['source_doc']!r} does not match the file name "
+                              f"{path.stem + '.yaml'!r} (name the file after the PDF)")
+        out[path.stem] = normalise_book(cfg)
+    return out

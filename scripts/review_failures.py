@@ -1,4 +1,4 @@
-"""Draft data/known_issues.csv rows for a book's unreviewed failed checks.
+"""Draft notes/known_issues.csv rows for a book's unreviewed failed checks.
 
 Usage:
     python scripts/review_failures.py <doc stem>            # print drafts

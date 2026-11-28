@@ -12,8 +12,8 @@
 
 | Phase | Status | Last commit | Next action |
 |---|---|---|---|
-| 0 Contracts | Built and checked; **owner check pending** | Phase 0 commit (local) | Owner runs the Phase 0 owner check; then push + PR |
-| 1 City into its folder | Not started | — | Starts after the Phase 0 PR merges |
+| 0 Contracts | Built; **PR #22 open, not merged** | 442d37a | Owner runs the Phase 0 owner check and merges PR #22 |
+| 1 City into its folder | Built except 1.3; **owner check pending** | local `feature/portable-phase1` | Owner runs the Phase 1 owner check; 1.3 and the PR after it |
 | 2 County into its folder | Not started | — | — |
 | 3 Website reads the manifest | Not started | — | — |
 | 4 Read / Detect / Review tools | Not started | — | — |
@@ -21,6 +21,18 @@
 | 6 Docs and hand-over | Not started | — | — |
 
 **Phase 0 (2026-11-28):** built by an Opus delegate, re-verified by Hermes: `validate_config.py` OK (42 files: 19 CSVs, 23 YAML/JSON, including today's `config/*.json` against the book schema); a `kind: town` copy fails with a plain message; `check_dataset.py` and `--entity county` 0 series mismatches; parity 83/83 files equal; `check_portable.py` 524 code hits (10 allowlisted: the checker's own table and the validator's temporary path table); `requirements-build.txt` installs on a fresh Python 3.12 and the validator and check run there; `pages.yml` has the install step (after PR #21 removed the debounce). Notes from the build: the plan's "531 lines" were 531 hits on 502 lines; book `status`/`layout_family` are optional until books move to YAML (make them required in Phase 1); the "own-year proposed column is never shown" rule can't be expressed yet (`hidden_columns` lists only `actual_ytd`); `income_sources` is `on` for both governments because the panel shows even without mapping rows (Phase 3 makes it `auto` = shown when the government has income lines).
+
+**Phase 1 (2026-11-28, Hermes):** branch `feature/portable-phase1` from `442d37a`, worktree `Lancaster Dashboard - portable-p1`. Steps 1.1, 1.2, 1.4, 1.5 and 1.6 are done; 1.3 is half done (see below).
+
+- **Moved (1.1):** `income_rules.csv`, `income_sources.csv` and `tax_rates.csv` split per government into `mapping/` (the `entity`/`government` column dropped; `tax_rates.json` still says `city`/`county`, taken from `government.yaml` `route`); `known_issues`, `line_notes`, `policy_notes`, `ocr_corrections`, `sign_corrections`, `staffing_corrections` → `notes/`; `tax_limit_lines.csv` and the ex-`config/tax_limit.json` → `content/rules/` (`tax_limit.yaml`); `org_structure_2027.csv` → `mapping/org_structure.csv`, `org_units_2027.csv` → `mapping/units.csv`, `org_descriptions_2027.csv` → `content/org_descriptions.csv`, with the year and the two PDFs in the new `org:` block of `government.yaml`.
+- **Books (1.2):** all seven `config/*.json` became `books/<pdf stem>.yaml` (`layout_family`, `status: reviewed`, `figure` instead of `doc_type`, `_comment` keys as YAML comments).
+- **Code:** `govconfig.Gov` (every folder of one government) and `govconfig.load_books()`; `--gov` on `ingest.py`, `build_dataset.py`, `check_dataset.py` (the old `--entity city|county` still works); every reader (income rules, income sources, tax rates, tax limit, org structure, changes, fund balance, crosscheck, extractors) takes its paths and its words from the government.
+- **Roles (1.4):** `mapping/funds.csv` (`code_prefix, name, role, paid_by, description, printed_names`) with a schema; the build takes the primary fund and the printed roll-up names from it (it must agree with `display.primary_fund`), and the reserve draw is `income_rules.csv` class `draw` instead of object `499000`.
+- **PDFs (1.6):** every City PDF (books, org chart, descriptions, audits) is in `sources/`; `web/pdfs` points there, so public addresses are unchanged; the County folder is linked as `sources/county` until Phase 2.
+- **1.3, done:** `extract_budget.py` reads `amount_columns`, `note_fonts`, `staffing.columns`, `funds` and the department maps from the 2027 book's YAML; its staffing row parsing takes one pair per printed column. **1.3, open:** it is still a separate script from `extract_layout.py` (one extractor per family is the goal), and the staffing long form is not written yet.
+- **Verified:** `validate_config.py` 45 files; `build_dataset.py` for both governments is byte-identical to `442d37a` (parity 83/83); `check_dataset.py` 0 mismatches for City and County; re-running `ingest.py` for all seven City books reproduces every value and matches a run of the unmodified `442d37a` code on the same OCR cache; `check_portable.py` 524 → 438 code hits.
+- **Known:** four committed `validation_*.csv` files differ from a fresh run by about 1e-16 in staffing sums. The same fresh-vs-committed drift happens with the unmodified code at `442d37a`, so it predates this phase; the committed files are left as they are.
+- **Docs:** README, PIPELINE, REFERENCE, SITE and REBUILD paths updated; `docs/portable/CONFIG.md` regenerated.
 
 **Done before Phase 0 (2026-11-28):** plan committed locally; owner decisions D1–D6 and the opening view recorded; origin/main `fcbabbb` merged in; worktree created; PyYAML 6.0.4 and jsonschema 4.26.0 installed in the main checkout's `.venv` (not yet in `requirements.txt`); baseline inventory written; School District of Lancaster sources checked (below); this plan.
 

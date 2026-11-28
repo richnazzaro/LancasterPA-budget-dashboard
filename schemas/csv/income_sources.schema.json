@@ -6,25 +6,12 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "entity",
     "code",
     "fund",
     "source",
     "evidence"
   ],
   "properties": {
-    "entity": {
-      "type": "string",
-      "x-type": "choice",
-      "description": "Which government (city or county).",
-      "enum": [
-        "city",
-        "county"
-      ],
-      "examples": [
-        "city"
-      ]
-    },
     "code": {
       "type": "string",
       "x-type": "code",

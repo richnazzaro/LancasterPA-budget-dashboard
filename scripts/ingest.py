@@ -1,7 +1,7 @@
 """One command for any City of Lancaster or Lancaster County budget book: detect, extract, check.
 
 Usage:
-    python scripts/ingest.py "Budget PDFs - City/2026-Adopted-Budget-2026.pdf"
+    python scripts/ingest.py "governments/lancaster-city/sources/2026-Adopted-Budget-2026.pdf"
     python scripts/ingest.py --all                 # every budget PDF in Budget PDFs - City/
                                                    # (skips the org chart and org descriptions PDFs)
     python scripts/ingest.py --all --dir "/path/to/Budget PDFs - City"
@@ -46,6 +46,7 @@ from datetime import date
 from pathlib import Path
 
 import pypdfium2 as pdfium
+import yaml
 
 from budget_common import OUT_DIR, ROOT
 import crosscheck
@@ -53,11 +54,9 @@ import extract_budget
 import extract_layout
 import extract_projections
 import fund_balance
-from extract_layout import CONFIG_DIR, load_page_lines, load_text_page_lines
+import govconfig
+from extract_layout import load_page_lines, load_text_page_lines
 from ocr_pages import cache_dir, ocr_document
-
-PDF_DIR = ROOT / "Budget PDFs - City"
-COUNTY_PDF_DIR = ROOT / "Budget PDFs - County"
 # PDFs in PDF_DIR that are not budget books. --all skips them; naming one explicitly is an error.
 # The org chart and org descriptions feed the dashboard's org structure instead
 # (scripts/extract_org_descriptions.py, data/org_*_2027.csv); they have no budget tables.
@@ -178,7 +177,7 @@ def _staffing_row(lines):
     return order if "title" in order and "salary" in order else None
 
 
-def infer_config(pdf_path, source):
+def infer_config(pdf_path, source, gov):
     sigs, staff_rows = Counter(), Counter()
     pages_of = {}
     for page_no, lines, unit in _pages(pdf_path, source):
@@ -231,11 +230,12 @@ def infer_config(pdf_path, source):
     budget_year = max((c["fiscal_year"] for c in main["columns"]
                        if c["doc_type"] == "proposed"),
                       default=max(c["fiscal_year"] for c in main["columns"]))
-    template = _newest_layout_config()
+    template = _newest_layout_config(gov)
     row = list(staff_rows.most_common(1)[0][0]) if staff_rows else None
     if row is None:
         notes.append("no staffing header found; staffing.row is a guess")
     cfg = {
+        "status": "draft",
         "_generated": (f"Inferred by scripts/ingest.py on {date.today()} from the column "
                        f"headers. REVIEW BEFORE TRUSTING: check each column's fiscal_year/"
                        f"doc_type against the printed header, the staffing row order, and "
@@ -258,12 +258,9 @@ def infer_config(pdf_path, source):
     return cfg
 
 
-def _layout_configs():
-    out = {}
-    for p in sorted(CONFIG_DIR.glob("*.json")):
-        cfg = json.loads(p.read_text())
-        out[p.stem] = cfg
-    return out
+def _layout_configs(gov):
+    """Every book config of the government: {pdf stem: config}."""
+    return govconfig.load_books(gov.id)
 
 
 def budget_year(cfg):
@@ -275,8 +272,8 @@ def budget_year(cfg):
     return max(years) if years else None
 
 
-def _newest_layout_config():
-    cfgs = [c for c in _layout_configs().values() if "funds" in c and not c.get("_generated")]
+def _newest_layout_config(gov):
+    cfgs = [c for c in _layout_configs(gov).values() if "funds" in c and c.get("status") != "draft"]
     return max(cfgs, key=lambda c: budget_year(c) or 0)
 
 
@@ -284,61 +281,64 @@ def _newest_layout_config():
 # 3. Extract, validate, cross-check
 # --------------------------------------------------------------------------
 
-def extract_one(pdf_path, cfg):
+def extract_one(pdf_path, cfg, gov):
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
         if cfg.get("extractor") == "extract_budget":
-            stats = extract_budget.run(pdf_path)
+            stats = extract_budget.run(pdf_path, gov.processed, gov=gov, cfg=cfg)
         elif cfg.get("extractor") == "extract_projections":
-            stats = extract_projections.run(pdf_path)
+            stats = extract_projections.run(pdf_path, gov.processed, gov=gov, cfg=cfg)
         else:
-            stats = extract_layout.run(pdf_path)
+            stats = extract_layout.run(pdf_path, None, gov.processed, gov=gov)
     return stats, buf.getvalue()
 
 
-def neighbour_checks(stem, cfgs):
+def neighbour_checks(stem, cfgs, gov):
     year = budget_year(cfgs[stem])
     by_year = {budget_year(c): s for s, c in cfgs.items()}
-    li = lambda s: OUT_DIR / f"line_items_{s}.csv"
+    li = lambda s: gov.processed / f"line_items_{s}.csv"
     results = []
     for a, b, y in ((by_year.get(year - 1), stem, year - 1), (stem, by_year.get(year + 1), year)):
         if a and b and li(a).exists() and li(b).exists():
             buf = io.StringIO()
             with contextlib.redirect_stdout(buf):
-                _, st = crosscheck.run_pair(li(a), f"proposed_{y}", li(b), f"adopted_{y}")
+                _, st = crosscheck.run_pair(li(a), f"proposed_{y}", li(b), f"adopted_{y}", gov.processed, gov)
             results.append((y, a, b, st))
     return results
 
 
 # --------------------------------------------------------------------------
 
-def ingest(pdf_path):
+def ingest(pdf_path, gov):
     pdf_path = Path(pdf_path)
     rep = {"pdf": pdf_path.name}
     share, n_pages = text_share(pdf_path)
     source = "text" if share >= TEXT_BOOK_SHARE else "ocr"
     rep.update(pages=n_pages, text_share=share, detected=source)
 
-    cfg_path = CONFIG_DIR / f"{pdf_path.stem}.json"
+    cfg_path = gov.books / f"{pdf_path.stem}.yaml"
     if cfg_path.exists():
-        cfg = json.loads(cfg_path.read_text())
+        cfg = govconfig.book_config(gov.id, pdf_path.name)
         rep["config"] = "existing"
         if cfg.get("source", "ocr") != source and cfg.get("extractor") not in ("extract_budget", "extract_projections"):
             rep["warning"] = (f"config says source={cfg.get('source', 'ocr')!r} but the PDF "
                               f"looks {source!r} ({share:.0%} of pages have text)")
     else:
-        cfg = infer_config(pdf_path, source)
+        cfg = infer_config(pdf_path, source, gov)
         if cfg is None:
-            rep["skip"] = "no budget column header found; not a budget book?"
+            rep["skip"] = "no budget column found; not a budget book?"
             return rep
-        cfg_path.write_text(json.dumps(cfg, indent=2, ensure_ascii=False) + "\n")
+        body = yaml.safe_dump(cfg, sort_keys=False, allow_unicode=True, width=100)
+        cfg_path.parent.mkdir(parents=True, exist_ok=True)
+        cfg_path.write_text(f"# Inferred {date.today()} by scripts/ingest.py. REVIEW BEFORE TRUSTING.\n" + body,
+                            encoding="utf-8")
         rep["config"] = "INFERRED"
-    if cfg.get("_generated"):
+    if cfg.get("status") == "draft" or cfg.get("_generated"):
         rep["config"] = "INFERRED"
         rep["config_path"] = cfg_path
 
     try:
-        stats, log = extract_one(pdf_path, cfg)
+        stats, log = extract_one(pdf_path, cfg, gov)
     except Exception as e:                         # header mismatch etc.
         rep["error"] = f"{type(e).__name__}: {e}"
         return rep
@@ -349,7 +349,7 @@ def ingest(pdf_path):
     buf = io.StringIO()
     with contextlib.redirect_stdout(buf):
         try:
-            rep["fund_balance"] = fund_balance.run(pdf_path)
+            rep["fund_balance"] = fund_balance.run(pdf_path, gov.processed, gov=gov)
         except Exception as e:                     # never hide the main results
             rep["fund_balance"] = {"ok": False, "found": None,
                                    "error": f"{type(e).__name__}: {e}"}
@@ -390,20 +390,25 @@ def ingest_county(pdfs):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("pdf", nargs="*", type=Path)
-    ap.add_argument("--all", action="store_true", help="every PDF in --dir")
-    ap.add_argument("--dir", type=Path, default=PDF_DIR)
+    ap.add_argument("--all", action="store_true", help="every PDF in the government's sources folder")
+    ap.add_argument("--dir", type=Path, help="a folder of PDFs (default: the government's sources folder)")
+    ap.add_argument("--gov", help="government id (default: site.yaml default_government)")
     ap.add_argument("-v", "--verbose", action="store_true", help="show each extractor's log")
     ap.add_argument("--county", action="store_true",
-                    help=f"every County budget book in {COUNTY_PDF_DIR.name}/ (those with a config in config/county/)")
+                    help="every County budget book (those with a config in config/county/)")
     args = ap.parse_args()
+    gov = govconfig.resolve_government(args.gov)
+    county_gov = govconfig.government("lancaster-county")
     if args.county:
         # Only the budget books: a County PDF is a book when it has a layout config in config/county/. The
         # budget presentation in the same folder is not one (its facts are checked by verify_county_context).
         import extract_county
-        books = [p for p in sorted(COUNTY_PDF_DIR.glob("*.pdf")) if (extract_county.CONFIG_DIR / f"{p.stem}.json").exists()]
+        books = [p for p in sorted(county_gov.sources.glob("*.pdf"))
+                 if (extract_county.CONFIG_DIR / f"{p.stem}.json").exists()]
         sys.exit(ingest_county(books))
+    args.dir = args.dir or gov.sources
     pdfs = sorted(args.dir.glob("*.pdf")) if args.all else args.pdf
-    county = [p for p in pdfs if p.resolve().parent.name == COUNTY_PDF_DIR.name]
+    county = [p for p in pdfs if p.resolve().parent.name == county_gov.sources.name]
     if county:
         if len(county) != len(pdfs):
             ap.error("give City and County books in separate runs")
@@ -417,9 +422,9 @@ def main():
     if not pdfs:
         ap.error("give a PDF or --all")
 
-    reports = [ingest(p) for p in pdfs]
-    fund_balance.crossbook()
-    cfgs = _layout_configs()
+    reports = [ingest(p, gov) for p in pdfs]
+    fund_balance.crossbook(gov.processed)
+    cfgs = _layout_configs(gov)
     status = 0
     print()
     for r in reports:
@@ -473,7 +478,7 @@ def main():
         else:
             print("  fund balance page: none found")
         if stem in cfgs:
-            for y, a, b, st in neighbour_checks(stem, cfgs):
+            for y, a, b, st in neighbour_checks(stem, cfgs, gov):
                 print(f"  cross-check {y}: {a} PROPOSED vs {b} ORIGINAL: "
                       f"{st['equal']}/{st['in_both']} equal ({st['rate']:.1%}); "
                       f"{st['adoption_changes']} adoption changes, "

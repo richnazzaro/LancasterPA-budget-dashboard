@@ -5,45 +5,58 @@ unless Council waives it (majority of the whole plus one). Fees, grants, one-tim
 and other restricted revenue are not tax revenue.
 
 Everything that can change is read from files, never written here:
-  config/tax_limit.json        entity, fund, limit, the first budget year made under the charter, which book columns
-                               are the budget being tested (proposed, proposed_revised), which figure is the preceding
-                               year (`baseline_measure`, a measure of build_dataset.RULE: the same book's Projected
-                               column, revised projection first, the figure the site compares the newest year with by
-                               default), and the budget years the § 13.14 note is shown for.
-  data/tax_limit_lines.csv     which General Fund revenue lines are tax revenue (counts = yes) and which tax-looking
-                               lines are not (counts = no), each with a one-line reason.
+  content/rules/tax_limit.yaml        fund, limit, the first budget year made under the charter, which book columns
+                                      are the budget being tested (proposed, proposed_revised), which figure is the
+                                      preceding year (`baseline_measure`, a measure of build_dataset.RULE), and the
+                                      budget years the note is shown for.
+  content/rules/tax_limit_lines.csv   which tax-funded revenue lines are tax revenue (counts = yes) and which
+                                      tax-looking lines are not (counts = no), each with a one-line reason.
 
 For each designated book whose own year is at or after `first_year`, each tested column the book prints gives one test:
 the sum of the counted lines in that column (the book's own year) against the sum of the same lines in the baseline
 column of the same book (the year before). The sums are this site's own (calculated); each line keeps its page.
 
 check() (run by check_dataset.py) recomputes every test straight from the budget_long CSVs and compares it with
-budget.json, and fails on a General Fund line in the books' tax revenue group that data/tax_limit_lines.csv does not
+budget.json, and fails on a General Fund line in the books' tax revenue group that content/rules/tax_limit_lines.csv does not
 list, so a new tax line is reviewed before the test silently leaves it out. Standard library only.
 """
 from __future__ import annotations
 
 import csv
-import json
 from collections import defaultdict
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-CONFIG = ROOT / "config" / "tax_limit.json"
-LINES = ROOT / "data" / "tax_limit_lines.csv"
 TAX_GROUP = "tax revenue"  # the books' revenue group ("Tax Revenue" / "Tax Revenues"), for the unreviewed-line check
 
 
-def load_config() -> dict:
-    return json.loads(CONFIG.read_text(encoding="utf-8"))
+def config_file(gov) -> Path:
+    return gov.content / "rules" / "tax_limit.yaml"
 
 
-def load_lines(entity: str) -> list[dict]:
-    with LINES.open(newline="", encoding="utf-8") as f:
-        rows = [r for r in csv.DictReader(f) if r["entity"] == entity]
+def lines_file(gov) -> Path:
+    return gov.content / "rules" / "tax_limit_lines.csv"
+
+
+def has_rule(gov) -> bool:
+    """Does this government test a tax limit? (a content/rules/tax_limit.yaml file)"""
+    return config_file(gov).exists()
+
+
+def load_config(gov=None) -> dict:
+    import govconfig
+    gov = govconfig.resolve_government(gov)
+    return govconfig.read_yaml(config_file(gov))
+
+
+def load_lines(gov=None) -> list[dict]:
+    import govconfig
+    gov = govconfig.resolve_government(gov)
+    f = lines_file(gov)
+    with f.open(newline="", encoding="utf-8") as fh:
+        rows = list(csv.DictReader(fh))
     for r in rows:
         if r["counts"] not in ("yes", "no"):
-            raise ValueError(f"{LINES.name}: counts {r['counts']!r} for {r['code']} must be yes or no")
+            raise ValueError(f"{f.name}: counts {r['counts']!r} for {r['code']} must be yes or no")
     return rows
 
 
@@ -55,13 +68,15 @@ def _amount(text: str):
     return int(v) if v.is_integer() else v
 
 
-def build(designated: dict, rule: dict, docs) -> dict | None:
+def build(designated: dict, rule: dict, docs, gov=None) -> dict | None:
     """budget.json `tax_limit`. designated: book year -> book ({doc, rows, year}); rule: build_dataset.RULE;
-    docs: the build's document interner (doc name -> index)."""
-    cfg = load_config()
-    if cfg.get("entity") != "city":
+    docs: the build's document interner (doc name -> index); gov: the government (no rule file -> None)."""
+    import govconfig
+    gov = govconfig.resolve_government(gov)
+    if not has_rule(gov):
         return None
-    lines = load_lines(cfg["entity"])
+    cfg = load_config(gov)
+    lines = load_lines(gov)
     counted = {r["code"] for r in lines if r["counts"] == "yes"}
     base_cols = rule[cfg["baseline_measure"]][1]
 
@@ -109,12 +124,14 @@ def build(designated: dict, rule: dict, docs) -> dict | None:
     }
 
 
-def check(budget: dict) -> int:
+def check(budget: dict, gov=None) -> int:
     """For check_dataset.py: recompute every test from the budget_long CSVs and compare with budget.json `tax_limit`.
     Returns the number of failures."""
-    print("\nHome Rule 6% tax revenue limit (§ 8.08; config/tax_limit.json, data/tax_limit_lines.csv):")
-    cfg = load_config()
-    lines = load_lines(cfg["entity"])
+    import govconfig
+    gov = govconfig.resolve_government(gov)
+    print(f"\nTax revenue limit ({govconfig.rel(config_file(gov))}, {govconfig.rel(lines_file(gov))}):")
+    cfg = load_config(gov)
+    lines = load_lines(gov)
     listed = {r["code"] for r in lines}
     counted = {r["code"] for r in lines if r["counts"] == "yes"}
     TL = budget.get("tax_limit")
@@ -130,7 +147,7 @@ def check(budget: dict) -> int:
     sums = defaultdict(float)  # (doc, fy, column) -> sum of counted lines
     pages = defaultdict(set)
     unreviewed = set()
-    for path in sorted((ROOT / "data" / "processed").glob("budget_long_*.csv")):
+    for path in sorted(gov.processed.glob("budget_long_*.csv")):
         with path.open(newline="", encoding="utf-8") as f:
             for r in csv.DictReader(f):
                 if r["fund"] != cfg["fund"] or not r["amount"].strip():
@@ -144,7 +161,8 @@ def check(budget: dict) -> int:
                     pages[k].add(int(r["source_page"]))
     for code, name in sorted(unreviewed):
         bad += 1
-        print(f"FAIL {code} {name}: a General Fund tax revenue line not in data/tax_limit_lines.csv; review it (counts yes/no)")
+        print(f"FAIL {code} {name}: a {cfg['fund']} tax revenue line not in {govconfig.rel(lines_file(gov))}; "
+              f"review it (counts yes/no)")
 
     expected = []
     for by in sorted(y for y in used if y >= cfg["first_year"]):

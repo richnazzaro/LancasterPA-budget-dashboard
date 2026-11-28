@@ -68,6 +68,25 @@
       "description": "text = the PDF has a text layer; ocr = scanned pages, read by OCR.",
       "examples": ["text"]
     },
+    "reading": {
+      "type": "string",
+      "enum": ["word_boxes", "char_rows"],
+      "description": "How the family reads this book's pages. word_boxes = words with positions (text layer or OCR), assigned to columns by x-position. char_rows = characters in the order the PDF draws them (books printed from a spreadsheet whose long titles overflow into the next column), rebuilt into rows first.",
+      "examples": ["word_boxes"]
+    },
+    "note_fonts": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "char_rows books: the ends of the font names used for the explanatory notes under line items (they overlap the table rows and are attached to the line above as its description).",
+      "examples": [["CIDFont+F2", "+Calibri"]]
+    },
+    "amount_columns": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/column"},
+      "description": "char_rows books: the printed amount columns, left to right, in the order the row's numbers appear.",
+      "examples": [[{"fiscal_year": 2025, "figure": "actual"}]]
+    },
     "extractor": {
       "type": "string",
       "enum": ["extract_layout", "extract_budget", "extract_projections"],
@@ -220,6 +239,13 @@
       "patternProperties": {"^_": {}, "^\\d+$": {"type": "string"}},
       "additionalProperties": false,
       "examples": [{"1403": "City Controller / Treasurer"}]
+    },
+    "fund_titles": {
+      "type": "object",
+      "description": "projection_book: the fund title printed in a page heading -> the fund name used everywhere else.",
+      "patternProperties": {"^_": {}, ".+": {"type": "string"}},
+      "additionalProperties": false,
+      "examples": [{"Stormwater Management Fund": "Stormwater Management Fund"}]
     },
     "fund_balance": {
       "type": "object",

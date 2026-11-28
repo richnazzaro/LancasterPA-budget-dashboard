@@ -76,15 +76,15 @@ For each budget book this detects text or scan, runs OCR where needed, extracts 
 
 - **Warnings:** lines such as `Cannot set gray non-stroke color` come from the PDF library reading the 2027 book and are harmless.
 - **Time:** the text books take seconds each. The scanned 2026 book takes a minute or more the first time (OCR at 300 DPI); the result is cached in `data/ocr_cache/` (not committed), so later runs are fast.
-- **Exit status 0:** every check passed or is a reviewed source error in `data/known_issues.csv`.
+- **Exit status 0:** every check passed or is a reviewed source error in `governments/lancaster-city/notes/known_issues.csv`.
 - **Exit status 1:** a check failed and has not been reviewed. Fix the cause; see "When a check fails" below.
 - **Exit status 2:** a config was inferred (review it, delete its `_generated` key, run again) or a PDF could not be read.
 
-Run one book at a time with `python scripts/ingest.py "Budget PDFs - City/<file>.pdf"`.
+Run one book at a time with `python scripts/ingest.py "governments/lancaster-city/sources/<file>.pdf"`.
 
 ### The 2028–2029 projections book
 
-The projections book (`config/2028-2029-Budget-Projections.json`, `"kind": "projection"`) goes through `scripts/extract_projections.py`. Its report line reads `projections book (doc_type 'projection'): cross-check vs 2027 Revised: both 953, only_2027 23`: every projection line matched to a 2027 Revised line, and 23 lines printed only in the 2027 book (listed in `crosscheck_projection_*.csv`). It has no Fund Balance page and no neighbouring-book cross-check.
+The projections book (`governments/lancaster-city/books/2028-2029-Budget-Projections.yaml`, `"kind": "projection"`) goes through `scripts/extract_projections.py`. Its report line reads `projections book (doc_type 'projection'): cross-check vs 2027 Revised: both 953, only_2027 23`: every projection line matched to a 2027 Revised line, and 23 lines printed only in the 2027 book (listed in `crosscheck_projection_*.csv`). It has no Fund Balance page and no neighbouring-book cross-check.
 
 ### Org descriptions (only when the descriptions PDF changes)
 
@@ -92,7 +92,7 @@ The projections book (`config/2028-2029-Budget-Projections.json`, `"kind": "proj
 python scripts/extract_org_descriptions.py
 ```
 
-This rewrites `data/org_descriptions_2027.csv` from `Org Descriptions 2027.pdf`. The committed file is already current, so a plain rebuild skips it.
+This rewrites `governments/lancaster-city/content/org_descriptions.csv` from `Org Descriptions 2027.pdf`. The committed file is already current, so a plain rebuild skips it.
 
 ## 4. Extract and validate the County books, resolutions and audited reports
 
@@ -122,14 +122,14 @@ These are reviewed by a person and committed; the scripts read them but never wr
 | File | What it holds |
 |---|---|
 | `config/*.json` | each book's column layout, staffing field order and code maps |
-| `data/known_issues.csv` | reviewed errors in the city's books (shown on the site) |
-| `data/sign_corrections.csv`, `data/ocr_corrections.csv`, `data/staffing_corrections.csv` | proven value fixes, each keeping the printed value and the evidence |
-| `data/org_units_2027.csv`, `data/org_structure_2027.csv` | departments and bureaus from the 2027 org chart, and which org code belongs to which |
-| `data/policy_notes.csv` | tax-rate facts that are not in the budget tables, each with its source |
-| `data/tax_limit_lines.csv` | which General Fund lines count as tax revenue for the Home Rule 6% limit (§ 8.08), with `config/tax_limit.json` (first charter year, limit, columns tested). If `check_dataset.py` reports "a General Fund tax revenue line not in data/tax_limit_lines.csv", decide whether it is a tax the City levies and add a row |
-| `data/line_notes.csv` | what a budget book says about one line in one year, shown beside the generated "stands out" note |
-| `data/income_rules.csv` | revenue lines that are not income (draws from savings, transfers from the government's own funds), charges between its funds, and reviewed look-alikes, City and County. If `check_dataset.py` reports a line that "looks like a draw, transfer or charge but has no rule", read the book's note for that line and add a row |
-| `data/income_sources.csv` | the source each income account is shown under in the Income Sources panel (taxes one by one, grants and reimbursements), City only. `scripts/income_sources.py` validates it and `build_dataset.py` writes `budget.json` `income_sources`; no check to run, rebuild and look at the Income view |
+| `governments/lancaster-city/notes/known_issues.csv` | reviewed errors in the city's books (shown on the site) |
+| `governments/lancaster-city/notes/sign_corrections.csv`, `governments/lancaster-city/notes/ocr_corrections.csv`, `governments/lancaster-city/notes/staffing_corrections.csv` | proven value fixes, each keeping the printed value and the evidence |
+| `governments/lancaster-city/mapping/units.csv`, `governments/lancaster-city/mapping/org_structure.csv` | departments and bureaus from the 2027 org chart, and which org code belongs to which |
+| `governments/lancaster-city/notes/policy_notes.csv` | tax-rate facts that are not in the budget tables, each with its source |
+| `governments/lancaster-city/content/rules/tax_limit_lines.csv` | which General Fund lines count as tax revenue for the Home Rule 6% limit (§ 8.08), with `governments/lancaster-city/content/rules/tax_limit.yaml` (first charter year, limit, columns tested). If `check_dataset.py` reports "a General Fund tax revenue line not in governments/lancaster-city/content/rules/tax_limit_lines.csv", decide whether it is a tax the City levies and add a row |
+| `governments/lancaster-city/notes/line_notes.csv` | what a budget book says about one line in one year, shown beside the generated "stands out" note |
+| `governments/lancaster-city/mapping/income_rules.csv` | revenue lines that are not income (draws from savings, transfers from the government's own funds), charges between its funds, and reviewed look-alikes, City and County. If `check_dataset.py` reports a line that "looks like a draw, transfer or charge but has no rule", read the book's note for that line and add a row |
+| `governments/lancaster-city/mapping/income_sources.csv` | the source each income account is shown under in the Income Sources panel (taxes one by one, grants and reimbursements), City only. `scripts/income_sources.py` validates it and `build_dataset.py` writes `budget.json` `income_sources`; no check to run, rebuild and look at the Income view |
 | `config/county/*.json`, `config/county/acfr/*.json`, `config/county/resolutions/*.json` | each County book's layout and OCR settings; each audited report's source addresses and schedule pages; each budget resolution's address and reprints |
 | `data/county/known_issues.csv` | reviewed errors and differences in the County's books and audited reports (shown on the County About page), each with a `kind`: `rounding`, `source_error` or `basis_difference` |
 | `data/county/context_facts.csv` | the County's context facts (tax rate and history, assessed value, bond rating, staffing, Capital Improvement Fund, agency grants), each with the primary document and page that print it and the presentation slide that repeats it; checked by `scripts/verify_county_context.py` and `check_county.py` |
@@ -144,7 +144,7 @@ Their columns, row counts and what each changes on the site are in [REFERENCE.md
 
 1. Read the failure: the report names the page, the section and the gap.
 2. If the extraction misread the page, fix the parsing (`scripts/extract_layout.py` or `config/<book>.json`; `scripts/extract_budget.py` for the 2027 book; `scripts/extract_projections.py` for the projections book).
-3. If the city's book is itself wrong, add a row to `data/known_issues.csv` explaining the evidence. `python scripts/review_failures.py <book name without .pdf>` drafts these rows for you to read and edit.
+3. If the city's book is itself wrong, add a row to `governments/lancaster-city/notes/known_issues.csv` explaining the evidence. `python scripts/review_failures.py <book name without .pdf>` drafts these rows for you to read and edit.
 4. If a value is provably misprinted (for example a negative printed without its minus sign), record the fix in the matching corrections file. `python scripts/sign_corrections.py <book> --append` proposes sign flips only when the printed total proves them.
 5. Never widen the $5 rounding tolerance to make a check pass.
 
@@ -209,28 +209,28 @@ Upload `_site/` to any static host. No server code or database is involved.
 
 ### A new budget year
 1. Put the PDF in `Budget PDFs - City/`. GitHub refuses files over 100 MB; compress the PDF first if needed.
-2. `python scripts/ingest.py "Budget PDFs - City/<file>.pdf"`; review the inferred config (exit status 2) and clear every failure (exit status 1).
-3. `python scripts/build_dataset.py` and `python scripts/check_dataset.py`. The new year becomes Proposed/Revised and the earlier years move forward automatically. If the build stops on an unmapped org code, add the code to `data/org_structure_2027.csv`.
+2. `python scripts/ingest.py "governments/lancaster-city/sources/<file>.pdf"`; review the inferred config (exit status 2) and clear every failure (exit status 1).
+3. `python scripts/build_dataset.py` and `python scripts/check_dataset.py`. The new year becomes Proposed/Revised and the earlier years move forward automatically. If the build stops on an unmapped org code, add the code to `governments/lancaster-city/mapping/org_structure.csv`.
 4. Look at the site locally (step 6), then commit the PDF, its config, `data/` and `web/data/`, and push to `main`.
 
 ### New projections
 When the city publishes projections for later years (as `2028-2029-Budget-Projections.pdf` came with the 2027 budget):
-1. Add the PDF under a clean name and copy `config/2028-2029-Budget-Projections.json` to the new name, changing `source_doc`.
-2. `python scripts/ingest.py "Budget PDFs - City/<file>.pdf"`. Clear every failure; read the cross-check list of lines that appear in only one book.
+1. Add the PDF under a clean name and copy `governments/lancaster-city/books/2028-2029-Budget-Projections.yaml` to the new name, changing `source_doc`.
+2. `python scripts/ingest.py "governments/lancaster-city/sources/<file>.pdf"`. Clear every failure; read the cross-check list of lines that appear in only one book.
 3. Remove the old projections book (`git rm` its PDF, config and `data/processed/*<old>*.csv`): the build stops if two projections books both cover years after the newest year. A projections book whose first year is not after the newest budget year is ignored, so after a new budget book arrives the old projections drop off the site on their own.
 4. Rebuild, check, preview, commit, push.
 
 ### An amended edition of the current book
 This is how the 11/16/2026 2027 book was replaced by the 11/19/2026 one:
 1. Add the new PDF and copy the old book's config to the new file name (`config/<new name>.json`), changing `source_doc` and any page numbers in its comments.
-2. `python scripts/ingest.py "Budget PDFs - City/<new file>.pdf"`.
+2. `python scripts/ingest.py "governments/lancaster-city/sources/<new file>.pdf"`.
 3. Compare `data/processed/line_items_<old>.csv` with `line_items_<new>.csv` by `org_code` + `object_code`: only the amended lines should differ. If others differ, the new PDF is being read differently; fix that first. (The 11/19 book was re-saved through macOS, which renamed the note font; `extract_budget.py` now accepts both names.)
-4. Move rows in `data/known_issues.csv` and `data/policy_notes.csv` from the old file name and page to the new ones, and delete rows the new edition fixes.
+4. Move rows in `governments/lancaster-city/notes/known_issues.csv` and `governments/lancaster-city/notes/policy_notes.csv` from the old file name and page to the new ones, and delete rows the new edition fixes.
 5. Remove the old book: `git rm` its PDF, `config/<old>.json` and every `data/processed/*<old>*.csv`.
 6. Rebuild and check (step 5), preview, commit, push.
 
 ### A new org chart
-Add the PDFs, run `python scripts/extract_org_descriptions.py --pdf "<new descriptions PDF>" --out data/org_descriptions_<year>.csv`, and review `data/org_units_2027.csv` and `data/org_structure_2027.csv` against the new chart (the file names and the build's references to them would move to the new year).
+Add the PDFs, run `python scripts/extract_org_descriptions.py --pdf "<new descriptions PDF>" --out data/org_descriptions_<year>.csv`, and review `governments/lancaster-city/mapping/units.csv` and `governments/lancaster-city/mapping/org_structure.csv` against the new chart (the file names and the build's references to them would move to the new year).
 
 ### A new County budget year or audited report
 1. Save the new County book as `Budget PDFs - County/County-<year>-Budget-Book.pdf` (keep it under 100 MB) and give it a `config/county/County-<year>-Budget-Book.json` modelled on the 2026 one (a scan also needs the `ocr` block). Run `python scripts/ingest.py --county` and clear every failure: fix the parsing, or record a reviewed source error in `data/county/known_issues.csv`. Never widen the tolerance.

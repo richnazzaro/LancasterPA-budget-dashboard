@@ -1,0 +1,73 @@
+# 2023-City-of-Lancaster-ADOPTED-Budget-122022.yaml — one City PDF: how to read it.
+# Schema: schemas/book.schema.json. Moved from config/2023-City-of-Lancaster-ADOPTED-Budget-122022.json in Phase 1.2 (2026-11-28);
+# the columns, page headers and totals were checked against the PDF when the book was ingested (status: reviewed).
+#
+# Layout of one scanned budget book, read by scripts/extract_scanned.py. Copy this file for another
+# year and change what differs.
+source_doc: 2023-City-of-Lancaster-ADOPTED-Budget-122022.pdf
+layout_family: lineitem_columns
+status: reviewed
+document_note: Text-layer book. Budget column is headed '2023 PROPOSED'; kept as doc_type 'proposed'.
+# Pages whose header matches every column below, left to right. 'header' is a regex matched against
+# the column's stacked header words joined with spaces.
+line_items:
+  columns:
+  - header: ^2021 ACTUAL$
+    fiscal_year: 2021
+    figure: actual
+  - header: ^2022 ORIGINAL BUDGET$
+    fiscal_year: 2022
+    figure: adopted
+  - header: ^2022 AMENDED BUDGET$
+    fiscal_year: 2022
+    figure: amended
+  - header: ^(?:RECEIVED|EXPENDED) YTD (\d{1,2}/\d{1,2}/\d{4})$
+    fiscal_year: 2022
+    figure: actual_ytd
+  - header: ^2022 PROJECTED$
+    fiscal_year: 2022
+    figure: projected
+  - header: ^2023 PROPOSED$
+    fiscal_year: 2023
+    figure: proposed
+  header_last_line: ACTUAL.*PROPOSED
+  total_prefix: ^TOTAL\b\s*[-_]?\s*
+  inherit_header: false
+# Staffing schedule rows: org, object, title, bargaining unit, FT/PT, then one (count, salary) pair
+# per column.
+staffing:
+  columns:
+  - fiscal_year: 2023
+    figure: proposed
+  row:
+  - count
+  - title
+  - salary
+# Org-code prefix (first 3 digits of 8-digit codes) -> fund. 7-digit codes are General Fund.
+funds:
+  '560': Stormwater Management Fund
+  '561': Sewer Fund
+  '562': Water Fund
+  '563': Solid Waste & Recycling Fund
+  '662':
+    fund: Long's Park Fund
+    department: Public Works
+  '265':
+    fund: Liquid Fuels Fund
+    department: Public Works
+general_fund_departments:
+  '10': General Revenue
+  '11': Executive
+  '12': Legislative
+  '13': Neighborhood Engagement
+  '14': Administrative Services
+  '15': Public Safety
+  '16': Community Planning & Economic Development
+  '18': Public Works
+# Check against this book's General Fund Expense Summary.
+general_fund_department_overrides:
+  '1403': City Controller / Treasurer
+source: text
+# Calibri 'ti' ligature on the p5 summary page.
+glyph_map:
+  (cid:415): ti

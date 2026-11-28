@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "csv/funds.schema.json",
+  "title": "funds.csv",
+  "description": "Every fund of one government, with its role and a plain description. Code is the org-code prefix the book uses for the fund (empty for the tax-funded main fund). Roles: primary = the fund the site opens on and the pages treat as the tax-funded one; enterprise = a self-supporting utility; special = a small fund with its own revenue; capital = a capital-projects fund; reserve = a savings fund shown last in a list. printed_names are the words a printed roll-up label uses for the fund (semicolon-separated, lower case), so a printed total can be matched to its fund.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "code_prefix",
+    "name",
+    "role",
+    "paid_by",
+    "description",
+    "printed_names"
+  ],
+  "properties": {
+    "code_prefix": {
+      "type": "string",
+      "x-type": "code",
+      "description": "The org-code prefix the book uses for this fund; empty for the main fund (its codes are 7 digits).",
+      "examples": [
+        "560"
+      ]
+    },
+    "name": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The fund's name, as the site shows it.",
+      "minLength": 1,
+      "examples": [
+        "Sewer Fund"
+      ]
+    },
+    "role": {
+      "type": "string",
+      "x-type": "choice",
+      "description": "primary = the fund the site opens on and the pages treat as tax-funded; enterprise = a self-supporting utility; special = a small fund with its own revenue; capital = a capital-projects fund; reserve = a savings fund.",
+      "enum": [
+        "primary",
+        "enterprise",
+        "special",
+        "capital",
+        "reserve"
+      ],
+      "examples": [
+        "enterprise"
+      ]
+    },
+    "paid_by": {
+      "type": "string",
+      "x-type": "text",
+      "description": "Who pays for the fund's spending (fees, taxes, a grant), in a few words.",
+      "examples": [
+        "Wastewater charges to users"
+      ]
+    },
+    "description": {
+      "type": "string",
+      "x-type": "text",
+      "description": "What the fund is for, in one sentence for readers.",
+      "minLength": 1,
+      "examples": [
+        "Wastewater collection, pumping stations and treatment."
+      ]
+    },
+    "printed_names": {
+      "type": "string",
+      "x-type": "text",
+      "description": "Words a printed roll-up label uses for this fund, lower case and semicolon-separated (matched anywhere in the label). More specific words come first.",
+      "examples": [
+        "wastewater;sewer"
+      ]
+    }
+  }
+}

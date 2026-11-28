@@ -1,0 +1,55 @@
+# 2027-Mayors-Revised-Proposed-Budget-Rev-11-19-26.yaml — one City PDF: how to read it.
+# Schema: schemas/book.schema.json. Moved from config/2027-Mayors-Revised-Proposed-Budget-Rev-11-19-26.json in Phase 1.2 (2026-11-28);
+# the columns, page headers and totals were checked against the PDF when the book was ingested (status: reviewed).
+#
+# The 2027 book has its own extractor (scripts/extract_budget.py, 8 columns and 2 staffing columns
+# hard-wired). This file only tells ingest.py to use it and which budget year the book is.
+source_doc: 2027-Mayors-Revised-Proposed-Budget-Rev-11-19-26.pdf
+layout_family: lineitem_columns
+status: reviewed
+extractor: extract_budget
+source: text
+budget_year: 2027
+staffing:                               # one (count, salary) pair per printed column, left to right
+  columns:
+    - {fiscal_year: 2027, figure: proposed}
+    - {fiscal_year: 2027, figure: proposed_revised}
+  row: [title, bargaining_unit, ft_pt, count, salary]
+
+# p35 prints two columns, both headed '2027 Budget': left = proposed, right = revised proposed.
+fund_balance:
+  scenarios:
+  - proposed
+  - revised
+
+funds:                                  # org-code prefix -> fund (8- and 9-digit org codes)
+  '560': Stormwater Management Fund
+  '561': Sewer Fund
+  '562': Water Fund
+  '563': Solid Waste & Recycling Fund
+general_fund_departments:               # 7-digit General Fund org codes: first 2 digits -> department
+  '10': General Revenue
+  '11': Executive
+  '12': Legislative
+  '13': Neighborhood Engagement
+  '14': Administrative Services
+  '15': Public Safety
+  '16': Community Planning & Economic Development
+  '18': Public Works
+general_fund_department_overrides:      # bureaus that report to a different department (4-digit prefix)
+  '1405': Executive
+  '1403': City Controller / Treasurer
+
+# Reading: this book was printed from a spreadsheet; long account names overflow into the amount
+# columns, so rows are rebuilt from characters in drawing order (scripts/extract_budget.py).
+reading: char_rows
+note_fonts: [CIDFont+F2, '+Calibri']
+amount_columns:
+  - {fiscal_year: 2025, figure: actual}
+  - {fiscal_year: 2026, figure: adopted}
+  - {fiscal_year: 2026, figure: amended}
+  - {fiscal_year: 2026, figure: actual_ytd}
+  - {fiscal_year: 2026, figure: projected}
+  - {fiscal_year: 2026, figure: projected_revised}
+  - {fiscal_year: 2027, figure: proposed}
+  - {fiscal_year: 2027, figure: proposed_revised}

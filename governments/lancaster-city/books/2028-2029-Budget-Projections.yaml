@@ -1,0 +1,39 @@
+# 2028-2029-Budget-Projections.yaml — one City PDF: how to read it.
+# Schema: schemas/book.schema.json. Moved from config/2028-2029-Budget-Projections.json in Phase 1.2 (2026-11-28);
+# the columns, page headers and totals were checked against the PDF when the book was ingested (status: reviewed).
+#
+# The City's 2028-2029 projections book (printed from the 2027 budget workbook): one table per fund
+# with two columns, '2028 Projection' and '2029 Projection'. It has its own extractor
+# (scripts/extract_projections.py). It is not a budget book: it has no budget year, staffing schedule
+# or Fund Balance page, and the site shows its figures only as Projection years after the newest year.
+source_doc: 2028-2029-Budget-Projections.pdf
+layout_family: projection_book
+status: reviewed
+extractor: extract_projections
+kind: projection
+source: text
+
+fund_titles:                            # the fund named in a page title -> the fund name used everywhere else
+  General Fund: General Fund
+  Stormwater Management Fund: Stormwater Management Fund
+  Sewer Fund: Sewer Fund
+  Water Fund: Water Fund
+  Solid Waste and Recycling Fund: Solid Waste & Recycling Fund
+
+funds:                                  # org-code prefix -> fund (8- and 9-digit org codes)
+  '560': Stormwater Management Fund
+  '561': Sewer Fund
+  '562': Water Fund
+  '563': Solid Waste & Recycling Fund
+general_fund_departments:               # 7-digit General Fund org codes: first 2 digits -> department
+  '10': General Revenue
+  '11': Executive
+  '12': Legislative
+  '13': Neighborhood Engagement
+  '14': Administrative Services
+  '15': Public Safety
+  '16': Community Planning & Economic Development
+  '18': Public Works
+general_fund_department_overrides:      # bureaus that report to a different department (4-digit prefix)
+  '1405': Executive
+  '1403': City Controller / Treasurer

@@ -1,7 +1,7 @@
 """Extract and validate the City's multi-year budget projections book.
 
 Usage:
-    python scripts/extract_projections.py "Budget PDFs - City/2028-2029-Budget-Projections.pdf"
+    python scripts/extract_projections.py "governments/lancaster-city/sources/2028-2029-Budget-Projections.pdf"
 
 The book (printed from the 2027 budget workbook) has one table per fund:
     <org> <object> <description> <2028 Projection> <2029 Projection>
@@ -26,7 +26,7 @@ Writes to data/processed/:
                             every line matched by account_code (and its order, for codes printed twice)
                             to the year before's Revised column in the newest budget book: `status` is
                             both / only_projection / only_<book year>, so no line is silently dropped.
-                            Org codes are also checked against data/org_structure_2027.csv.
+                            Org codes are also checked against mapping/org_structure.csv.
 """
 
 import argparse
@@ -41,7 +41,6 @@ from budget_common import (
     OUT_DIR, ROUNDING_TOLERANCE, acknowledge_known_issues, category_for, check_counts,
     make_fund_mapper, to_long, to_number,
 )
-from extract_budget import FUNDS, GENERAL_FUND_DEPARTMENTS, GENERAL_FUND_DEPARTMENT_OVERRIDES
 
 DOC_TYPE = "projection"
 RE_TITLE = re.compile(r"^(.+?) (\d{4})-(\d{4}) Projections$")
@@ -49,15 +48,7 @@ RE_HEADER = re.compile(r"^Org Obj Description (\d{4}) Projection (\d{4}) Project
 RE_ASSUMPTIONS = re.compile(r"^\d{4}-\d{4} Projection Assumptions$")
 RE_AMOUNT = re.compile(r"^\(?-?[\d,]+\)?$")
 RE_CODE_ROW = re.compile(r"^(\d{7,9}) (\d{6}|TBD) (.+)$")
-FUND_TITLES = {  # the fund named in each page title -> fund name used everywhere else
-    "General Fund": "General Fund",
-    "Stormwater Management Fund": "Stormwater Management Fund",
-    "Sewer Fund": "Sewer Fund",
-    "Water Fund": "Water Fund",
-    "Solid Waste and Recycling Fund": "Solid Waste & Recycling Fund",
-}
-FUND_PREFIX = {v: k for k, v in FUNDS.items()}
-fund_and_department = make_fund_mapper(FUNDS, GENERAL_FUND_DEPARTMENTS, GENERAL_FUND_DEPARTMENT_OVERRIDES)
+# The fund named in each page title -> the fund name used everywhere else comes from the book (`fund_titles`).
 
 
 def cells_from_chars(chars, y_tolerance=3, cell_gap=1.5):
@@ -117,7 +108,7 @@ def split_amounts(words):
     return words[:k], words[k:]
 
 
-def extract(pdf_path):
+def extract(pdf_path, book):
     items, checks, unparsed, assumptions = [], [], [], []
     fund, years, col_split = None, None, None
     section = None             # current expense section heading, or None
@@ -150,7 +141,7 @@ def extract(pdf_path):
                 if m:
                     if open_items:
                         unparsed.append({"source_page": page_no, "text": f"{len(open_items)} lines of {fund} never closed by a total"})
-                    fund = FUND_TITLES.get(m.group(1))
+                    fund = book["fund_titles"].get(m.group(1))
                     if fund is None:
                         raise SystemExit(f"p{page_no}: unknown fund title {m.group(1)!r}")
                     section, open_items, fund_items, leaf = None, [], [], []
@@ -180,7 +171,7 @@ def extract(pdf_path):
                 m = RE_CODE_ROW.match(label)
                 if m and not any(w["bold"] for w in head):
                     org, obj, name = m.groups()
-                    f, dept = fund_and_department(org)
+                    f, dept = book["fund_and_department"](org)
                     if f != fund:
                         unparsed.append({"source_page": page_no, "text": f"org {org} maps to {f}, page is {fund}: {text}"})
                     cat = category_for(obj)
@@ -255,7 +246,7 @@ def extract(pdf_path):
     return items, checks, unparsed, assumption_rows, years, keys
 
 
-def crosscheck_revised(doc, years, out=OUT_DIR):
+def crosscheck_revised(doc, years, out=OUT_DIR, gov=None):
     """Match every projection line to the newest book's Revised column for the year before the first
     projection year. Returns (stats, path) or (None, None) when that book is not extracted."""
     base = years[0] - 1
@@ -285,7 +276,8 @@ def crosscheck_revised(doc, years, out=OUT_DIR):
     m = m[cols]
     path = out / f"crosscheck_projection_{doc}_vs_revised_{base}_{book_stem}.csv"
     m.to_csv(path, index=False)
-    org = pd.read_csv(Path(__file__).resolve().parent.parent / "data" / "org_structure_2027.csv", dtype=str)
+    org = pd.read_csv(gov.path(gov["org"]["codes"]), dtype=str) if gov.get("org") else pd.DataFrame({"org_code": [],
+                                                                                                 "fund": []})
     unmapped = sorted(set(p["org_code"]) - set(org["org_code"]))
     funds = p.merge(org, on="org_code", suffixes=("", "_org"))
     fund_diff = sorted(set(funds.loc[funds["fund"] != funds["fund_org"], "org_code"]))
@@ -296,11 +288,20 @@ def crosscheck_revised(doc, years, out=OUT_DIR):
             "col": col}, path
 
 
-def run(pdf, out=OUT_DIR):
+def run(pdf, out=OUT_DIR, gov=None, cfg=None):
     """Extract and validate the projections book. Returns a stats dict like the other extractors."""
+    import govconfig
+    gov = govconfig.resolve_government(gov)
     pdf, out = Path(pdf), Path(out)
     doc = pdf.stem
-    items, checks, unparsed, assumption_rows, years, keys = extract(pdf)
+    if cfg is None:
+        cfg = govconfig.book_config(gov.id, pdf.name)
+        if cfg is None:
+            sys.exit(f"{govconfig.books_dir(gov.id) / (pdf.stem + '.yaml')}: no book config for {pdf.name}")
+    book = {"fund_titles": cfg.get("fund_titles") or {},
+            "fund_and_department": make_fund_mapper(cfg["funds"], cfg["general_fund_departments"],
+                                                    cfg.get("general_fund_department_overrides", {}))}
+    items, checks, unparsed, assumption_rows, years, keys = extract(pdf, book)
     out.mkdir(parents=True, exist_ok=True)
     cols = ["fund", "department", "bureau", "account_code", "org_code", "object_code",
             "account_name", "category", *keys, "source_page"]
@@ -308,7 +309,7 @@ def run(pdf, out=OUT_DIR):
     to_long(items, [(y, DOC_TYPE) for y in years], keys, pdf.name).to_csv(out / f"budget_long_{doc}.csv", index=False)
     pd.DataFrame(assumption_rows, columns=["source_page", "line", "text"]).to_csv(
         out / f"projection_assumptions_{doc}.csv", index=False)
-    checks = acknowledge_known_issues(pd.DataFrame(checks), pdf.name)
+    checks = acknowledge_known_issues(pd.DataFrame(checks), pdf.name, gov)
     checks.to_csv(out / f"validation_{doc}.csv", index=False)
 
     df = pd.DataFrame(items)
@@ -326,7 +327,7 @@ def run(pdf, out=OUT_DIR):
     failed = checks[~checks["passed"] & (checks["acknowledged"] == "")]
     for _, r in failed.iterrows():
         print(f"  FAILED p{r.source_page} [{r.level}] {r.label}: off by up to {r.max_abs_diff:,}")
-    xc, xpath = crosscheck_revised(doc, years, out)
+    xc, xpath = crosscheck_revised(doc, years, out, gov)
     if xc is None:
         print(f"\nNo extracted book has a {years[0] - 1} Revised column; cross-check skipped.")
     else:
@@ -337,7 +338,7 @@ def run(pdf, out=OUT_DIR):
             for _, r in df_.iterrows():
                 amt = r[xc["col"]] if "only_" + str(xc["base"]) == r["status"] else r[keys[0]]
                 print(f"  {label}: {r.account_code:18s} {r.account_name:28s} {r.bureau:32s} {amt:>12,.0f}")
-        print(f"Org codes not in data/org_structure_2027.csv: {xc['unmapped_orgs'] or 'none'}; "
+        print(f"Org codes not in {gov.get('org', {}).get('codes', 'the org structure')}: {xc['unmapped_orgs'] or 'none'}; "
               f"fund differs from the org structure: {xc['fund_differs'] or 'none'}")
     stats = {"ok": failed.empty and not unparsed and not (xc and (xc["unmapped_orgs"] or xc["fund_differs"])), "line_items": len(items), "positions": 0,
              **check_counts(checks), "source": "text"}
@@ -353,8 +354,9 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("pdf", type=Path)
     ap.add_argument("--out", type=Path, default=OUT_DIR)
+    ap.add_argument("--gov", help="government id (default: site.yaml default_government)")
     args = ap.parse_args()
-    if not run(args.pdf, args.out)["ok"]:
+    if not run(args.pdf, args.out, gov=args.gov)["ok"]:
         sys.exit(1)
 
 

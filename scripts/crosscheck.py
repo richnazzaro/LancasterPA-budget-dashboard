@@ -75,13 +75,14 @@ def digit_pattern(a, b):
     return ""
 
 
-def crosscheck(a_path, a_col, b_path, b_col):
+def crosscheck(a_path, a_col, b_path, b_col, gov=None):
     a, b = load(a_path, a_col), load(b_path, b_col)
     a_checks = pd.read_csv(Path(a_path).parent / f"validation_{doc_name(a_path)}.csv")
     a_checks = a_checks[a_checks.level == "section"]
     sec_diff = {r.label: abs(getattr(r, f"diff_{a_col}")) for r in a_checks.itertuples()}
-    cfg_path = ROOT / "config" / f"{doc_name(a_path)}.json"
-    a_is_ocr = cfg_path.exists() and json.loads(cfg_path.read_text()).get("source", "ocr") == "ocr"
+    import govconfig
+    cfg = govconfig.book_config(gov.id, doc_name(a_path) + ".pdf") if gov else None
+    a_is_ocr = bool(cfg) and cfg.get("source", "ocr") == "ocr"
 
     m = a.merge(b, on="account_code", how="outer", suffixes=("_a", "_b"), indicator="side")
     rows = []
@@ -127,9 +128,9 @@ def crosscheck(a_path, a_col, b_path, b_col):
     return out.sort_values(["_o", "account_code"]).drop(columns="_o")
 
 
-def run_pair(a_csv, a_col, b_csv, b_col, out_dir=OUT_DIR):
+def run_pair(a_csv, a_col, b_csv, b_col, out_dir=OUT_DIR, gov=None):
     """Run one comparison, write its CSV, return (table, stats)."""
-    out = crosscheck(a_csv, a_col, b_csv, b_col)
+    out = crosscheck(a_csv, a_col, b_csv, b_col, gov)
     path = Path(out_dir) / (f"crosscheck_{a_col}_{doc_name(a_csv)}"
                             f"_vs_{b_col}_{doc_name(b_csv)}.csv")
     out.to_csv(path, index=False)

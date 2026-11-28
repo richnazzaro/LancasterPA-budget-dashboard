@@ -5,7 +5,7 @@ What it checks:
   site.yaml, kinds/*.yaml, governments/*/government.yaml, and when present governments/*/books/*.yaml,
   governments/*/content/calendar.yaml and governments/*/content/rules/*.yaml;
   today's per-book configs (config/*.json, config/county/*.json, config/county/acfr/*.json,
-  config/county/resolutions/*.json) against schemas/book.schema.json, and config/tax_limit.json against
+  config/county/resolutions/*.json) against schemas/book.schema.json, and content/rules/tax_limit.yaml against
   schemas/tax_limit.schema.json, so the schemas are proven to describe the files that exist;
   today's hand-kept CSVs (data/*.csv, data/county/*.csv) against schemas/csv/: required columns, unknown columns,
   and every value (types, allowed values, forms such as page numbers and account codes).
@@ -35,19 +35,22 @@ from govconfig import ROOT, ConfigError, rel  # noqa: E402
 # Each CSV schema (schemas/csv/<name>.schema.json) and the hand-kept files it checks today. Phase 1 and 2 move these
 # files into governments/<id>/mapping|notes|content; only this table changes then.
 CSV_FILES = {
-    "income_rules": ["data/income_rules.csv"],
-    "income_sources": ["data/income_sources.csv"],
-    "known_issues": ["data/known_issues.csv", "data/county/known_issues.csv"],
-    "line_notes": ["data/line_notes.csv"],
-    "ocr_corrections": ["data/ocr_corrections.csv", "data/county/ocr_corrections.csv"],
-    "org_descriptions": ["data/org_descriptions_2027.csv"],
-    "org_structure": ["data/org_structure_2027.csv"],
-    "org_units": ["data/org_units_2027.csv"],
-    "policy_notes": ["data/policy_notes.csv"],
-    "sign_corrections": ["data/sign_corrections.csv"],
-    "staffing_corrections": ["data/staffing_corrections.csv"],
-    "tax_limit_lines": ["data/tax_limit_lines.csv"],
-    "tax_rates": ["data/tax_rates.csv"],
+    "funds": ["governments/lancaster-city/mapping/funds.csv"],
+    "income_rules": ["governments/lancaster-city/mapping/income_rules.csv",
+                     "governments/lancaster-county/mapping/income_rules.csv"],
+    "income_sources": ["governments/lancaster-city/mapping/income_sources.csv"],
+    "known_issues": ["governments/lancaster-city/notes/known_issues.csv", "data/county/known_issues.csv"],
+    "line_notes": ["governments/lancaster-city/notes/line_notes.csv"],
+    "ocr_corrections": ["governments/lancaster-city/notes/ocr_corrections.csv", "data/county/ocr_corrections.csv"],
+    "org_descriptions": ["governments/lancaster-city/content/org_descriptions.csv"],
+    "org_structure": ["governments/lancaster-city/mapping/org_structure.csv"],
+    "org_units": ["governments/lancaster-city/mapping/units.csv"],
+    "policy_notes": ["governments/lancaster-city/notes/policy_notes.csv"],
+    "sign_corrections": ["governments/lancaster-city/notes/sign_corrections.csv"],
+    "staffing_corrections": ["governments/lancaster-city/notes/staffing_corrections.csv"],
+    "tax_limit_lines": ["governments/lancaster-city/content/rules/tax_limit_lines.csv"],
+    "tax_rates": ["governments/lancaster-city/mapping/tax_rates.csv",
+                  "governments/lancaster-county/mapping/tax_rates.csv"],
     "county_account_changes": ["data/county/account_changes.csv"],
     "county_context_facts": ["data/county/context_facts.csv"],
     "county_elected_offices": ["data/county/elected_offices.csv"],
@@ -61,7 +64,7 @@ LEGACY_JSON = [
     ("config/county/acfr/*.json", "book"),
     ("config/county/resolutions/*.json", "book"),
 ]
-LEGACY_TAX_LIMIT = "config/tax_limit.json"
+LEGACY_TAX_LIMIT = "content/rules/tax_limit.yaml"
 
 
 def yaml_targets() -> list[tuple[Path, str]]:

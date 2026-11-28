@@ -16,7 +16,7 @@ the project owner):
 Anything else (no fit, several fits) is left as printed and stays in
 known_issues.csv for a person.
 
-Flips are written to data/sign_corrections.csv with the evidence (printed
+Flips are written to notes/sign_corrections.csv with the evidence (printed
 total, line sum, gap). extract_layout.py applies them and keeps the printed
 value in the line_items `as_printed` column, so every change can be audited.
 Run this on outputs produced *before* the flips are applied; sections that

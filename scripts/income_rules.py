@@ -1,4 +1,4 @@
-"""What counts as income (data/income_rules.csv).
+"""What counts as income (a government's mapping/income_rules.csv).
 
 The budget books list some revenue lines that are not money coming in from the public:
 
@@ -25,7 +25,12 @@ import re
 from collections import Counter
 from pathlib import Path
 
-PATH = Path(__file__).resolve().parent.parent / "data" / "income_rules.csv"
+import govconfig
+
+def path(gov=None) -> Path:
+    """The government's mapping/income_rules.csv (governments/<id>/mapping/)."""
+    import govconfig
+    return govconfig.resolve_government(gov).mapping / "income_rules.csv"
 CLASSES = ("draw", "transfer", "charge", "income")
 # Names that suggest a draw, transfer or charge. "Real Estate Transfer" is a tax.
 WATCH = re.compile(r"(?<!estate )transfer|tsfr|fund balance|allocation|indirect|county cash|county share|reimb\.? .*fund", re.I)
@@ -33,12 +38,13 @@ WATCH = re.compile(r"(?<!estate )transfer|tsfr|fund balance|allocation|indirect|
 WATCH_COUNTY_CATEGORY = re.compile(r"^Charges (to )?County Agencies$", re.I)
 
 
-def load(path: Path = PATH) -> list[dict]:
-    with path.open(newline="") as f:
+def load(gov=None) -> list[dict]:
+    file = path(gov)
+    with file.open(newline="") as f:
         rules = list(csv.DictReader(f))
     for r in rules:
         if r["class"] not in CLASSES:
-            raise ValueError(f"{path.name}: class {r['class']!r} for {r['code']} is not one of {CLASSES}")
+            raise ValueError(f"{file.name}: class {r['class']!r} for {r['code']} is not one of {CLASSES}")
     return rules
 
 
@@ -58,9 +64,9 @@ def classifier(rules: list[dict] | None = None):
     return classify
 
 
-def not_income(accounts: list, funds: list, categories: list, revenue: str = "Revenue") -> dict:
+def not_income(accounts: list, funds: list, categories: list, revenue: str = "Revenue", gov=None) -> dict:
     """budget.json `not_income`: {account index (as text): class} for every revenue account a rule matches."""
-    classify = classifier()
+    classify = classifier(load(gov))
     out = {}
     for i, a in enumerate(accounts):
         if categories[a[5]] != revenue:
@@ -71,14 +77,15 @@ def not_income(accounts: list, funds: list, categories: list, revenue: str = "Re
     return out
 
 
-def check(budget: dict, revenue: str = "Revenue") -> int:
+def check(budget: dict, revenue: str = "Revenue", gov=None) -> int:
     """For check_dataset.py and check_county.py: every revenue line that looks like a draw, transfer or charge (WATCH,
     or a County "Charges to County Agencies" group) has a rule, and every rule's class is what budget.json carries.
     Returns the number of failures."""
     acc, funds, cats, bureaus = budget["accounts"], budget["funds"], budget["categories"], budget["bureaus"]
-    classify, bad, seen = classifier(), 0, Counter()
-    reviewed = {r["code"] for r in load() if r["class"] == "income"}
-    print("\nWhat counts as income (data/income_rules.csv):")
+    rules = load(gov)
+    classify, bad, seen = classifier(rules), 0, Counter()
+    reviewed = {r["code"] for r in rules if r["class"] == "income"}
+    print(f"\nWhat counts as income ({govconfig.rel(path(gov))}):")
     for i, a in enumerate(acc):
         if cats[a[5]] != revenue:
             continue
@@ -90,6 +97,7 @@ def check(budget: dict, revenue: str = "Revenue") -> int:
             seen[c] += 1
         elif a[0].split("-")[-1] not in reviewed and (WATCH.search(a[1]) or WATCH_COUNTY_CATEGORY.match(bureaus[a[4]])):
             bad += 1
-            print(f"FAIL {a[0]} {a[1]} ({funds[a[2]]}): looks like a draw, transfer or charge but has no rule; add it to data/income_rules.csv")
+            print(f"FAIL {a[0]} {a[1]} ({funds[a[2]]}): looks like a draw, transfer or charge but has no rule; "
+                  f"add it to {govconfig.rel(path(gov))}")
     print(f"{'ok  ' if not bad else 'FAIL'} revenue accounts not counted as income: {dict(sorted(seen.items()))}; no unreviewed look-alikes")
     return bad

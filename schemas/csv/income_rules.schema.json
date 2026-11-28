@@ -6,7 +6,6 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "entity",
     "code",
     "fund",
     "class",
@@ -14,18 +13,6 @@
     "evidence"
   ],
   "properties": {
-    "entity": {
-      "type": "string",
-      "x-type": "choice",
-      "description": "Which government the rule is for (city or county). Dropped when the file moves into a government's folder.",
-      "enum": [
-        "city",
-        "county"
-      ],
-      "examples": [
-        "city"
-      ]
-    },
     "code": {
       "type": "string",
       "x-type": "code",

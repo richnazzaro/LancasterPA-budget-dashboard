@@ -1,7 +1,7 @@
 """Extract and check the General Fund "Fund Balance Projection" page.
 
 Usage:
-    python scripts/fund_balance.py "Budget PDFs - City/2027-Mayors-Revised-Proposed-Budget-Rev-11-19-26.pdf"
+    python scripts/fund_balance.py "governments/lancaster-city/sources/2027-Mayors-Revised-Proposed-Budget-Rev-11-19-26.pdf"
     (ingest.py runs this for every book)
 
 The page walks the General Fund reserve ("Reserve Fund" on the dashboard)
@@ -39,7 +39,7 @@ import pandas as pd
 
 from budget_common import (OUT_DIR, ROUNDING_TOLERANCE, acknowledge_known_issues,
                            check_counts)
-from extract_layout import CONFIG_DIR, load_page_lines, load_text_page_lines, read_salary
+from extract_layout import load_page_lines, load_text_page_lines, read_salary
 from ocr_pages import cache_dir, ocr_document
 
 RE_MONEY = re.compile(r"^\$?\(?\$?[\d,]+(\.\d+)?\)?$")
@@ -212,16 +212,22 @@ def chain_checks(rows, scenario, page):
     return checks
 
 
-def gf_total_checks(rows, doc, scenario_cols):
-    """Compare page revenues/expenditures with this book's General Fund totals:
-    the printed roll-up, the sum of General Fund lines, and (revenues) that sum
-    without 499000 Fund Balance Reserve, the budgeted draw on the reserve."""
-    val_path, li_path = OUT_DIR / f"validation_{doc}.csv", OUT_DIR / f"line_items_{doc}.csv"
+def gf_total_checks(rows, doc, scenario_cols, gov):
+    """Compare page revenues/expenditures with this book's tax-funded fund totals:
+    the printed roll-up, the sum of its lines, and (revenues) that sum without the
+    reviewed draw lines (income_rules.csv class draw: the budgeted draw on savings)."""
+    import income_rules
+    primary = gov["display"]["primary_fund"]
+    draws = [r for r in income_rules.load(gov) if r["class"] == "draw"]
+    draw_codes = {r["code"] for r in draws}
+    draw_label = " / ".join(f"{r['code']} {r['lines']}" for r in draws)
+    out_dir = gov.processed
+    val_path, li_path = out_dir / f"validation_{doc}.csv", out_dir / f"line_items_{doc}.csv"
     if not val_path.exists() or not li_path.exists():
         return []
     v, li = pd.read_csv(val_path), pd.read_csv(li_path, dtype={"object_code": str})
     roll = v[v.level.isin(["rollup", "section"])]
-    gf = li[li.fund == "General Fund"]
+    gf = li[li.fund == primary]
     out = []
     for r in rows:
         if r["line_type"] not in ("revenues", "expenditures") or r["amount"] is None:
@@ -234,20 +240,20 @@ def gf_total_checks(rows, doc, scenario_cols):
         tot = roll[roll.label.str.contains(pat, case=False, regex=True)]
         printed = tot[f"printed_{col}"].iloc[-1] if len(tot) and f"printed_{col}" in tot else None
         lines = gf[(gf.category == "Revenue") == rev]
-        cands = {"printed General Fund total": printed,
-                 "sum of General Fund lines": lines[col].sum()}
+        cands = {f"printed {primary} total": printed,
+                 f"sum of {primary} lines": lines[col].sum()}
         if rev:
-            cands["sum of lines excl. 499000 Fund Balance Reserve"] = \
-                lines[lines.object_code != "499000"][col].sum()
+            cands[f"sum of lines excl. {draw_label}"] = \
+                lines[~lines.object_code.isin(draw_codes)][col].sum()
         page_amt = abs(r["amount"])
         diffs = {k: page_amt - c for k, c in cands.items() if c is not None and c == c}
         best = min(diffs, key=lambda k: abs(diffs[k])) if diffs else None
         out.append({"level": "fund_balance_gf_total",
                     "label": f"{r['scenario']}: {r['label']} vs {col}",
                     "source_page": r["source_page"], "members": 1,
-                    "printed": page_amt, "computed": cands["printed General Fund total"],
-                    "line_sum": cands["sum of General Fund lines"],
-                    "line_sum_excl_reserve": cands.get("sum of lines excl. 499000 Fund Balance Reserve"),
+                    "printed": page_amt, "computed": cands[f"printed {primary} total"],
+                    "line_sum": cands[f"sum of {primary} lines"],
+                    "line_sum_excl_reserve": cands.get(f"sum of lines excl. {draw_label}"),
                     "max_abs_diff": abs(diffs[best]) if best else None,
                     "matches": (best if best and abs(diffs[best]) <= ROUNDING_TOLERANCE
                                 else f"none (closest: {best}, off by {diffs[best]:,.0f})"
@@ -263,9 +269,13 @@ def scenario_columns(cfg, scenario, year_now):
             (scenario, "proposed", year_now): f"proposed{rev}_{year_now}"}
 
 
-def run(pdf, out=OUT_DIR):
+def run(pdf, out=OUT_DIR, gov=None):
+    import govconfig
+    gov = govconfig.resolve_government(gov)
     pdf = Path(pdf)
-    cfg = json.loads((CONFIG_DIR / f"{pdf.stem}.json").read_text())
+    cfg = govconfig.book_config(gov.id, pdf.name)
+    if cfg is None:
+        raise SystemExit(f"{govconfig.books_dir(gov.id) / (pdf.stem + '.yaml')}: no book config for {pdf.name}")
     scenarios = cfg.get("fund_balance", {}).get("scenarios", ["single"])
     page, lines = find_page(pdf, cfg)
     if page is None:
@@ -278,10 +288,10 @@ def run(pdf, out=OUT_DIR):
         rows += r
         checks += chain_checks(r, scenario, page)
         year_now = max(x["fiscal_year"] for x in r if x["fiscal_year"])
-        checks += gf_total_checks(r, pdf.stem, scenario_columns(cfg, scenario, year_now))
+        checks += gf_total_checks(r, pdf.stem, scenario_columns(cfg, scenario, year_now), gov)
     df = pd.DataFrame(rows)
     df.to_csv(Path(out) / f"fund_balance_{pdf.stem}.csv", index=False)
-    ch = acknowledge_known_issues(pd.DataFrame(checks), pdf.name)
+    ch = acknowledge_known_issues(pd.DataFrame(checks), pdf.name, gov)
     ch.to_csv(Path(out) / f"fund_balance_checks_{pdf.stem}.csv", index=False)
     counts = check_counts(ch)
     print(f"{pdf.name}: Fund Balance Projection on p{page}, {len(scenarios)} column(s), "

@@ -77,12 +77,15 @@ from pathlib import Path
 
 from build_dataset import Interner, parse_amount, read_csv, write_json
 from changes import compare
+import govconfig
 import income_rules
 import income_sources
 from org_structure import slug
 
 ROOT = Path(__file__).resolve().parent.parent
-PROCESSED = ROOT / "data" / "processed" / "county"
+# The County's folders and files come from governments/lancaster-county/ (Phase 2 moves the rest of them there).
+GOV = govconfig.government("lancaster-county")
+PROCESSED = GOV.processed
 DATA = ROOT / "data" / "county"
 OUT = ROOT / "web" / "data" / "county"
 MEASURE = "budget"
@@ -658,7 +661,7 @@ def build(processed: Path = PROCESSED, out: Path = OUT) -> dict:
         ctx = {"id": cid, "from_label": f"{newest - 1} Budget", "to_label": f"{newest} Budget"}
         view_budget = {"accounts": accounts.items, "categories": cats.items, "funds": funds.items, "org": org, "printed": printed}
         comp = {"to": to_key, "from": from_key, "same_kind": True}
-        comp |= compare(view_budget, Lines(from_key, f_view), Lines(to_key, t_view), ctx)
+        comp |= compare(view_budget, Lines(from_key, f_view), Lines(to_key, t_view), ctx, GOV)
         where = {ln[0]: i for i, ln in enumerate(comp["lines"])}
         for m in merges:
             m["line"] = where.get(m.pop("a"))
@@ -688,10 +691,10 @@ def build(processed: Path = PROCESSED, out: Path = OUT) -> dict:
         "categories": cats.items,
         # [account_code, account_name, fund, department, bureau, category]
         "accounts": [list(a) for a in accounts.items],
-        # Revenue accounts that are not income: {account index: draw | transfer | charge} (data/income_rules.csv).
-        "not_income": income_rules.not_income(accounts.items, funds.items, cats.items, REVENUE),
-        # Income sources (data/income_sources.csv); the County has no rows, so the panel uses the printed groups.
-        "income_sources": income_sources.income_sources(accounts.items, funds.items, cats.items, "county", REVENUE),
+        # Revenue accounts that are not income: {account index: draw | transfer | charge} (mapping/income_rules.csv).
+        "not_income": income_rules.not_income(accounts.items, funds.items, cats.items, REVENUE, GOV),
+        # Income sources (mapping/income_sources.csv); the County has no rows, so the panel uses the printed groups.
+        "income_sources": income_sources.income_sources(accounts.items, funds.items, cats.items, GOV, REVENUE),
         "series": dict(sorted(series.items())),
         "printed": printed,
         "known_issues": known,
