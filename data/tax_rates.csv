@@ -1,5 +1,5 @@
 government,tax,year,label,rate,unit,assessed_year,account,source,evidence
 city,real_estate,2026,2026,12.64,mills,2026,1000001-400000,https://co.lancaster.pa.us/DocumentCenter/View/19105/2026-County-Municipal-and-2025-2026-School,"County millage table, 2026: ""331-339 Lancaster City 3.201 12.640000 25.4776 41.3186"""
-city,real_estate,2027,2027 Revised,5.71,mills,2027,1000001-400000,user-provided; not printed in the 2027 budget book,"Owner-provided 2026-11-27; the 2027 book (284 pages) prints no millage. Rate on the 2027 reassessed values."
-city,earned_income,2027,2027 Revised,1.3,%,,1000001-400300,2027-Mayors-Revised-Proposed-Budget-Rev-11-19-26.pdf#page=37,"""Revenue is derived from the 1.3% Earned Income Tax paid by City residents"""
+city,real_estate,2027,2027,5.71,mills,2027,1000001-400000,user-provided; not printed in the 2027 budget book,"Owner-provided 2026-11-27, confirmed 2026-11-28 as the City's 2027 revenue-neutral rate on the reassessed values (the 2027 book prints no millage). The Revised budget makes no change to it (p. 3); the Proposal's 5% increase comes from data/policy_notes.csv."
+city,earned_income,2026,2026,1.10,%,,1000001-400300,2027-Mayors-Revised-Proposed-Budget-Rev-11-19-26.pdf#page=3,"The rate in 2026: ""from 1.10% to 1.30%"" (Mayor's letter on the 2027 change). The Proposal's and the Revised budget's 2027 rates come from data/policy_notes.csv."
 county,real_estate,2026,2026 Budget,3.201,mills,2026,,County-Resolution-79-of-2025.pdf#page=1,"""TAX RATE ON ASSESSED VALUE OF REAL ESTATE = 3.201 MILLS"""

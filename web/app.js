@@ -3017,7 +3017,7 @@
     document.body.classList.toggle('calendar-page', route.name === 'calendar');
     page.after?.();
     // Mark where the reader is in the contents.
-    const here = route.name === 'changes' ? 'changes' : route.name === 'about' ? 'about' : route.name === 'terms' ? 'terms' : route.name === 'calendar' ? 'calendar' : route.name === 'tax' ? 'tax' : route.name === 'home' ? (isReserve() ? 'reserve' : 'home') : 'home'; // 'tax' has no contents link: the page is reached from the tax notes
+    const here = route.name === 'changes' ? 'changes' : route.name === 'about' ? 'about' : route.name === 'terms' ? 'terms' : route.name === 'calendar' ? 'calendar' : route.name === 'tax' ? 'tax' : 'home'; // the Reserve Fund (a fund view on the Overview) marks Overview
     const onUnit = route.name === 'dept' || route.name === 'bureau';
     document.querySelectorAll('#site-nav a').forEach((a) => { if (a.dataset.nav === here && !onUnit) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     pinControls();
@@ -3592,16 +3592,31 @@
       </div>`;
   }
   /* ---------- What would you pay? (#/tax, #/county/tax) ----------
-     An estimate of a reader's City and County taxes at each tax's newest rate (web/data/tax_rates.json, from
-     data/tax_rates.csv via scripts/tax_rates.py). No header link: the property and earned income tax notes on What
-     changed link here (taxLinkHTML). The values typed in stay in this page (TX), never in the address. */
+     This year against next year: a reader's City and County taxes this year (config.json `tax_estimate.this_year`) and
+     next year (`next_year`) under the newest budget's latest figure (2027 Revised; the Proposal is not shown), from web/data/tax_rates.json
+     (data/tax_rates.csv and the budget's tax changes in data/policy_notes.csv, via scripts/tax_rates.py). A tax with no
+     rate yet for next year (the County's, on the reassessed values) shows this year only. In the header ("Your taxes", in place
+     of the Reserve Fund, which stays in every Fund list), and linked from the property and earned income tax notes on
+     What changed (taxLinkHTML). What is typed stays in this page (TX). */
   const TAX_NAME = { real_estate: 'Property tax', earned_income: 'Earned income tax' };
   const TAX_WHO = [['both', 'Both (property in the City)', ['city', 'county']], ['city', 'City only', ['city']], ['county', 'County only (outside the City)', ['county']]];
   const TX = { who: null, av: {}, inc: '' };
-  // The newest rate for each government and tax; older rows (the City's rate before the reassessment) are context.
-  function taxNewest(gov, tax) {
-    const rs = (TAXR?.rates || []).filter((r) => r.gov === gov && r.tax === tax);
-    return rs.length ? rs.reduce((a, b) => (b.year > a.year ? b : a)) : null;
+  const taxYears = () => ({ now: BASE.tax_estimate?.this_year, next: BASE.tax_estimate?.next_year });
+  const taxRow = (gov, tax, year) => (TAXR?.rates || []).find((r) => r.gov === gov && r.tax === tax && r.year === year) || null;
+  const taxKinds = (gov) => [...new Set((TAXR?.rates || []).filter((r) => r.gov === gov).map((r) => r.tax))].sort((x, y) => (x === 'real_estate' ? -1 : y === 'real_estate' ? 1 : 0));
+  // Next year's column for the governments shown: the newest budget's latest figure (the City's 2027 Revised; the
+  // Proposal is not shown), or one "next year" column (the County alone: the City's budget does not apply to it).
+  function taxNextCols(govs = ['city', 'county']) {
+    const { next } = taxYears();
+    const steps = (TAXR?.rates || []).filter((x) => x.year === next && govs.includes(x.gov) && x.steps?.length).map((x) => x.steps[x.steps.length - 1]);
+    const last = steps.reduce((m, s) => (!m || ['proposed', 'revised'].indexOf(s.figure) > ['proposed', 'revised'].indexOf(m.figure) ? s : m), null);
+    return [last ? { figure: last.figure, label: last.label } : { figure: null, label: String(next) }];
+  }
+  // The rate a tax has next year under one column: its step for that figure, else the year's own rate, else none.
+  function taxNextRate(gov, tax, figure) {
+    const r = taxRow(gov, tax, taxYears().next);
+    if (!r) return null;
+    return (r.steps || []).find((s) => s.figure === figure) || (r.steps?.length ? r.steps[r.steps.length - 1] : { ...r, figure: null });
   }
   // "Estimate what you would pay →" under a tax note, when the page has a rate for that tax (City: by budget line).
   function taxLinkHTML(gov, tax, account = null, wrap = 'br') {
@@ -3611,62 +3626,128 @@
     return wrap === 'p' ? `<p class="tax-link-p">${a}</p>` : `<br>${a}`;
   }
   const govName = (g) => BASE.entities?.[g]?.entity?.short || g;
-  const rateText = (r) => (r.unit === '%' ? `${r.rate}%` : `${r.rate} mills`);
-  const rateHTML = (r) => (r.href
-    ? `<a class="src" href="${esc(r.href)}" target="_blank" rel="noopener" aria-label="${esc(rateText(r))}: open the source">${esc(rateText(r))}</a>`
-    : `${esc(rateText(r))}<span class="tx-sub">Not printed in the budget book</span>`);
+  const govShort = (g) => govName(g).replace(/ of Lancaster$/, '');
+  const rateNum = (n) => String(+n.toFixed(4));
+  const rateText = (r) => (r.unit === '%' ? `${rateNum(r.rate)}%` : `${rateNum(r.rate)} mills`);
+  // A rate, linked to its source. A calculated rate says so, and a rate the budget book does not print says where it is
+  // from; the notes under the table explain both.
+  function rateHTML(r, unit = r.unit) {
+    const t = rateText({ rate: r.rate, unit });
+    if (r.calculated) return `${esc(t)} (calculated)`;
+    if (r.href) return `<a class="src" href="${esc(r.href)}" target="_blank" rel="noopener" aria-label="${esc(t)}: open the source">${esc(t)}</a>`;
+    return `${esc(t)} (not in the budget book)`;
+  }
   const taxNum = (s) => { const t = String(s ?? '').replace(/[^0-9.]/g, ''); return t ? Number(t) : null; };
   const taxGovs = () => (TAX_WHO.find((w) => w[0] === TX.who) || TAX_WHO[0])[2];
-  // Property rates by the year of assessed value they apply to: one field per year (the 2027 reassessment changed every value).
+  // One "Assessed value, {year}" field per year of value a shown property rate applies to (2026 this year; 2027, the
+  // reassessed value, next year), with the governments that use it.
   function taxValueYears() {
-    const ys = new Map();
-    for (const g of ['city', 'county']) { const r = taxNewest(g, 'real_estate'); if (r) ys.set(r.assessed_year, [...(ys.get(r.assessed_year) || []), g]); }
-    return [...ys.entries()].sort((a, b) => b[0] - a[0]);
+    const { now, next } = taxYears(), ys = new Map();
+    for (const g of ['city', 'county']) for (const y of [now, next]) {
+      const r = taxRow(g, 'real_estate', y);
+      if (r && !(ys.get(r.assessed_year) || []).includes(g)) ys.set(r.assessed_year, [...(ys.get(r.assessed_year) || []), g]);
+    }
+    return [...ys.entries()].sort((a, b) => a[0] - b[0]);
   }
+  const signMoney = (n) => (Math.round(n) === 0 ? '$0' : `${n > 0 ? '+' : MINUS}${money(Math.abs(n))}`);
+  const signPct = (d, base) => (base ? ` (${d >= 0 ? '+' : MINUS}${Math.abs((d / base) * 100).toFixed(1)}%)` : '');
   function taxPage() {
     document.title = pageTitle('What would you pay?');
+    const { now, next } = taxYears(), cols = taxNextCols();
     const head = `<header class="page-head"><h1 id="page-h" tabindex="-1">What would you pay?</h1>
-      <p class="lede-sm">An estimate of your City and County taxes at the newest rates. It is not a tax bill.</p></header>`;
-    if (!TAXR?.rates?.length) return { html: `${head}<p class="muted">The tax rates could not be loaded.</p>` };
+      <p class="lede-sm">Your City and County taxes this year, and what they would be next year under the City's ${esc(cols[0].label)} budget. An estimate, not a tax bill.</p></header>`;
+    if (!TAXR?.rates?.length || !now || !next) return { html: `${head}<p class="muted">The tax rates could not be loaded.</p>` };
     if (!TX.who) TX.who = isCounty() ? 'county' : 'both';
     const R = BASE.tax_estimate?.reassessment_year;
     const fld = (id, label, note, value, govs) => `<div class="field tx-field" data-govs="${govs.join(' ')}"><label class="field-label" for="${id}">${label}</label>
       <div class="tx-input"><span aria-hidden="true">$</span><input id="${id}" type="text" inputmode="decimal" autocomplete="off" value="${esc(value)}" aria-describedby="${id}-note"></div>
       <p class="field-note" id="${id}-note">${note}</p></div>`;
     const vals = taxValueYears().map(([y, govs]) => fld(`tx-av-${y}`, `Assessed value, ${y}`,
-      R && y >= R ? 'The new value on your reassessment notice.' : `The value on your ${y} tax bill.${govs.length === 1 ? ` ${esc(govName(govs[0]))}'s newest rate uses it.` : ''}`, TX.av[y] || '', govs)).join('');
-    const eit = taxNewest('city', 'earned_income');
-    const inc = eit ? fld('tx-inc', 'Earned income', 'Wages and business profits, as on your PA tax return. City residents only.', TX.inc, ['city']) : '';
+      R && y >= R ? 'The new value on your reassessment notice.' : `The value on your ${y} tax bill.`, TX.av[y] || '', govs)).join('');
+    const eitNow = taxRow('city', 'earned_income', now);
+    const inc = eitNow ? fld('tx-inc', 'Earned income', 'Wages and business profits, as on your PA tax return. City residents only. Used for both years.', TX.inc, ['city']) : '';
     const html = `${head}
+      ${taxFindHTML()}
       <section class="panel" id="tx-in" tabindex="-1" aria-labelledby="tx-in-t"><h2 class="panel-title" id="tx-in-t">Your details</h2>
         <form class="tx-form" id="tx-form" novalidate>
           <div class="field tx-field"><label class="field-label" for="tx-who">Taxes to include</label>
             <select id="tx-who">${TAX_WHO.map(([v, l]) => `<option value="${v}"${v === TX.who ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
           ${vals}${inc}
         </form>
-        <p class="panel-note tx-privacy">What you type stays in this page: it is not sent anywhere or saved in the address.</p>
+        <p class="panel-note tx-privacy">Your assessed values and income stay in this page: they are not sent anywhere or saved in the address.</p>
       </section>
-      <section class="panel" id="tx-out" tabindex="-1" aria-labelledby="tx-out-t"><h2 class="panel-title" id="tx-out-t">Your estimate</h2>
+      <section class="panel" id="tx-chg" tabindex="-1" aria-labelledby="tx-chg-t"><h2 class="panel-title" id="tx-chg-t">How your taxes change</h2>
+        <div id="tx-summary"></div>
+      </section>
+      <section class="panel" id="tx-out" tabindex="-1" aria-labelledby="tx-out-t"><h2 class="panel-title" id="tx-out-t">This year and next year</h2>
         <div id="tx-result"></div>
       </section>
       <section class="panel" id="tx-how" tabindex="-1" aria-labelledby="tx-how-t"><h2 class="panel-title" id="tx-how-t">How this is worked out</h2>
         <ul class="tx-notes">
-          <li><strong>Property tax</strong> is your assessed value ÷ 1,000 × the rate in mills. Each government's newest rate is used: ${andList(['city', 'county'].map((g) => taxNewest(g, 'real_estate')).filter(Boolean).map((r) => `${esc(govName(r.gov))}, ${esc(r.label)}`))}.</li>
-          ${eit ? `<li><strong>Earned income tax</strong> is your earned income × the City's rate (${esc(eit.label)}). It applies to people who live in the City.</li>` : ''}
+          <li><strong>Property tax</strong> is your assessed value ÷ 1,000 × the rate in mills. This year (${now}) uses your ${now} value; next year uses your ${R || next} value, because every property was reassessed for ${R || next}.</li>
+          ${eitNow ? `<li><strong>Earned income tax</strong> is your earned income × the City's rate. It applies to people who live in the City. The same income is used for both years, so the change shows only the rate.</li>` : ''}
+          <li><strong>Next year</strong> uses the tax rates in the City's ${esc(cols[0].label)} budget. A tax with no rate set yet for ${next} shows this year only.</li>
           <li><strong>Not included:</strong> School District of Lancaster taxes, your township's or borough's taxes outside the City, the Local Services Tax for people who work in the City, homestead and farmstead exclusions, and discounts and penalties.</li>
         </ul>
       </section>`;
     return { html, after: mountTax };
   }
+  /* Find your assessed values: a hand-off to the County's property search (config.json `tax_estimate.lookup`, one
+     site per year of value). The reader's own browser posts the address or parcel number to the County's search in a
+     new tab; this site sends nothing and sees nothing. No proxy: the County's sites send no CORS headers and ask
+     robots not to fetch parcel pages. */
+  const taxLookups = () => (BASE.tax_estimate?.lookup || []).filter((l) => l.search && taxValueYears().some(([y]) => y === l.assessed_year));
+  function taxFindHTML() {
+    const L = taxLookups();
+    if (!L.length) return '';
+    const fld = (id, label, note, attrs = '') => `<div class="field tx-find-field"><label class="field-label" for="${id}">${label}</label><input class="tx-text" id="${id}" type="text" autocomplete="off"${attrs}${note ? ` aria-describedby="${id}-note"` : ''}>${note ? `<p class="field-note" id="${id}-note">${note}</p>` : ''}</div>`;
+    return `<section class="panel tx-find" id="tx-find" tabindex="-1" aria-labelledby="tx-find-t"><h2 class="panel-title" id="tx-find-t">Find your assessed values</h2>
+      <p class="tx-find-lede">Don't have your assessment notice? Search the County's property records by address or parcel number. Each button opens the County's site in a new tab; only the address or parcel number goes to the County, and this site does not see it.</p>
+      <div class="tx-find-fields">
+        ${fld('tx-f-num', 'House number', '', ' inputmode="numeric"')}
+        ${fld('tx-f-street', 'Street name', 'With its direction, like S Duke or E James.', ' autocapitalize="characters"')}
+        <p class="tx-find-or" aria-hidden="true">or</p>
+        ${fld('tx-f-parcel', 'Parcel number', 'From your tax bill or notice, like 332-32083-0-0000.')}
+      </div>
+      <div class="tx-find-btns">${L.map((l) => `<button type="button" class="btn btn-outline tx-find-btn" data-year="${l.assessed_year}">Look up your ${l.assessed_year} value<span class="sr-only"> (opens the County's ${esc(l.name)} in a new tab)</span><span aria-hidden="true"> ↗</span></button>`).join('')}</div>
+      <p class="tx-find-msg" id="tx-find-msg" role="status" aria-live="polite"></p>
+      <p class="field-note tx-find-how">On the County's page, open your property and find <strong>Assessments</strong>. Use the <strong>Total</strong> in the <strong>Non-Exempt</strong> row (or <strong>Pref. Total</strong> if it is above zero), and type it into the matching Assessed value field below.</p>
+    </section>`;
+  }
+  // The County's search matches "S DUKE" or "S DUKE ST" but not "SOUTH DUKE" or "DUKE STREET": directions become their
+  // letter, and a spelled-out street type at the end is dropped.
+  const TAX_DIR = { NORTH: 'N', SOUTH: 'S', EAST: 'E', WEST: 'W' };
+  const TAX_SUFFIX = /\s+(STREET|AVENUE|ROAD|LANE|DRIVE|PLACE|COURT|BOULEVARD|TERRACE|CIRCLE|ALLEY)$/;
+  const taxStreet = (s) => String(s || '').toUpperCase().replace(/\./g, ' ').replace(/\s+/g, ' ').trim()
+    .replace(/^(NORTH|SOUTH|EAST|WEST)\s/, (m, d) => `${TAX_DIR[d]} `).replace(TAX_SUFFIX, '');
+  // Post the search to the County's site in a new tab: by parcel number, or by house number and street.
+  function taxFindGo(year) {
+    const l = taxLookups().find((x) => x.assessed_year === year); if (!l) return;
+    const num = $('tx-f-num').value.replace(/[^0-9]/g, ''), street = taxStreet($('tx-f-street').value), parcel = $('tx-f-parcel').value.trim();
+    const msg = $('tx-find-msg');
+    if (!parcel && !street) { msg.textContent = 'Type a street name, or a parcel number, first.'; $('tx-f-street').focus(); return; }
+    msg.textContent = `Opened the County's ${l.name} in a new tab.`;
+    const f = document.createElement('form');
+    f.method = 'post'; f.action = l.search; f.target = '_blank'; f.rel = 'noopener noreferrer'; f.hidden = true;
+    const fields = parcel ? [['property_key', parcel]] : [['house_number_min', num], ['house_number_max', num], ['street_name', street]];
+    for (const [k, v] of fields) { const i = document.createElement('input'); i.type = 'hidden'; i.name = k; i.value = v; f.appendChild(i); }
+    document.body.appendChild(f); f.submit(); f.remove();
+  }
   function mountTax() {
     const form = $('tx-form'); if (!form) return;
+    document.querySelectorAll('.tx-find-btn').forEach((b) => b.addEventListener('click', () => taxFindGo(+b.dataset.year)));
+    $('tx-find')?.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.matches('input')) { e.preventDefault(); const b = [...document.querySelectorAll('.tx-find-btn')].find((x) => !x.hidden); if (b) taxFindGo(+b.dataset.year); } });
     const sync = () => {
       TX.who = $('tx-who').value;
       for (const [y] of taxValueYears()) TX.av[y] = $(`tx-av-${y}`)?.value || '';
       TX.inc = $('tx-inc')?.value || '';
       const govs = taxGovs();
       form.querySelectorAll('[data-govs]').forEach((f) => { f.hidden = !f.dataset.govs.split(' ').some((g) => govs.includes(g)); });
-      $('tx-result').innerHTML = taxResultHTML(govs);
+      // A lookup button only for a year of value the chosen taxes use.
+      document.querySelectorAll('.tx-find-btn').forEach((b) => { b.hidden = !!$(`tx-av-${b.dataset.year}`)?.closest('.tx-field')?.hidden; });
+      const M = taxModel(govs);
+      $('tx-summary').innerHTML = taxSummaryHTML(M);
+      $('tx-result').innerHTML = taxTableHTML(M);
     };
     form.addEventListener('input', sync);
     form.addEventListener('change', sync);
@@ -3675,47 +3756,115 @@
     form.querySelectorAll('.tx-input input').forEach((el) => el.addEventListener('blur', () => { const n = taxNum(el.value); el.value = n == null ? '' : n.toLocaleString('en-US', { maximumFractionDigits: 2 }); sync(); }));
     sync();
   }
-  function taxResultHTML(govs) {
-    const R = BASE.tax_estimate?.reassessment_year, rows = [], parts = [];
-    let total = 0, any = false;
-    for (const g of govs) {
-      const lines = [];
-      let sum = 0, has = false;
-      const re = taxNewest(g, 'real_estate');
-      if (re) {
-        const v = taxNum(TX.av[re.assessed_year]);
-        const amt = v == null ? null : (v / 1000) * re.rate;
-        lines.push([re, v == null ? '—' : `${money(v)} value`, amt]);
-      }
-      const ei = taxNewest(g, 'earned_income');
-      if (ei) {
-        const v = taxNum(TX.inc);
-        lines.push([ei, v == null ? '—' : `${money(v)} income`, v == null ? null : (v * ei.rate) / 100]);
-      }
-      for (const [, , amt] of lines) if (amt != null) { sum += amt; has = true; }
-      if (!lines.length) continue;
-      rows.push(`<tr class="tx-gov"><th colspan="4" scope="colgroup">${esc(govName(g))}</th></tr>`
-        + lines.map(([r, on, amt]) => `<tr><th scope="row">${TAX_NAME[r.tax]}<span class="tx-sub">${esc(r.label)}</span></th><td class="num">${rateHTML(r)}</td><td class="num">${on}</td><td class="num">${amt == null ? '—' : money(amt)}</td></tr>`).join(''));
-      if (has) { total += sum; any = true; parts.push([govName(g).replace(/ of Lancaster$/, ''), sum]); }
+  // One tax in one year: the amount (null when an input is missing) and what it is applied to.
+  function taxCell(r, tax, assessedYear) {
+    if (tax === 'real_estate') {
+      const v = taxNum(TX.av[assessedYear]);
+      return { amt: v == null ? null : (v / 1000) * r.rate, base: v };
     }
-    const deck = !any ? 'Type in your values above to see an estimate.'
-      : parts.length > 1 ? `${money(parts[0][1])} to the ${esc(parts[0][0])} and ${money(parts[1][1])} to the ${esc(parts[1][0])}.` : `All of it to the ${esc(parts[0][0])}.`;
-    // The reassessment: the City's newest rate is on the new values, its rate before on the old ones.
+    const v = taxNum(TX.inc);
+    return { amt: v == null ? null : (v * r.rate) / 100, base: v };
+  }
+  /* Every shown tax this year and next year (the newest budget's latest figure), and the totals:
+     { col, lines: [{ g, tax, rn, rx, cn, cx, d }], govs: {g: {now, next, ok, set}}, all }. `rx` is null where next year's
+     rate is not set yet (the County today); `d` is next − this year where both amounts are known. */
+  function taxModel(govs) {
+    const { now, next } = taxYears(), col = taxNextCols(govs)[0], lines = [], G = {};
+    for (const g of govs) {
+      G[g] = { now: 0, next: 0, nowOk: true, nextOk: true, set: true, n: 0 };
+      for (const tax of taxKinds(g)) {
+        const rn = taxRow(g, tax, now);
+        if (!rn) continue;
+        const rx = taxNextRate(g, tax, col.figure);
+        const cn = taxCell(rn, tax, rn.assessed_year);
+        const cx = rx ? taxCell(rx, tax, taxRow(g, tax, next)?.assessed_year ?? rn.assessed_year) : null;
+        const d = cx && cx.amt != null && cn.amt != null ? cx.amt - cn.amt : null;
+        lines.push({ g, tax, rn, rx, cn, cx, d });
+        G[g].n += 1;
+        if (cn.amt == null) G[g].nowOk = false; else G[g].now += cn.amt;
+        if (!rx) G[g].set = false; else if (cx.amt == null) G[g].nextOk = false; else G[g].next += cx.amt;
+      }
+      if (!G[g].n) delete G[g];
+    }
+    const gs = Object.keys(G), withNext = gs.filter((g) => G[g].set);
+    const all = { now: gs.reduce((s, g) => s + G[g].now, 0), nowOk: gs.every((g) => G[g].nowOk),
+      // The change covers the governments with next year's rates; the others show this year only.
+      from: withNext.reduce((s, g) => s + G[g].now, 0), to: withNext.reduce((s, g) => s + G[g].next, 0),
+      ok: withNext.length > 0 && withNext.every((g) => G[g].nowOk && G[g].nextOk), withNext, unset: gs.filter((g) => !G[g].set) };
+    return { now, next, col, lines, G, gs, all };
+  }
+  const taxLineName = (L, M) => `${M.gs.length > 1 ? `${govShort(L.g)} ` : ''}${TAX_NAME[L.tax].toLowerCase()}`.replace(/^./, (c) => c.toUpperCase());
+  const taxChgHTML = (d, base) => `<span class="${d > 0.5 ? 'up' : d < -0.5 ? 'down' : ''}">${signMoney(d)}</span>${base ? `<span class="tx-pct">${signPct(d, base)}</span>` : ''}`;
+  // How your taxes change: one line per tax (this year → next year, and the change), then the total.
+  function taxSummaryHTML(M) {
+    const { now, col, all } = M;
+    const row = (name, from, to, chg, cls = '') => `<li class="tx-sum-row${cls}"><span class="tx-sum-name">${name}</span><span class="tx-sum-span">${from} → ${to}</span><span class="tx-sum-chg">${chg}</span></li>`;
+    const items = M.lines.map((L) => {
+      const name = esc(taxLineName(L, M));
+      if (!L.rx) return row(name, L.cn.amt == null ? '—' : money(L.cn.amt), `<span class="muted">${esc(String(M.next))} rate not set yet</span>`, `<span class="muted">${M.all.withNext.length ? 'Not in the total' : '—'}</span>`, ' tx-sum-unset');
+      return row(name, L.cn.amt == null ? '—' : money(L.cn.amt), L.cx.amt == null ? '—' : money(L.cx.amt), L.d == null ? '—' : taxChgHTML(L.d, L.cn.amt));
+    });
+    let total = '';
+    if (all.withNext.length) {
+      const d = all.ok ? all.to - all.from : null;
+      const word = d == null ? 'Total change' : d > 0.5 ? 'Total increase' : d < -0.5 ? 'Total decrease' : 'Total change';
+      const who = all.unset.length ? ` <span class="tx-sum-who">(${esc(all.withNext.map(govShort).join(' and '))} taxes)</span>` : '';
+      total = row(`${word}${who}`, all.ok ? money(all.from) : '—', all.ok ? money(all.to) : '—', d == null ? '—' : taxChgHTML(d, all.from), ' tx-sum-total');
+    }
+    const head = `<p class="tx-sum-head"><span>${esc(String(now))} → ${esc(col.label)}</span></p>`;
+    const empty = M.lines.every((L) => L.cn.amt == null) ? '<p class="tx-deck">Type in your values above to see how your taxes change.</p>' : '';
+    const unsetNote = all.unset.length ? `<p class="panel-note tx-sum-note">${andList(all.unset.map((g) => `The ${esc(govShort(g))}`))} has not set its ${M.next} rate yet${all.withNext.length ? `, so ${all.unset.length > 1 ? 'they are' : 'it is'} not in the total` : ''}.</p>` : '';
+    return `${empty}${head}<ul class="tx-sum">${items.join('')}${total}</ul>${unsetNote}`;
+  }
+  // This year and next year: the table (Tax · this year · next year · Change), the totals and the notes.
+  function taxTableHTML(M) {
+    const { now, next, col, G, gs, all } = M, R = BASE.tax_estimate?.reassessment_year;
+    const hNow = String(now), hNext = col.label;
+    const onText = (L) => {
+      if (L.tax === 'earned_income') return L.cn.base == null ? 'On your income' : `On ${money(L.cn.base)} income`;
+      const a = L.cn.base, b = L.cx?.base;
+      if (a == null && b == null) return 'On your assessed value';
+      if (!L.cx || L.rn.assessed_year === (taxRow(L.g, L.tax, next)?.assessed_year ?? L.rn.assessed_year)) return `On ${a == null ? 'your' : money(a)} value`;
+      return `On ${a == null ? '—' : money(a)} → ${b == null ? '—' : money(b)} value`;
+    };
+    const amt = (c) => (c && c.amt != null ? money(c.amt) : '—');
+    const body = [];
+    for (const g of gs) {
+      body.push(`<tr class="tx-gov"><th colspan="4" scope="colgroup">${esc(govName(g))}</th></tr>`);
+      for (const L of M.lines.filter((x) => x.g === g)) {
+        body.push(`<tr><th scope="row">${TAX_NAME[L.tax]}<span class="tx-sub">${onText(L)}</span></th>
+          <td class="num" data-label="${esc(hNow)}">${amt(L.cn)}<span class="tx-sub">${rateHTML(L.rn)}</span></td>
+          ${L.rx ? `<td class="num" data-label="${esc(hNext)}">${amt(L.cx)}<span class="tx-sub">${rateHTML(L.rx, L.rn.unit)}</span></td>
+          <td class="num" data-label="Change">${L.d == null ? '—' : `<span class="tx-chgv">${taxChgHTML(L.d, L.cn.amt)}</span>`}</td>`
+          : `<td class="num tx-notset" data-label="${esc(hNext)}"><span>—</span><span class="tx-sub">Rate not set yet</span></td><td class="num tx-notset" data-label="Change">—</td>`}</tr>`);
+      }
+    }
+    const foot = [];
+    const totRow = (name, nowV, nowOk, nextV, nextOk, set, cls = '') => `<tr${cls}><th scope="row">${name}</th>
+      <td class="num" data-label="${esc(hNow)}">${nowOk ? money(nowV) : '—'}</td>
+      <td class="num" data-label="${esc(hNext)}">${set && nextOk ? money(nextV) : '—'}</td>
+      <td class="num" data-label="Change">${set && nowOk && nextOk ? `<span class="tx-chgv">${taxChgHTML(nextV - nowV, nowV)}</span>` : '—'}</td></tr>`;
+    if (gs.length > 1) for (const g of gs) foot.push(totRow(`${esc(govShort(g))} total`, G[g].now, G[g].nowOk, G[g].next, G[g].nextOk, G[g].set));
+    foot.push(totRow(gs.length > 1 ? 'Total' : `${esc(govShort(gs[0]))} total`, all.now, all.nowOk, gs.reduce((s, g) => s + G[g].next, 0), gs.every((g) => G[g].nextOk), gs.every((g) => G[g].set), ' class="tx-grand"'));
+    // Notes: why the City's property tax rate is lower next year, and rates with no page to link to.
     const notes = [];
-    const cNew = govs.includes('city') ? taxNewest('city', 'real_estate') : null;
-    const cOld = cNew && (TAXR.rates || []).filter((r) => r.gov === 'city' && r.tax === 'real_estate' && r.assessed_year < R).sort((a, b) => b.year - a.year)[0];
+    const cNow = G.city ? taxRow('city', 'real_estate', now) : null, cNext = G.city ? taxRow('city', 'real_estate', next) : null;
     const rs = BASE.tax_estimate?.reassessment_source;
     const law = rs ? `<a href="${esc(rs)}" target="_blank" rel="noopener">state law</a>` : 'state law';
-    if (R && cNew && cOld && cNew.assessed_year >= R) notes.push(`<strong>Why the City's rate is lower:</strong> every property was reassessed for ${R}. Under ${law}, a reassessment by itself cannot raise a government's property tax revenue, so rates are reset on the new values. The City's went from ${rateHTML(cOld)} in ${cOld.year} to ${esc(rateText(cNew))} for ${esc(cNew.label)}. Whether you pay more or less depends on how your value changed compared with other properties.`);
-    const co = govs.includes('county') ? taxNewest('county', 'real_estate') : null;
-    if (R && co && co.assessed_year < R) notes.push(`This site does not have the County's ${R} rate on the new values yet, so the County's line uses its ${esc(co.label)} rate and your ${co.assessed_year} value.`);
-    return `<p class="tx-total-label" id="tx-total-l">Estimated total a year</p>
-      <p class="tx-total" aria-describedby="tx-total-l">${any ? money(total) : '—'}</p>
-      <p class="tx-deck">${deck}</p>
-      <div class="table-scroll"><table class="table tx-table"><caption class="sr-only">Estimate by tax</caption>
-        <thead><tr><th scope="col">Tax</th><th scope="col" class="num">Rate</th><th scope="col" class="num">On</th><th scope="col" class="num">Estimate</th></tr></thead>
-        <tbody>${rows.join('')}</tbody>
-        <tfoot><tr><td colspan="3">Total</td><td class="num">${any ? money(total) : '—'}</td></tr></tfoot></table></div>
+    if (R && cNow && cNext && cNext.assessed_year >= R && cNow.assessed_year < R) notes.push(`<strong>Why the City's property tax rate is lower next year:</strong> every property was reassessed for ${R}. Under ${law}, a reassessment by itself cannot raise a government's property tax revenue, so the City's rate was reset from ${rateHTML(cNow)} on the old values to ${esc(rateText(cNext))} on the new ones, the revenue-neutral rate. Whether your property tax goes up or down depends on how your value changed compared with other properties, and on any rate change in the budget.`);
+    const calc = M.lines.map((L) => L.rx).find((x) => x?.calculated);
+    if (calc) notes.push(`The ${esc(calc.label)} ${TAX_NAME[calc.tax].toLowerCase()} rate is calculated: ${calc.change_pct > 0 ? '+' : ''}${calc.change_pct}% on the rate before, as the City's budget described. The budget book does not print it.`);
+    const unprinted = [];
+    for (const L of M.lines) for (const r of [L.rn, L.rx]) {
+      if (!r || !r.user_provided || r.calculated) continue;
+      const t = `${TAX_NAME[L.tax].toLowerCase()} rate ${rateText({ rate: r.rate, unit: L.rn.unit })} (${r.label})`;
+      if (!unprinted.includes(t)) unprinted.push(t);
+    }
+    if (unprinted.length) notes.push(`Not printed in the budget book, so not linked: the ${esc(andList(unprinted))}.`);
+    return `<div class="table-scroll"><table class="table tx-table"><caption class="sr-only">Your taxes in ${esc(hNow)} and ${esc(hNext)}</caption>
+        <thead><tr><th scope="col">Tax</th><th scope="col" class="num">${esc(hNow)}</th><th scope="col" class="num">${esc(hNext)}</th><th scope="col" class="num">Change</th></tr></thead>
+        <tbody>${body.join('')}</tbody>
+        <tfoot>${foot.join('')}</tfoot></table></div>
       ${notes.map((n) => `<p class="draw-note">${n}</p>`).join('')}`;
   }
 
@@ -3894,11 +4043,11 @@
     $('footer-text').textContent = CFG.footer;
     if (CFG.tagline) $('tagline').textContent = CFG.tagline;
     if (CFG.contact_email) $('footer-contact').innerHTML = `Questions or corrections: <a href="mailto:${esc(CFG.contact_email)}">${esc(CFG.contact_email)}</a>`;
-    const nav = { home: eh(''), changes: eh('changes'), reserve: eh(`?f=${encodeURIComponent(D.reserve?.name || 'Reserve Fund')}`), about: eh('about'), terms: eh('terms'), calendar: eh('budget-calendar') };
+    const nav = { home: eh(''), changes: eh('changes'), tax: eh('tax'), about: eh('about'), terms: eh('terms'), calendar: eh('budget-calendar') };
     document.querySelectorAll('#site-nav a[data-nav]').forEach((a) => {
       a.setAttribute('href', nav[a.dataset.nav]);
       if (a.dataset.nav === 'calendar') a.closest('li').hidden = !CFG.budget_calendar; // the budget calendar is researched for the City only
-      if (a.dataset.nav === 'reserve') { a.closest('li').hidden = !D.reserve; if (D.reserve) a.textContent = D.reserve.name; } // the City's Reserve Fund, the County's General Fund Balance
+      if (a.dataset.nav === 'tax') a.closest('li').hidden = !TAXR?.rates?.length; // What would you pay? needs web/data/tax_rates.json
     });
     jumpIndexReset();
   }
