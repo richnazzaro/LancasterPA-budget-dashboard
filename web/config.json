@@ -17,6 +17,7 @@
       "footer": "An independent transparency project using the City of Lancaster's published budget books.",
       "default_fund": "General Fund",
       "files": ["changes", "staffing"],
+      "lazy_files": ["positions"],
       "budget_calendar": {
         "charter_title": "Home Rule Charter",
         "charter_url": "https://www.cityoflancasterpa.gov/wp-content/uploads/2025/01/Adopted-Home-Rule-Charter.pdf",

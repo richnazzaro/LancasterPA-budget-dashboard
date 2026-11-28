@@ -400,6 +400,8 @@ def check_changes(budget: dict) -> int:
                     print(f"       artifact [{a['kind']}] {a['text']}")
             print(f"       + {sum(1 for a in P['artifacts'] if a['kind'] == 'titles')} bureaus with renamed titles (compared per bureau)")
 
+    bad += check_position_pairs(budget, ch, staffing_sum)
+
     print("\nTax-policy notes (data/policy_notes.csv):")
     for n in ch["policy"]:
         print(f"     {n['year']} {n['figure']:8s} {n['item']:18s} {n['text']}  [{n['source']}]")
@@ -803,6 +805,86 @@ def check_projection(budget: dict) -> int:
 
 def budget_stem(doc: str) -> str:
     return doc[:-4] if doc.lower().endswith(".pdf") else doc
+
+
+def check_position_pairs(budget: dict, ch: dict, staffing_sum: dict, override: dict | None = None) -> int:
+    """web/data/positions.json (positions for every pair of position schedules), re-derived from the staffing CSVs:
+    each side's all-funds total per class equals the schedule column's sum (unplaced positions included); the
+    unplaced count equals the CSV lines whose org code the org chart doesn't have; adjusted = raw minus the positions
+    left out for a missing schedule page (moves and relabels net to zero); and each pair that changes.json also has
+    is identical to it. `override` replaces the file's data (to show the check catches a wrong number)."""
+    print("\nPositions for every pair of schedules (positions.json):")
+    path = ROOT / "web" / "data" / "positions.json"
+    if override is None and not path.exists():
+        print("FAIL web/data/positions.json is missing (run build_dataset.py)")
+        return 1
+    pos: dict = override if override is not None else json.loads(path.read_text())
+    codes, docs, newest = budget["org"]["codes"], budget["docs"], ch["year"]
+    csv_cache, bad = {}, 0
+
+    def sched_rows(sid):
+        """(class, n, placed) per CSV line of a schedule; class as changes.load_schedule() assigns it."""
+        if sid in csv_cache:
+            return csv_cache[sid]
+        doc = docs[pos["schedules"][sid]["doc"]]
+        y, _, m = sid.partition("|")
+        col = f"count_{y}_proposed_revised" if m == "revised" else f"count_{y}_proposed"
+        path = next(p for p in (ROOT / "data" / "processed").glob("staffing_*.csv") if budget_stem(doc) in p.name)
+        with path.open(newline="", encoding="utf-8") as f:
+            rows = list(csv.DictReader(f))
+        ftpt = any(r.get("ft_pt") in ("FT", "PT") for r in rows)
+        out = []
+        for r in rows:
+            n = float(r[col]) if r.get(col, "").strip() else 0.0
+            if not n:
+                continue
+            org = r["org_code"]
+            placed = org in codes or len([c for c in codes if len(c) == len(org) and c[:-1] == org[:-1]]) == 1
+            out.append(("PT" if ftpt and r["ft_pt"] == "PT" else "FT" if ftpt else "ALL", n, placed))
+        csv_cache[sid] = (out, sum(v for (fn, cn), v in staffing_sum.items() if cn == col[6:] and budget_stem(doc) in fn))
+        return csv_cache[sid]
+
+    sk = lambda k: k if k.startswith(f"{newest}|") else k.split("|")[0]
+    n_ok = 0
+    for pid, P in pos["pairs"].items():
+        t_id, f_id = pid.split("~")
+        T = P["totals"]["all"]
+        fails = []
+        for side, sid, raw, adj in (("from", f_id, "f", "af"), ("to", t_id, "t", "at")):
+            rows, col_sum = sched_rows(sid)
+            for c in P["classes"]:
+                want = sum(n for cl, n, _ in rows if c == "ALL" or cl == c)
+                if abs(T[c][raw] - want) > 0.005:
+                    fails.append(f"{side} {c} total {T[c][raw]:g} vs staffing CSV {want:g}")
+            if abs(sum(T[c][raw] for c in P["classes"]) - col_sum) > 0.005:
+                fails.append(f"{side} total {sum(T[c][raw] for c in P['classes']):g} vs staffing CSV column sum {col_sum:g}")
+            up_csv = sum(n for _, n, placed in rows if not placed)
+            up_art = sum(sum(a["n"].values()) for a in P["artifacts"] if a["kind"] == "unplaced" and a["side"] == side)
+            if abs(up_csv - up_art) > 0.005:
+                fails.append(f"{side} unplaced {up_art:g} vs CSV lines with unknown org codes {up_csv:g}")
+            rows_sum = sum(r[3 if side == "from" else 4] for r in P["rows"])
+            if abs(rows_sum + up_art - sum(T[c][raw] for c in P["classes"])) > 0.005:
+                fails.append(f"{side} bureau rows {rows_sum:g} + unplaced {up_art:g} is not the total")
+            other = "to" if side == "from" else "from"
+            missing = sum(a["n_other"] for a in P["artifacts"] if a["kind"] == "missing_schedule" and a["side"] == other)
+            r_tot, a_tot = sum(T[c][raw] for c in P["classes"]), sum(T[c][adj] for c in P["classes"])
+            if abs(a_tot - (r_tot - missing)) > 0.005:
+                fails.append(f"{side} adjusted {a_tot:g} is not raw {r_tot:g} - missing schedules {missing:g}")
+        for cid, c in ch["comparisons"].items():
+            if c.get("positions") and f"{sk(c['to'])}~{sk(c['from'])}" == pid and c["positions"] != P:
+                fails.append(f"differs from changes.json {cid}")
+        bad += len(fails)
+        n_ok += not fails
+        for x in fails:
+            print(f"FAIL {pid:24s} {x}")
+    same = [cid for cid, c in ch["comparisons"].items() if c.get("positions") and pos["pairs"].get(f"{sk(c['to'])}~{sk(c['from'])}") == c["positions"]]
+    print(f"{'ok  ' if n_ok == len(pos['pairs']) else 'FAIL'} {n_ok} of {len(pos['pairs'])} pairs ({len(pos['schedules'])} schedules): totals per class = "
+          f"staffing CSV sums (unplaced included), adjusted = raw - missing schedules; {len(same)} identical to changes.json ({', '.join(same)})")
+    for sid in pos["schedules"]:
+        rows, col_sum = sched_rows(sid)
+        up = sum(n for _, n, placed in rows if not placed)
+        print(f"       {sid:14s} {col_sum:8.2f} positions" + (f", {up:g} under org codes the org chart doesn't have" if up else ""))
+    return bad
 
 
 SPIKE_X, SPIKE_SHARE = 2, 0.05  # keep equal to app.js

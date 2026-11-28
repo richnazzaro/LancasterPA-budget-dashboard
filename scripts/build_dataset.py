@@ -42,6 +42,8 @@ Outputs (web/data/):
                   totals by fund, category, department and bureau, shifts between funds found in the
                   city's line notes, position counts per bureau (raw and adjusted), tax-policy notes
                   (data/policy_notes.csv)
+  positions.json  position counts per bureau for every pair of position schedules (scripts/changes.py
+                  build_positions), so What changed shows positions for any two figures; loaded lazily
 
 Standard library only, so GitHub Actions can run it with no installs.
 Usage: python3 scripts/build_dataset.py [--entity city|county] [--processed DIR] [--out DIR]
@@ -62,7 +64,7 @@ import income_rules
 import tax_limit
 import income_sources
 
-from changes import build_changes
+from changes import build_changes, build_positions
 from org_structure import build_org
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -323,7 +325,10 @@ def build(processed: Path, out: Path) -> dict:
     write_json(out / "conflicts.json", conflicts)
     write_json(out / "staffing.json", staffing(processed, designated, newest))
     # "What changed" for the newest year (scripts/changes.py): comparisons, fund shifts, positions, policy notes.
-    write_json(out / "changes.json", build_changes(budget, processed, designated, newest, FUND_ALIASES))
+    changes = build_changes(budget, processed, designated, newest, FUND_ALIASES)
+    write_json(out / "changes.json", changes)
+    # Positions for every pair of position schedules (What changed for any two figures; loaded only on that page).
+    write_json(out / "positions.json", build_positions(budget, processed, designated, newest, changes["shifts"]))
     return budget
 
 
@@ -746,7 +751,7 @@ def main() -> None:
         for key, s in pj["series"].items():
             print(f"  {key:16s} {len(s['a']):4d} lines  total {sum(s['v']):>14,}  (projection block, not selectable)")
     print(f"Conflicts: {budget['conflict_count']} (web/data/conflicts.json)")
-    for name in ("budget.json", "staffing.json", "conflicts.json", "changes.json"):
+    for name in ("budget.json", "staffing.json", "conflicts.json", "changes.json", "positions.json"):
         print(f"  {name}: {(args.out / name).stat().st_size:,} bytes")
 
 
