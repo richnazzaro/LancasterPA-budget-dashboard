@@ -5,7 +5,7 @@ file, one row per (government, tax, year), each with its source:
 
     government     city | county
     tax            real_estate (rate in mills, on assessed value) | earned_income (rate in %, on earned income)
-    year, label    the tax year, and the site's label for the figure the rate belongs to ("2027 Revised", "2026 Budget")
+    year, label    the tax year, and the site's label for the rate ("2027", "2026 Budget")
     rate, unit     the rate as published; unit is mills for real_estate and % for earned_income
     assessed_year  real_estate only: which year's assessed value the rate applies to (the 2027 reassessment changed
                    every value, so a 2027 rate cannot be applied to a 2026 value)
@@ -14,9 +14,16 @@ file, one row per (government, tax, year), each with its source:
                    not printed in the budget book)
     evidence       the words the source prints, for review
 
-The page estimates each tax at its newest year's rate; older rows are context (the City's 2026 rate, before the
-reassessment). check() (run by check_dataset.py) validates every row, cross-checks the County's rate against
-data/county/context_facts.csv and the City's earned income tax against data/policy_notes.csv, and fails when
+Each row is the rate in force for that year, before any change the year's budget makes: this year's rates (2026), and
+for next year the City's property tax rate reset after the reassessment (5.71 mills on the new values). What the newest
+budget does comes from data/policy_notes.csv, matched by year and `account`: a note's `rate_to` is the new rate, its
+`change_pct` raises the year's rate by that percent (a calculated rate, flagged). Each becomes a step in `steps` (the
+Proposal, then the Revised budget). Where a tax has notes for a year but no row (the earned income tax in 2027), the
+year before's row is carried forward as the base (`carried`). The page (config.json `tax_estimate.this_year` and
+`next_year`) shows this year's tax beside next year's under each step.
+
+check() (run by check_dataset.py) validates every row, cross-checks the County's rate against
+data/county/context_facts.csv and each policy note's rate_from against the rate here, and fails when
 web/data/tax_rates.json is out of date. Standard library only.
 """
 from __future__ import annotations
@@ -87,21 +94,75 @@ def problems(rows: list[dict]) -> list[str]:
     return out
 
 
-def build(rows: list[dict] | None = None) -> dict:
+FIGURES = ("proposed", "revised")  # the newest budget's figures, in the order the page shows them
+FIGURE_LABEL = {"proposed": "Proposed", "revised": "Revised"}
+
+
+def _source(s: str) -> tuple[str | None, str | None]:
+    """(href, pdf name) for a source: a PDF page under web/pdfs, an https address, or (None, None) when user-provided."""
+    s = s.strip()
+    m = PDF_SRC.match(s)
+    if m:
+        return f"{_pdf_path(m['doc'])}#page={m['page']}", m["doc"]
+    return (s, None) if s.startswith("https://") else (None, None)
+
+
+def load_policy() -> list[dict]:
+    with POLICY.open(newline="", encoding="utf-8") as f:
+        return [p for p in csv.DictReader(f) if p["account"] and (p["rate_to"] or p["change_pct"])]
+
+
+def steps_for(r: dict, policy: list[dict]) -> list[dict]:
+    """What the newest budget's figures do to this rate (data/policy_notes.csv, same year and account), in FIGURES order.
+    A note with rate_to gives the new rate; one with change_pct raises the row's rate by that percent (calculated)."""
+    if r["government"] != "city" or not r["account"]:
+        return []
+    base, out = float(r["rate"]), []
+    for fig in FIGURES:
+        ns = [p for p in policy if p["year"] == r["year"] and p["account"] == r["account"] and p["figure"] == fig]
+        if not ns:
+            continue
+        n = next((p for p in ns if p["rate_to"]), ns[0])
+        pct = None if n["rate_to"] else float(n["change_pct"])
+        rate = float(n["rate_to"]) if n["rate_to"] else round(base * (1 + pct / 100), 6)
+        # The rate's source: the note's, where it prints the new rate; the row's, where the rate is the row's rate
+        # changed by a percent (the note only says what the change was, so it is kept as `change_href`).
+        href, doc = _source(n["source"] if n["rate_to"] else r["source"])
+        change_href = None if n["rate_to"] else _source(n["source"])[0]
+        out.append({"figure": fig, "label": f"{r['year']} {FIGURE_LABEL[fig]}", "rate": rate, "tax": r["tax"],
+                    "change_pct": pct, "calculated": bool(pct), "href": href, "doc": doc, "user_provided": href is None,
+                    "change_href": change_href,
+                    "rate_from": float(n["rate_from"]) if n["rate_from"] else None})
+    return out
+
+
+def with_carried(rows: list[dict], policy: list[dict]) -> list[dict]:
+    """The rows, plus a carried-forward base for each City tax with policy notes for a year it has no row for."""
+    out = list(rows)
+    for y, acct in sorted({(p["year"], p["account"]) for p in policy}):
+        if any(r["government"] == "city" and r["account"] == acct and r["year"] == y for r in rows):
+            continue
+        prev = [r for r in rows if r["government"] == "city" and r["account"] == acct and int(r["year"]) == int(y) - 1]
+        if prev:
+            out.append({**prev[0], "year": y, "label": y, "carried": True})
+    return out
+
+
+def build(rows: list[dict] | None = None, policy: list[dict] | None = None) -> dict:
     rows = load() if rows is None else rows
+    policy = load_policy() if policy is None else policy
     bad = problems(rows)
     if bad:
         raise SystemExit("\n".join(bad))
     rates = []
-    for r in rows:
-        s = r["source"].strip()
-        m = PDF_SRC.match(s)
-        href = f"{_pdf_path(m['doc'])}#page={m['page']}" if m else s if s.startswith("https://") else None
+    for r in with_carried(rows, policy):
+        href, doc = _source(r["source"])
+        steps = [{k: v for k, v in st.items() if k != "rate_from"} for st in steps_for(r, policy)]
         rates.append({"gov": r["government"], "tax": r["tax"], "year": int(r["year"]), "label": r["label"],
                       "rate": float(r["rate"]), "unit": r["unit"],
                       "assessed_year": int(r["assessed_year"]) if r["assessed_year"] else None,
-                      "account": r["account"] or None, "href": href, "doc": m["doc"] if m else None,
-                      "user_provided": href is None})
+                      "account": r["account"] or None, "href": href, "doc": doc,
+                      "user_provided": href is None, "carried": bool(r.get("carried")), "steps": steps})
     rates.sort(key=lambda x: (x["gov"], x["tax"], x["year"]))
     return {"rates": rates}
 
@@ -117,8 +178,9 @@ def check() -> int:
     print("\nTax rates for the tax estimate page (data/tax_rates.csv):")
     rows = load()
     fails = problems(rows)
+    policy = load_policy()
     newest = {}
-    for r in rows:
+    for r in with_carried(rows, policy):
         k = (r["government"], r["tax"])
         if k not in newest or int(r["year"]) > int(newest[k]["year"]):
             newest[k] = r
@@ -131,27 +193,32 @@ def check() -> int:
                 fails.append(f"county real_estate {r['year']}: no millage_{r['year']} in data/county/context_facts.csv")
             elif abs(float(f["value"]) - float(r["rate"])) > 1e-9:
                 fails.append(f"county real_estate {r['year']}: {r['rate']} mills here, {f['value']} in context_facts.csv")
-    # The City's newest earned income tax rate is also a policy note's rate_to for the same year and line.
-    with POLICY.open(newline="", encoding="utf-8") as f:
-        pol = [p for p in csv.DictReader(f) if p["rate_to"]]
+    # The budget's tax changes (data/policy_notes.csv): a note's rate_from is the rate before the change, so it must
+    # equal this file's rate; every figure with a note for the row's year and line must become a step.
     for (gov, tax), r in newest.items():
-        if gov == "city" and tax == "earned_income":
-            # The note for the same figure ("2027 Revised" -> the revised note), else any note for that year and line.
-            fig = r["label"].split()[-1].lower()
-            same = [p for p in pol if p["year"] == r["year"] and p["account"] == r["account"]]
-            to = {float(p["rate_to"]) for p in same if p["figure"] == fig} or {float(p["rate_to"]) for p in same}
-            if to and float(r["rate"]) not in to:
-                fails.append(f"city earned_income {r['year']}: {r['rate']}% here, policy_notes.csv says {sorted(to)}")
+        steps = steps_for(r, policy)
+        for st in steps:
+            if st["rate_from"] is not None and abs(st["rate_from"] - float(r["rate"])) > 1e-9:
+                fails.append(f"{gov} {tax} {r['year']}: {r['rate']}{r['unit']} here, but the {st['figure']} note in "
+                             f"policy_notes.csv changes it from {st['rate_from']}{r['unit']}")
+        noted = {p["figure"] for p in policy if p["year"] == r["year"] and p["account"] == r["account"]} if r["account"] else set()
+        if noted - {st["figure"] for st in steps}:
+            fails.append(f"{gov} {tax} {r['year']}: policy notes {sorted(noted)} not all turned into steps")
     if not fails:
         try:
             on_disk = json.loads(OUT.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             on_disk = None
-        if on_disk != build(rows):
+        if on_disk != build(rows, policy):
             fails.append("web/data/tax_rates.json is out of date: run scripts/build_dataset.py")
     for (gov, tax), r in sorted(newest.items()):
         note = " (user-provided: not printed in a source document yet)" if r["source"].lower().startswith("user-provided") else ""
+        note += f" (carried from {int(r['year']) - 1})" if r.get("carried") else ""
         print(f"  {gov:6s} {tax:13s} {r['label']:13s} {r['rate']} {r['unit']}{note}")
+        for st in steps_for(r, policy):
+            print(f"         {'':13s} {st['label']:13s} {st['rate']} {r['unit']}"
+                  + (f" (calculated: {st['change_pct']:+g}%)" if st["calculated"] else "")
+                  + (" (user-provided)" if st["user_provided"] else ""))
     for msg in fails:
         print(f"FAIL {msg}")
     if not fails:

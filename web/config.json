@@ -5,6 +5,8 @@
   "default_entity": "city",
   "tax_estimate": {
     "rates": "data/tax_rates.json",
+    "this_year": 2026,
+    "next_year": 2027,
     "reassessment_year": 2027,
     "reassessment_source": "https://co.lancaster.pa.us/DocumentCenter/View/17033/Taxpayers-Guide-to-the-2027-Reassessment-"
   },

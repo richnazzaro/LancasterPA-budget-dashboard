@@ -1102,8 +1102,8 @@ a.src.cite:hover, a.src.cite:focus-visible { border-bottom: 1px solid currentCol
   .cal-step { padding-left: 64px; }
 }
 
-/* What would you pay? (#/tax): the tax estimate page. Fields like the view controls, the total like a page figure,
-   a ruled table grouped by government. Existing tokens only. */
+/* What would you pay? (#/tax): How your taxes change (a ledger: one line per tax, then the total) and This year and
+   next year (a compact table). Ink with the site's ▲/▼ marks for changes; existing tokens only. */
 .tx-form { display: flex; flex-wrap: wrap; gap: 20px 16px; align-items: flex-start; }
 .tx-form .tx-field { flex: 1 1 220px; max-width: 320px; }
 .tx-form .tx-field[hidden] { display: none; }
@@ -1111,21 +1111,64 @@ a.src.cite:hover, a.src.cite:focus-visible { border-bottom: 1px solid currentCol
 .tx-input span { position: absolute; left: 12px; top: 10px; color: var(--muted); font: 14px/20px var(--font); pointer-events: none; }
 .tx-input input { width: 100%; height: 40px; background: var(--card); color: var(--fg); border: 1px solid var(--fg); border-radius: 2px; padding: 8px 12px 8px 24px; font: 14px/20px var(--font); font-variant-numeric: tabular-nums; }
 .tx-privacy { margin: 16px 0 0; font-size: 14px; }
-.tx-total-label { margin: 0 0 4px; font-size: 13px; line-height: 20px; letter-spacing: .1em; text-transform: uppercase; font-weight: 600; color: var(--muted); }
-.tx-total { margin: 0 0 8px; font-family: var(--serif); font-size: 44px; line-height: 48px; font-weight: 700; color: var(--sel-ink); font-variant-numeric: tabular-nums; }
-.tx-deck { margin: 0 0 24px; font-family: var(--serif); font-size: 20px; line-height: 28px; font-weight: 600; }
-.tx-table tr.tx-gov th { padding-top: 20px; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--fg); }
+.tx-deck { margin: 0 0 16px; max-width: 62ch; font-family: var(--serif); font-size: 20px; line-height: 28px; font-weight: 600; }
+
+/* How your taxes change */
+.tx-sum-head { margin: 0 0 4px; display: flex; justify-content: flex-end; font-size: 13px; line-height: 20px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600; color: var(--muted); max-width: 760px; }
+.tx-sum { list-style: none; margin: 0; padding: 0; max-width: 760px; border-top: 1px solid var(--fg); }
+.tx-sum-row { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(150px, auto); align-items: baseline; column-gap: 24px; padding: 12px 0; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+.tx-sum-name { font-size: 17px; font-weight: 600; }
+.tx-sum-span { color: var(--muted); font-size: 15px; text-align: right; white-space: nowrap; }
+.tx-sum-chg { text-align: right; white-space: nowrap; font-family: var(--serif); font-size: 22px; line-height: 28px; font-weight: 700; }
+.tx-sum-chg .tx-pct { font-family: var(--font); font-size: 14px; font-weight: 500; color: var(--muted); }
+.tx-sum-unset .tx-sum-chg { font-family: var(--font); font-size: 14px; font-weight: 400; }
+.tx-sum-total { border-top: 1px solid var(--fg); border-bottom: 3px double var(--fg); padding: 16px 0; }
+.tx-sum-total .tx-sum-name { font-family: var(--serif); font-size: 22px; font-weight: 700; }
+.tx-sum-total .tx-sum-chg { font-size: 34px; line-height: 40px; color: var(--sel-ink); }
+.tx-sum-total .tx-sum-chg .up, .tx-sum-total .tx-sum-chg .down { color: var(--sel-ink); }
+.tx-sum-who { font-family: var(--font); font-size: 14px; font-weight: 500; color: var(--muted); }
+.tx-sum-note { margin: 12px 0 0; font-size: 14px; }
+
+/* This year and next year: a compact table */
+.tx-table { max-width: 860px; font-variant-numeric: tabular-nums; }
+.tx-table th, .tx-table td { padding: 8px 12px; vertical-align: top; }
+.tx-table th:first-child, .tx-table td:first-child { padding-left: 0; }
+.tx-table th:last-child, .tx-table td:last-child { padding-right: 0; }
+.tx-table tbody th[scope="row"] { font-weight: 600; white-space: normal; }
+.tx-table tr.tx-gov th { padding-top: 18px; padding-bottom: 6px; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--fg); }
 .tx-table tbody tr.tx-gov:hover { background: transparent; }
-.tx-sub { display: block; font-size: 13px; color: var(--muted); font-weight: 400; }
+.tx-table tfoot th, .tx-table tfoot td { border-top: 1px solid var(--fg); border-bottom: 0; font-weight: 600; }
+.tx-table tfoot tr.tx-grand th, .tx-table tfoot tr.tx-grand td { border-top: 3px double var(--fg); font-weight: 700; }
+.tx-table .tx-pct { font-size: 13px; font-weight: 500; color: var(--muted); }
+.tx-table td.num { white-space: nowrap; }
+.tx-sub { display: block; font-size: 13px; line-height: 18px; color: var(--muted); font-weight: 400; white-space: normal; }
+.tx-notset { color: var(--muted); }
 .tx-notes { margin: 0; padding-left: 20px; }
 .tx-notes li { margin: 0 0 10px; }
 .tax-link, .tax-link-p a { color: var(--link); font-weight: 600; }
 .tax-link-p { margin: 8px 0 0; font-size: 15px; }
 @media (max-width: 767px) {
   .tx-form .tx-field { max-width: none; flex-basis: 100%; }
-  .tx-total { font-size: 36px; line-height: 40px; }
   .tx-input input { height: 44px; }
   .tx-input span { top: 12px; }
+  .tx-sum-head { display: none; }
+  .tx-sum-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 2px; }
+  .tx-sum-span { grid-row: 2; grid-column: 1; text-align: left; }
+  .tx-sum-chg { grid-row: 1 / span 2; grid-column: 2; align-self: center; }
+  .tx-sum-total .tx-sum-chg { font-size: 28px; line-height: 34px; }
+  /* Phones: each tax stacks into labelled rows. */
+  .tx-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .tx-table, .tx-table tbody, .tx-table tfoot, .tx-table tr { display: block; width: 100%; }
+  .tx-table tr { padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .tx-table tr.tx-gov { padding: 0; border: 0; }
+  .tx-table tr.tx-gov th { display: block; }
+  .tx-table th[scope="row"] { display: block; padding: 0 0 4px; border: 0; }
+  .tx-table td, .tx-table td:last-child { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; padding: 2px 0; border: 0; text-align: right; }
+  .tx-table td::before { content: attr(data-label); color: var(--muted); font-size: 14px; font-weight: 400; text-align: left; }
+  .tx-table td .tx-sub { grid-column: 2; }
+  .tx-table tfoot th, .tx-table tfoot td, .tx-table tfoot tr.tx-grand th, .tx-table tfoot tr.tx-grand td { border-top: 0; }
+  .tx-table tfoot tr { border-top: 1px solid var(--fg); border-bottom: 0; }
+  .tx-table tfoot tr.tx-grand { border-top: 3px double var(--fg); }
 }
 @media print {
   .calendar-page .site-header, .calendar-page .site-footer, .calendar-page .phone-toc, .calendar-page .skip { display: none !important; }
