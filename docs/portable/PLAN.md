@@ -13,7 +13,7 @@
 | Phase | Status | Last commit | Next action |
 |---|---|---|---|
 | 0 Contracts | Built; **PR #22 open, not merged** | 442d37a | Owner runs the Phase 0 owner check and merges PR #22 |
-| 1 City into its folder | Built except 1.3; **owner check pending** | local `feature/portable-phase1` | Owner runs the Phase 1 owner check; 1.3 and the PR after it |
+| 1 City into its folder | Built except the 1.3 merge of extractors; re-verified by Hermes; **owner check pending** | `1b9c5e4` (local `feature/portable-phase1`) | Owner runs the Phase 1 owner check; PR after PR #22 merges |
 | 2 County into its folder | Not started | — | — |
 | 3 Website reads the manifest | Not started | — | — |
 | 4 Read / Detect / Review tools | Not started | — | — |
@@ -30,8 +30,9 @@
 - **Roles (1.4):** `mapping/funds.csv` (`code_prefix, name, role, paid_by, description, printed_names`) with a schema; the build takes the primary fund and the printed roll-up names from it (it must agree with `display.primary_fund`), and the reserve draw is `income_rules.csv` class `draw` instead of object `499000`.
 - **PDFs (1.6):** every City PDF (books, org chart, descriptions, audits) is in `sources/`; `web/pdfs` points there, so public addresses are unchanged; the County folder is linked as `sources/county` until Phase 2.
 - **1.3, done:** `extract_budget.py` reads `amount_columns`, `note_fonts`, `staffing.columns`, `funds` and the department maps from the 2027 book's YAML; its staffing row parsing takes one pair per printed column. **1.3, open:** it is still a separate script from `extract_layout.py` (one extractor per family is the goal), and the staffing long form is not written yet.
-- **Verified:** `validate_config.py` 45 files; `build_dataset.py` for both governments is byte-identical to `442d37a` (parity 83/83); `check_dataset.py` 0 mismatches for City and County; re-running `ingest.py` for all seven City books reproduces every value and matches a run of the unmodified `442d37a` code on the same OCR cache; `check_portable.py` 524 → 438 code hits.
-- **Known:** four committed `validation_*.csv` files differ from a fresh run by about 1e-16 in staffing sums. The same fresh-vs-committed drift happens with the unmodified code at `442d37a`, so it predates this phase; the committed files are left as they are.
+- **Verified:** `validate_config.py` 45 files; `build_dataset.py` for both governments is byte-identical to `442d37a` (parity 83/83); `check_dataset.py` 0 mismatches for City and County; re-running `ingest.py` for all seven City books reproduces every value and matches a run of the unmodified `442d37a` code on the same OCR cache; `check_portable.py` 524 → 423 code hits (re-counted by Hermes on the commit).
+- **Known:** five committed `validation_*.csv` files (2022, 2023, 2024, 2025, 2026 books) differ from a fresh run in staffing-sum float noise (e.g. 11.399999999999999 vs 11.4); no pass/fail flag changes.
+- **Known:** the order of two notes in `positions.json` (`pairs.2023~2022.artifacts` 19 and 20, orgs 1861000/1862000) follows `PYTHONHASHSEED`, with the old and the new code alike (seeds 0–1 one order, 2–3 the other). Parity compares lists in order, so a rebuild can report this file as different; fix the sort in Phase 2 (it is a build bug, not a data change). The same fresh-vs-committed drift happens with the unmodified code at `442d37a`, so it predates this phase; the committed files are left as they are.
 - **Docs:** README, PIPELINE, REFERENCE, SITE and REBUILD paths updated; `docs/portable/CONFIG.md` regenerated.
 
 **Done before Phase 0 (2026-11-28):** plan committed locally; owner decisions D1–D6 and the opening view recorded; origin/main `fcbabbb` merged in; worktree created; PyYAML 6.0.4 and jsonschema 4.26.0 installed in the main checkout's `.venv` (not yet in `requirements.txt`); baseline inventory written; School District of Lancaster sources checked (below); this plan.
@@ -164,7 +165,7 @@ OCR is an option of the Read step (`ocr_pages.py`), not a family.
 
 **Gate:** processed-CSV parity for all 7 City books; `parity.py` equal for `budget.json`, `changes.json`, `staffing.json`, `positions.json`, `tax_rates.json`; `check_dataset.py` 0 mismatches; `check_portable.py` shows no City literals left in the touched scripts (or each is allowlisted with a reason).
 
-**Owner check (≈30 min):** run the four City commands from the new paths (`ingest --gov lancaster-city --all`, build, check, preview); open `mapping/funds.csv` and `books/2027-….yaml` and confirm they say what the book prints; change a fund's `description` and see it in `budget.json`.
+**Owner check (≈30 min):** run the four City commands from the new paths (`ingest --gov lancaster-city --all`, build, check, preview); open `mapping/funds.csv` and `books/2027-….yaml` and confirm they say what the book prints. (Fund descriptions are not in `budget.json` yet; they reach the site in Phase 3, when `FUND_INFO` leaves `app.js`.) Instead, try the guard: change the General Fund's `role` from `primary` to `special` in `mapping/funds.csv`, run `python scripts/build_dataset.py`, read the error, and change it back.
 
 ## Phase 2: Lancaster County into its folder
 
