@@ -1664,18 +1664,19 @@
     for (const y of years().slice().sort((a, b) => a - b)) for (const m of ORDER) if (series(key(y, m))) scols.push(key(y, m));
     for (const y of projectionYears()) scols.push(key(y, 'projection')); // the city's projections, after the newest year
     const bySrc = new Map(), totals = new Map(), notes = new Map(), label = new Map();
-    const lastBudget = scols.filter((k) => !isProjKey(k)).pop(), newestSrc = new Map();
-    for (const r of rows(lastBudget)) if (isIncome(r)) newestSrc.set(`${r.code}|${r.fund}`, sourceOf(r));
+    // A line's source in every year is the one it has in the newest budget that prints it (same account, same fund): the books
+    // rename their groups over the years ("Public Safety Revenues" became "Public Safety - Police Fees") and the projections
+    // book prints one group, "Revenue", so grouping each year by its own printed name would break a source's trend.
+    const newestSrc = new Map();
+    for (const k of scols) if (!isProjKey(k)) for (const r of rows(k)) if (isIncome(r)) newestSrc.set(`${r.code}|${r.fund}`, sourceOf(r));
     for (const k of scols) {
       const list = scoped(k);
       if (list.length) totals.set(k, totalOf(list, k));
       const groups = new Map();
       for (const r of list) {
-        let s = sourceOf(r);
-        // The projections book prints one group, "Revenue": give the line the source it has in the newest budget (same account, same fund).
-        if (isProjKey(k) && newestSrc.has(`${r.code}|${r.fund}`)) s = newestSrc.get(`${r.code}|${r.fund}`);
+        const s = newestSrc.get(`${r.code}|${r.fund}`) || sourceOf(r);
         const g = sourceKey(s);
-        if (!isProjKey(k) || !label.has(g)) label.set(g, s);
+        if (!label.has(g)) label.set(g, s);
         if (!groups.has(g)) groups.set(g, []);
         groups.get(g).push(r);
       }
@@ -1703,7 +1704,7 @@
     const where = S.f ? ` in the ${esc(fn(S.f))}` : '';
     const allFunds = !S.f;
     return `<section class="panel" id="sec-income-sources" tabindex="-1" aria-labelledby="is-t"><h2 class="panel-title" id="is-t">Income Sources</h2>
-      <p class="panel-note">Income${where} by source, with the same figures as Totals by Year. Sources follow the books' account numbers: taxes are shown one by one, and other lines are grouped as the book prints them. Draws from savings and transfers between funds are not income and are left out.${allFunds ? ' In All funds, charges to other funds are left out too.' : ''} The All row is the income total shown at the top of the page. <a href="${termHref('term-income')}">What counts as income</a></p>
+      <p class="panel-note">Income${where} by source, with the same figures as Totals by Year. Sources follow the books' account numbers: taxes are shown one by one, and other lines are grouped as the newest book that prints them does, so a group renamed over the years stays one row. Draws from savings and transfers between funds are not income and are left out.${allFunds ? ' In All funds, charges to other funds are left out too.' : ''} The All row is the income total shown at the top of the page. <a href="${termHref('term-income')}">What counts as income</a></p>
       ${multi ? '<p class="hint li-hint">Select a source\'s name to see it year by year.</p>' : ''}
       <div class="table-scroll" tabindex="0" role="region" aria-label="Income by source and year, scrollable"><table class="table tight staff-table is-table" aria-label="Income by source and year">
         <thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div>
