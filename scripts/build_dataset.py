@@ -60,6 +60,7 @@ from pathlib import Path
 
 import income_rules
 import tax_limit
+import income_sources
 
 from changes import build_changes
 from org_structure import build_org
@@ -302,6 +303,8 @@ def build(processed: Path, out: Path) -> dict:
         # Home Rule Charter § 8.08: each budget made under the charter tested against the 6% tax revenue limit
         # (scripts/tax_limit.py; config/tax_limit.json, data/tax_limit_lines.csv). Sums are calculated.
         "tax_limit": tax_limit.build(designated, RULE, docs),
+        # Income sources: {"names": [...], "a": {account index: name index}} (data/income_sources.csv).
+        "income_sources": income_sources.income_sources(accounts.items, funds.items, cats.items),
         "series": out_series,
         "printed": printed,
         "known_issues": known_issues,

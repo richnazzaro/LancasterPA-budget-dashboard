@@ -20,7 +20,7 @@
 (() => {
   'use strict';
 
-  const LABEL = { proposed: 'Proposed', revised: 'Revised', projected: 'Projected', actual: 'Actual', budget: 'Budget', projection: 'Projection', adopted: 'Adopted', amended: 'Amended' };
+  const LABEL = { proposed: 'Proposed', revised: 'Revised', projected: 'Projected', actual: 'Actual', budget: 'Budget', budgeted: 'Budgeted', projection: 'Projection', adopted: 'Adopted', amended: 'Amended' };
   // The one kind of figure per year that the multi-year charts and tables draw (and the default figure of a year).
   const ORDER = ['actual', 'projected', 'budget', 'proposed', 'revised'];
   // Every figure a year can be picked as in Budget year / Compare with, newest first within a year. A year's budget as
@@ -481,7 +481,7 @@
     announceView();
   }
 
-  function destroyCharts() { charts.forEach((c) => c.destroy()); charts = []; closeHist(); }
+  function destroyCharts() { charts.forEach((c) => c.destroy()); charts = []; closeHist(); closeStaffChart(); closeSrcChart(); }
   const chartTheme = () => ({
     tip: { backgroundColor: BG, borderColor: GRID, borderWidth: 1, titleColor: INK, bodyColor: INK, padding: 10 },
     tick: MUTED, grid: GRID,
@@ -549,6 +549,7 @@
     return [
       has('actual') && `<li><i class="ln"></i>Actual</li>`,
       has('budget') && `<li><i class="ln"></i>Budget</li>`,
+      has('budgeted') && `<li><i class="ln"></i>Budgeted</li>`,
       has('projected') && `<li><i class="ln dashed"></i>Projected</li>`,
       has('proposed') && `<li><i class="dot diamond" style="background:${PALETTE[0]}"></i>Proposed</li>`,
       has('revised') && `<li><i class="dot" style="background:${SEL}"></i>Revised</li>`,
@@ -586,11 +587,11 @@
   /* The trend line chart for a list of points ({ y, m, v }, v null where there is no figure): Totals by Year, and the
      history of one line item (lineHistory). `axisEl` receives the note that the axis does not start at zero; `fine` gives a
      narrow range in millions the decimals its ticks need. */
-  function trendChart(cv, pts, axisEl, fine = false) {
+  function trendChart(cv, pts, axisEl, fine = false, count = false) {
     const th = chartTheme();
     const yrs = [...new Set(pts.map((p) => p.y))];
     const projAt = new Set(pts.filter((p) => p.m === 'projection').map((p) => p.y));
-    const main = yrs.map((y) => pts.find((p) => p.y === y && (p.m === 'actual' || p.m === 'projected' || p.m === 'budget')) || null);
+    const main = yrs.map((y) => pts.find((p) => p.y === y && (p.m === 'actual' || p.m === 'projected' || p.m === 'budget' || p.m === 'budgeted')) || null);
     const dot = (m, c) => ({ label: LABEL[m], data: yrs.map((y) => pts.find((p) => p.y === y && p.m === m)?.v ?? null), borderColor: c, backgroundColor: c, showLine: false, pointRadius: 5, pointHoverRadius: 7 });
     const datasets = [{
       label: 'Actual / Projected', data: main.map((p) => p?.v ?? null), borderColor: SEL, borderWidth: 2, tension: 0, spanGaps: true,
@@ -626,15 +627,16 @@
     // The line chart does not start at zero (a line shows movement, not size), so the axis says where it starts.
     const vals = pts.map((p) => p.v).filter((v) => v != null && v > 0);
     let yMin = 0;
-    if (vals.length) { const lo = Math.min(...vals) * 0.7, pow = 10 ** Math.floor(Math.log10(lo)); yMin = Math.floor(lo / pow) * pow; }
+    if (vals.length) { const lo = Math.min(...vals) * 0.7, pow = 10 ** Math.floor(Math.log10(lo)); yMin = count && lo < 10 ? 0 : Math.floor(lo / pow) * pow; }
     // A narrow range in millions would repeat "$6M, $6M"; give those ticks the decimals they need.
     const span = vals.length ? Math.max(...vals) - Math.min(...vals) : 0;
-    const tickFmt = (n) => (fine && span < 5e6 && Math.abs(n) >= 1e6 ? `${n < 0 ? MINUS : ''}$${parseFloat((Math.abs(n) / 1e6).toFixed(2))}M` : short(n));
-    if (axisEl) axisEl.textContent = yMin > 0 ? `The vertical axis starts at ${short(yMin)}, not zero.` : '';
+    const tickFmt = (n) => (count ? fmtN(n) : fine && span < 5e6 && Math.abs(n) >= 1e6 ? `${n < 0 ? MINUS : ''}$${parseFloat((Math.abs(n) / 1e6).toFixed(2))}M` : short(n));
+    const val = (n) => (count ? fmtN(n) : money(n));
+    if (axisEl) axisEl.textContent = yMin > 0 ? `The vertical axis starts at ${count ? `${fmtN(yMin)} positions` : short(yMin)}, not zero.` : '';
     return new Chart(cv, { type: 'line', data: { labels: yrs, datasets }, plugins: [band],
       options: { responsive: true, maintainAspectRatio: false, layout: { padding: { right: 8 } }, animation: reduceMotion() ? false : { duration: 300 },
-        plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { label: (c) => (c.datasetIndex === 0 ? `${LABEL[main[c.dataIndex].m]}: ${money(c.raw)}` : `${c.dataset.label}: ${money(c.raw)}`) } } },
-        scales: { x: { offset: true, ticks: { color: (c) => (projAt.has(yrs[c.index]) ? MUTED : INK) }, grid: { color: th.grid } }, y: { beginAtZero: yMin === 0, min: yMin || undefined, ticks: { color: th.tick, callback: (n) => tickFmt(n) }, grid: { color: th.grid } } } } });
+        plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { label: (c) => (c.datasetIndex === 0 ? `${LABEL[main[c.dataIndex].m]}: ${val(c.raw)}` : `${c.dataset.label}: ${val(c.raw)}`) } } },
+        scales: { x: { offset: true, ticks: { color: (c) => (projAt.has(yrs[c.index]) ? MUTED : INK) }, grid: { color: th.grid } }, y: { beginAtZero: yMin === 0, min: yMin || undefined, ticks: { color: th.tick, precision: count ? 0 : undefined, callback: (n) => tickFmt(n) }, grid: { color: th.grid } } } } });
   }
   /* ---------- A line far above the years either side of it (e.g. 2025 Building Permits) ----------
      Along the Actual / Projected line (then the newest year's figure), a line whose amount in one year is at least
@@ -1083,6 +1085,7 @@
      items: [{ label, v, href }] in the list's order. Swatches use the CSS variables, so they follow the theme. */
   const pieVar = (i) => (i < PIE_SLICES ? `--cat-${(i % 8) + 1}` : '--cat-other');
   const pieKey = (i) => `<i class="pie-key" aria-hidden="true" style="background:var(${pieVar(i)})"></i>`;
+  const piePick = {}; // canvas id -> function(row id): what a click on that pie's slice does (toggle the row's history)
   const pieTotal = (items) => items.reduce((t, x) => t + Math.max(0, x.v), 0);
   function sidePieHTML(id, caption, items) {
     const total = pieTotal(items);
@@ -1090,7 +1093,7 @@
     const desc = items.filter((x) => x.v > 0).map((x) => `${x.label} ${((x.v / total) * 100).toFixed(1)}%`).join(', ');
     return `<figure class="side-pie"><div class="side-pie-box"><canvas id="${id}" role="img" aria-label="${esc(`${caption}: ${desc}. The list beside it has the amounts.`)}"></canvas></div><figcaption>${esc(caption)}</figcaption></figure>`;
   }
-  function drawSidePie(id, items) {
+  function drawSidePie(id, items, fmt = money) {
     const cv = $(id);
     if (!cv || !window.Chart) return;
     const th = chartTheme(), total = pieTotal(items);
@@ -1102,9 +1105,9 @@
       type: 'pie',
       data: { labels: data.map((d) => d.label), datasets: [{ data: data.map((d) => d.v), backgroundColor: data.map((d) => d.c), borderColor: BG, borderWidth: 2 }] },
       options: { responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
-        onClick: (_ev, els) => { const x = at(els); if (x && x.href) navigate(x.href); },
-        onHover: (ev, els) => { const x = at(els); ev.native.target.style.cursor = x && x.href ? 'pointer' : 'default'; },
-        plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { label: (c) => `${c.label}: ${money(c.raw)} (${((c.raw / total) * 100).toFixed(1)}%)` } } } },
+        onClick: (_ev, els) => { const x = at(els); if (x && x.href) navigate(x.href); else if (x && x.pick && piePick[id]) piePick[id](x.pick); },
+        onHover: (ev, els) => { const x = at(els); ev.native.target.style.cursor = x && (x.href || x.pick) ? 'pointer' : 'default'; },
+        plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { label: (c) => `${c.label}: ${fmt(c.raw)} (${((c.raw / total) * 100).toFixed(1)}%)` } } } },
     }));
   }
 
@@ -1294,6 +1297,7 @@
       <section class="panel" id="sec-departments" tabindex="-1" aria-labelledby="dep-t"><h2 class="panel-title" id="dep-t">${isCounty() ? 'Departments by Group' : 'Departments'}</h2>
         <p class="panel-note">${isCounty() ? 'The County\'s departments are grouped as in its budget book. Select a group to see its departments, or the arrow beside it to see it year by year.' : 'Select a department to see its detailed breakdown, or the arrow beside it to see it year by year.'} Amounts open the source page in the budget book.</p>
         ${depPieHTML ? `<div class="with-pie">${ledger}${depPieHTML}</div>` : ledger}${gapNotes(ledgerNotes)}</section>
+      ${homeStaffHTML()}${incomeSourcesHTML()}
       <section class="panel" aria-labelledby="re-title"><h2 class="panel-title" id="re-title">Income vs. Spending by Fund: ${esc(seriesLabel(k))}</h2>
         <div class="chart-box"><canvas id="re-chart" role="img" aria-label="Income and spending by fund"></canvas></div>
         <div class="with-pie" id="re-wrap"><div class="table-scroll"><table class="table" id="re-table"></table></div></div></section>${actualsHTML()}${contextHTML()}</div>`;
@@ -1459,12 +1463,115 @@
      one-figure-per-year rule: Actual, Projected, then Proposed and Revised, then the city's projections (muted). Positions are placed in org-chart
      bureaus by org code (O.codes), the same way as the budget lines. */
   let ST = null;
+  // Staff charts: staffPts maps a row id ('scope', 'u<unit>' or 'd<dept>' for positions, 's<unit>' for a bureau's salaries) to
+  // { name, pts, money }, filled while the Staff HTML is built and read by mountStaff(); staffChart is the one open bureau or
+  // department chart in the Staff section, kept apart from the page's charts.
+  let staffPts = new Map(), staffChart = null, staffPies = []; // staffPies: [canvas id, items, number format] for the side pies the Staff HTML laid out
+  function closeStaffChart() { if (staffChart) { staffChart.destroy(); staffChart = null; } }
+  function closeInlineRows(sec) {
+    sec.querySelectorAll('tr.li-hist').forEach((r) => r.remove());
+    sec.querySelectorAll('.li-toggle[aria-expanded="true"]').forEach((x) => x.setAttribute('aria-expanded', 'false'));
+  }
+  // A Staff history opens in a row under the clicked name, like a line item's history.
+  function openInlineRow(btn, id, inner) {
+    const tr = btn.closest('tr');
+    tr.insertAdjacentHTML('afterend', `<tr class="li-hist" id="${id}"><td colspan="${tr.cells.length}">${inner}</td></tr>`);
+    btn.setAttribute('aria-controls', id);
+    btn.setAttribute('aria-expanded', 'true');
+    return tr.nextElementSibling;
+  }
+  const staffCols = () => ST.books.map((b) => ({ k: `${b.year}|${b.measure}`, label: b.measure === 'budgeted' ? String(b.year) : `${b.year} ${LABEL[b.measure]}`, b }));
+  // One point per schedule for trendChart: 2022–2026 Budgeted (the line), the newest year's Proposed and Revised (the marks).
+  const staffPoints = (pcols, cellOf) => pcols.map((c) => { const cell = cellOf(c.k); return { y: c.b.year, m: c.b.measure, v: cell ? cell.n : null, t: cell || null }; });
+  // Which staffing schedule a series key stands for: the newest year's Revised and Proposed are their own schedules; any other
+  // figure (Actual, Projected, Budget, Adopted, Amended) is that year's budgeted positions; null when the books print none.
+  function posSched(k) {
+    if (!k || !ST) return null;
+    const { y, m } = parseKey(k), newest = Math.max(...ST.books.map((b) => b.year));
+    const want = y === newest && (m === 'revised' || m === 'proposed') ? m : 'budgeted';
+    const b = ST.books.find((x) => x.year === y && x.measure === want);
+    return b ? `${b.year}|${b.measure}` : null;
+  }
+  const noSched = (k) => `<span class="missing" title="No staffing schedule for ${esc(seriesLabel(k))}">—</span>`;
+  // One Staff ledger, the Income Sources format: Name | comparison | selected | Change | Share, with a side pie keyed by the rows.
+  // o: { aria, head, rows: [{ id (toggle id or ''), label, name, sel, cmp, selHtml, cmpHtml }], selOk, cmpOk, fmt, all: { sel, cmp, selHtml, cmpHtml } | null,
+  //      pieId, pieCaption } — sel/cmp are numbers (null: no figure); selOk/cmpOk: the figure exists at all (positions: a schedule exists).
+  function staffLedger(o) {
+    const sk = key(S.y, S.m), multi = o.rows.length > 1;
+    if (!o.rows.length) return `<p class="panel-note">The books print no staffing schedule for ${esc(seriesLabel(sk))}${S.c ? ` or ${esc(seriesLabel(S.c))}` : ''}, so there is nothing to compare.</p>`;
+    const items = o.rows.map((r) => ({ label: r.label, v: r.sel || 0, pick: r.id || undefined }));
+    const pie = o.selOk && multi ? sidePieHTML(o.pieId, o.pieCaption, items) : '';
+    if (pie) staffPies.push([o.pieId, items, o.fmt === fmtN ? fmtN : money]);
+    const base = o.all && o.all.sel != null ? o.all.sel : items.reduce((t, x) => t + Math.max(0, x.v), 0);
+    const shareCell = (sh) => (sh == null ? '' : `<span class="share-bar" aria-hidden="true"><i style="width:${sh.toFixed(1)}%"></i></span><span class="share-n">${sh > 0 && sh < 0.1 ? '<0.1' : sh.toFixed(1)}%</span>`);
+    const chg = (sel, cmp) => (S.c && o.selOk && o.cmpOk ? deltaHTML(sel - cmp, cmp, o.fmt) : '');
+    const head = `<tr><th scope="col">${esc(o.head)}</th>${S.c ? `<th scope="col" class="num hide-sm">${esc(seriesLabel(S.c))}</th>` : ''}<th scope="col" class="num">${esc(seriesLabel(sk))}</th>${S.c ? '<th scope="col" class="num">Change</th>' : ''}${multi ? '<th scope="col" class="num hide-sm">Share</th>' : ''}</tr>`;
+    const body = o.rows.map((r, i) => {
+      const nm = multi && r.id ? `<button type="button" class="li-toggle staff-toggle" data-st="${r.id}" aria-expanded="false">${esc(r.label)}</button>` : r.name;
+      const sh = o.selOk && base > 0 ? (Math.max(0, r.sel || 0) / base) * 100 : null;
+      return `<tr><th scope="row">${pie ? `<span class="keyed">${pieKey(i)}${nm}</span>` : nm}</th>${S.c ? `<td class="num hide-sm">${r.cmpHtml}</td>` : ''}<td class="num">${r.selHtml}</td>${S.c ? `<td class="num">${chg(r.sel || 0, r.cmp || 0)}</td>` : ''}${multi ? `<td class="num share-cell hide-sm">${shareCell(sh)}</td>` : ''}</tr>`;
+    }).join('');
+    const a = o.all;
+    const foot = multi && a ? `<tfoot><tr><th scope="row">All</th>${S.c ? `<td class="num hide-sm">${a.cmpHtml}</td>` : ''}<td class="num">${a.selHtml}</td>${S.c ? `<td class="num">${chg(a.sel || 0, a.cmp || 0)}</td>` : ''}<td class="num hide-sm">${o.selOk && a.sel ? '100%' : ''}</td></tr></tfoot>` : '';
+    return `${pie ? '<div class="with-pie">' : ''}<div class="table-scroll"><table class="table ledger" aria-label="${esc(o.aria)}"><thead>${head}</thead><tbody>${body}</tbody>${foot}</table></div>${pie ? `${pie}</div>` : ''}`
+      + (!o.selOk ? `<p class="panel-note">The books print no staffing schedule for ${esc(seriesLabel(sk))}, so there is no figure or share to show for it.</p>` : '');
+  }
+  // The unfolded chart and values for one row (or the page's total when `id` is given, for the always-open chart).
+  function staffHistoryHTML(name, pts, id = '') {
+    const link = (p) => (p.t && p.t.d != null && p.t.d >= 0 ? `<a class="src" href="${pdfHref(p.t.d, p.t.p)}" target="_blank" rel="noopener" title="View in budget book">${fmtN(p.v)}</a>` : fmtN(p.v));
+    const rowsHtml = pts.map((p) => `<tr><th scope="row">${p.y}</th><td>${LABEL[p.m]}</td><td class="num">${p.v != null ? link(p) : '—'}</td></tr>`).join('');
+    const pv = pts.find((p) => p.m === 'proposed' && p.v != null), rv = pts.find((p) => p.m === 'revised' && p.v != null);
+    const revision = pv && rv && pv.v !== rv.v ? `<p class="trend-revision">${rv.y}: Proposed ${fmtN(pv.v)} → Revised ${fmtN(rv.v)} positions</p>` : '';
+    return `<div class="li-hist-body" role="group" aria-label="Budgeted positions, ${esc(name)}">
+      <ul class="trend-legend" aria-hidden="true">${trendLegend(pts)}</ul>${revision}
+      <div class="chart-box short"><canvas${id ? ` id="${id}"` : ''} role="img" aria-label="Budgeted positions, ${esc(name)}, ${pts[0].y} to ${pts[pts.length - 1].y}. Solid line: budgeted. Hollow diamond: proposed. Solid dot: revised. The table below has the values."></canvas></div>
+      <p class="trend-axis"></p>
+      <details class="values"><summary>Show values</summary><div class="table-scroll"><table class="table"><thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Positions</th></tr></thead><tbody>${rowsHtml}</tbody></table></div></details></div>`;
+  }
+  // A bureau's Salaries and wages by year, unfolded under the salaries table: the same chart and values as a line item's history.
+  function salHistoryHTML(name, pts, what = 'Salaries and wages') {
+    const rowsHtml = pts.map((p) => `<tr${p.m === 'projection' ? ' class="proj-row"' : ''}><th scope="row">${p.y}</th><td>${LABEL[p.m]}</td><td class="num">${p.t ? src(money(p.v), p.t.k, p.t.d, p.t.p) : '—'}</td></tr>`).join('');
+    return `<div class="li-hist-body" role="group" aria-label="${esc(what)}, ${esc(name)}">
+      <ul class="trend-legend" aria-hidden="true">${trendLegend(pts)}</ul>
+      <div class="chart-box short"><canvas role="img" aria-label="${esc(what)}, ${esc(name)}, by year, ${pts[0].y} to ${pts[pts.length - 1].y}. Solid line: actual. Dashed line: projected. Hollow diamond: proposed. Solid dot: revised. The table below has the values."></canvas></div>
+      <p class="trend-axis"></p>
+      <details class="values"><summary>Show values</summary><div class="table-scroll"><table class="table"><thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Amount</th></tr></thead><tbody>${rowsHtml}</tbody></table></div></details></div>`;
+  }
+  // After a page with a Staff section is drawn: the always-open chart, then the bureau or department toggles. A toggle opens its
+  // chart in the box its aria-controls names (under the positions or the salaries table); one chart is open in the section at a time.
+  function mountStaff() {
+    const sec = $('sec-staff');
+    if (!sec) return;
+    const cv = $('staff-chart'), sc = staffPts.get('scope');
+    if (cv && sc && window.Chart) charts.push(trendChart(cv, sc.pts, cv.closest('.li-hist-body').querySelector('.trend-axis'), false, true));
+    staffPies.forEach(([id, items, f]) => {
+      drawSidePie(id, items, f);
+      piePick[id] = (st) => { // a pie slice: toggle that row's history, and bring it into view when it opens
+        const b = sec.querySelector(`.staff-toggle[data-st="${st}"]`);
+        if (!b) return;
+        b.click();
+        const row = $(`st-row-${st}`);
+        if (row) row.scrollIntoView({ block: 'nearest', behavior: reduceMotion() ? 'auto' : 'smooth' });
+      };
+    });
+    sec.querySelectorAll('.staff-toggle').forEach((b) => b.addEventListener('click', () => {
+      const wasOpen = b.getAttribute('aria-expanded') === 'true';
+      closeStaffChart();
+      closeInlineRows(sec);
+      if (wasOpen) return;
+      const h = staffPts.get(b.dataset.st);
+      if (!h || !h.pts.some((p) => p.v != null)) return;
+      const box = openInlineRow(b, `st-row-${b.dataset.st}`, h.money ? salHistoryHTML(h.name, h.pts) : staffHistoryHTML(h.name, h.pts));
+      if (window.Chart) staffChart = trendChart(box.querySelector('canvas'), h.pts, box.querySelector('.trend-axis'), true, !h.money);
+    }));
+  }
   function staffHTML(scope) {
+    staffPts = new Map(); staffPies = [];
     if (!ST || S.k === 'revenue') return '';
     const inScope = (u) => (scope.unit != null ? u === scope.unit : O.units[u].dept === scope.dept);
     const fsel = scope.unit == null && S.f ? S.f : null; // a bureau page shows all of its funds, as elsewhere
     // Positions: unit -> column -> { n, d, p }
-    const pcols = ST.books.map((b) => ({ k: `${b.year}|${b.measure}`, label: b.measure === 'budgeted' ? String(b.year) : `${b.year} ${LABEL[b.measure]}`, b }));
+    const pcols = staffCols();
     const pos = new Map();
     for (const c of pcols) {
       const d = D.docs.indexOf(c.b.doc);
@@ -1483,7 +1590,8 @@
     for (const y of years().slice().sort((a, b) => a - b)) for (const m of ORDER) if (series(key(y, m))) scols.push(key(y, m));
     for (const y of projectionYears()) scols.push(key(y, 'projection')); // the city's projections, after the newest year
     const sal = new Map();
-    for (const k of scols) {
+    const sk = key(S.y, S.m), shown = [...new Set([...scols, sk, ...(S.c ? [S.c] : [])])]; // the table shows the selected and comparison figures; the history unfolds every year
+    for (const k of shown) {
       for (const r of scoped(k, { ...scope, kind: 'expense' })) {
         if (r.cat !== cat || !inScope(r.unit)) continue;
         if (!sal.has(r.unit)) sal.set(r.unit, new Map());
@@ -1500,19 +1608,39 @@
     const rowHead = (u) => (scope.unit == null && O.departments[O.units[u].dept].bureaus ? `<a href="${esc(unitHash(u))}">${esc(unitLabel(u, 'expense'))}</a>` : esc(unitLabel(u, 'expense')));
     const pdfLink = (text, d, p) => (d >= 0 && d != null ? `<a class="src" href="${pdfHref(d, p)}" target="_blank" rel="noopener" title="View in budget book">${text}</a>` : text);
     const sumCol = (m, k, f) => { let t = 0, any = false; for (const u of ids) { const c = m.get(u)?.get(k); if (c) { t += f(c); any = true; } } return any ? t : null; };
-    const table = (caption, cols, m, cell, total) => `<div class="table-scroll" tabindex="0" role="region" aria-label="${esc(caption)}, scrollable"><table class="table tight staff-table" aria-label="${esc(caption)}">
-      <thead><tr><th scope="col">${scope.unit == null ? 'Bureau' : ''}</th>${cols.map((c) => `<th scope="col" class="num${pc(c)}">${c.label.split(' ').map(esc).join('<br>')}</th>`).join('')}</tr></thead>
-      <tbody>${ids.map((u) => `<tr><th scope="row">${rowHead(u)}</th>${cols.map((c) => `<td class="num${pc(c)}">${cell(m.get(u)?.get(c.k), c.k)}</td>`).join('')}</tr>`).join('')}</tbody>
-      ${multi ? `<tfoot><tr><th scope="row">All</th>${cols.map((c) => `<td class="num${pc(c)}">${total(c.k)}</td>`).join('')}</tr></tfoot>` : ''}</table></div>`;
-    const pc = (c) => (isProjKey(c.k) ? ' proj-col' : '');
+    // Chart points: each bureau with positions, and the page's total (the same sum as the table's All row).
+    for (const u of pos.keys()) staffPts.set(`u${u}`, { name: unitLabel(u, 'expense'), pts: staffPoints(pcols, (k) => pos.get(u).get(k)) });
+    const scopeName = scope.unit != null ? unitLabel(scope.unit, 'expense') : O.departments[scope.dept].name;
+    if (pos.size) staffPts.set('scope', { name: scopeName, pts: staffPoints(pcols, (k) => { const t = sumCol(pos, k, (c) => c.n); return t == null ? null : { n: t }; }) });
+    for (const u of sal.keys()) staffPts.set(`s${u}`, { name: unitLabel(u, 'expense'), money: true, pts: scols.map((k) => { const c = sal.get(u).get(k), { y, m } = parseKey(k); return { y, m, v: c ? c.v : null, t: c ? { k, d: c.d, p: c.p } : null }; }) });
+    // Ledgers: the selected and comparison figures, change and share (like Income Sources). Positions come from the staffing
+    // schedule each series key stands for; salaries are budget lines and use the series keys directly.
+    const csch = S.c ? posSched(S.c) : null, sch = posSched(sk);
+    const posOf = (u, k) => (k ? pos.get(u)?.get(k) : undefined), salOf = (u, k) => sal.get(u)?.get(k);
+    const pdfN = (c) => pdfLink(fmtN(c.n), c.d, c.p);
     const dash = '<span class="missing" title="Not in this year\'s schedule">—</span>';
-    const posTable = table('Budgeted positions by year', pcols, pos,
-      (c) => (c ? pdfLink(fmtN(c.n), c.d, c.p) : dash),
-      (k) => { const t = sumCol(pos, k, (c) => c.n); return t == null ? dash : fmtN(t); });
-    const salCols = scols.map((k) => ({ k, label: seriesLabel(k) }));
-    const salTable = table('Salaries and wages by year', salCols, sal,
-      (c, k) => (c ? src(mny(c.v), k, c.d, c.p) : dash),
-      (k) => { const t = sumCol(sal, k, (c) => c.v); return t == null ? dash : mny(t); });
+    const none = '<span class="missing">No figures</span>';
+    const posCell = (u, k, sc) => (!sc ? noSched(k) : posOf(u, sc) ? pdfN(posOf(u, sc)) : dash);
+    const salCell = (u, k) => (salOf(u, k) ? src(money(salOf(u, k).v), k, salOf(u, k).d, salOf(u, k).p) : none);
+    const byName = (a, b) => (O.units[a].name < O.units[b].name ? -1 : 1);
+    const posIds = ids.filter((u) => posOf(u, sch) || posOf(u, csch))
+      .sort((a, b) => (posOf(b, sch)?.n || 0) - (posOf(a, sch)?.n || 0) || (posOf(b, csch)?.n || 0) - (posOf(a, csch)?.n || 0) || byName(a, b));
+    const salIds = ids.filter((u) => salOf(u, sk) || (S.c && salOf(u, S.c)))
+      .sort((a, b) => (salOf(b, sk)?.v || 0) - (salOf(a, sk)?.v || 0) || (salOf(b, S.c)?.v || 0) - (salOf(a, S.c)?.v || 0) || byName(a, b));
+    const unitRow = (u, pre, sel, cmp, selHtml, cmpHtml) => ({ id: `${pre}${u}`, label: unitLabel(u, 'expense'), name: rowHead(u), sel, cmp, selHtml, cmpHtml });
+    const pTot = (k) => (k ? sumCol(pos, k, (c) => c.n) : null), sTot = (k) => sumCol(sal, k, (c) => c.v);
+    const posTable = posIds.length ? staffLedger({
+      aria: 'Budgeted positions by bureau', head: 'Bureau', pieId: 'pie-st-pos', fmt: fmtN, selOk: !!sch, cmpOk: !!csch,
+      pieCaption: `Share of ${seriesLabel(sk)} positions by bureau`,
+      rows: posIds.map((u) => unitRow(u, 'u', posOf(u, sch)?.n ?? null, posOf(u, csch)?.n ?? null, posCell(u, sk, sch), S.c ? posCell(u, S.c, csch) : '')),
+      all: multi ? { sel: pTot(sch), cmp: pTot(csch), selHtml: pTot(sch) == null ? noSched(sk) : fmtN(pTot(sch)), cmpHtml: S.c ? (pTot(csch) == null ? noSched(S.c) : fmtN(pTot(csch))) : '' } : null,
+    }) : '';
+    const salTable = salIds.length ? staffLedger({
+      aria: 'Salaries and wages by bureau', head: 'Bureau', pieId: 'pie-st-sal', fmt: mny, selOk: true, cmpOk: true,
+      pieCaption: `Share of ${seriesLabel(sk)} salaries and wages by bureau`,
+      rows: salIds.map((u) => unitRow(u, 's', salOf(u, sk)?.v ?? null, salOf(u, S.c)?.v ?? null, salCell(u, sk), S.c ? salCell(u, S.c) : '')),
+      all: multi ? { sel: sTot(sk), cmp: S.c ? sTot(S.c) : null, selHtml: sTot(sk) == null ? none : money(sTot(sk)), cmpHtml: S.c ? (sTot(S.c) == null ? none : money(sTot(S.c))) : '' } : null,
+    }) : '';
     // Titles in the newest schedule (bureau pages only).
     let titles = '';
     if (scope.unit != null && last) {
@@ -1528,11 +1656,169 @@
     const where = fsel ? ` in the ${esc(fsel)}` : '';
     return `<section class="panel" id="sec-staff" tabindex="-1" aria-labelledby="st-t"><h2 class="panel-title" id="st-t">Staff</h2>
       <h3 class="wc-h3">Budgeted positions${where}</h3>
-      <p class="panel-note">From each year's staffing schedule. The city publishes budgeted positions, not how many people were actually employed. Fractions are positions shared with other bureaus or funds. Counts open the schedule page in the budget book.</p>
+      <p class="panel-note">From each year's staffing schedule. The city publishes budgeted positions, not how many people were actually employed. Fractions are positions shared with other bureaus or funds. For an Actual or Projected year the figure is that year's budgeted positions (the books print no actual headcount). Counts open the schedule page in the budget book.</p>
+      ${staffPts.has('scope') ? staffHistoryHTML(scopeName, staffPts.get('scope').pts, 'staff-chart') : ''}
+      ${multi && posIds.length > 1 ? '<p class="hint li-hint">Select a bureau\'s name to see its positions year by year.</p>' : ''}
       ${posTable}${titles}
       <h3 class="wc-h3">Salaries and wages${where}</h3>
       <p class="panel-note">The “Salaries &amp; Wages” budget lines (salaries, overtime and temporary wages; benefits are separate): Actual through 2025, Projected for 2026, Proposed and Revised for 2027${projectionYears().length ? `, then the city's projections for ${projectionYears().join(' and ')}` : ''}.</p>
+      ${multi && salIds.length > 1 ? '<p class="hint li-hint">Select a bureau\'s name to see its salaries and wages year by year.</p>' : ''}
       ${salTable}</section>`;
+  }
+  /* Home page Staff panel: budgeted positions by department and year, city-wide (or in the selected fund), with a chart
+     of the total and a toggle on each department. Positions whose account number in that year's book matches no office
+     on the 2027 organizational chart are shown on their own row, so the total is every position in the schedules. */
+  function homeStaffHTML() {
+    staffPts = new Map(); staffPies = [];
+    if (!ST || isCounty() || S.k === 'revenue') return '';
+    const pcols = staffCols(), pos = new Map(), off = new Map();
+    for (const c of pcols) {
+      for (const x of c.b.positions) {
+        if (S.f && ST.units[x[0]][0] !== S.f) continue;
+        const u = O.codes[x[3]];
+        if (u == null) { off.set(c.k, { n: (off.get(c.k)?.n || 0) + x[5] }); continue; }
+        const dp = O.units[u].dept;
+        if (!pos.has(dp)) pos.set(dp, new Map());
+        const cell = pos.get(dp).get(c.k) || { n: 0 };
+        cell.n += x[5];
+        pos.get(dp).set(c.k, cell);
+      }
+    }
+    if (!pos.size) return '';
+    const sk = key(S.y, S.m), sch = posSched(sk), csch = S.c ? posSched(S.c) : null;
+    const nOf = (d, k) => (k ? pos.get(d).get(k)?.n : undefined);
+    const total = (k) => { if (!k) return null; let t = 0, any = false; for (const d of pos.keys()) { const c = pos.get(d).get(k); if (c) { t += c.n; any = true; } } if (off.get(k)) { t += off.get(k).n; any = true; } return any ? { n: t } : null; };
+    const ids = [...pos.keys()].filter((d) => nOf(d, sch) != null || nOf(d, csch) != null)
+      .sort((a, b) => (nOf(b, sch) || 0) - (nOf(a, sch) || 0) || (nOf(b, csch) || 0) - (nOf(a, csch) || 0) || (O.departments[a].name < O.departments[b].name ? -1 : 1));
+    for (const d of pos.keys()) staffPts.set(`d${d}`, { name: O.departments[d].name, pts: staffPoints(pcols, (k) => pos.get(d).get(k)) });
+    const scopeName = S.f ? fn(S.f) : CFG.entity.short;
+    staffPts.set('scope', { name: scopeName, pts: staffPoints(pcols, (k) => total(k)) });
+    const dash = '<span class="missing" title="Not in this year\'s schedule">—</span>';
+    const pcell = (n, k, sc) => (!sc ? noSched(k) : n == null ? dash : fmtN(n));
+    const rows = ids.map((d) => ({ id: `d${d}`, label: O.departments[d].name, name: esc(O.departments[d].name), sel: nOf(d, sch) ?? null, cmp: nOf(d, csch) ?? null, selHtml: pcell(nOf(d, sch), sk, sch), cmpHtml: S.c ? pcell(nOf(d, csch), S.c, csch) : '' }));
+    const offSel = sch ? off.get(sch)?.n : undefined, offCmp = csch ? off.get(csch)?.n : undefined;
+    if (offSel != null || offCmp != null) rows.push({ id: '', label: 'Not placed in a department', name: 'Not placed in a department', sel: offSel ?? null, cmp: offCmp ?? null, selHtml: pcell(offSel, sk, sch), cmpHtml: S.c ? pcell(offCmp, S.c, csch) : '' });
+    const tS = total(sch), tC = total(csch);
+    const table = staffLedger({
+      aria: 'Budgeted positions by department', head: 'Department', pieId: 'pie-st-home', fmt: fmtN, selOk: !!sch, cmpOk: !!csch,
+      pieCaption: `Share of ${seriesLabel(sk)} positions by department`, rows,
+      all: { sel: tS ? tS.n : null, cmp: tC ? tC.n : null, selHtml: tS ? fmtN(tS.n) : noSched(sk), cmpHtml: S.c ? (tC ? fmtN(tC.n) : noSched(S.c)) : '' },
+    });
+    const where = S.f ? ` in the ${esc(fn(S.f))}` : '';
+    return `<section class="panel" id="sec-staff" tabindex="-1" aria-labelledby="st-t"><h2 class="panel-title" id="st-t">Staff</h2>
+      <h3 class="wc-h3">Budgeted positions${where}</h3>
+      <p class="panel-note">From each year's staffing schedule. The city publishes budgeted positions, not how many people were actually employed. Departments follow the 2027 organizational chart in every year. Fractions are positions shared with other bureaus or funds. For an Actual or Projected year the figure is that year's budgeted positions (the books print no actual headcount). The totals are this site's sums of the schedules' lines.</p>
+      ${staffHistoryHTML(scopeName, staffPts.get('scope').pts, 'staff-chart')}
+      ${rows.length > 1 ? '<p class="hint li-hint">Select a department\'s name to see its positions year by year.</p>' : ''}
+      ${table}
+      ${off.size ? '<p class="panel-note">“Not placed in a department”: positions whose account number in that year\'s book matches no office on the 2027 organizational chart.</p>' : ''}
+      <p class="panel-note">Where a book's schedule pages are missing or printed twice, the note is under <a href="${eh('about?s=about-issues')}">Known problems in the source books</a>.</p></section>`;
+  }
+
+
+  /* ---------- Income Sources: income by source, year by year (home page, Income view) ----------
+     A line's source: the name data/income_sources.csv gives its account (budget.json `income_sources`: the taxes one by one,
+     grants and reimbursements); else "Charges to other funds" when income_rules.csv calls it a charge; else the group the book
+     prints it under (the bureau). Draws and transfers are not income and never appear. The rows are the same lines the home
+     page's total uses (scoped()), so the All row is that total for every column. */
+  let srcPts = new Map(), srcChart = null;
+  function closeSrcChart() { if (srcChart) { srcChart.destroy(); srcChart = null; } }
+  function sourceOf(r) {
+    const IS = D.income_sources, n = IS && IS.a ? IS.a[r.ai] : null;
+    if (n != null) return IS.names[n];
+    return nonIncome(r.ai) === 'charge' ? 'Charges to other funds' : plainName(D.bureaus[r.bureau]);
+  }
+  // The books rename a group from year to year ("Water Revenues", "Water Revenue"; "&" and "and"; a hyphen added): one row for them.
+  const sourceKey = (s) => s.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim().replace(/s$/, '');
+  function incomeSourcesHTML() {
+    srcPts = new Map();
+    if (S.k !== 'revenue' || isReserve()) return '';
+    const scols = [];
+    for (const y of years().slice().sort((a, b) => a - b)) for (const m of ORDER) if (series(key(y, m))) scols.push(key(y, m));
+    for (const y of projectionYears()) scols.push(key(y, 'projection')); // the city's projections, after the newest year
+    const bySrc = new Map(), totals = new Map(), notes = new Map(), label = new Map();
+    // A line's source in every year is the one it has in the newest budget that prints it (same account, same fund): the books
+    // rename their groups over the years ("Public Safety Revenues" became "Public Safety - Police Fees") and the projections
+    // book prints one group, "Revenue", so grouping each year by its own printed name would break a source's trend.
+    const newestSrc = new Map();
+    for (const k of scols) if (!isProjKey(k)) for (const r of rows(k)) if (isIncome(r)) newestSrc.set(`${r.code}|${r.fund}`, sourceOf(r));
+    const sk = key(S.y, S.m); // the selected figure and the comparison figure: the two the table shows (the history unfolds every year)
+    for (const k of [...new Set([...scols, sk, ...(S.c ? [S.c] : [])])]) {
+      const list = scoped(k);
+      if (list.length) totals.set(k, totalOf(list, k));
+      const groups = new Map();
+      for (const r of list) {
+        const s = newestSrc.get(`${r.code}|${r.fund}`) || sourceOf(r);
+        const g = sourceKey(s);
+        if (!label.has(g)) label.set(g, s);
+        if (!groups.has(g)) groups.set(g, []);
+        groups.get(g).push(r);
+      }
+      for (const [s, l] of groups) {
+        if (!bySrc.has(s)) bySrc.set(s, new Map());
+        const big = l.slice().sort((a, b) => b.v - a.v); // the page of the largest line
+        bySrc.get(s).set(k, { v: sum(l), k, ...firstPage(big) });
+      }
+    }
+    if (!bySrc.size) return '';
+    // Same columns as the line items and the Departments ledger: comparison, selected figure, signed change, share. A source with
+    // nothing in either shown figure is left out (its history says nothing about this comparison).
+    const val = (s, k) => bySrc.get(s).get(k)?.v || 0;
+    const names = [...bySrc.keys()].filter((s) => val(s, sk) || (S.c && val(s, S.c))).sort((a, b) => val(b, sk) - val(a, sk) || (label.get(a) < label.get(b) ? -1 : 1));
+    if (!names.length) return '';
+    const selTotal = totals.get(sk), cmpTotal = S.c ? totals.get(S.c) : null;
+    const shareBase = selTotal ? selTotal.v : names.reduce((t, s) => t + Math.max(0, val(s, sk)), 0);
+    const multi = names.length > 1;
+    names.forEach((s, i) => srcPts.set(`i${i}`, { name: label.get(s), money: true, pts: scols.map((k) => { const c = bySrc.get(s).get(k), { y, m } = parseKey(k); return { y, m, v: c ? c.v : null, t: c ? { k, d: c.d, p: c.p } : null }; }) }));
+    const none = '<span class="missing">No figures</span>';
+    // Side pie: each source's share of the selected figure, the rows are its key; a slice opens that source's history row.
+    const pieItems = names.map((s, i) => ({ label: label.get(s), v: val(s, sk), pick: `i${i}` }));
+    const pie = sidePieHTML('pie-src', `Share of ${seriesLabel(sk)} income by source`, pieItems);
+    if (pie) homePies.push(['pie-src', pieItems]);
+    const cell = (s, k) => { const c = bySrc.get(s).get(k); return c ? src(money(c.v), k, c.d, c.p) : none; };
+    const head = `<tr><th scope="col">Source</th>${S.c ? `<th scope="col" class="num hide-sm">${esc(seriesLabel(S.c))}</th>` : ''}<th scope="col" class="num">${esc(seriesLabel(sk))}</th>${S.c ? '<th scope="col" class="num">Change</th>' : ''}<th scope="col" class="num hide-sm">Share</th></tr>`;
+    const body = names.map((s, i) => {
+      const sel = val(s, sk), cmp = S.c ? val(s, S.c) : 0, sh = shareBase > 0 ? (Math.max(0, sel) / shareBase) * 100 : 0;
+      const nm = multi ? `<button type="button" class="li-toggle is-toggle" data-is="i${i}" aria-expanded="false">${esc(label.get(s))}</button>` : esc(label.get(s));
+      return `<tr><th scope="row">${pie ? `<span class="keyed">${pieKey(i)}${nm}</span>` : nm}</th>${S.c ? `<td class="num hide-sm">${cell(s, S.c)}</td>` : ''}<td class="num">${cell(s, sk)}</td>${S.c ? `<td class="num">${deltaHTML(sel - cmp, cmp, mny)}</td>` : ''}<td class="num share-cell hide-sm"><span class="share-bar" aria-hidden="true"><i style="width:${sh.toFixed(1)}%"></i></span><span class="share-n">${sh > 0 && sh < 0.1 ? '<0.1' : sh.toFixed(1)}%</span></td></tr>`;
+    }).join('');
+    const ft = (t) => fig(t, { notes, what: 'Income' });
+    const foot = `<tr><th scope="row">All</th>${S.c ? `<td class="num hide-sm">${cmpTotal ? ft(cmpTotal) : ''}</td>` : ''}<td class="num">${selTotal ? ft(selTotal) : ''}</td>${S.c ? `<td class="num">${deltaHTML((selTotal?.v || 0) - (cmpTotal?.v || 0), cmpTotal?.v || 0, mny)}</td>` : ''}<td class="num hide-sm">100%</td></tr>`;
+    const where = S.f ? ` in the ${esc(fn(S.f))}` : '';
+    const allFunds = !S.f;
+    return `<section class="panel" id="sec-income-sources" tabindex="-1" aria-labelledby="is-t"><h2 class="panel-title" id="is-t">Income Sources</h2>
+      <p class="panel-note">Income${where} by source, in the same columns as the line items: the budget year, the comparison year, the change and each source's share. Sources follow the books' account numbers: taxes are shown one by one, and other lines are grouped as the newest book that prints them does, so a group renamed over the years stays one row. Draws from savings and transfers between funds are not income and are left out.${allFunds ? ' In All funds, charges to other funds are left out too.' : ''} The All row is the income total shown at the top of the page. <a href="${termHref('term-income')}">What counts as income</a></p>
+      ${multi ? '<p class="hint li-hint">Select a source\'s name to see it year by year.</p>' : ''}
+      ${pie ? '<div class="with-pie">' : ''}<div class="table-scroll"><table class="table ledger" aria-label="Income by source">
+        <thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div>${pie ? `${pie}</div>` : ''}
+      ${gapNotes(notes)}</section>`;
+  }
+  // After the page is drawn: a source's name opens its chart and values under the table; one is open at a time.
+  function mountIncomeSources() {
+    const sec = $('sec-income-sources');
+    if (!sec) return;
+    piePick['pie-src'] = (id) => { // a pie slice: toggle that source's history row, and bring it into view when it opens
+      const b = sec.querySelector(`.is-toggle[data-is="${id}"]`);
+      if (!b) return;
+      b.click();
+      const row = $(`is-row-${id}`);
+      if (row) row.scrollIntoView({ block: 'nearest', behavior: reduceMotion() ? 'auto' : 'smooth' });
+    };
+    sec.querySelectorAll('.is-toggle').forEach((b) => b.addEventListener('click', () => {
+      const wasOpen = b.getAttribute('aria-expanded') === 'true';
+      closeSrcChart();
+      sec.querySelectorAll('tr.li-hist').forEach((r) => r.remove());
+      sec.querySelectorAll('.li-toggle[aria-expanded="true"]').forEach((x) => x.setAttribute('aria-expanded', 'false'));
+      if (wasOpen) return;
+      const h = srcPts.get(b.dataset.is);
+      if (!h || !h.pts.some((p) => p.v != null)) return;
+      const tr = b.closest('tr'), id = `is-row-${b.dataset.is}`;
+      tr.insertAdjacentHTML('afterend', `<tr class="li-hist" id="${id}"><td colspan="${tr.cells.length}">${salHistoryHTML(h.name, h.pts, 'Income')}</td></tr>`);
+      b.setAttribute('aria-controls', id);
+      b.setAttribute('aria-expanded', 'true');
+      const box = tr.nextElementSibling;
+      if (window.Chart) srcChart = trendChart(box.querySelector('canvas'), h.pts, box.querySelector('.trend-axis'), true);
+    }));
   }
 
   const bdWord = () => (S.k === 'revenue' ? 'Revenue' : isCounty() ? 'Spending' : 'Budget'); // "Total Budget" on a City department page; the County's figure is already called Budget
@@ -1582,6 +1868,7 @@
     const k = key(S.y, S.m), th = chartTheme();
     drawPie(`${$('page-h').textContent} ${seriesLabel(k)} ${bdWord()} Breakdown`, cats);
     drawTrend();
+    mountStaff();
     const yoy = $('yoy-chart');
     if (yoy && window.Chart) {
       const ds = [];
@@ -2531,7 +2818,7 @@
     destroyCharts();
     notesShown = new Set();
     let page;
-    if (route.name === 'home') page = { html: homeView(), after: () => { if (isReserve()) drawReserve(); else { drawTrend(); revExpAfter(); drawContext(); homePies.forEach(([id, items]) => drawSidePie(id, items)); mountDeptHistory(); } } };
+    if (route.name === 'home') page = { html: homeView(), after: () => { if (isReserve()) drawReserve(); else { drawTrend(); revExpAfter(); drawContext(); homePies.forEach(([id, items]) => drawSidePie(id, items)); mountDeptHistory(); mountStaff(); mountIncomeSources(); } } };
     else if (route.name === 'changes') page = changesPage();
     else if (route.name === 'dept') page = deptPage();
     else if (route.name === 'about') page = { html: '<header class="page-head"><h1 id="page-h" tabindex="-1">About the data</h1></header>', after: () => { const t = q.get('s') && $(q.get('s')); if (t) { if (t.tagName === 'DETAILS') t.open = true; t.scrollIntoView(); } } };
