@@ -42,40 +42,6 @@ jobs:
         run: |
           mkdir _site
           cp -RL web/. _site/
-      - name: Wait for deploy debounce
-        run: |
-          #!/usr/bin/env bash
-          set -euo pipefail
-
-          lock=".deploy-lock"
-          stamp=".deploy-timestamp"
-          debounce=${DEBOUNCE_SECS:-60}
-
-          # If two pushes to main land within $debounce seconds, only the last one
-          # triggers a deployment — and only after the window has cleared. GitHub
-          # Pages deployments to the same environment collide and fail when
-          # several runs publish at once; collapsing a burst into one publish
-          # stops that. The lock/stamp files are build-local and gitignored.
-          while :; do
-            if mkdir "$lock" 2>/dev/null; then
-              stamp_existed=0
-              [[ -f "$stamp" ]] || stamp_existed=1
-              last=0
-              [[ -f "$stamp" ]] && last=$(cat "$stamp")
-              now=$(date +%s)
-
-              if (( stamp_existed )) && (( now - last >= debounce )); then
-                echo "$now" > "$stamp"
-                rmdir "$lock"
-                break
-              fi
-              rmdir "$lock"
-              sleep 10
-            else
-              sleep 10
-            fi
-          done
-
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:
