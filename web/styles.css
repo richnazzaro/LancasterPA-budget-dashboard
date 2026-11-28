@@ -337,8 +337,8 @@ details.values summary:hover { color: var(--fg); }
 /* Projection years: a dotted ink-gray line with hollow points (app.js drawTrend), muted rows and columns in tables. */
 .trend-legend .ln.dotted.proj { border-top: 2px dotted var(--cmp); width: 18px; }
 .trend-legend .dot.ring.proj { width: 10px; height: 10px; border: 1.5px solid var(--cmp); margin-left: -6px; }
-.table tr.proj-row th, .table tr.proj-row td, .table .proj-col { color: var(--muted); font-style: italic; }
-.table tr.proj-row a.src, .table .proj-col a.src { color: inherit; }
+.table tr.proj-row th, .table tr.proj-row td { color: var(--muted); font-style: italic; }
+.table tr.proj-row a.src { color: inherit; }
 .trend-proj { margin: 12px 0 0; font-size: 14px; line-height: 20px; color: var(--muted); }
 .trend-proj p { margin: 0; }
 .trend-proj strong { color: var(--fg); }
@@ -892,10 +892,7 @@ a.src { white-space: nowrap; }
 .gap-note > .gap-mark:first-child { margin: 0 .2em 0 0; }
 .gap-note strong { color: var(--fg); font-weight: 600; }
 
-/* Staff section: positions and salaries by year */
-.staff-table th[scope="row"] { min-width: 10em; }
-.staff-table th, .staff-table td { padding-left: 8px; padding-right: 8px; } /* the narrow-screen table padding, so nine year columns fit */
-.staff-table td.num { white-space: nowrap; }
+/* Staff section: positions and salaries ledgers use the shared .ledger, .with-pie and .li-hist rules (Income Sources format) */
 
 /* One line far above the years either side of it (app.js lineSpikes): a note under Totals by Year and on What changed.
    Plain text, full width, like a footnote in a printed book; no box. */
@@ -971,10 +968,6 @@ a.status:hover { text-decoration: underline; text-underline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { .li-toggle::before { transition: none; } }
 .li-toggle:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 0; }
 .table tbody tr.li-hist:hover { background: none; }
-/* Staff rows sit in tables that scroll sideways: the opened row's content is pinned to the scroll area's left edge and
-   given its visible width (set in app.js), so the chart never spans the whole table */
-.li-hist .st-row { position: sticky; left: 0; }
-.staff-table tfoot .li-toggle, .staff-table tbody .li-toggle { font-weight: inherit; }
 .li-hist > td { padding: 8px 0 24px 20px; }
 .li-hist .trend-legend { justify-content: flex-start; }
 .li-hist .trend-spike { color: var(--muted); }

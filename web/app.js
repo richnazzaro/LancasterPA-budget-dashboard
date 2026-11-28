@@ -1085,6 +1085,7 @@
      items: [{ label, v, href }] in the list's order. Swatches use the CSS variables, so they follow the theme. */
   const pieVar = (i) => (i < PIE_SLICES ? `--cat-${(i % 8) + 1}` : '--cat-other');
   const pieKey = (i) => `<i class="pie-key" aria-hidden="true" style="background:var(${pieVar(i)})"></i>`;
+  const piePick = {}; // canvas id -> function(row id): what a click on that pie's slice does (toggle the row's history)
   const pieTotal = (items) => items.reduce((t, x) => t + Math.max(0, x.v), 0);
   function sidePieHTML(id, caption, items) {
     const total = pieTotal(items);
@@ -1092,7 +1093,7 @@
     const desc = items.filter((x) => x.v > 0).map((x) => `${x.label} ${((x.v / total) * 100).toFixed(1)}%`).join(', ');
     return `<figure class="side-pie"><div class="side-pie-box"><canvas id="${id}" role="img" aria-label="${esc(`${caption}: ${desc}. The list beside it has the amounts.`)}"></canvas></div><figcaption>${esc(caption)}</figcaption></figure>`;
   }
-  function drawSidePie(id, items) {
+  function drawSidePie(id, items, fmt = money) {
     const cv = $(id);
     if (!cv || !window.Chart) return;
     const th = chartTheme(), total = pieTotal(items);
@@ -1104,9 +1105,9 @@
       type: 'pie',
       data: { labels: data.map((d) => d.label), datasets: [{ data: data.map((d) => d.v), backgroundColor: data.map((d) => d.c), borderColor: BG, borderWidth: 2 }] },
       options: { responsive: true, maintainAspectRatio: false, animation: reduceMotion() ? false : { duration: 300 },
-        onClick: (_ev, els) => { const x = at(els); if (x && x.href) navigate(x.href); else if (x && x.pick && pickSource) pickSource(x.pick); },
+        onClick: (_ev, els) => { const x = at(els); if (x && x.href) navigate(x.href); else if (x && x.pick && piePick[id]) piePick[id](x.pick); },
         onHover: (ev, els) => { const x = at(els); ev.native.target.style.cursor = x && (x.href || x.pick) ? 'pointer' : 'default'; },
-        plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { label: (c) => `${c.label}: ${money(c.raw)} (${((c.raw / total) * 100).toFixed(1)}%)` } } } },
+        plugins: { legend: { display: false }, tooltip: { ...th.tip, callbacks: { label: (c) => `${c.label}: ${fmt(c.raw)} (${((c.raw / total) * 100).toFixed(1)}%)` } } } },
     }));
   }
 
@@ -1464,31 +1465,56 @@
   // Staff charts: staffPts maps a row id ('scope', 'u<unit>' or 'd<dept>' for positions, 's<unit>' for a bureau's salaries) to
   // { name, pts, money }, filled while the Staff HTML is built and read by mountStaff(); staffChart is the one open bureau or
   // department chart in the Staff section, kept apart from the page's charts.
-  let staffPts = new Map(), staffChart = null;
-  function closeStaffChart() { if (staffChart) { staffChart.destroy(); staffChart = null; } unfitRow(); }
-  // A Staff chart opens in a row under the clicked name, like a line item's history. These tables are wider than
-  // the page and scroll sideways, so the row's content is pinned to the scroll area's left edge (position: sticky) and given its visible width.
-  let rowFit = null;
-  function unfitRow() { if (rowFit) { window.removeEventListener('resize', rowFit); rowFit = null; } }
+  let staffPts = new Map(), staffChart = null, staffPies = []; // staffPies: [canvas id, items, number format] for the side pies the Staff HTML laid out
+  function closeStaffChart() { if (staffChart) { staffChart.destroy(); staffChart = null; } }
   function closeInlineRows(sec) {
     sec.querySelectorAll('tr.li-hist').forEach((r) => r.remove());
     sec.querySelectorAll('.li-toggle[aria-expanded="true"]').forEach((x) => x.setAttribute('aria-expanded', 'false'));
   }
+  // A Staff history opens in a row under the clicked name, like a line item's history.
   function openInlineRow(btn, id, inner) {
-    const tr = btn.closest('tr'), sc = tr.closest('.table-scroll');
-    tr.insertAdjacentHTML('afterend', `<tr class="li-hist" id="${id}"><td colspan="${tr.cells.length}"><div class="st-row">${inner}</div></td></tr>`);
+    const tr = btn.closest('tr');
+    tr.insertAdjacentHTML('afterend', `<tr class="li-hist" id="${id}"><td colspan="${tr.cells.length}">${inner}</td></tr>`);
     btn.setAttribute('aria-controls', id);
     btn.setAttribute('aria-expanded', 'true');
-    const row = tr.nextElementSibling, td = row.firstElementChild, box = td.firstElementChild;
-    unfitRow();
-    rowFit = () => { const cs = getComputedStyle(td); box.style.width = `${Math.max(200, sc.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight))}px`; };
-    rowFit();
-    window.addEventListener('resize', rowFit);
-    return row;
+    return tr.nextElementSibling;
   }
   const staffCols = () => ST.books.map((b) => ({ k: `${b.year}|${b.measure}`, label: b.measure === 'budgeted' ? String(b.year) : `${b.year} ${LABEL[b.measure]}`, b }));
   // One point per schedule for trendChart: 2022–2026 Budgeted (the line), the newest year's Proposed and Revised (the marks).
   const staffPoints = (pcols, cellOf) => pcols.map((c) => { const cell = cellOf(c.k); return { y: c.b.year, m: c.b.measure, v: cell ? cell.n : null, t: cell || null }; });
+  // Which staffing schedule a series key stands for: the newest year's Revised and Proposed are their own schedules; any other
+  // figure (Actual, Projected, Budget, Adopted, Amended) is that year's budgeted positions; null when the books print none.
+  function posSched(k) {
+    if (!k || !ST) return null;
+    const { y, m } = parseKey(k), newest = Math.max(...ST.books.map((b) => b.year));
+    const want = y === newest && (m === 'revised' || m === 'proposed') ? m : 'budgeted';
+    const b = ST.books.find((x) => x.year === y && x.measure === want);
+    return b ? `${b.year}|${b.measure}` : null;
+  }
+  const noSched = (k) => `<span class="missing" title="No staffing schedule for ${esc(seriesLabel(k))}">—</span>`;
+  // One Staff ledger, the Income Sources format: Name | comparison | selected | Change | Share, with a side pie keyed by the rows.
+  // o: { aria, head, rows: [{ id (toggle id or ''), label, name, sel, cmp, selHtml, cmpHtml }], selOk, cmpOk, fmt, all: { sel, cmp, selHtml, cmpHtml } | null,
+  //      pieId, pieCaption } — sel/cmp are numbers (null: no figure); selOk/cmpOk: the figure exists at all (positions: a schedule exists).
+  function staffLedger(o) {
+    const sk = key(S.y, S.m), multi = o.rows.length > 1;
+    if (!o.rows.length) return `<p class="panel-note">The books print no staffing schedule for ${esc(seriesLabel(sk))}${S.c ? ` or ${esc(seriesLabel(S.c))}` : ''}, so there is nothing to compare.</p>`;
+    const items = o.rows.map((r) => ({ label: r.label, v: r.sel || 0, pick: r.id || undefined }));
+    const pie = o.selOk && multi ? sidePieHTML(o.pieId, o.pieCaption, items) : '';
+    if (pie) staffPies.push([o.pieId, items, o.fmt === fmtN ? fmtN : money]);
+    const base = o.all && o.all.sel != null ? o.all.sel : items.reduce((t, x) => t + Math.max(0, x.v), 0);
+    const shareCell = (sh) => (sh == null ? '' : `<span class="share-bar" aria-hidden="true"><i style="width:${sh.toFixed(1)}%"></i></span><span class="share-n">${sh > 0 && sh < 0.1 ? '<0.1' : sh.toFixed(1)}%</span>`);
+    const chg = (sel, cmp) => (S.c && o.selOk && o.cmpOk ? deltaHTML(sel - cmp, cmp, o.fmt) : '');
+    const head = `<tr><th scope="col">${esc(o.head)}</th>${S.c ? `<th scope="col" class="num hide-sm">${esc(seriesLabel(S.c))}</th>` : ''}<th scope="col" class="num">${esc(seriesLabel(sk))}</th>${S.c ? '<th scope="col" class="num">Change</th>' : ''}${multi ? '<th scope="col" class="num hide-sm">Share</th>' : ''}</tr>`;
+    const body = o.rows.map((r, i) => {
+      const nm = multi && r.id ? `<button type="button" class="li-toggle staff-toggle" data-st="${r.id}" aria-expanded="false">${esc(r.label)}</button>` : r.name;
+      const sh = o.selOk && base > 0 ? (Math.max(0, r.sel || 0) / base) * 100 : null;
+      return `<tr><th scope="row">${pie ? `<span class="keyed">${pieKey(i)}${nm}</span>` : nm}</th>${S.c ? `<td class="num hide-sm">${r.cmpHtml}</td>` : ''}<td class="num">${r.selHtml}</td>${S.c ? `<td class="num">${chg(r.sel || 0, r.cmp || 0)}</td>` : ''}${multi ? `<td class="num share-cell hide-sm">${shareCell(sh)}</td>` : ''}</tr>`;
+    }).join('');
+    const a = o.all;
+    const foot = multi && a ? `<tfoot><tr><th scope="row">All</th>${S.c ? `<td class="num hide-sm">${a.cmpHtml}</td>` : ''}<td class="num">${a.selHtml}</td>${S.c ? `<td class="num">${chg(a.sel || 0, a.cmp || 0)}</td>` : ''}<td class="num hide-sm">${o.selOk && a.sel ? '100%' : ''}</td></tr></tfoot>` : '';
+    return `${pie ? '<div class="with-pie">' : ''}<div class="table-scroll"><table class="table ledger" aria-label="${esc(o.aria)}"><thead>${head}</thead><tbody>${body}</tbody>${foot}</table></div>${pie ? `${pie}</div>` : ''}`
+      + (!o.selOk ? `<p class="panel-note">The books print no staffing schedule for ${esc(seriesLabel(sk))}, so there is no figure or share to show for it.</p>` : '');
+  }
   // The unfolded chart and values for one row (or the page's total when `id` is given, for the always-open chart).
   function staffHistoryHTML(name, pts, id = '') {
     const link = (p) => (p.t && p.t.d != null && p.t.d >= 0 ? `<a class="src" href="${pdfHref(p.t.d, p.t.p)}" target="_blank" rel="noopener" title="View in budget book">${fmtN(p.v)}</a>` : fmtN(p.v));
@@ -1517,6 +1543,16 @@
     if (!sec) return;
     const cv = $('staff-chart'), sc = staffPts.get('scope');
     if (cv && sc && window.Chart) charts.push(trendChart(cv, sc.pts, cv.closest('.li-hist-body').querySelector('.trend-axis'), false, true));
+    staffPies.forEach(([id, items, f]) => {
+      drawSidePie(id, items, f);
+      piePick[id] = (st) => { // a pie slice: toggle that row's history, and bring it into view when it opens
+        const b = sec.querySelector(`.staff-toggle[data-st="${st}"]`);
+        if (!b) return;
+        b.click();
+        const row = $(`st-row-${st}`);
+        if (row) row.scrollIntoView({ block: 'nearest', behavior: reduceMotion() ? 'auto' : 'smooth' });
+      };
+    });
     sec.querySelectorAll('.staff-toggle').forEach((b) => b.addEventListener('click', () => {
       const wasOpen = b.getAttribute('aria-expanded') === 'true';
       closeStaffChart();
@@ -1529,7 +1565,7 @@
     }));
   }
   function staffHTML(scope) {
-    staffPts = new Map();
+    staffPts = new Map(); staffPies = [];
     if (!ST || S.k === 'revenue') return '';
     const inScope = (u) => (scope.unit != null ? u === scope.unit : O.units[u].dept === scope.dept);
     const fsel = scope.unit == null && S.f ? S.f : null; // a bureau page shows all of its funds, as elsewhere
@@ -1553,7 +1589,8 @@
     for (const y of years().slice().sort((a, b) => a - b)) for (const m of ORDER) if (series(key(y, m))) scols.push(key(y, m));
     for (const y of projectionYears()) scols.push(key(y, 'projection')); // the city's projections, after the newest year
     const sal = new Map();
-    for (const k of scols) {
+    const sk = key(S.y, S.m), shown = [...new Set([...scols, sk, ...(S.c ? [S.c] : [])])]; // the table shows the selected and comparison figures; the history unfolds every year
+    for (const k of shown) {
       for (const r of scoped(k, { ...scope, kind: 'expense' })) {
         if (r.cat !== cat || !inScope(r.unit)) continue;
         if (!sal.has(r.unit)) sal.set(r.unit, new Map());
@@ -1575,22 +1612,34 @@
     const scopeName = scope.unit != null ? unitLabel(scope.unit, 'expense') : O.departments[scope.dept].name;
     if (pos.size) staffPts.set('scope', { name: scopeName, pts: staffPoints(pcols, (k) => { const t = sumCol(pos, k, (c) => c.n); return t == null ? null : { n: t }; }) });
     for (const u of sal.keys()) staffPts.set(`s${u}`, { name: unitLabel(u, 'expense'), money: true, pts: scols.map((k) => { const c = sal.get(u).get(k), { y, m } = parseKey(k); return { y, m, v: c ? c.v : null, t: c ? { k, d: c.d, p: c.p } : null }; }) });
-    // On a department page a bureau's name in either table opens its chart under that table (the bureau cards link to the pages).
-    const toggleHead = (pre, m) => (u) => (multi && m.has(u) ? `<button type="button" class="li-toggle staff-toggle" data-st="${pre}${u}" aria-expanded="false">${esc(unitLabel(u, 'expense'))}</button>` : rowHead(u));
-    const posHead = toggleHead('u', pos), salHead = toggleHead('s', sal);
-    const table = (caption, cols, m, cell, total, head = rowHead) => `<div class="table-scroll" tabindex="0" role="region" aria-label="${esc(caption)}, scrollable"><table class="table tight staff-table" aria-label="${esc(caption)}">
-      <thead><tr><th scope="col">${scope.unit == null ? 'Bureau' : ''}</th>${cols.map((c) => `<th scope="col" class="num${pc(c)}">${c.label.split(' ').map(esc).join('<br>')}</th>`).join('')}</tr></thead>
-      <tbody>${ids.map((u) => `<tr><th scope="row">${head(u)}</th>${cols.map((c) => `<td class="num${pc(c)}">${cell(m.get(u)?.get(c.k), c.k)}</td>`).join('')}</tr>`).join('')}</tbody>
-      ${multi ? `<tfoot><tr><th scope="row">All</th>${cols.map((c) => `<td class="num${pc(c)}">${total(c.k)}</td>`).join('')}</tr></tfoot>` : ''}</table></div>`;
-    const pc = (c) => (isProjKey(c.k) ? ' proj-col' : '');
+    // Ledgers: the selected and comparison figures, change and share (like Income Sources). Positions come from the staffing
+    // schedule each series key stands for; salaries are budget lines and use the series keys directly.
+    const csch = S.c ? posSched(S.c) : null, sch = posSched(sk);
+    const posOf = (u, k) => (k ? pos.get(u)?.get(k) : undefined), salOf = (u, k) => sal.get(u)?.get(k);
+    const pdfN = (c) => pdfLink(fmtN(c.n), c.d, c.p);
     const dash = '<span class="missing" title="Not in this year\'s schedule">—</span>';
-    const posTable = table('Budgeted positions by year', pcols, pos,
-      (c) => (c ? pdfLink(fmtN(c.n), c.d, c.p) : dash),
-      (k) => { const t = sumCol(pos, k, (c) => c.n); return t == null ? dash : fmtN(t); }, posHead);
-    const salCols = scols.map((k) => ({ k, label: seriesLabel(k) }));
-    const salTable = table('Salaries and wages by year', salCols, sal,
-      (c, k) => (c ? src(mny(c.v), k, c.d, c.p) : dash),
-      (k) => { const t = sumCol(sal, k, (c) => c.v); return t == null ? dash : mny(t); }, salHead);
+    const none = '<span class="missing">No figures</span>';
+    const posCell = (u, k, sc) => (!sc ? noSched(k) : posOf(u, sc) ? pdfN(posOf(u, sc)) : dash);
+    const salCell = (u, k) => (salOf(u, k) ? src(money(salOf(u, k).v), k, salOf(u, k).d, salOf(u, k).p) : none);
+    const byName = (a, b) => (O.units[a].name < O.units[b].name ? -1 : 1);
+    const posIds = ids.filter((u) => posOf(u, sch) || posOf(u, csch))
+      .sort((a, b) => (posOf(b, sch)?.n || 0) - (posOf(a, sch)?.n || 0) || (posOf(b, csch)?.n || 0) - (posOf(a, csch)?.n || 0) || byName(a, b));
+    const salIds = ids.filter((u) => salOf(u, sk) || (S.c && salOf(u, S.c)))
+      .sort((a, b) => (salOf(b, sk)?.v || 0) - (salOf(a, sk)?.v || 0) || (salOf(b, S.c)?.v || 0) - (salOf(a, S.c)?.v || 0) || byName(a, b));
+    const unitRow = (u, pre, sel, cmp, selHtml, cmpHtml) => ({ id: `${pre}${u}`, label: unitLabel(u, 'expense'), name: rowHead(u), sel, cmp, selHtml, cmpHtml });
+    const pTot = (k) => (k ? sumCol(pos, k, (c) => c.n) : null), sTot = (k) => sumCol(sal, k, (c) => c.v);
+    const posTable = posIds.length ? staffLedger({
+      aria: 'Budgeted positions by bureau', head: 'Bureau', pieId: 'pie-st-pos', fmt: fmtN, selOk: !!sch, cmpOk: !!csch,
+      pieCaption: `Share of ${seriesLabel(sk)} positions by bureau`,
+      rows: posIds.map((u) => unitRow(u, 'u', posOf(u, sch)?.n ?? null, posOf(u, csch)?.n ?? null, posCell(u, sk, sch), S.c ? posCell(u, S.c, csch) : '')),
+      all: multi ? { sel: pTot(sch), cmp: pTot(csch), selHtml: pTot(sch) == null ? noSched(sk) : fmtN(pTot(sch)), cmpHtml: S.c ? (pTot(csch) == null ? noSched(S.c) : fmtN(pTot(csch))) : '' } : null,
+    }) : '';
+    const salTable = salIds.length ? staffLedger({
+      aria: 'Salaries and wages by bureau', head: 'Bureau', pieId: 'pie-st-sal', fmt: mny, selOk: true, cmpOk: true,
+      pieCaption: `Share of ${seriesLabel(sk)} salaries and wages by bureau`,
+      rows: salIds.map((u) => unitRow(u, 's', salOf(u, sk)?.v ?? null, salOf(u, S.c)?.v ?? null, salCell(u, sk), S.c ? salCell(u, S.c) : '')),
+      all: multi ? { sel: sTot(sk), cmp: S.c ? sTot(S.c) : null, selHtml: sTot(sk) == null ? none : money(sTot(sk)), cmpHtml: S.c ? (sTot(S.c) == null ? none : money(sTot(S.c))) : '' } : null,
+    }) : '';
     // Titles in the newest schedule (bureau pages only).
     let titles = '';
     if (scope.unit != null && last) {
@@ -1606,20 +1655,20 @@
     const where = fsel ? ` in the ${esc(fsel)}` : '';
     return `<section class="panel" id="sec-staff" tabindex="-1" aria-labelledby="st-t"><h2 class="panel-title" id="st-t">Staff</h2>
       <h3 class="wc-h3">Budgeted positions${where}</h3>
-      <p class="panel-note">From each year's staffing schedule. The city publishes budgeted positions, not how many people were actually employed. Fractions are positions shared with other bureaus or funds. Counts open the schedule page in the budget book.</p>
+      <p class="panel-note">From each year's staffing schedule. The city publishes budgeted positions, not how many people were actually employed. Fractions are positions shared with other bureaus or funds. For an Actual or Projected year the figure is that year's budgeted positions (the books print no actual headcount). Counts open the schedule page in the budget book.</p>
       ${staffPts.has('scope') ? staffHistoryHTML(scopeName, staffPts.get('scope').pts, 'staff-chart') : ''}
-      ${multi && pos.size ? '<p class="hint li-hint">Select a bureau\'s name to see its positions year by year.</p>' : ''}
+      ${multi && posIds.length > 1 ? '<p class="hint li-hint">Select a bureau\'s name to see its positions year by year.</p>' : ''}
       ${posTable}${titles}
       <h3 class="wc-h3">Salaries and wages${where}</h3>
       <p class="panel-note">The “Salaries &amp; Wages” budget lines (salaries, overtime and temporary wages; benefits are separate): Actual through 2025, Projected for 2026, Proposed and Revised for 2027${projectionYears().length ? `, then the city's projections for ${projectionYears().join(' and ')}` : ''}.</p>
-      ${multi && sal.size ? '<p class="hint li-hint">Select a bureau\'s name to see its salaries and wages year by year.</p>' : ''}
+      ${multi && salIds.length > 1 ? '<p class="hint li-hint">Select a bureau\'s name to see its salaries and wages year by year.</p>' : ''}
       ${salTable}</section>`;
   }
   /* Home page Staff panel: budgeted positions by department and year, city-wide (or in the selected fund), with a chart
      of the total and a toggle on each department. Positions whose account number in that year's book matches no office
      on the 2027 organizational chart are shown on their own row, so the total is every position in the schedules. */
   function homeStaffHTML() {
-    staffPts = new Map();
+    staffPts = new Map(); staffPies = [];
     if (!ST || isCounty() || S.k === 'revenue') return '';
     const pcols = staffCols(), pos = new Map(), off = new Map();
     for (const c of pcols) {
@@ -1635,26 +1684,32 @@
       }
     }
     if (!pos.size) return '';
-    const last = pcols[pcols.length - 1].k;
-    const ids = [...pos.keys()].sort((a, b) => (pos.get(b).get(last)?.n || 0) - (pos.get(a).get(last)?.n || 0) || (O.departments[a].name < O.departments[b].name ? -1 : 1));
-    const total = (k) => { let t = 0, any = false; for (const d of ids) { const c = pos.get(d).get(k); if (c) { t += c.n; any = true; } } if (off.get(k)) { t += off.get(k).n; any = true; } return any ? { n: t } : null; };
-    for (const d of ids) staffPts.set(`d${d}`, { name: O.departments[d].name, pts: staffPoints(pcols, (k) => pos.get(d).get(k)) });
+    const sk = key(S.y, S.m), sch = posSched(sk), csch = S.c ? posSched(S.c) : null;
+    const nOf = (d, k) => (k ? pos.get(d).get(k)?.n : undefined);
+    const total = (k) => { if (!k) return null; let t = 0, any = false; for (const d of pos.keys()) { const c = pos.get(d).get(k); if (c) { t += c.n; any = true; } } if (off.get(k)) { t += off.get(k).n; any = true; } return any ? { n: t } : null; };
+    const ids = [...pos.keys()].filter((d) => nOf(d, sch) != null || nOf(d, csch) != null)
+      .sort((a, b) => (nOf(b, sch) || 0) - (nOf(a, sch) || 0) || (nOf(b, csch) || 0) - (nOf(a, csch) || 0) || (O.departments[a].name < O.departments[b].name ? -1 : 1));
+    for (const d of pos.keys()) staffPts.set(`d${d}`, { name: O.departments[d].name, pts: staffPoints(pcols, (k) => pos.get(d).get(k)) });
     const scopeName = S.f ? fn(S.f) : CFG.entity.short;
-    staffPts.set('scope', { name: scopeName, pts: staffPoints(pcols, total) });
+    staffPts.set('scope', { name: scopeName, pts: staffPoints(pcols, (k) => total(k)) });
     const dash = '<span class="missing" title="Not in this year\'s schedule">—</span>';
-    const cell = (c) => (c ? fmtN(c.n) : dash);
-    const head = `<tr><th scope="col">Department</th>${pcols.map((c) => `<th scope="col" class="num">${c.label.split(' ').map(esc).join('<br>')}</th>`).join('')}</tr>`;
-    const body = ids.map((d) => `<tr><th scope="row"><button type="button" class="li-toggle staff-toggle" data-st="d${d}" aria-expanded="false">${esc(O.departments[d].name)}</button></th>${pcols.map((c) => `<td class="num">${cell(pos.get(d).get(c.k))}</td>`).join('')}</tr>`).join('')
-      + (off.size ? `<tr><th scope="row">Not placed in a department</th>${pcols.map((c) => `<td class="num">${cell(off.get(c.k))}</td>`).join('')}</tr>` : '');
-    const foot = `<tr><th scope="row">All</th>${pcols.map((c) => `<td class="num">${cell(total(c.k))}</td>`).join('')}</tr>`;
+    const pcell = (n, k, sc) => (!sc ? noSched(k) : n == null ? dash : fmtN(n));
+    const rows = ids.map((d) => ({ id: `d${d}`, label: O.departments[d].name, name: esc(O.departments[d].name), sel: nOf(d, sch) ?? null, cmp: nOf(d, csch) ?? null, selHtml: pcell(nOf(d, sch), sk, sch), cmpHtml: S.c ? pcell(nOf(d, csch), S.c, csch) : '' }));
+    const offSel = sch ? off.get(sch)?.n : undefined, offCmp = csch ? off.get(csch)?.n : undefined;
+    if (offSel != null || offCmp != null) rows.push({ id: '', label: 'Not placed in a department', name: 'Not placed in a department', sel: offSel ?? null, cmp: offCmp ?? null, selHtml: pcell(offSel, sk, sch), cmpHtml: S.c ? pcell(offCmp, S.c, csch) : '' });
+    const tS = total(sch), tC = total(csch);
+    const table = staffLedger({
+      aria: 'Budgeted positions by department', head: 'Department', pieId: 'pie-st-home', fmt: fmtN, selOk: !!sch, cmpOk: !!csch,
+      pieCaption: `Share of ${seriesLabel(sk)} positions by department`, rows,
+      all: { sel: tS ? tS.n : null, cmp: tC ? tC.n : null, selHtml: tS ? fmtN(tS.n) : noSched(sk), cmpHtml: S.c ? (tC ? fmtN(tC.n) : noSched(S.c)) : '' },
+    });
     const where = S.f ? ` in the ${esc(fn(S.f))}` : '';
     return `<section class="panel" id="sec-staff" tabindex="-1" aria-labelledby="st-t"><h2 class="panel-title" id="st-t">Staff</h2>
       <h3 class="wc-h3">Budgeted positions${where}</h3>
-      <p class="panel-note">From each year's staffing schedule. The city publishes budgeted positions, not how many people were actually employed. Departments follow the 2027 organizational chart in every year. Fractions are positions shared with other bureaus or funds. The totals are this site's sums of the schedules' lines.</p>
+      <p class="panel-note">From each year's staffing schedule. The city publishes budgeted positions, not how many people were actually employed. Departments follow the 2027 organizational chart in every year. Fractions are positions shared with other bureaus or funds. For an Actual or Projected year the figure is that year's budgeted positions (the books print no actual headcount). The totals are this site's sums of the schedules' lines.</p>
       ${staffHistoryHTML(scopeName, staffPts.get('scope').pts, 'staff-chart')}
-      <p class="hint li-hint">Select a department's name to see its positions year by year.</p>
-      <div class="table-scroll" tabindex="0" role="region" aria-label="Budgeted positions by department, scrollable"><table class="table tight staff-table" aria-label="Budgeted positions by department">
-        <thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div>
+      ${rows.length > 1 ? '<p class="hint li-hint">Select a department\'s name to see its positions year by year.</p>' : ''}
+      ${table}
       ${off.size ? '<p class="panel-note">“Not placed in a department”: positions whose account number in that year\'s book matches no office on the 2027 organizational chart.</p>' : ''}
       <p class="panel-note">Where a book's schedule pages are missing or printed twice, the note is under <a href="${eh('about?s=about-issues')}">Known problems in the source books</a>.</p></section>`;
   }
@@ -1665,7 +1720,7 @@
      grants and reimbursements); else "Charges to other funds" when income_rules.csv calls it a charge; else the group the book
      prints it under (the bureau). Draws and transfers are not income and never appear. The rows are the same lines the home
      page's total uses (scoped()), so the All row is that total for every column. */
-  let srcPts = new Map(), srcChart = null, pickSource = null;
+  let srcPts = new Map(), srcChart = null;
   function closeSrcChart() { if (srcChart) { srcChart.destroy(); srcChart = null; } }
   function sourceOf(r) {
     const IS = D.income_sources, n = IS && IS.a ? IS.a[r.ai] : null;
@@ -1741,7 +1796,7 @@
   function mountIncomeSources() {
     const sec = $('sec-income-sources');
     if (!sec) return;
-    pickSource = (id) => { // a pie slice: toggle that source's history row, and bring it into view when it opens
+    piePick['pie-src'] = (id) => { // a pie slice: toggle that source's history row, and bring it into view when it opens
       const b = sec.querySelector(`.is-toggle[data-is="${id}"]`);
       if (!b) return;
       b.click();
