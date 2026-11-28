@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "csv/county_account_changes.schema.json",
+  "title": "account_changes.csv (County)",
+  "description": "County accounts merged or renamed between books, so both years are compared as one combined line.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "first_book",
+    "department_scope",
+    "from_accounts",
+    "to_account",
+    "to_name",
+    "evidence"
+  ],
+  "properties": {
+    "first_book": {
+      "type": "string",
+      "x-type": "file name",
+      "description": "The first book that uses the new account.",
+      "pattern": "\\.pdf$",
+      "minLength": 1,
+      "examples": [
+        "County-2026-Budget-Book.pdf"
+      ]
+    },
+    "department_scope": {
+      "type": "string",
+      "x-type": "text",
+      "description": "all, or department codes separated by ;.",
+      "pattern": "^(all|[A-Z]\\d{4}(;[A-Z]\\d{4})*)$",
+      "minLength": 1,
+      "examples": [
+        "all"
+      ]
+    },
+    "from_accounts": {
+      "type": "string",
+      "x-type": "codes",
+      "description": "The old account codes, separated by ;.",
+      "pattern": "^\\d+(;\\d+)*$",
+      "minLength": 1,
+      "examples": [
+        "7112;7114"
+      ]
+    },
+    "to_account": {
+      "type": "string",
+      "x-type": "code",
+      "description": "The account they were merged into.",
+      "pattern": "^\\d+$",
+      "minLength": 1,
+      "examples": [
+        "7113"
+      ]
+    },
+    "to_name": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The new account's printed name.",
+      "minLength": 1,
+      "examples": [
+        "Professional (Full-Time Employees)"
+      ]
+    },
+    "evidence": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The figures that prove the merge.",
+      "minLength": 1,
+      "examples": [
+        "The 2026 book budgets no 2026 money in 7112 Executive or 7114 Staff and renames 7113 Pr..."
+      ]
+    }
+  }
+}

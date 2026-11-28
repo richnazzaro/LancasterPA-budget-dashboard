@@ -1,0 +1,22 @@
+# Settings for the whole site. Schema: schemas/site.schema.json.
+# Phase 0: nothing reads this file yet except scripts/validate_config.py; the website still reads web/config.json.
+title: Lancaster Budget Explorer                 # web/config.json site_title
+contact_email: budget@nazwel.net                 # web/config.json contact_email
+repository: https://github.com/richnazzaro/LancasterPA-budget-dashboard   # web/config.json project_repository
+default_government: lancaster-city               # PLAN.md "Opening view": / always opens the City (web/config.json default_entity: city)
+governments:                                     # switch order as today: City, then County (web/config.json entities)
+  - lancaster-city
+  - lancaster-county
+tax_estimate:                                    # web/config.json tax_estimate, unchanged
+  rates: data/tax_rates.json
+  this_year: 2026
+  next_year: 2027
+  reassessment_year: 2027
+  lookup:
+    - assessed_year: 2026
+      name: Property Tax Inquiry
+      search: https://lancasterpa.devnetwedge.com/Search/ExecuteSearch
+    - assessed_year: 2027
+      name: 2027 Reassessment Inquiry
+      search: https://lancasterpa-reval.devnetwedge.com/Search/ExecuteSearch
+  reassessment_source: https://co.lancaster.pa.us/DocumentCenter/View/17033/Taxpayers-Guide-to-the-2027-Reassessment-

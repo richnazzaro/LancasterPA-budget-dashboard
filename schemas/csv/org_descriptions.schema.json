@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "csv/org_descriptions.schema.json",
+  "title": "org_descriptions_2027.csv",
+  "description": "Descriptions of departments and bureaus from the City's org descriptions PDF, one row per heading, with its page.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "level",
+    "parent",
+    "heading",
+    "source_page",
+    "text"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "x-type": "id",
+      "description": "A stable id for the description (page and heading).",
+      "pattern": "^[a-z0-9-]+$",
+      "minLength": 1,
+      "examples": [
+        "p1-executive-department"
+      ]
+    },
+    "level": {
+      "type": "string",
+      "x-type": "choice",
+      "description": "1 = department heading, 2 = a heading under it.",
+      "enum": [
+        "1",
+        "2"
+      ],
+      "examples": [
+        "1"
+      ]
+    },
+    "parent": {
+      "type": "string",
+      "x-type": "id",
+      "description": "The id of the department heading this one sits under; empty for a department.",
+      "pattern": "^$|^[a-z0-9-]+$",
+      "examples": [
+        "p1-executive-department"
+      ]
+    },
+    "heading": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The heading as printed.",
+      "minLength": 1,
+      "examples": [
+        "EXECUTIVE DEPARTMENT"
+      ]
+    },
+    "source_page": {
+      "type": "string",
+      "x-type": "page number",
+      "description": "The PDF page.",
+      "pattern": "^[1-9]\\d*$",
+      "minLength": 1,
+      "examples": [
+        "1"
+      ]
+    },
+    "text": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The description text as printed.",
+      "minLength": 1,
+      "examples": [
+        "The Mayor is an elected official responsible for efficiently directing the city's opera..."
+      ]
+    }
+  }
+}

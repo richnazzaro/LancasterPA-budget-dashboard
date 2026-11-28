@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "csv/income_rules.schema.json",
+  "title": "income_rules.csv",
+  "description": "Revenue lines that are not income: draws from savings, transfers from the government's own funds, and charges between its own funds. The Income view and totals leave them out (charges stay in the paid fund's income, labelled). The check fails on a look-alike line with no rule here.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entity",
+    "code",
+    "fund",
+    "class",
+    "lines",
+    "evidence"
+  ],
+  "properties": {
+    "entity": {
+      "type": "string",
+      "x-type": "choice",
+      "description": "Which government the rule is for (city or county). Dropped when the file moves into a government's folder.",
+      "enum": [
+        "city",
+        "county"
+      ],
+      "examples": [
+        "city"
+      ]
+    },
+    "code": {
+      "type": "string",
+      "x-type": "code",
+      "description": "The revenue line's object (account) code.",
+      "pattern": "^\\d+$",
+      "minLength": 1,
+      "examples": [
+        "499000"
+      ]
+    },
+    "fund": {
+      "type": "string",
+      "x-type": "text",
+      "description": "Only for this fund; empty = every fund that prints the code."
+    },
+    "class": {
+      "type": "string",
+      "x-type": "choice",
+      "description": "draw = money taken from savings; transfer = money moved in from another of the government's funds; charge = a charge between the government's own funds (kept in the paid fund's income, labelled, left out of the All funds total); income = a look-alike that is real income.",
+      "enum": [
+        "draw",
+        "transfer",
+        "charge",
+        "income"
+      ],
+      "examples": [
+        "draw"
+      ]
+    },
+    "lines": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The line's printed name(s), for people reading the file.",
+      "minLength": 1,
+      "examples": [
+        "Fund Balance Reserve"
+      ]
+    },
+    "evidence": {
+      "type": "string",
+      "x-type": "text",
+      "description": "Why: the book's own words or page that shows what the line is.",
+      "minLength": 1,
+      "examples": [
+        "Money taken from the fund's own savings to balance the budget, not money coming in. The..."
+      ]
+    }
+  }
+}

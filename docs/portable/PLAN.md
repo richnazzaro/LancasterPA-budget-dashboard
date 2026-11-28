@@ -12,15 +12,17 @@
 
 | Phase | Status | Last commit | Next action |
 |---|---|---|---|
-| 0 Contracts | Not started | plan committed locally | 0.1 requirements + CI install step |
-| 1 City into its folder | Not started | — | — |
+| 0 Contracts | Built and checked; **owner check pending** | Phase 0 commit (local) | Owner runs the Phase 0 owner check; then push + PR |
+| 1 City into its folder | Not started | — | Starts after the Phase 0 PR merges |
 | 2 County into its folder | Not started | — | — |
 | 3 Website reads the manifest | Not started | — | — |
 | 4 Read / Detect / Review tools | Not started | — | — |
 | 5 Pilot: School District of Lancaster (owner runs it) | Not started | — | — |
 | 6 Docs and hand-over | Not started | — | — |
 
-**Done so far (2026-11-28):** plan committed locally; owner decisions D1–D6 and the opening view recorded; origin/main `fcbabbb` merged in; worktree created; PyYAML 6.0.4 and jsonschema 4.26.0 installed in the main checkout's `.venv` (not yet in `requirements.txt`); baseline inventory written; School District of Lancaster sources checked (below); this plan.
+**Phase 0 (2026-11-28):** built by an Opus delegate, re-verified by Hermes: `validate_config.py` OK (42 files: 19 CSVs, 23 YAML/JSON, including today's `config/*.json` against the book schema); a `kind: town` copy fails with a plain message; `check_dataset.py` and `--entity county` 0 series mismatches; parity 83/83 files equal; `check_portable.py` 524 code hits (10 allowlisted: the checker's own table and the validator's temporary path table); `requirements-build.txt` installs on a fresh Python 3.12 and the validator and check run there; `pages.yml` has the install step (after PR #21 removed the debounce). Notes from the build: the plan's "531 lines" were 531 hits on 502 lines; book `status`/`layout_family` are optional until books move to YAML (make them required in Phase 1); the "own-year proposed column is never shown" rule can't be expressed yet (`hidden_columns` lists only `actual_ytd`); `income_sources` is `on` for both governments because the panel shows even without mapping rows (Phase 3 makes it `auto` = shown when the government has income lines).
+
+**Done before Phase 0 (2026-11-28):** plan committed locally; owner decisions D1–D6 and the opening view recorded; origin/main `fcbabbb` merged in; worktree created; PyYAML 6.0.4 and jsonschema 4.26.0 installed in the main checkout's `.venv` (not yet in `requirements.txt`); baseline inventory written; School District of Lancaster sources checked (below); this plan.
 
 ---
 
@@ -110,7 +112,7 @@ OCR is an option of the Read step (`ocr_pages.py`), not a family.
 
 ## Cross-phase tools (built in Phase 0, used by every gate)
 
-- **Parity harness** `scripts/parity.py <baseline-dir> <web/data>`: compares every JSON file as parsed data, ignoring `generated`, and sorting the `values` keys in `changes.json` (their order follows `PYTHONHASHSEED`, a known non-issue). The baseline is a snapshot of `web/data/` at `6693955`, saved outside the repo in the scratch dir and also reproducible with `git show 6693955:web/data/...`.
+- **Parity harness** `scripts/parity.py snapshot <git-ref> <dir>` then `scripts/parity.py compare <dir>`: compares every JSON file as parsed data, ignoring `generated`, and sorting the `values` keys in `changes.json` (their order follows `PYTHONHASHSEED`, a known non-issue). The baseline is a snapshot of `web/data/` at `6693955`, saved outside the repo in the scratch dir and also reproducible with `git show 6693955:web/data/...`.
 - **Processed-CSV parity**: re-run extraction for every book and diff `data/processed/*.csv` against `6693955` (sorted rows).
 - **Screenshot baseline** (Phase 3): every route, 1440 and 375, light and dark, from the live site before Phase 3 starts.
 - **`check_portable.py`**: the inventory above as a check, with a reviewed allowlist `config/portable_allowlist.csv` (file, pattern, reason). Report-only until Phase 3, then a CI failure.

@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "calendar.schema.json",
+  "title": "governments/<id>/content/calendar.yaml",
+  "description": "The budget calendar page: the steps by which the government makes its budget, in time order, each citing the section and page of the document that requires it. A government without this file has no calendar page. Write it from the government's own documents; nothing is assumed from its kind.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "documents", "steps"],
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "The page heading.",
+      "examples": ["How the City budget is made"]
+    },
+    "nav_label": {
+      "type": "string",
+      "description": "The page's name in the header navigation (may be shorter than the heading).",
+      "examples": ["Home Rule and the Budget"]
+    },
+    "intro": {
+      "type": "string",
+      "description": "Opening paragraph (Markdown).",
+      "examples": ["Who prepares and approves the budget, and by when."]
+    },
+    "documents": {
+      "type": "object",
+      "minProperties": 1,
+      "description": "The documents the steps cite, keyed by a short id used in each citation.",
+      "propertyNames": {"pattern": "^[a-z][a-z0-9_]*$"},
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["title", "url"],
+        "properties": {
+          "title": {"type": "string", "description": "The document's title.", "examples": ["Home Rule Charter"]},
+          "url": {"type": "string", "pattern": "^https://", "description": "Its public address (a PDF).", "examples": ["https://www.cityoflancasterpa.gov/wp-content/uploads/2025/01/Adopted-Home-Rule-Charter.pdf"]},
+          "section_pages": {
+            "type": "object",
+            "description": "Section number -> PDF page, so a citation of a section opens the PDF at the right page. A sub-section such as 8.09(a) falls back to its section 8.09.",
+            "additionalProperties": {"type": "integer", "minimum": 1},
+            "examples": [{"8.02": 35, "8.08": 39}]
+          }
+        }
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "description": "The steps, in time order.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["when", "title", "who", "body"],
+        "properties": {
+          "month": {
+            "type": ["string", "null"],
+            "enum": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", null],
+            "description": "The month band the step sits in (shown only when it changes from the step before). Empty for a step tied to another step rather than a date.",
+            "examples": ["Oct"]
+          },
+          "deadline": {"type": "boolean", "description": "true = a date the rules require.", "examples": [true]},
+          "new_year": {"type": "boolean", "description": "true = the step where the budget year begins.", "examples": [false]},
+          "when": {"type": "string", "description": "The date or timing in words.", "examples": ["By Dec 15"]},
+          "title": {"type": "string", "description": "The step's short title.", "examples": ["Council adopts the budget"]},
+          "who": {"type": "array", "minItems": 1, "items": {"type": "string"}, "description": "Who acts.", "examples": [["Council"]]},
+          "body": {"type": "string", "description": "What happens (Markdown). Cite with [§ 8.05(e)](cite:charter) style links.", "examples": ["Council adopts the budget ordinance."]},
+          "missed": {"type": "string", "description": "What the rules say happens when the deadline is missed.", "examples": ["The Mayor's proposed budget becomes the official budget for the year."]},
+          "missed_label": {"type": "string", "description": "The heading for missed, if not the default.", "examples": ["If it does not pass"]},
+          "cite": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["doc", "section"],
+            "description": "The main rule behind the step.",
+            "properties": {
+              "doc": {"type": "string", "description": "A document id from documents.", "examples": ["charter"]},
+              "section": {"type": "string", "description": "The section number.", "examples": ["8.05(e)"]},
+              "page": {"type": "integer", "minimum": 1, "description": "The PDF page, when the section is not in section_pages.", "examples": [39]}
+            }
+          }
+        }
+      }
+    }
+  }
+}

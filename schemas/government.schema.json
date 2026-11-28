@@ -1,0 +1,306 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "government.schema.json",
+  "title": "governments/<id>/government.yaml",
+  "description": "One government on the site (a city, county or school district): its names, its fiscal year, where its PDFs and data live, which figures the site shows for each year, which optional pages it has, and the words and site text used for it. One file per folder under governments/.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "short_name", "kind", "route", "fiscal_year", "sources_dir", "pdf_path", "data_path", "display", "features", "text"],
+  "$defs": {
+    "feature_mode": {
+      "type": "string",
+      "enum": ["auto", "on", "off"],
+      "description": "auto = shown when its data exists; on = always shown (the build fails if the data is missing); off = never shown."
+    },
+    "figure": {
+      "type": "string",
+      "pattern": "^[a-z][a-z_]*$",
+      "description": "A figure name as the site stores it (for example actual, projected, proposed, revised, amended, adopted, budget, projection)."
+    },
+    "column": {
+      "type": "string",
+      "enum": ["actual", "adopted", "amended", "actual_ytd", "projected", "projected_revised", "proposed", "proposed_revised", "projection", "budget"],
+      "description": "A printed column kind as the extractors record it (doc_type in data/processed/budget_long_*.csv)."
+    },
+    "vocabulary": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Words the site uses for this kind of government. A government's own vocabulary overrides its kind's.",
+      "properties": {
+        "governing_body": {"type": "string", "description": "Who passes the budget.", "examples": ["City Council"]},
+        "executive": {"type": "string", "description": "Who proposes the budget.", "examples": ["Mayor"]},
+        "department": {"type": "string", "description": "The word for the top level of the organisation (the first level under a fund).", "examples": ["Department"]},
+        "unit": {"type": "string", "description": "The word for the level under a department.", "examples": ["Bureau"]},
+        "category": {"type": "string", "description": "The word for a spending category (salaries, benefits, operating...).", "examples": ["Category"]},
+        "line_item": {"type": "string", "description": "The word for one budget line.", "examples": ["Line item"]},
+        "budget_document": {"type": "string", "description": "What the government's budget document is called in running text.", "examples": ["budget book"]}
+      }
+    }
+  },
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "The government's id: lower case letters, digits and dashes. Must match its folder name under governments/.",
+      "examples": ["lancaster-city"]
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The government's full name as the site prints it in headings.",
+      "examples": ["City of Lancaster, PA"]
+    },
+    "short_name": {
+      "type": "string",
+      "minLength": 1,
+      "description": "A shorter name for running text and links.",
+      "examples": ["City of Lancaster"]
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["city", "county", "school_district"],
+      "description": "What kind of government this is. Picks the default words from kinds/<kind>.yaml.",
+      "examples": ["city"]
+    },
+    "route": {
+      "type": "string",
+      "enum": ["city", "county", "school"],
+      "description": "The first part of the government's web addresses (/city/..., /county/..., /school/...). Two governments on one site cannot share a route.",
+      "examples": ["city"]
+    },
+    "fiscal_year": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start_month", "label"],
+      "description": "When the government's budget year starts and how a year is written. A year is always stored as the calendar year it ends in.",
+      "properties": {
+        "start_month": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12,
+          "description": "The month the budget year starts: 1 for January to December, 7 for July to June.",
+          "examples": [1, 7]
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\{(end|start|end_short)\\}",
+          "description": "How a year is shown. {end} is the year the budget year ends in (the stored year), {start} the year it starts in, {end_short} the last two digits of the end year. A January year is \"{end}\" (shown 2027); a July to June year is \"{start}–{end_short}\" (stored 2027, shown 2026–27).",
+          "examples": ["{end}", "{start}–{end_short}"]
+        }
+      }
+    },
+    "sources_dir": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The folder, relative to the repository root, that holds the government's processed source PDFs.",
+      "examples": ["Budget PDFs - City"]
+    },
+    "pdf_path": {
+      "type": "string",
+      "pattern": "^[^/].*/$",
+      "description": "Where the PDFs are published on the website, relative to the site root, ending in /. Every number on the site links to a page in one of these PDFs, so this address must not change once published.",
+      "examples": ["pdfs/"]
+    },
+    "data_path": {
+      "type": "string",
+      "pattern": "^[^/].*/$",
+      "description": "Where the government's generated data files are published on the website, relative to the site root, ending in /.",
+      "examples": ["data/"]
+    },
+    "display": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["figures", "measures", "primary_fund"],
+      "description": "Which figure the site shows for each year. The site shows one kind of figure per year on its charts; each rule below says which figure a group of years gets.",
+      "properties": {
+        "figures": {
+          "type": "array",
+          "minItems": 1,
+          "description": "One rule per group of years. A year's charted figure is the first listed figure that has data.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["years", "show"],
+            "properties": {
+              "years": {
+                "type": "string",
+                "enum": ["newest", "prior", "past", "after_newest", "all", "audited"],
+                "description": "Which years the rule covers: newest = the newest budget's year; prior = the year before it; past = every earlier year; after_newest = years after the newest (projections); all = every year; audited = years with an audited annual report.",
+                "examples": ["newest"]
+              },
+              "show": {
+                "type": "array",
+                "minItems": 1,
+                "items": {"$ref": "#/$defs/figure"},
+                "description": "The figures shown for those years. Each must be defined under measures.",
+                "examples": [["proposed", "revised"]]
+              },
+              "note": {
+                "type": "string",
+                "description": "A plain explanation of the rule, for people reading this file.",
+                "examples": ["Proposed and Revised, labelled exactly that."]
+              }
+            }
+          }
+        },
+        "selectable": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["figures"],
+          "description": "Extra figures a reader can pick in Budget year / Compare with but that are never drawn on the charts.",
+          "properties": {
+            "figures": {
+              "type": "array",
+              "items": {"$ref": "#/$defs/figure"},
+              "description": "The extra figures, in order of preference.",
+              "examples": [["amended", "adopted"]]
+            },
+            "one_per_year": {
+              "type": "boolean",
+              "description": "true = offer only the first of these figures that a year has (Amended where printed, else Adopted; never both).",
+              "examples": [true]
+            }
+          }
+        },
+        "measures": {
+          "type": "object",
+          "minProperties": 1,
+          "description": "Every figure the site can show, keyed by its stored name: its label and which printed column (in which book) it is taken from.",
+          "propertyNames": {"pattern": "^[a-z][a-z_]*$"},
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["label"],
+            "properties": {
+              "label": {
+                "type": "string",
+                "description": "The figure's name as the site prints it.",
+                "examples": ["Revised"]
+              },
+              "columns": {
+                "type": "array",
+                "minItems": 1,
+                "items": {"$ref": "#/$defs/column"},
+                "description": "Printed columns the figure is taken from, in order of preference.",
+                "examples": [["projected_revised", "projected"]]
+              },
+              "book_offset": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Which book the figure is read from: 0 = the book for that year, 1 = the next year's book, 2 = the book two years later.",
+                "examples": [2]
+              },
+              "book": {
+                "type": "string",
+                "enum": ["newest_that_prints_the_year"],
+                "description": "Use instead of book_offset when the figure comes from the newest book that prints the year.",
+                "examples": ["newest_that_prints_the_year"]
+              },
+              "source": {
+                "type": "string",
+                "enum": ["budget_books", "audited_reports", "projections_book"],
+                "description": "Which kind of document the figure comes from. Default budget_books.",
+                "examples": ["audited_reports"]
+              },
+              "status": {
+                "type": "string",
+                "description": "The short status line shown with the figure (for example \"Proposed, not adopted\").",
+                "examples": ["Revised proposal, not adopted"]
+              }
+            }
+          }
+        },
+        "hidden_columns": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/column"},
+          "description": "Printed columns the site never shows; they are only used to cross-check the extraction.",
+          "examples": [["actual_ytd"]]
+        },
+        "primary_fund": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The fund the site opens on (the government's main tax-funded fund).",
+          "examples": ["General Fund"]
+        },
+        "reserve_name": {
+          "type": "string",
+          "description": "The name of the savings/fund balance view, listed last in every Fund list.",
+          "examples": ["Reserve Fund"]
+        },
+        "fund_names": {
+          "type": "object",
+          "description": "Longer names for funds whose printed name is a code (printed name -> name shown).",
+          "additionalProperties": {"type": "string"},
+          "examples": [{"Fund B": "Liquid Fuels (Fund B)"}]
+        }
+      }
+    },
+    "features": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Optional pages and sections. Each is auto, on or off.",
+      "required": ["reserve", "staffing", "actuals", "projections", "tax_limit", "tax_estimate", "budget_calendar", "context_facts", "unit_descriptions", "income_sources"],
+      "properties": {
+        "reserve": {"$ref": "#/$defs/feature_mode", "description": "The savings / fund balance view (City Reserve Fund, County General Fund Balance). auto, on or off.", "examples": ["auto"]},
+        "staffing": {"$ref": "#/$defs/feature_mode", "description": "Staff sections: budgeted positions from the books' staffing schedules. auto, on or off.", "examples": ["auto"]},
+        "actuals": {"$ref": "#/$defs/feature_mode", "description": "Audited actual figures from annual financial reports, shown beside the budget. auto, on or off.", "examples": ["off"]},
+        "projections": {"$ref": "#/$defs/feature_mode", "description": "Projection years after the newest budget, from a projections book. auto, on or off.", "examples": ["auto"]},
+        "tax_limit": {"$ref": "#/$defs/feature_mode", "description": "A legal tax-revenue limit test (content/rules/tax_limit.yaml). auto, on or off.", "examples": ["auto"]},
+        "tax_estimate": {"$ref": "#/$defs/feature_mode", "description": "This government's rates on the property-tax estimate page. auto, on or off.", "examples": ["auto"]},
+        "budget_calendar": {"$ref": "#/$defs/feature_mode", "description": "The page that explains how the budget is made, step by step (content/calendar.yaml). auto, on or off.", "examples": ["auto"]},
+        "context_facts": {"$ref": "#/$defs/feature_mode", "description": "Context figures from outside the budget tables (tax rate history, ratings, grants), each with its source page. auto, on or off.", "examples": ["off"]},
+        "unit_descriptions": {"$ref": "#/$defs/feature_mode", "description": "Descriptions of departments and units from the government's own documents. auto, on or off.", "examples": ["auto"]},
+        "income_sources": {"$ref": "#/$defs/feature_mode", "description": "The Income Sources breakdown (taxes one by one, grants...). auto, on or off.", "examples": ["auto"]}
+      }
+    },
+    "vocabulary": {
+      "$ref": "#/$defs/vocabulary",
+      "description": "Words that override the defaults from kinds/<kind>.yaml for this government only."
+    },
+    "text": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["switch_label", "possessive", "description", "tagline", "footer"],
+      "description": "Reader-facing text about this government used around the site.",
+      "properties": {
+        "switch_label": {"type": "string", "description": "The government's label in the City / County / School switch.", "examples": ["City"]},
+        "title_suffix": {"type": "string", "description": "Added to the site title in the browser tab when this government is shown. Leave out for none.", "examples": [": County"]},
+        "possessive": {"type": "string", "description": "The name in possessive form for running text.", "examples": ["the City of Lancaster's"]},
+        "description": {"type": "string", "description": "One sentence describing what the site shows for this government (used as the page description for search engines and link previews).", "examples": ["City of Lancaster, PA budget by department, bureau and line item, from the city's published budget books."]},
+        "tagline": {"type": "string", "description": "The independence statement under the site header.", "examples": ["This is an independent project, not associated with the City of Lancaster."]},
+        "footer": {"type": "string", "description": "The sentence in the page footer.", "examples": ["An independent transparency project using the City of Lancaster's published budget books."]},
+        "adopted": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["year", "text"],
+          "description": "How the newest budget was adopted, quoted in the figure explanations.",
+          "properties": {
+            "year": {"type": "integer", "minimum": 1900, "maximum": 2100, "description": "The budget year this describes.", "examples": [2026]},
+            "text": {"type": "string", "description": "The wording, starting with \"adopted\".", "examples": ["adopted Dec 24, 2025 (Resolution 79 of 2025)"]}
+          }
+        },
+        "budget_calendar_links": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Documents linked from the budget calendar page.",
+          "properties": {
+            "charter_title": {"type": "string", "description": "Title of the document that sets the budget process.", "examples": ["Home Rule Charter"]},
+            "charter_url": {"type": "string", "pattern": "^https://", "description": "Its public address.", "examples": ["https://www.cityoflancasterpa.gov/wp-content/uploads/2025/01/Adopted-Home-Rule-Charter.pdf"]},
+            "old_rules_title": {"type": "string", "description": "Title of the document that describes the rules before the current ones.", "examples": ["2024 audited financial statements"]},
+            "old_rules_url": {"type": "string", "pattern": "^https://", "description": "Its public address.", "examples": ["https://www.cityoflancasterpa.gov/wp-content/uploads/2025/12/COL-Financial-Statements-2024.pdf"]}
+          }
+        }
+      }
+    },
+    "data_files": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Extra generated data files the website loads for this government, besides budget.json.",
+      "properties": {
+        "eager": {"type": "array", "items": {"type": "string", "pattern": "^[a-z_]+$"}, "description": "Loaded when the site opens (file names without .json).", "examples": [["changes", "staffing"]]},
+        "lazy": {"type": "array", "items": {"type": "string", "pattern": "^[a-z_]+$"}, "description": "Loaded the first time a page needs them.", "examples": [["positions"]]}
+      }
+    }
+  }
+}

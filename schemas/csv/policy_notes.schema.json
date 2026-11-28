@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "csv/policy_notes.schema.json",
+  "title": "policy_notes.csv",
+  "description": "Tax-rate and policy facts the budget tables do not print (for example a tax rate change), each with its source.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "year",
+    "figure",
+    "item",
+    "text",
+    "source",
+    "account",
+    "rate_from",
+    "rate_to",
+    "unit",
+    "change_pct"
+  ],
+  "properties": {
+    "year": {
+      "type": "string",
+      "x-type": "year",
+      "description": "The budget year.",
+      "pattern": "^(19|20|21)\\d\\d$",
+      "minLength": 1,
+      "examples": [
+        "2027"
+      ]
+    },
+    "figure": {
+      "type": "string",
+      "x-type": "choice",
+      "description": "The figure (proposal or revision) the note belongs to.",
+      "enum": [
+        "actual",
+        "projected",
+        "proposed",
+        "revised",
+        "amended",
+        "adopted",
+        "budget",
+        "projection"
+      ],
+      "examples": [
+        "proposed"
+      ]
+    },
+    "item": {
+      "type": "string",
+      "x-type": "text",
+      "description": "What the note is about, as shown.",
+      "minLength": 1,
+      "examples": [
+        "Property tax"
+      ]
+    },
+    "text": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The note as the site shows it.",
+      "minLength": 1,
+      "examples": [
+        "The proposal raised the property tax rate by 5%."
+      ]
+    },
+    "source": {
+      "type": "string",
+      "x-type": "text",
+      "description": "A PDF link (<file>#page=N) or a plain description of the source.",
+      "minLength": 1,
+      "examples": [
+        "user-provided; city proposal"
+      ]
+    },
+    "account": {
+      "type": "string",
+      "x-type": "account code",
+      "description": "The budget line the note belongs to (org-object).",
+      "pattern": "^\\d+-(\\d+|TBD)$",
+      "minLength": 1,
+      "examples": [
+        "1000001-400000"
+      ]
+    },
+    "rate_from": {
+      "type": "string",
+      "x-type": "number",
+      "description": "The old rate, if the note is a rate change.",
+      "pattern": "^$|^-?\\d+(\\.\\d+)?$",
+      "examples": [
+        "1.10"
+      ]
+    },
+    "rate_to": {
+      "type": "string",
+      "x-type": "number",
+      "description": "The new rate.",
+      "pattern": "^$|^-?\\d+(\\.\\d+)?$",
+      "examples": [
+        "1.20"
+      ]
+    },
+    "unit": {
+      "type": "string",
+      "x-type": "choice",
+      "description": "The rate's unit (% or mills).",
+      "enum": [
+        "%",
+        "mills",
+        ""
+      ],
+      "examples": [
+        "%"
+      ]
+    },
+    "change_pct": {
+      "type": "string",
+      "x-type": "number",
+      "description": "The change in percent, where the source states one.",
+      "pattern": "^$|^-?\\d+(\\.\\d+)?$",
+      "examples": [
+        "5"
+      ]
+    }
+  }
+}

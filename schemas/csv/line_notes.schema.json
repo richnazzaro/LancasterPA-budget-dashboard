@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "csv/line_notes.schema.json",
+  "title": "line_notes.csv",
+  "description": "Text a budget book prints about one line in one year, shown beside the site's note when the line stands out.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "year",
+    "figure",
+    "account",
+    "text",
+    "source"
+  ],
+  "properties": {
+    "year": {
+      "type": "string",
+      "x-type": "year",
+      "description": "The budget year the note is about.",
+      "pattern": "^(19|20|21)\\d\\d$",
+      "minLength": 1,
+      "examples": [
+        "2025"
+      ]
+    },
+    "figure": {
+      "type": "string",
+      "x-type": "choice",
+      "description": "The figure the note is about.",
+      "enum": [
+        "actual",
+        "projected",
+        "proposed",
+        "revised",
+        "amended",
+        "adopted",
+        "budget",
+        "projection"
+      ],
+      "examples": [
+        "actual"
+      ]
+    },
+    "account": {
+      "type": "string",
+      "x-type": "account code",
+      "description": "The line's account code (org-object).",
+      "pattern": "^\\d+-(\\d+|TBD)$",
+      "minLength": 1,
+      "examples": [
+        "1601001-401700"
+      ]
+    },
+    "text": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The note as the site shows it.",
+      "minLength": 1,
+      "examples": [
+        "The 2027 book says the city used data center building permit revenue to pay $4,162,525 ..."
+      ]
+    },
+    "source": {
+      "type": "string",
+      "x-type": "PDF link",
+      "description": "Where the book says it: <PDF file name>#page=N.",
+      "pattern": "^.+\\.pdf#page=[1-9]\\d*$",
+      "minLength": 1,
+      "examples": [
+        "2027-Mayors-Revised-Proposed-Budget-Rev-11-19-26.pdf#page=7"
+      ]
+    }
+  }
+}

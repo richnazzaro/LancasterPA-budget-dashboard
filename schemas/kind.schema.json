@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "kind.schema.json",
+  "title": "kinds/<kind>.yaml",
+  "description": "Default words and settings for one kind of government (city, county or school district). Every government of that kind starts from these; its government.yaml can override any of them. Nothing here is a fact about a particular government.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["kind", "name", "route", "vocabulary", "figure_labels"],
+  "properties": {
+    "kind": {
+      "type": "string",
+      "enum": ["city", "county", "school_district"],
+      "description": "Which kind this file describes. Must match the file name.",
+      "examples": ["city"]
+    },
+    "name": {
+      "type": "string",
+      "description": "The kind's name in plain words.",
+      "examples": ["City"]
+    },
+    "route": {
+      "type": "string",
+      "enum": ["city", "county", "school"],
+      "description": "The default first part of web addresses for governments of this kind.",
+      "examples": ["city"]
+    },
+    "fiscal_year": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The usual budget year for this kind. A government sets its own in government.yaml.",
+      "properties": {
+        "start_month": {"type": "integer", "minimum": 1, "maximum": 12, "description": "The month the budget year usually starts.", "examples": [7]},
+        "label": {"type": "string", "pattern": "\\{(end|start|end_short)\\}", "description": "How a year is usually shown (same tokens as government.yaml).", "examples": ["{start}–{end_short}"]}
+      }
+    },
+    "vocabulary": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Default words for this kind of government.",
+      "properties": {
+        "governing_body": {"type": "string", "description": "Who passes the budget.", "examples": ["Council"]},
+        "executive": {"type": "string", "description": "Who proposes the budget.", "examples": ["Mayor"]},
+        "department": {"type": "string", "description": "The word for the top level of the organisation.", "examples": ["Department"]},
+        "unit": {"type": "string", "description": "The word for the level under a department.", "examples": ["Bureau"]},
+        "category": {"type": "string", "description": "The word for a spending category.", "examples": ["Category"]},
+        "line_item": {"type": "string", "description": "The word for one budget line.", "examples": ["Line item"]},
+        "budget_document": {"type": "string", "description": "What the budget document is called in running text.", "examples": ["budget book"]}
+      }
+    },
+    "figure_labels": {
+      "type": "object",
+      "description": "Default label for each figure name (stored name -> label shown).",
+      "propertyNames": {"pattern": "^[a-z][a-z_]*$"},
+      "additionalProperties": {"type": "string"},
+      "examples": [{"proposed": "Proposed", "revised": "Revised"}]
+    }
+  }
+}

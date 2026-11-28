@@ -1,0 +1,25 @@
+# Default words for a city government. A city's government.yaml can override any of them.
+# Schema: schemas/kind.schema.json. Nothing here is a fact about a particular city.
+kind: city
+name: City
+route: city                      # PLAN.md decision D6: addresses /city/...
+fiscal_year:
+  start_month: 1                 # generic default; the City of Lancaster's own year is set in its government.yaml
+  label: "{end}"
+vocabulary:
+  governing_body: Council        # web/app.js budget calendar steps (who: 'Council')
+  executive: Mayor               # web/app.js budget calendar steps (who: 'Mayor')
+  department: Department         # web/app.js JT(): ['Department', 'Bureau', 'Line item'] for the City
+  unit: Bureau                   # web/app.js JT() and UW ('bureau') for the City
+  line_item: Line item           # web/app.js JT()
+  budget_document: budget book   # web/config.json footer: "published budget books"
+figure_labels:                   # web/app.js LABEL
+  actual: Actual
+  projected: Projected
+  proposed: Proposed
+  revised: Revised
+  amended: Amended
+  adopted: Adopted
+  budget: Budget
+  budgeted: Budgeted
+  projection: Projection

@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "csv/income_sources.schema.json",
+  "title": "income_sources.csv",
+  "description": "Revenue object code -> the income source it is shown under in the Income Sources panel (taxes one by one, grants, one-time federal money). Lines not listed fall back to the newest book's printed revenue group.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "entity",
+    "code",
+    "fund",
+    "source",
+    "evidence"
+  ],
+  "properties": {
+    "entity": {
+      "type": "string",
+      "x-type": "choice",
+      "description": "Which government (city or county).",
+      "enum": [
+        "city",
+        "county"
+      ],
+      "examples": [
+        "city"
+      ]
+    },
+    "code": {
+      "type": "string",
+      "x-type": "code",
+      "description": "The revenue line's object code.",
+      "pattern": "^\\d+$",
+      "minLength": 1,
+      "examples": [
+        "400000"
+      ]
+    },
+    "fund": {
+      "type": "string",
+      "x-type": "text",
+      "description": "Only for this fund; empty = every fund."
+    },
+    "source": {
+      "type": "string",
+      "x-type": "text",
+      "description": "The income source name shown on the site.",
+      "minLength": 1,
+      "examples": [
+        "Real estate tax"
+      ]
+    },
+    "evidence": {
+      "type": "string",
+      "x-type": "text",
+      "description": "Where the book prints the line, quoting its exact name.",
+      "minLength": 1,
+      "examples": [
+        "Line \"City Real Estate Taxes\" in Tax Revenue."
+      ]
+    }
+  }
+}
