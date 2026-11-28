@@ -1461,8 +1461,9 @@
      one-figure-per-year rule: Actual, Projected, then Proposed and Revised, then the city's projections (muted). Positions are placed in org-chart
      bureaus by org code (O.codes), the same way as the budget lines. */
   let ST = null;
-  // Staff charts: staffPts maps a row id ('scope', 'u<unit>' or 'd<dept>') to { name, pts }, filled while the Staff HTML is
-  // built and read by mountStaff(); staffChart is the one open bureau or department chart, kept apart from the page's charts.
+  // Staff charts: staffPts maps a row id ('scope', 'u<unit>' or 'd<dept>' for positions, 's<unit>' for a bureau's salaries) to
+  // { name, pts, money }, filled while the Staff HTML is built and read by mountStaff(); staffChart is the one open bureau or
+  // department chart in the Staff section, kept apart from the page's charts.
   let staffPts = new Map(), staffChart = null;
   function closeStaffChart() { if (staffChart) { staffChart.destroy(); staffChart = null; } }
   const staffCols = () => ST.books.map((b) => ({ k: `${b.year}|${b.measure}`, label: b.measure === 'budgeted' ? String(b.year) : `${b.year} ${LABEL[b.measure]}`, b }));
@@ -1480,24 +1481,33 @@
       <p class="trend-axis"></p>
       <details class="values"><summary>Show values</summary><div class="table-scroll"><table class="table"><thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Positions</th></tr></thead><tbody>${rowsHtml}</tbody></table></div></details></div>`;
   }
-  // After a page with a Staff section is drawn: the always-open chart, then the bureau or department toggles (one open at a time).
+  // A bureau's Salaries and wages by year, unfolded under the salaries table: the same chart and values as a line item's history.
+  function salHistoryHTML(name, pts) {
+    const rowsHtml = pts.map((p) => `<tr${p.m === 'projection' ? ' class="proj-row"' : ''}><th scope="row">${p.y}</th><td>${LABEL[p.m]}</td><td class="num">${p.t ? src(money(p.v), p.t.k, p.t.d, p.t.p) : '—'}</td></tr>`).join('');
+    return `<div class="li-hist-body" role="group" aria-label="Salaries and wages, ${esc(name)}">
+      <ul class="trend-legend" aria-hidden="true">${trendLegend(pts)}</ul>
+      <div class="chart-box short"><canvas role="img" aria-label="Salaries and wages, ${esc(name)}, by year, ${pts[0].y} to ${pts[pts.length - 1].y}. Solid line: actual. Dashed line: projected. Hollow diamond: proposed. Solid dot: revised. The table below has the values."></canvas></div>
+      <p class="trend-axis"></p>
+      <details class="values"><summary>Show values</summary><div class="table-scroll"><table class="table"><thead><tr><th scope="col">Year</th><th scope="col">Figure</th><th scope="col" class="num">Amount</th></tr></thead><tbody>${rowsHtml}</tbody></table></div></details></div>`;
+  }
+  // After a page with a Staff section is drawn: the always-open chart, then the bureau or department toggles. A toggle opens its
+  // chart in the box its aria-controls names (under the positions or the salaries table); one chart is open in the section at a time.
   function mountStaff() {
     const sec = $('sec-staff');
     if (!sec) return;
     const cv = $('staff-chart'), sc = staffPts.get('scope');
     if (cv && sc && window.Chart) charts.push(trendChart(cv, sc.pts, cv.closest('.li-hist-body').querySelector('.trend-axis'), false, true));
-    const box = $('st-hist');
     sec.querySelectorAll('.staff-toggle').forEach((b) => b.addEventListener('click', () => {
-      const wasOpen = b.getAttribute('aria-expanded') === 'true';
+      const wasOpen = b.getAttribute('aria-expanded') === 'true', box = $(b.getAttribute('aria-controls'));
       closeStaffChart();
-      if (box) box.innerHTML = '';
+      sec.querySelectorAll('.st-hist').forEach((x) => { x.innerHTML = ''; });
       sec.querySelectorAll('.staff-toggle[aria-expanded="true"]').forEach((x) => x.setAttribute('aria-expanded', 'false'));
       if (wasOpen || !box) return;
       const h = staffPts.get(b.dataset.st);
       if (!h || !h.pts.some((p) => p.v != null)) return;
-      box.innerHTML = `<h4 class="wc-h3 st-hist-h">${esc(h.name)}</h4>${staffHistoryHTML(h.name, h.pts)}`;
+      box.innerHTML = `<h4 class="wc-h3 st-hist-h">${esc(h.name)}</h4>${h.money ? salHistoryHTML(h.name, h.pts) : staffHistoryHTML(h.name, h.pts)}`;
       b.setAttribute('aria-expanded', 'true');
-      if (window.Chart) staffChart = trendChart(box.querySelector('canvas'), h.pts, box.querySelector('.trend-axis'), false, true);
+      if (window.Chart) staffChart = trendChart(box.querySelector('canvas'), h.pts, box.querySelector('.trend-axis'), true, !h.money);
     }));
   }
   function staffHTML(scope) {
@@ -1546,8 +1556,10 @@
     for (const u of pos.keys()) staffPts.set(`u${u}`, { name: unitLabel(u, 'expense'), pts: staffPoints(pcols, (k) => pos.get(u).get(k)) });
     const scopeName = scope.unit != null ? unitLabel(scope.unit, 'expense') : O.departments[scope.dept].name;
     if (pos.size) staffPts.set('scope', { name: scopeName, pts: staffPoints(pcols, (k) => { const t = sumCol(pos, k, (c) => c.n); return t == null ? null : { n: t }; }) });
-    // In the positions table a bureau's name opens its chart; the salaries table keeps its links.
-    const posHead = (u) => (multi && pos.has(u) ? `<button type="button" class="li-toggle staff-toggle" data-st="u${u}" aria-expanded="false" aria-controls="st-hist">${esc(unitLabel(u, 'expense'))}</button>` : rowHead(u));
+    for (const u of sal.keys()) staffPts.set(`s${u}`, { name: unitLabel(u, 'expense'), money: true, pts: scols.map((k) => { const c = sal.get(u).get(k), { y, m } = parseKey(k); return { y, m, v: c ? c.v : null, t: c ? { k, d: c.d, p: c.p } : null }; }) });
+    // On a department page a bureau's name in either table opens its chart under that table (the bureau cards link to the pages).
+    const toggleHead = (pre, m, box) => (u) => (multi && m.has(u) ? `<button type="button" class="li-toggle staff-toggle" data-st="${pre}${u}" aria-expanded="false" aria-controls="${box}">${esc(unitLabel(u, 'expense'))}</button>` : rowHead(u));
+    const posHead = toggleHead('u', pos, 'st-hist'), salHead = toggleHead('s', sal, 'sal-hist');
     const table = (caption, cols, m, cell, total, head = rowHead) => `<div class="table-scroll" tabindex="0" role="region" aria-label="${esc(caption)}, scrollable"><table class="table tight staff-table" aria-label="${esc(caption)}">
       <thead><tr><th scope="col">${scope.unit == null ? 'Bureau' : ''}</th>${cols.map((c) => `<th scope="col" class="num${pc(c)}">${c.label.split(' ').map(esc).join('<br>')}</th>`).join('')}</tr></thead>
       <tbody>${ids.map((u) => `<tr><th scope="row">${head(u)}</th>${cols.map((c) => `<td class="num${pc(c)}">${cell(m.get(u)?.get(c.k), c.k)}</td>`).join('')}</tr>`).join('')}</tbody>
@@ -1560,7 +1572,7 @@
     const salCols = scols.map((k) => ({ k, label: seriesLabel(k) }));
     const salTable = table('Salaries and wages by year', salCols, sal,
       (c, k) => (c ? src(mny(c.v), k, c.d, c.p) : dash),
-      (k) => { const t = sumCol(sal, k, (c) => c.v); return t == null ? dash : mny(t); });
+      (k) => { const t = sumCol(sal, k, (c) => c.v); return t == null ? dash : mny(t); }, salHead);
     // Titles in the newest schedule (bureau pages only).
     let titles = '';
     if (scope.unit != null && last) {
@@ -1582,7 +1594,8 @@
       ${posTable}<div class="st-hist" id="st-hist"></div>${titles}
       <h3 class="wc-h3">Salaries and wages${where}</h3>
       <p class="panel-note">The “Salaries &amp; Wages” budget lines (salaries, overtime and temporary wages; benefits are separate): Actual through 2025, Projected for 2026, Proposed and Revised for 2027${projectionYears().length ? `, then the city's projections for ${projectionYears().join(' and ')}` : ''}.</p>
-      ${salTable}</section>`;
+      ${multi && sal.size ? '<p class="hint li-hint">Select a bureau\'s name to see its salaries and wages year by year.</p>' : ''}
+      ${salTable}<div class="st-hist" id="sal-hist"></div></section>`;
   }
   /* Home page Staff panel: budgeted positions by department and year, city-wide (or in the selected fund), with a chart
      of the total and a toggle on each department. Positions whose account number in that year's book matches no office
