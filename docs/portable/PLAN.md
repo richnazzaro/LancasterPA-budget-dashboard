@@ -20,7 +20,7 @@
 | 5 Pilot: School District of Lancaster (owner runs it) | Not started | — | — |
 | 6 Docs and hand-over | Not started | — | — |
 
-**Done so far (2026-11-28):** worktree created; PyYAML 6.0.4 and jsonschema 4.26.0 installed in the main checkout's `.venv` (not yet in `requirements.txt`); baseline inventory written; School District of Lancaster sources checked (below); this plan.
+**Done so far (2026-11-28):** plan committed locally; owner decisions D1–D6 and the opening view recorded; origin/main `fcbabbb` merged in; worktree created; PyYAML 6.0.4 and jsonschema 4.26.0 installed in the main checkout's `.venv` (not yet in `requirements.txt`); baseline inventory written; School District of Lancaster sources checked (below); this plan.
 
 ---
 
@@ -37,14 +37,16 @@
 9. **D1:** a July–June year is stored as the year it ends (2027) and shown as "2026–27" (label pattern in `government.yaml`).
 10. **D3:** one PR per phase; the owner merges each.
 11. **D6:** government ids `lancaster-city`, `lancaster-county`, `sd-lancaster`. Addresses become real paths, **`/city/…`, `/county/…`, `/school/…`**, instead of `#/…` (Phase 3.3). Old `#/` links keep working by redirect.
+12. **Opening view:** `/` always opens the City (most readers look there first). It is a setting, `default_government: lancaster-city` in `site.yaml`, not code.
+13. **D2:** School District tax **is** included on the tax estimate page once the district's data exists (Phase 5). Main's current note "school district taxes are not included" (`fcbabbb`) then disappears by the same feature rule: shown only while a government in the area has no tax rates.
+14. **D4:** PDFs are dropped in `governments/<id>/inbox/`; once a book is reviewed and parses with its checks passing, the pipeline moves it to `governments/<id>/sources/` (a `git mv` when tracked). Today's PDFs move there in Phases 1 and 2. Public PDF addresses stay the same (`/pdfs/…`, `/pdfs/county/…`): the site build copies each government's `sources/` to the `pdf_path` set in `government.yaml`.
+15. **D5:** content files are Markdown (small subset, converted at build time).
 
 ## Open decisions (ask before the phase that needs them)
 
 | # | Question | Default if not answered | Needed by |
 |---|---|---|---|
-| D2 | School District tax on the tax estimate page (ruled out 2026-11-27 for City/County scope) | Stays out; revisit after the pilot | Phase 5 |
-| D4 | Move source PDFs into `governments/<id>/inbox/` now? | No: Phase 1 points to today's folders via `sources_dir`; moving is optional later (keeps the public `pdfs/` links) | Phase 1 |
-| D5 | Content files format | Markdown, a small subset (paragraphs, **bold**, *italic*, links, lists, headings), converted at build time | Phase 3 |
+| — | None open. New questions go here with a default and the phase that needs them. | | |
 
 ---
 
@@ -61,6 +63,8 @@ governments/<id>/
             account_codes.csv, income_rules.csv, income_sources.csv
   notes/    known_issues.csv, line_notes.csv, policy_notes.csv, corrections.csv, context_facts.csv
   content/  about.md, calendar.yaml, glossary.yaml, rules/*.yaml (e.g. tax_limit.yaml)
+  inbox/           drop new PDFs here
+  sources/         processed PDFs (moved here after review + passing checks); published at pdf_path
   review/<book>/   generated: pages/NNN.md, words.tsv, headings.csv, checks.csv, index.html
   data/            generated: spending.csv, income.csv, staffing.csv, balance.csv, actuals.csv
 engine/ (= today's scripts/, renamed at the end)  read, detect, extractors, build, check, web app
@@ -119,7 +123,7 @@ OCR is an option of the Read step (`ocr_pages.py`), not a family.
 
 | Step | Work | Files |
 |---|---|---|
-| 0.1 | Pin `PyYAML==6.0.4`, `jsonschema==4.26.0` in `requirements.txt`; add `requirements-build.txt` (just those two) and a `pip install -r requirements-build.txt` step to `pages.yml` (the build is stdlib-only today, so CI installs nothing). **The owner's main checkout has uncommitted `pages.yml` edits: compare before touching it.** | requirements*.txt, .github/workflows/pages.yml |
+| 0.1 | Pin `PyYAML==6.0.4`, `jsonschema==4.26.0` in `requirements.txt`; add `requirements-build.txt` (just those two) and a `pip install -r requirements-build.txt` step to `pages.yml` (the build is stdlib-only today, so CI installs nothing). **The owner's debounce commit `604eb76` (on the already-merged `feature/about-section-redesign`, not on main) also edits `pages.yml`; its debounce cannot work across runs (each run is a fresh machine). Settle it with the owner before editing this file.** | requirements*.txt, .github/workflows/pages.yml |
 | 0.2 | Schemas for `site.yaml`, `government.yaml`, `kinds/*.yaml`, `books/*.yaml`, `calendar.yaml`, `rules/tax_limit.yaml`, and one per hand-kept CSV (required columns, types, allowed values) | schemas/ |
 | 0.3 | Loader `scripts/govconfig.py`: `load_site()`, `load_government(id)`, `book_config(gov, pdf)`, path resolution (`sources_dir`, `mapping/`, `notes/`), plain error messages | scripts/govconfig.py |
 | 0.4 | `scripts/validate_config.py`: validates every YAML and CSV; exit 1 with readable messages | scripts/ |
@@ -142,6 +146,7 @@ OCR is an option of the Read step (`ocr_pages.py`), not a family.
 | 1.3 | Merge `extract_budget.py` into the `lineitem_columns` family: its `AMOUNT_COLUMNS`, `FUNDS`, `GENERAL_FUND_DEPARTMENTS`, overrides, `NOTE_FONT_SUFFIXES` and the `count_2027_*` staffing field names come from the 2027 book's YAML. Staffing output switches to long form (`fiscal_year, figure, count, salary`) with a compatibility writer until build reads it. |
 | 1.4 | Fund roles: `mapping/funds.csv` (`code_prefix, name, role, paid_by, description`). Replace `"General Fund"` / `"Reserve Fund"` literals in `build_dataset.py`, `check_dataset.py`, `changes.py`, `fund_balance.py`, `extract_projections.py`, `tax_limit.py` with role lookups; replace object `499000` with the `draw` class already in `income_rules.csv`. |
 | 1.5 | `ingest.py`, `build_dataset.py`, `check_dataset.py` take `--gov lancaster-city` (default from `site.yaml`), read paths from the loader. |
+| 1.6 | Move the City PDFs from `Budget PDFs - City/` to `governments/lancaster-city/sources/` (`git mv`; the untracked capital budget PDF stays the owner's to place); point `web/pdfs` at it so public PDF addresses do not change (D4). |
 
 **Gate:** processed-CSV parity for all 7 City books; `parity.py` equal for `budget.json`, `changes.json`, `staffing.json`, `positions.json`, `tax_rates.json`; `check_dataset.py` 0 mismatches; `check_portable.py` shows no City literals left in the touched scripts (or each is allowlisted with a reason).
 
@@ -157,6 +162,7 @@ OCR is an option of the Read step (`ocr_pages.py`), not a family.
 | 2.2 | `data/county/*` (`account_changes`, `context_facts`, `elected_offices`, `known_issues`, `ocr_corrections`, `org_units`) → `mapping/`, `notes/`, `content/`. `FUND_ORDER`, `CHART_DOC/CHART_PAGE`, the description strings in `build_county.py` and `config.json` `fund_names` → `funds.csv` / `government.yaml` / `content/`. |
 | 2.3 | Fold `build_county.py` / `check_county.py` into `build_dataset.py` / `check_dataset.py` as modules (actuals, context facts, resolution-based balance). `--entity county` stays as an alias for `--gov lancaster-county`. |
 | 2.4 | `pages.yml`: loop over `site.yaml` governments instead of two fixed steps. |
+| 2.5 | Move the County PDFs (books, `Resolutions/`, ACFRs) to `governments/lancaster-county/sources/`; public `/pdfs/county/…` addresses unchanged. |
 
 **Gate:** processed-CSV parity for the 3 County books, ACFRs, resolutions; `parity.py` equal for `web/data/county/*`; both checks 0 mismatches; no County literals in the shared scripts.
 
@@ -189,7 +195,7 @@ OCR is an option of the Read step (`ocr_pages.py`), not a family.
 | 4.2 | **read**: text layer or OCR (existing detection in `ingest.py` + `ocr_pages.py`); writes `review/<book>/pages/NNN.md` (readable) and `words.tsv` (word, x0, x1, top, bottom, font, size, page). |
 | 4.3 | **detect**: page kinds (line items, summary, staffing, balance, narrative); column headers → year + figure (generalise `ingest.py`'s header inference); account-code pattern (most common leading token shapes); headings (font, caps, position, a `TOTAL - X` that closes them) → `headings.csv` with page, guessed role and confidence; government name, kind and budget year from the cover/title lines; layout family by matching each family's signature. Writes `books/<book>.yaml` with `status: draft` and appends unknown codes to mapping CSVs with `status: review`. |
 | 4.4 | **review**: writes `review/<book>/index.html`: summary (what was found, what needs a decision), then per page the rendered PDF page beside the parsed rows, each row's fund/department/category, unmatched lines and failed totals highlighted, and the exact file + row to edit. Read-only: all edits go in YAML/CSV. |
-| 4.5 | **parse**: runs the family's extractor; writes `data/*.csv` and `review/<book>/checks.csv`; refuses a `status: draft` book. |
+| 4.5 | **parse**: runs the family's extractor; writes `data/*.csv` and `review/<book>/checks.csv`; refuses a `status: draft` book. When the book is reviewed and every check passes or is acknowledged, moves the PDF from `inbox/` to `sources/` (D4). |
 
 **Gate:** detect re-run on every Lancaster City and County book from scratch, compared with the reviewed configs: report the share of columns, page ranges, funds and departments found unaided. No accuracy target is promised in advance; the report decides how much review the onboarding guide must ask for.
 
@@ -209,6 +215,7 @@ OCR is an option of the Read step (`ocr_pages.py`), not a family.
 - Figures: each form prints only its own year, so trends use one "Budget" figure per year (like County). Actuals would come later from audited reports.
 - General Fund only; no staffing schedule (Staff module stays hidden); the Fund Balance Summary feeds the Reserve module.
 - July–June fiscal year (decision D1).
+- Tax estimate (D2): the district's millage and its tax pages (pp8–12 of the 2026-27 form) feed `tax_rates.csv`. Its tax year runs July–June while the City's and County's run with the calendar year, and the homestead/farmstead exclusion applies to school district tax: verify both from the district's own documents before building, and say on the page which year each rate is for.
 - Departments ≈ functions (1000 Instruction, 2000 Support Services…), categories ≈ objects (100 Salaries, 200 Benefits…). The owner decides that mapping in `mapping/` during review.
 
 **Hermes prepares (before the owner starts):** the `pde2028` family; `kinds/school_district.yaml`; a template `government.yaml`; the guide's School District page.
@@ -234,7 +241,7 @@ OCR is an option of the Read step (`ocr_pages.py`), not a family.
 | Auto-detection is wrong on an unfamiliar book | Detect only drafts; nothing parses until a person sets `status: reviewed`; the review page shows every unmatched line |
 | A new publisher's layout fits no family | A new family is a one-time engine change, reused by every government with that layout |
 | `app.js` (~4,100 lines) is one scope; the Phase 3 change is large | Split into steps 3.2a–e by area (controls, reserve, about, calendar, tax), each screenshot-checked |
-| The owner's main checkout is behind and dirty | All work in this worktree; the owner's `pages.yml` edit is compared before Phase 0.1 touches the file |
+| The owner's main checkout is behind and on a merged branch | All work in this worktree; `pages.yml` changes wait for the owner's decision on `604eb76` |
 | Effort | Rough: Phase 0 1–2 days, 1 3–5, 2 3–5, 3 5–8, 4 5–10, 5 3–5 plus the owner's time, 6 2. Estimates, not commitments. |
 
 ## How to pick this up
