@@ -3,6 +3,11 @@
   "contact_email": "budget@nazwel.net",
   "project_repository": "https://github.com/richnazzaro/LancasterPA-budget-dashboard",
   "default_entity": "city",
+  "tax_estimate": {
+    "rates": "data/tax_rates.json",
+    "reassessment_year": 2027,
+    "reassessment_source": "https://co.lancaster.pa.us/DocumentCenter/View/17033/Taxpayers-Guide-to-the-2027-Reassessment-"
+  },
   "entities": {
     "city": {
       "label": "City",

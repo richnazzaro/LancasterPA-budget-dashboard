@@ -741,6 +741,8 @@ def main() -> None:
     args.processed = args.processed or ROOT / "data" / "processed"
     args.out = args.out or ROOT / "web" / "data"
     budget = build(args.processed, args.out)
+    import tax_rates  # the tax estimate page's rates (data/tax_rates.csv), shared by the City and County pages
+    tax_rates.write(args.out / "tax_rates.json")
     print(f"Books: " + ", ".join(f"{b['year']}={b['doc']}{'' if b['used'] else ' (ignored)'}"
                                  for b in budget["books"]))
     for key, s in budget["series"].items():

@@ -35,6 +35,7 @@
   // Colors are read from CSS variables at start-up (see loadTokens), so branding lives in styles.css.
   let PALETTE = [], OTHER_COLOR = '#777', SEL = '#41ffca', CMP = '#ffca41', INK = '#fff', MUTED = '#b3b3b3', GRID = '#262626', SURFACE = '#0d0d0d', BG = '#000', TRACK = '#222';
   let CFG = null, DEFAULT_FUND = '', BASE = null, ENT = 'city', SITE = '', GB = null; // BASE: config.json; CFG: BASE plus the chosen entity; GB: County audited fund balances
+  let TAXR = null; // web/data/tax_rates.json (config.json `tax_estimate.rates`): the tax estimate page's rates, City and County
   function loadTokens() {
     const cs = getComputedStyle(document.documentElement), v = (n, d) => cs.getPropertyValue(n).trim() || d;
     PALETTE = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => v(`--cat-${i}`, '#888'));
@@ -260,6 +261,7 @@
     else if (parts[0] === 'about') r = { name: 'about' };
     else if (parts[0] === 'terms') r = { name: 'terms' };
     else if (parts[0] === 'budget-calendar') r = { name: 'calendar' };
+    else if (parts[0] === 'tax') r = { name: 'tax' };
     else if (parts[0] === 'department' && parts[1]) {
       r = parts[2] === 'bureau' && parts[3] ? { name: 'bureau', dept: parts[1], bureau: parts[3] } : { name: 'dept', dept: parts[1] };
     } else if (parts.length && location.hash.startsWith('#/')) r = { name: 'missing' }; // any other path is not a page
@@ -762,7 +764,7 @@
       const now = D.context && y === D.context.year ? ctxFact(`millage_${y}`) : null, was = now ? ctxFact(`millage_${y - 1}`) : null;
       if (now && was) {
         const mills = (n) => `${n.toFixed(3)} mills`;
-        out.push(['Real estate tax', deltaHTML(now.v - was.v, was.v, mills), `${y - 1} ${ctxLink(was, mills(was.v))} → ${lbl} ${ctxLink(now, mills(now.v))}`]);
+        out.push(['Real estate tax', deltaHTML(now.v - was.v, was.v, mills), `${y - 1} ${ctxLink(was, mills(was.v))} → ${lbl} ${ctxLink(now, mills(now.v))}${taxLinkHTML('county', 'real_estate')}`]);
       }
       return out;
     }
@@ -770,7 +772,7 @@
     for (const it of [...new Set(ps.map((x) => x.item))]) {
       const x = ps.find((q) => q.item === it);
       const at = (t) => (x.d != null ? srcDoc(t, x.d, x.p) : t);
-      const from = /^user-provided/i.test(x.source) ? '<br><span class="muted">From the city\'s proposal; not printed in the budget book.</span>' : '';
+      const from = (/^user-provided/i.test(x.source) ? '<br><span class="muted">From the city\'s proposal; not printed in the budget book.</span>' : '') + taxLinkHTML('city', null, x.account);
       if (x.rate_to != null) {
         const r = (n) => `${n.toFixed(2)}${x.unit}`;
         out.push([esc(it), deltaHTML(x.rate_to - x.rate_from, x.rate_from, (n) => `${n.toFixed(2)} pts`), `${y - 1} ${r(x.rate_from)} → ${lbl} ${at(r(x.rate_to))}${from}`]);
@@ -2703,7 +2705,7 @@
         traj = `<p class="wc-traj">${esc(rows(base?.k || fromK).find((r) => r.code === code)?.name || code)}: ${pts.map((x, i) => `${esc(seriesLabel(x.k))} ${src(money(x.v), x.k, x.d, x.p)}${i && base ? ` <span class="muted">(${fmtPct(((x.v - base.v) / base.v) * 100, true)} vs. ${esc(seriesLabel(base.k))})</span>` : ''}`).join(' → ')}</p>`;
       }
       const li = ns.map((p) => `<li><span class="wc-fig">${esc(LABEL[p.figure] || p.figure)}:</span> ${esc(p.text)} <span class="wc-srcnote">${p.d != null ? srcDoc('Budget book', p.d, p.p) : /^user-provided/i.test(p.source) ? 'From the city\'s proposal; not printed in the budget book.' : `Source: ${esc(p.source)}`}</span></li>`).join('');
-      return `<div class="wc-policy"><h3>${esc(it)}</h3>${traj}<ul>${li}</ul></div>`;
+      return `<div class="wc-policy"><h3>${esc(it)}</h3>${traj}<ul>${li}</ul>${code ? taxLinkHTML('city', null, code, 'p') : ''}</div>`;
     }).join('');
     return `<div class="wc-policies"><p class="wc-note">Tax rates are not printed in the budget tables. These notes say what the proposal and the revision did to them, next to the revenue line each one affects.</p>${blocks}</div>`;
   }
@@ -3001,6 +3003,7 @@
     else if (route.name === 'about') page = { html: '<header class="page-head"><h1 id="page-h" tabindex="-1">About the data</h1></header>', after: () => { const t = q.get('s') && $(q.get('s')); if (t) { if (t.tagName === 'DETAILS') t.open = true; t.scrollIntoView(); } } };
     else if (route.name === 'terms') page = termsPage(q);
     else if (route.name === 'calendar') page = calendarPage();
+    else if (route.name === 'tax') page = taxPage();
     else if (route.name === 'missing') page = notFound('Page');
     else page = bureauPage();
     if (page.redirect) { navigate(page.redirect, true); return; }
@@ -3014,7 +3017,7 @@
     document.body.classList.toggle('calendar-page', route.name === 'calendar');
     page.after?.();
     // Mark where the reader is in the contents.
-    const here = route.name === 'changes' ? 'changes' : route.name === 'about' ? 'about' : route.name === 'terms' ? 'terms' : route.name === 'calendar' ? 'calendar' : route.name === 'home' ? (isReserve() ? 'reserve' : 'home') : 'home';
+    const here = route.name === 'changes' ? 'changes' : route.name === 'about' ? 'about' : route.name === 'terms' ? 'terms' : route.name === 'calendar' ? 'calendar' : route.name === 'tax' ? 'tax' : route.name === 'home' ? (isReserve() ? 'reserve' : 'home') : 'home'; // 'tax' has no contents link: the page is reached from the tax notes
     const onUnit = route.name === 'dept' || route.name === 'bureau';
     document.querySelectorAll('#site-nav a').forEach((a) => { if (a.dataset.nav === here && !onUnit) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
     pinControls();
@@ -3575,6 +3578,134 @@
         <details class="values tl-lines"><summary>Which lines count</summary><ul>${counted.map((l) => `<li><strong>${esc(l[1])}</strong> (${esc(l[0])}): counted. ${esc(l[3])}</li>`).join('')}${left.map((l) => `<li><strong>${esc(l[1])}</strong> (${esc(l[0])}): not counted. ${esc(l[3])}</li>`).join('')}</ul></details>
       </div>`;
   }
+  /* ---------- What would you pay? (#/tax, #/county/tax) ----------
+     An estimate of a reader's City and County taxes at each tax's newest rate (web/data/tax_rates.json, from
+     data/tax_rates.csv via scripts/tax_rates.py). No header link: the property and earned income tax notes on What
+     changed link here (taxLinkHTML). The values typed in stay in this page (TX), never in the address. */
+  const TAX_NAME = { real_estate: 'Property tax', earned_income: 'Earned income tax' };
+  const TAX_WHO = [['both', 'Both (property in the City)', ['city', 'county']], ['city', 'City only', ['city']], ['county', 'County only (outside the City)', ['county']]];
+  const TX = { who: null, av: {}, inc: '' };
+  // The newest rate for each government and tax; older rows (the City's rate before the reassessment) are context.
+  function taxNewest(gov, tax) {
+    const rs = (TAXR?.rates || []).filter((r) => r.gov === gov && r.tax === tax);
+    return rs.length ? rs.reduce((a, b) => (b.year > a.year ? b : a)) : null;
+  }
+  // "Estimate what you would pay →" under a tax note, when the page has a rate for that tax (City: by budget line).
+  function taxLinkHTML(gov, tax, account = null, wrap = 'br') {
+    const has = (TAXR?.rates || []).some((r) => r.gov === gov && (tax ? r.tax === tax : account && r.account === account));
+    if (!has) return '';
+    const a = `<a class="tax-link" href="${esc(eh('tax'))}">Estimate what you would pay →</a>`;
+    return wrap === 'p' ? `<p class="tax-link-p">${a}</p>` : `<br>${a}`;
+  }
+  const govName = (g) => BASE.entities?.[g]?.entity?.short || g;
+  const rateText = (r) => (r.unit === '%' ? `${r.rate}%` : `${r.rate} mills`);
+  const rateHTML = (r) => (r.href
+    ? `<a class="src" href="${esc(r.href)}" target="_blank" rel="noopener" aria-label="${esc(rateText(r))}: open the source">${esc(rateText(r))}</a>`
+    : `${esc(rateText(r))}<span class="tx-sub">Not printed in the budget book</span>`);
+  const taxNum = (s) => { const t = String(s ?? '').replace(/[^0-9.]/g, ''); return t ? Number(t) : null; };
+  const taxGovs = () => (TAX_WHO.find((w) => w[0] === TX.who) || TAX_WHO[0])[2];
+  // Property rates by the year of assessed value they apply to: one field per year (the 2027 reassessment changed every value).
+  function taxValueYears() {
+    const ys = new Map();
+    for (const g of ['city', 'county']) { const r = taxNewest(g, 'real_estate'); if (r) ys.set(r.assessed_year, [...(ys.get(r.assessed_year) || []), g]); }
+    return [...ys.entries()].sort((a, b) => b[0] - a[0]);
+  }
+  function taxPage() {
+    document.title = pageTitle('What would you pay?');
+    const head = `<header class="page-head"><h1 id="page-h" tabindex="-1">What would you pay?</h1>
+      <p class="lede-sm">An estimate of your City and County taxes at the newest rates. It is not a tax bill.</p></header>`;
+    if (!TAXR?.rates?.length) return { html: `${head}<p class="muted">The tax rates could not be loaded.</p>` };
+    if (!TX.who) TX.who = isCounty() ? 'county' : 'both';
+    const R = BASE.tax_estimate?.reassessment_year;
+    const fld = (id, label, note, value, govs) => `<div class="field tx-field" data-govs="${govs.join(' ')}"><label class="field-label" for="${id}">${label}</label>
+      <div class="tx-input"><span aria-hidden="true">$</span><input id="${id}" type="text" inputmode="decimal" autocomplete="off" value="${esc(value)}" aria-describedby="${id}-note"></div>
+      <p class="field-note" id="${id}-note">${note}</p></div>`;
+    const vals = taxValueYears().map(([y, govs]) => fld(`tx-av-${y}`, `Assessed value, ${y}`,
+      R && y >= R ? 'The new value on your reassessment notice.' : `The value on your ${y} tax bill.${govs.length === 1 ? ` ${esc(govName(govs[0]))}'s newest rate uses it.` : ''}`, TX.av[y] || '', govs)).join('');
+    const eit = taxNewest('city', 'earned_income');
+    const inc = eit ? fld('tx-inc', 'Earned income', 'Wages and business profits, as on your PA tax return. City residents only.', TX.inc, ['city']) : '';
+    const html = `${head}
+      <section class="panel" id="tx-in" tabindex="-1" aria-labelledby="tx-in-t"><h2 class="panel-title" id="tx-in-t">Your details</h2>
+        <form class="tx-form" id="tx-form" novalidate>
+          <div class="field tx-field"><label class="field-label" for="tx-who">Taxes to include</label>
+            <select id="tx-who">${TAX_WHO.map(([v, l]) => `<option value="${v}"${v === TX.who ? ' selected' : ''}>${l}</option>`).join('')}</select></div>
+          ${vals}${inc}
+        </form>
+        <p class="panel-note tx-privacy">What you type stays in this page: it is not sent anywhere or saved in the address.</p>
+      </section>
+      <section class="panel" id="tx-out" tabindex="-1" aria-labelledby="tx-out-t"><h2 class="panel-title" id="tx-out-t">Your estimate</h2>
+        <div id="tx-result"></div>
+      </section>
+      <section class="panel" id="tx-how" tabindex="-1" aria-labelledby="tx-how-t"><h2 class="panel-title" id="tx-how-t">How this is worked out</h2>
+        <ul class="tx-notes">
+          <li><strong>Property tax</strong> is your assessed value ÷ 1,000 × the rate in mills. Each government's newest rate is used: ${andList(['city', 'county'].map((g) => taxNewest(g, 'real_estate')).filter(Boolean).map((r) => `${esc(govName(r.gov))}, ${esc(r.label)}`))}.</li>
+          ${eit ? `<li><strong>Earned income tax</strong> is your earned income × the City's rate (${esc(eit.label)}). It applies to people who live in the City.</li>` : ''}
+          <li><strong>Not included:</strong> School District of Lancaster taxes, your township's or borough's taxes outside the City, the Local Services Tax for people who work in the City, homestead and farmstead exclusions, and discounts and penalties.</li>
+        </ul>
+      </section>`;
+    return { html, after: mountTax };
+  }
+  function mountTax() {
+    const form = $('tx-form'); if (!form) return;
+    const sync = () => {
+      TX.who = $('tx-who').value;
+      for (const [y] of taxValueYears()) TX.av[y] = $(`tx-av-${y}`)?.value || '';
+      TX.inc = $('tx-inc')?.value || '';
+      const govs = taxGovs();
+      form.querySelectorAll('[data-govs]').forEach((f) => { f.hidden = !f.dataset.govs.split(' ').some((g) => govs.includes(g)); });
+      $('tx-result').innerHTML = taxResultHTML(govs);
+    };
+    form.addEventListener('input', sync);
+    form.addEventListener('change', sync);
+    form.addEventListener('submit', (e) => e.preventDefault());
+    // Commas once the reader leaves a field, so a long number reads back as typed.
+    form.querySelectorAll('.tx-input input').forEach((el) => el.addEventListener('blur', () => { const n = taxNum(el.value); el.value = n == null ? '' : n.toLocaleString('en-US', { maximumFractionDigits: 2 }); sync(); }));
+    sync();
+  }
+  function taxResultHTML(govs) {
+    const R = BASE.tax_estimate?.reassessment_year, rows = [], parts = [];
+    let total = 0, any = false;
+    for (const g of govs) {
+      const lines = [];
+      let sum = 0, has = false;
+      const re = taxNewest(g, 'real_estate');
+      if (re) {
+        const v = taxNum(TX.av[re.assessed_year]);
+        const amt = v == null ? null : (v / 1000) * re.rate;
+        lines.push([re, v == null ? '—' : `${money(v)} value`, amt]);
+      }
+      const ei = taxNewest(g, 'earned_income');
+      if (ei) {
+        const v = taxNum(TX.inc);
+        lines.push([ei, v == null ? '—' : `${money(v)} income`, v == null ? null : (v * ei.rate) / 100]);
+      }
+      for (const [, , amt] of lines) if (amt != null) { sum += amt; has = true; }
+      if (!lines.length) continue;
+      rows.push(`<tr class="tx-gov"><th colspan="4" scope="colgroup">${esc(govName(g))}</th></tr>`
+        + lines.map(([r, on, amt]) => `<tr><th scope="row">${TAX_NAME[r.tax]}<span class="tx-sub">${esc(r.label)}</span></th><td class="num">${rateHTML(r)}</td><td class="num">${on}</td><td class="num">${amt == null ? '—' : money(amt)}</td></tr>`).join(''));
+      if (has) { total += sum; any = true; parts.push([govName(g).replace(/ of Lancaster$/, ''), sum]); }
+    }
+    const deck = !any ? 'Type in your values above to see an estimate.'
+      : parts.length > 1 ? `${money(parts[0][1])} to the ${esc(parts[0][0])} and ${money(parts[1][1])} to the ${esc(parts[1][0])}.` : `All of it to the ${esc(parts[0][0])}.`;
+    // The reassessment: the City's newest rate is on the new values, its rate before on the old ones.
+    const notes = [];
+    const cNew = govs.includes('city') ? taxNewest('city', 'real_estate') : null;
+    const cOld = cNew && (TAXR.rates || []).filter((r) => r.gov === 'city' && r.tax === 'real_estate' && r.assessed_year < R).sort((a, b) => b.year - a.year)[0];
+    const rs = BASE.tax_estimate?.reassessment_source;
+    const law = rs ? `<a href="${esc(rs)}" target="_blank" rel="noopener">state law</a>` : 'state law';
+    if (R && cNew && cOld && cNew.assessed_year >= R) notes.push(`<strong>Why the City's rate is lower:</strong> every property was reassessed for ${R}. Under ${law}, a reassessment by itself cannot raise a government's property tax revenue, so rates are reset on the new values. The City's went from ${rateHTML(cOld)} in ${cOld.year} to ${esc(rateText(cNew))} for ${esc(cNew.label)}. Whether you pay more or less depends on how your value changed compared with other properties.`);
+    const co = govs.includes('county') ? taxNewest('county', 'real_estate') : null;
+    if (R && co && co.assessed_year < R) notes.push(`This site does not have the County's ${R} rate on the new values yet, so the County's line uses its ${esc(co.label)} rate and your ${co.assessed_year} value.`);
+    return `<p class="tx-total-label" id="tx-total-l">Estimated total a year</p>
+      <p class="tx-total" aria-describedby="tx-total-l">${any ? money(total) : '—'}</p>
+      <p class="tx-deck">${deck}</p>
+      <div class="table-scroll"><table class="table tx-table"><caption class="sr-only">Estimate by tax</caption>
+        <thead><tr><th scope="col">Tax</th><th scope="col" class="num">Rate</th><th scope="col" class="num">On</th><th scope="col" class="num">Estimate</th></tr></thead>
+        <tbody>${rows.join('')}</tbody>
+        <tfoot><tr><td colspan="3">Total</td><td class="num">${any ? money(total) : '—'}</td></tr></tfoot></table></div>
+      ${notes.map((n) => `<p class="draw-note">${n}</p>`).join('')}`;
+  }
+
   function calendarPage() {
     document.title = pageTitle('How the City budget is made');
     const B = CFG.budget_calendar;
@@ -3761,7 +3892,7 @@
   const jumpIndexReset = () => { jumpIndex = null; const i = $('jump-input'); if (i) i.value = ''; };
   /* City / County tabs: each opens the same kind of page in the other entity (the overview, What changed or About). */
   function renderSwitch() {
-    const tail = route.name === 'changes' ? 'changes' : route.name === 'about' ? 'about' : route.name === 'terms' ? 'terms' : route.name === 'calendar' ? 'budget-calendar' : '';
+    const tail = route.name === 'changes' ? 'changes' : route.name === 'about' ? 'about' : route.name === 'terms' ? 'terms' : route.name === 'calendar' ? 'budget-calendar' : route.name === 'tax' ? 'tax' : '';
     document.querySelectorAll('#entity-switch a').forEach((a) => {
       const county = a.dataset.entity === 'county';
       a.setAttribute('href', `#/${county ? 'county/' : ''}${tail}`);
@@ -3777,6 +3908,9 @@
       return;
     }
     SITE = BASE.site_title;
+    // The tax estimate page's rates (a few hundred bytes, shared by the City and County): optional, so a missing file
+    // only hides the page's links.
+    if (BASE.tax_estimate?.rates) TAXR = await fetch(BASE.tax_estimate.rates, { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
     // The controls used to fold behind "Change view" and remembered that as `controlsOpen`; they are always open now.
     try { localStorage.removeItem('controlsOpen'); } catch (e) { /* no storage */ }
     // A bare address opens the entity the visitor last chose; any #/... address says which one it means.

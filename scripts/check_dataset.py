@@ -58,6 +58,7 @@ from pathlib import Path
 
 import income_rules
 import tax_limit
+import tax_rates
 from changes import counts_as_income
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -1028,6 +1029,7 @@ def main() -> int:
     failures += check_spikes(budget)
     failures += check_projection(budget)
     failures += tax_limit.check(budget)
+    failures += tax_rates.check()
 
     print(f"\n{failures} series mismatches")
     return 1 if failures else 0
