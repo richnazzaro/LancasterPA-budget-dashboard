@@ -123,7 +123,7 @@ OCR is an option of the Read step (`ocr_pages.py`), not a family.
 
 | Step | Work | Files |
 |---|---|---|
-| 0.1 | Pin `PyYAML==6.0.4`, `jsonschema==4.26.0` in `requirements.txt`; add `requirements-build.txt` (just those two) and a `pip install -r requirements-build.txt` step to `pages.yml` (the build is stdlib-only today, so CI installs nothing). **The owner's debounce commit `604eb76` (on the already-merged `feature/about-section-redesign`, not on main) also edits `pages.yml`; its debounce cannot work across runs (each run is a fresh machine). Settle it with the owner before editing this file.** | requirements*.txt, .github/workflows/pages.yml |
+| 0.1 | Pin `PyYAML==6.0.4`, `jsonschema==4.26.0` in `requirements.txt`; add `requirements-build.txt` (just those two) and a `pip install -r requirements-build.txt` step to `pages.yml` (the build is stdlib-only today, so CI installs nothing). **Main's debounce step (PR #20) is removed by branch `chore/pages-timeout` (`7deebc3`, keeps `timeout-minutes: 30`); merge that first, then edit `pages.yml` here.** | requirements*.txt, .github/workflows/pages.yml |
 | 0.2 | Schemas for `site.yaml`, `government.yaml`, `kinds/*.yaml`, `books/*.yaml`, `calendar.yaml`, `rules/tax_limit.yaml`, and one per hand-kept CSV (required columns, types, allowed values) | schemas/ |
 | 0.3 | Loader `scripts/govconfig.py`: `load_site()`, `load_government(id)`, `book_config(gov, pdf)`, path resolution (`sources_dir`, `mapping/`, `notes/`), plain error messages | scripts/govconfig.py |
 | 0.4 | `scripts/validate_config.py`: validates every YAML and CSV; exit 1 with readable messages | scripts/ |
@@ -241,7 +241,7 @@ OCR is an option of the Read step (`ocr_pages.py`), not a family.
 | Auto-detection is wrong on an unfamiliar book | Detect only drafts; nothing parses until a person sets `status: reviewed`; the review page shows every unmatched line |
 | A new publisher's layout fits no family | A new family is a one-time engine change, reused by every government with that layout |
 | `app.js` (~4,100 lines) is one scope; the Phase 3 change is large | Split into steps 3.2a–e by area (controls, reserve, about, calendar, tax), each screenshot-checked |
-| The owner's main checkout is behind and on a merged branch | All work in this worktree; `pages.yml` changes wait for the owner's decision on `604eb76` |
+| The owner's main checkout is behind and on a merged branch | All work in this worktree; `pages.yml` changes wait for `chore/pages-timeout` to merge |
 | Effort | Rough: Phase 0 1–2 days, 1 3–5, 2 3–5, 3 5–8, 4 5–10, 5 3–5 plus the owner's time, 6 2. Estimates, not commitments. |
 
 ## How to pick this up
