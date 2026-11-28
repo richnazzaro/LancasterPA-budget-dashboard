@@ -80,6 +80,22 @@
     --cal-deadline: #7fc99b; --cal-deadline-fg: #0d1410;
   }
 }
+/* About section: grid layout with two columns for better readability */
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin: 0 0 1rem 0;
+}
+.about-col {
+  padding: 0 1rem;
+}
+/* Hide About section on small screens */
+@media (max-width: 767px) {
+  .about-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
